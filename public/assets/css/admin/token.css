@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --sidebar-width: 260px;
+    --sidebar-bg: #0f1f3d;
+    --sidebar-hover: #1a3360;
+    --sidebar-active: #1e4080;
+    --sidebar-accent: #3b82f6;
+    --topbar-height: 64px;
+    --body-bg: #f0f4f8;
+    --card-bg: #ffffff;
+    --text-primary: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --radius-card: 14px;
+    --radius-btn: 8px;
+    --radius-badge: 20px;
+    --color-berlangsung: #dc2626;
+    --color-persiapan: #d97706;
+    --color-menunggu: #64748b;
+    --color-selesai: #16a34a;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--body-bg);
+    color: var(--text-primary);
+    margin: 0;
+    overflow-x: hidden;
+}
