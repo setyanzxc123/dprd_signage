@@ -6,18 +6,21 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-// ── Home ──────────────────────────────────────────────────────────────
-$routes->get('/', 'Home::index');
+// Home
+$routes->get('/', 'SignageController::index');
 
-// ── Layar TV Signage (publik, tanpa auth) ─────────────────────────────
+// Layar TV Signage
 $routes->get('signage', 'SignageController::index');
 
-// ── Auth (login/logout, di luar group admin) ──────────────────────────
+// Portal Publik — akses via QR Code / direct link
+$routes->get('jadwal', 'PublicController::index');
+
+// Auth (login/logout, di luar group admin)
 $routes->get( 'admin/login',  'Admin\AuthController::loginPage');
 $routes->post('admin/login',  'Admin\AuthController::loginProcess');
 $routes->get( 'admin/logout', 'Admin\AuthController::logout');
 
-// ── Admin — semua route dilindungi filter auth ─────────────────────────
+// Admin — semua route dilindungi filter auth
 $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 
     // Dashboard
@@ -41,12 +44,16 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'ruangan/(:num)/delete', 'Admin\RoomController::delete/$1');
 
     // Jadwal Rapat
-    $routes->get( 'jadwal',               'Admin\MeetingController::index');
-    $routes->get( 'jadwal/create',        'Admin\MeetingController::create');
-    $routes->post('jadwal/store',         'Admin\MeetingController::store');
-    $routes->get( 'jadwal/(:num)/edit',   'Admin\MeetingController::edit/$1');
-    $routes->post('jadwal/(:num)/update', 'Admin\MeetingController::update/$1');
-    $routes->get( 'jadwal/(:num)/delete', 'Admin\MeetingController::delete/$1');
+    $routes->get( 'jadwal',                      'Admin\MeetingController::index');
+    $routes->get( 'jadwal/create',               'Admin\MeetingController::create');
+    $routes->post('jadwal/store',                'Admin\MeetingController::store');
+    $routes->get( 'jadwal/(:num)/edit',          'Admin\MeetingController::edit/$1');
+    $routes->post('jadwal/(:num)/update',        'Admin\MeetingController::update/$1');
+    $routes->get( 'jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
+    $routes->post('jadwal/(:num)/toggle-publik', 'Admin\MeetingController::togglePublik/$1');
+
+    // Bamus — Jadwal Semesteran (view-only)
+    $routes->get('bamus', 'Admin\BamusController::index');
 
     // Notifikasi WA
     $routes->get( 'notifikasi',                  'Admin\NotificationController::index');
@@ -59,5 +66,10 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
 });
 
-// ── API (publik, untuk signage TV) ────────────────────────────────────
+// ── API v1 Publik (tanpa auth) ───────────────────────────────────────
+$routes->group('api/v1/publik', function ($routes) {
+    $routes->get('jadwal', 'Api\PublicController::jadwal');
+});
+
+// ── API Signage (backward compatible) ────────────────────────────────
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');

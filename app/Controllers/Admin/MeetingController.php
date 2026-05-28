@@ -92,6 +92,9 @@ class MeetingController extends BaseController
             'blast_before'  => $blastBefore,
             'reminder_time' => $reminderTime,
             'materi_url'    => $this->request->getPost('materi_url'),
+            'stream_url'    => $this->request->getPost('stream_url') ?: null,
+            'is_publik'     => $this->request->getPost('is_publik') ? 1 : 0,
+            'jenis'         => $this->request->getPost('jenis') ?? 'insidental',
             'status'        => 'menunggu',
         ], true); // true = return insert ID
 
@@ -151,6 +154,9 @@ class MeetingController extends BaseController
             'blast_before'  => $blastBefore,
             'reminder_time' => $reminderTime,
             'materi_url'    => $this->request->getPost('materi_url'),
+            'stream_url'    => $this->request->getPost('stream_url') ?: null,
+            'is_publik'     => $this->request->getPost('is_publik') ? 1 : 0,
+            'jenis'         => $this->request->getPost('jenis') ?? 'insidental',
         ]);
 
         session()->setFlashdata('success', 'Jadwal berhasil diperbarui.');
@@ -164,6 +170,26 @@ class MeetingController extends BaseController
 
         session()->setFlashdata('success', 'Jadwal berhasil dihapus.');
         return redirect()->to(base_url('admin/jadwal'));
+    }
+
+    // ── Toggle is_publik ───────────────────────────────────────────────
+    public function togglePublik(int $id)
+    {
+        $jadwalModel = new JadwalModel();
+        $jadwal      = $jadwalModel->find($id);
+
+        if (!$jadwal) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Jadwal tidak ditemukan.']);
+        }
+
+        $newVal = $jadwal['is_publik'] ? 0 : 1;
+        $jadwalModel->update($id, ['is_publik' => $newVal]);
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'is_publik'  => $newVal,
+            'message'    => $newVal ? 'Jadwal ditampilkan di publik.' : 'Jadwal disembunyikan dari publik.',
+        ]);
     }
 
     // ── Helper: buat entri notifikasi pending ──────────────────────────

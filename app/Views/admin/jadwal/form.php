@@ -91,6 +91,20 @@
                         </div>
                     </div>
 
+                    <div class="col-12">
+                        <label class="form-label fw-semibold" for="stream_url">
+                            <i class="bi bi-play-circle me-1 text-danger"></i>
+                            Link Live Streaming / Arsip Video
+                        </label>
+                        <input type="url" class="form-control" id="stream_url" name="stream_url"
+                            value="<?= esc($meeting['stream_url'] ?? '') ?>"
+                            placeholder="https://youtube.com/live/... atau link streaming lainnya" />
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Opsional. Jika diisi, tombol "Tonton" akan muncul di portal publik.
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -98,7 +112,52 @@
         <div class="col-lg-4">
             <div class="form-card">
 
-                <div class="form-section-title">Target Peserta &amp; WA</div>
+                <div class="form-section-title">Klasifikasi & Visibilitas</div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Jenis Rapat</label>
+                    <div class="form-text mb-2">Apakah rapat ini terencana dalam SK Bamus atau mendadak?</div>
+                    <?php $jenis = $meeting['jenis'] ?? 'insidental'; ?>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="jenis"
+                            id="jenis-bamus" value="bamus"
+                            <?= $jenis === 'bamus' ? 'checked' : '' ?> />
+                        <label class="form-check-label" for="jenis-bamus">
+                            <span class="badge bg-purple-subtle text-purple">Bamus</span>
+                            Terencana dalam SK Bamus
+                        </label>
+                    </div>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="radio" name="jenis"
+                            id="jenis-insidental" value="insidental"
+                            <?= $jenis === 'insidental' ? 'checked' : '' ?> />
+                        <label class="form-check-label" for="jenis-insidental">
+                            <span class="badge bg-secondary-subtle text-secondary">Insidental</span>
+                            Rapat mendadak / di luar SK
+                        </label>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Visibilitas Publik</label>
+                    <div class="form-text mb-2">
+                        Apakah jadwal ini boleh ditampilkan di layar TV lobby dan portal publik?
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                            id="is_publik" name="is_publik" value="1"
+                            <?= ($meeting['is_publik'] ?? 0) ? 'checked' : '' ?> />
+                        <label class="form-check-label" for="is_publik">
+                            <span id="publik-label"><?= ($meeting['is_publik'] ?? 0) ? 'Tampil di Publik' : 'Hanya Internal' ?></span>
+                        </label>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="form-section-title">Target Peserta & WA</div>
 
                 <!-- Pilih komisi yang akan dinotifikasi -->
                 <div class="mb-3">

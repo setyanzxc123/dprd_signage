@@ -19,7 +19,7 @@ class InitialDataSeeder extends Seeder
             ['key_name' => 'bmkg_adm4',          'value' => '72.71.04.1001'],
         ]);
 
-        // ── User admin pertama (password: admin123) ────────────────────
+        // ── User admin pertama (password: admin) ────────────────────
         $this->db->table('users')->insert([
             'name'       => 'Administrator',
             'email'      => 'admin@gmail.com',

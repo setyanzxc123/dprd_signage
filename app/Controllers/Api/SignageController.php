@@ -26,10 +26,12 @@ class SignageController extends BaseController
                 j.komisi_target,
                 j.status,
                 j.materi_url,
+                j.stream_url,
                 r.name AS nama_ruangan
             ')
             ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
             ->where('j.tanggal', $today)
+            ->where('j.is_publik', 1)
             ->orderBy('j.waktu_mulai', 'ASC')
             ->get()
             ->getResultArray();

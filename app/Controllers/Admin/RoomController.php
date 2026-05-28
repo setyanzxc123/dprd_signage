@@ -20,9 +20,10 @@ class RoomController extends BaseController
     public function create(): string
     {
         return view('admin/ruangan/form', [
-            'pageTitle'  => 'Tambah Ruangan',
-            'room'       => null,
-            'action_url' => base_url('admin/ruangan/store'),
+            'pageTitle'   => 'Tambah Ruangan',
+            'room'        => null,
+            'action_url'  => base_url('admin/ruangan/store'),
+            'lantai_opts' => [1, 2],
         ]);
     }
 
@@ -52,9 +53,10 @@ class RoomController extends BaseController
         }
 
         return view('admin/ruangan/form', [
-            'pageTitle'  => 'Edit Ruangan',
-            'room'       => $room,
-            'action_url' => base_url("admin/ruangan/{$id}/update"),
+            'pageTitle'   => 'Edit Ruangan',
+            'room'        => $room,
+            'action_url'  => base_url("admin/ruangan/{$id}/update"),
+            'lantai_opts' => [1, 2, 3, 4, 5],
         ]);
     }
 

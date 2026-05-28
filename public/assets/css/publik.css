@@ -1,0 +1,189 @@
+/* ═══════════════════════════════════════════════════════════
+   publik.css — Portal Publik DPRD (Mobile-First)
+   ═══════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --pk-bg:        #0f172a;
+    --pk-surface:   #1e293b;
+    --pk-border:    #334155;
+    --pk-text:      #f1f5f9;
+    --pk-muted:     #94a3b8;
+    --pk-primary:   #38bdf8;
+    --pk-green:     #22c55e;
+    --pk-yellow:    #f59e0b;
+    --pk-red:       #ef4444;
+    --pk-gray:      #64748b;
+    --pk-radius:    14px;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--pk-bg);
+    color: var(--pk-text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+}
+
+/* ── Header ── */
+.pk-header {
+    background: var(--pk-surface);
+    border-bottom: 1px solid var(--pk-border);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.pk-header-inner { display: flex; align-items: center; gap: .75rem; }
+.pk-logo { width: 40px; height: 40px; object-fit: contain; border-radius: 8px; }
+.pk-instansi { font-size: .7rem; color: var(--pk-muted); text-transform: uppercase; letter-spacing: .05em; }
+.pk-provinsi { font-size: .95rem; font-weight: 700; color: var(--pk-primary); }
+.pk-live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--pk-green);
+    animation: livepulse 2s ease-in-out infinite;
+}
+@keyframes livepulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: .5; transform: scale(1.4); }
+}
+
+/* ── Date Nav ── */
+.pk-date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem .5rem;
+    gap: .5rem;
+}
+.pk-nav-btn {
+    background: var(--pk-surface);
+    border: 1px solid var(--pk-border);
+    color: var(--pk-text);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+}
+.pk-nav-btn:hover { background: var(--pk-border); }
+.pk-date-center { text-align: center; flex: 1; }
+.pk-date-day  { font-size: .7rem; font-weight: 600; color: var(--pk-primary); letter-spacing: .08em; }
+.pk-date-full { font-size: 1rem; font-weight: 700; }
+
+/* ── Summary ── */
+.pk-summary {
+    padding: .25rem 1.25rem .75rem;
+    font-size: .8rem;
+    color: var(--pk-muted);
+}
+.pk-refresh-time { opacity: .7; }
+
+/* ── List ── */
+.pk-list { padding: 0 1rem; display: flex; flex-direction: column; gap: .75rem; }
+
+/* Skeleton loader */
+.pk-skeleton {
+    height: 100px;
+    border-radius: var(--pk-radius);
+    background: linear-gradient(90deg, var(--pk-surface) 25%, var(--pk-border) 50%, var(--pk-surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Empty state */
+.pk-empty { text-align: center; padding: 3rem 1rem; color: var(--pk-muted); }
+.pk-empty-icon { font-size: 3rem; margin-bottom: .75rem; }
+.pk-empty p { font-size: .9rem; line-height: 1.5; }
+
+/* ── Card ── */
+.pk-card {
+    background: var(--pk-surface);
+    border: 1px solid var(--pk-border);
+    border-radius: var(--pk-radius);
+    overflow: hidden;
+    transition: transform .15s, box-shadow .15s;
+}
+.pk-card:active { transform: scale(.98); }
+
+/* Status border kiri */
+.pk-card.status-berlangsung { border-left: 4px solid var(--pk-green); }
+.pk-card.status-persiapan   { border-left: 4px solid var(--pk-yellow); }
+.pk-card.status-menunggu    { border-left: 4px solid var(--pk-gray); }
+.pk-card.status-selesai     { border-left: 4px solid #334155; opacity: .7; }
+
+.pk-card-status {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .875rem .25rem;
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--pk-muted);
+}
+.pk-status-dot {
+    width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+    background: var(--pk-gray);
+}
+.status-berlangsung .pk-status-dot { background: var(--pk-green); }
+.status-persiapan   .pk-status-dot { background: var(--pk-yellow); }
+.status-berlangsung .pk-status-label { color: var(--pk-green); }
+.status-persiapan   .pk-status-label { color: var(--pk-yellow); }
+
+.pk-status-dot.pulse {
+    animation: dotpulse 1.2s ease-in-out infinite;
+    box-shadow: 0 0 0 0 rgba(34,197,94,.5);
+}
+@keyframes dotpulse {
+    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
+    70%  { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+
+.pk-card-body { padding: .25rem .875rem .75rem; }
+.pk-card-title { font-size: .95rem; font-weight: 600; line-height: 1.35; margin-bottom: .5rem; }
+.pk-card-meta  { display: flex; flex-wrap: wrap; gap: .4rem .75rem; margin-bottom: .4rem; }
+.pk-meta-item  { display: flex; align-items: center; gap: .3rem; font-size: .75rem; color: var(--pk-muted); }
+.pk-card-keterangan { font-size: .78rem; color: var(--pk-muted); line-height: 1.4; margin-top: .25rem; }
+
+/* ── Tombol Nonton ── */
+.pk-watch-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    margin: 0 .875rem .875rem;
+    padding: .6rem;
+    background: rgba(239,68,68,.12);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: 8px;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, color .2s;
+}
+.pk-watch-btn:hover {
+    background: rgba(239,68,68,.22);
+    color: #fca5a5;
+}
+
+/* ── Footer ── */
+.pk-footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: .72rem;
+    color: var(--pk-muted);
+    padding: 0 1rem;
+    line-height: 1.8;
+}
