@@ -63,4 +63,109 @@ class SignageController extends BaseController
                 'jadwal' => $jadwal,
             ]);
     }
+
+    /**
+     * GET api/signage/cuaca
+     * Mengembalikan prakiraan cuaca BMKG untuk waktu saat ini.
+     * Response di-cache ke file selama 30 menit agar tidak melebihi limit API BMKG.
+     * Wajib: tampilkan atribusi "Sumber: BMKG" di UI.
+     */
+    public function cuaca()
+    {
+        $cacheFile = WRITEPATH . 'cache/bmkg_cuaca.json';
+        $cacheTTL  = 1800; // 30 menit
+
+        // Cek cache — gunakan jika masih segar
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTTL) {
+            $cached = json_decode(file_get_contents($cacheFile), true);
+            if ($cached) {
+                $cached['from_cache'] = true;
+                return $this->response
+                    ->setHeader('Cache-Control', 'no-store')
+                    ->setJSON($cached);
+            }
+        }
+
+        // Ambil kode wilayah dari .env (prioritas) atau database settings (fallback)
+        $settingModel = new \App\Models\SettingModel();
+        $adm4 = env('BMKG_ADM4') ?: ($settingModel->getValue('bmkg_adm4') ?: '72.71.01.1004');
+
+        $url  = 'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=' . urlencode($adm4);
+        $body = @file_get_contents($url);
+
+        if ($body === false) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Gagal mengambil data BMKG.',
+            ]);
+        }
+
+        $data = json_decode($body, true);
+        if (!$data) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Respons BMKG bukan JSON valid.',
+            ]);
+        }
+
+        // Flatten semua slot prakiraan dari 3 hari
+        $lokasi      = $data['lokasi'] ?? [];
+        $allForecast = [];
+        foreach ($data['data'][0]['cuaca'] ?? [] as $harian) {
+            foreach ($harian as $slot) {
+                $allForecast[] = $slot;
+            }
+        }
+
+        // Cari slot prakiraan yang paling dekat dengan waktu lokal sekarang
+        $nowTs   = time();
+        $current = null;
+        $minDiff = PHP_INT_MAX;
+        foreach ($allForecast as $slot) {
+            $slotTs = strtotime($slot['local_datetime'] ?? '');
+            if (!$slotTs) continue;
+            $diff = abs($nowTs - $slotTs);
+            if ($diff < $minDiff) { $minDiff = $diff; $current = $slot; }
+        }
+
+        if (!$current) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Tidak ada slot prakiraan tersedia.',
+            ]);
+        }
+
+        $result = [
+            'status'  => 'success',
+            'lokasi'  => [
+                'desa'      => $lokasi['desa']      ?? '-',
+                'kecamatan' => $lokasi['kecamatan'] ?? '-',
+                'kotkab'    => $lokasi['kotkab']    ?? '-',
+                'provinsi'  => $lokasi['provinsi']  ?? '-',
+            ],
+            'cuaca' => [
+                'suhu'          => ($current['t']    ?? '-') . '°C',
+                'suhu_raw'      => $current['t']     ?? null,
+                'kondisi'       => $current['weather_desc']    ?? '-',
+                'kondisi_en'    => $current['weather_desc_en'] ?? '-',
+                'kelembapan'    => ($current['hu']   ?? '-') . '%',
+                'kec_angin'     => ($current['ws']   ?? '-') . ' km/j',
+                'arah_angin'    => $current['wd']    ?? '-',
+                'jarak_pandang' => $current['vs_text'] ?? '-',
+                'icon_url'      => !empty($current['image'])
+                    ? str_replace(' ', '%20', $current['image']) : '',
+                'waktu_lokal'   => $current['local_datetime'] ?? '',
+            ],
+            'cached_at'   => date('Y-m-d H:i:s'),
+            'from_cache'  => false,
+            'attribution' => 'Sumber: BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)',
+        ];
+
+        // Simpan ke cache
+        @file_put_contents($cacheFile, json_encode($result));
+
+        return $this->response
+            ->setHeader('Cache-Control', 'no-store')
+            ->setJSON($result);
+    }
 }

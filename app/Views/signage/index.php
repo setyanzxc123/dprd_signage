@@ -31,10 +31,24 @@
 
             <div class="header-meta">
                 <div class="weather-widget">
-                    <span class="weather-icon">{{ cuaca.ikon }}</span>
-                    <div>
-                        <div class="weather-temp">{{ cuaca.suhu }}</div>
+                    <div class="weather-left-block">
+                        <div class="weather-top-row">
+                            <img v-if="cuaca.icon_url" :src="cuaca.icon_url" class="weather-img" alt="ikon cuaca" />
+                            <span v-else class="weather-icon">🌤️</span>
+                            <span class="weather-temp">{{ cuaca.suhu }}</span>
+                        </div>
                         <div class="weather-cond">{{ cuaca.kondisi }}</div>
+                    </div>
+                    
+                    <div class="weather-details">
+                        <div class="weather-details-row">
+                            <span class="weather-loc" v-if="cuaca.desa">📍 {{ cuaca.desa }}, {{ cuaca.kecamatan }}</span>
+                        </div>
+                        <div class="weather-details-row">
+                            <span class="weather-hum">💧 {{ cuaca.kelembapan }} &nbsp;&nbsp;💨 {{ cuaca.kec_angin }}</span>
+                            <span class="weather-separator">·</span>
+                            <span class="weather-src">Sumber: BMKG</span>
+                        </div>
                     </div>
                 </div>
                 <div class="header-divider"></div>
@@ -117,9 +131,13 @@
                 });
 
                 const cuaca = ref({
-                    suhu: '28°C',
-                    kondisi: 'Cerah Berawan',
-                    ikon: '⛅',
+                    suhu: '--°C',
+                    kondisi: 'Memuat...',
+                    kelembapan: '--%',
+                    kec_angin: '-- km/j',
+                    icon_url: '',
+                    desa: '',
+                    kecamatan: '',
                 });
 
                 const qrTarget = ref('');
@@ -186,6 +204,25 @@
                         .catch(err => console.error('[Signage] Gagal ambil data jadwal:', err));
                 }
 
+                function loadCuaca() {
+                    fetch('<?= base_url('api/signage/cuaca') ?>')
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status === 'success' && data.cuaca) {
+                                cuaca.value = {
+                                    suhu:       data.cuaca.suhu,
+                                    kondisi:    data.cuaca.kondisi,
+                                    kelembapan: data.cuaca.kelembapan,
+                                    kec_angin:  data.cuaca.kec_angin,
+                                    icon_url:   data.cuaca.icon_url,
+                                    desa:       data.lokasi?.desa || '',
+                                    kecamatan:  data.lokasi?.kecamatan || '',
+                                };
+                            }
+                        })
+                        .catch(err => console.error('[Signage] Gagal ambil cuaca BMKG:', err));
+                }
+
                 let dataTimer = null;
 
                 onMounted(() => {
@@ -193,7 +230,10 @@
                     clockTimer = setInterval(updateClock, 1000);
 
                     loadData();
+                    loadCuaca();
                     dataTimer = setInterval(loadData, 60000);
+                    // Cuaca refresh setiap 15 menit (cache BMKG 30 menit)
+                    setInterval(loadCuaca, 900000);
                 });
 
                 onUnmounted(() => {

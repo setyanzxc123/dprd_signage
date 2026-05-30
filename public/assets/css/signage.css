@@ -85,7 +85,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.6vh 2.5vw;
+    padding: 0.8vh 2.5vw;
     background: var(--sg-header-grad);
     border-bottom: 1px solid var(--sg-header-border);
     flex-shrink: 0;
@@ -410,27 +410,91 @@ body {
 .weather-widget {
     display: flex;
     align-items: center;
-    gap: 0.5vw;
-    margin-top: 0.6vh;
+    gap: 0.8vw;
     background: var(--sg-weather-bg);
     border: 1px solid var(--sg-weather-bdr);
     border-radius: 8px;
-    padding: 0.4vh 0.8vw;
+    padding: 0.8vh 1.2vw;
+    min-height: unset;
     transition: background 0.5s ease;
 }
 
-.weather-icon { font-size: 1.3vw; line-height: 1; }
+.weather-icon { font-size: 1.8vw; line-height: 1; }
+
+.weather-img {
+    width: clamp(32px, 2.6vw, 48px);
+    height: clamp(32px, 2.6vw, 48px);
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px rgba(255,255,255,0.2));
+}
+
+.weather-left-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    padding-right: 0.8vw;
+    margin-right: 0.2vw;
+}
+
+.weather-top-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4vw;
+}
 
 .weather-temp {
-    font-size: 0.95vw;
-    font-weight: 700;
+    font-size: 1.8vw;
+    font-weight: 800;
     color: #fff;
-    line-height: 1.1;
+    line-height: 1;
+}
+
+.weather-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3vh;
+    justify-content: center;
+}
+
+.weather-details-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4vw;
+    line-height: 1.25;
 }
 
 .weather-cond {
-    font-size: 0.6vw;
+    font-size: 0.9vw;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    margin-top: 0.4vh;
+    text-align: center;
+}
+
+.weather-loc {
+    font-size: 1.0vw;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+}
+
+.weather-hum {
+    font-size: 0.8vw;
     color: rgba(255, 255, 255, 0.6);
+}
+
+.weather-src {
+    font-size: 0.7vw;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.3px;
+    font-style: italic;
+}
+
+.weather-separator {
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+    font-size: 0.9vw;
 }
 
 .qr-panel {

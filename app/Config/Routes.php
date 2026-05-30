@@ -73,3 +73,5 @@ $routes->group('api/v1/publik', function ($routes) {
 
 // ── API Signage (backward compatible) ────────────────────────────────
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
+$routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
+

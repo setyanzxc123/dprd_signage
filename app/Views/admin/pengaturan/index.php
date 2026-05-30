@@ -183,6 +183,42 @@
 
     </div>
 
+    <!-- Seksi BMKG -->
+    <div class="form-card mt-3 mb-3">
+        <div class="form-section-title">🌤️ Integrasi Cuaca BMKG</div>
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <label class="form-label fw-semibold" for="bmkg_adm4">
+                    Kode Wilayah (ADM4 — Kelurahan/Desa)
+                </label>
+                <input type="text" class="form-control font-monospace" id="bmkg_adm4" name="bmkg_adm4"
+                    value="<?= esc($settings['bmkg_adm4'] ?? '72.71.01.1004') ?>"
+                    placeholder="Contoh: 72.71.01.1004"
+                    pattern="\d{2}\.\d{2}\.\d{2}\.\d{4}"
+                    <?= env('BMKG_ADM4') ? 'readonly' : '' ?> />
+                <?php if (env('BMKG_ADM4')): ?>
+                    <div class="text-success mt-1" style="font-size: 0.8rem;">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Terkunci via file <code>.env</code> (<code>BMKG_ADM4</code>).
+                    </div>
+                <?php endif; ?>
+                <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Format: <code>PP.KK.KC.LLLL</code> (Provinsi.Kab-Kota.Kecamatan.Kelurahan).<br/>
+                    Kode saat ini merujuk ke: <strong id="bmkg-resolved-location">Memuat lokasi...</strong>.<br/>
+                    Data diperbarui BMKG 2x sehari. Sistem men-cache respons selama <strong>30 menit</strong>.
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="alert alert-info py-2 px-3" style="font-size:.8rem;">
+                    <i class="bi bi-cloud-sun me-1"></i>
+                    <strong>Wajib:</strong> Atribusi <em>Sumber: BMKG</em> ditampilkan otomatis
+                    di layar signage sesuai syarat penggunaan API BMKG.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-save me-1"></i>Simpan Perubahan Tampilan
@@ -281,5 +317,29 @@
         document.getElementById('mode-' + mode).classList.add('selected');
         document.getElementById('radio-' + mode).checked = true;
     }
+
+    // Dynamic fetch resolved BMKG location
+    document.addEventListener('DOMContentLoaded', function() {
+        const locationEl = document.getElementById('bmkg-resolved-location');
+        if (locationEl) {
+            fetch('<?= base_url('api/signage/cuaca') ?>')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success' && data.lokasi) {
+                        const lok = data.lokasi;
+                        const desa = lok.desa || '-';
+                        const kec = lok.kecamatan || '-';
+                        const kab = lok.kotkab || '-';
+                        locationEl.innerHTML = `<strong>${desa}, ${kec}, ${kab}</strong>`;
+                    } else {
+                        locationEl.innerHTML = '<span class="text-danger">Gagal mendeteksi lokasi. Pastikan kode ADM4 benar dan internet terhubung.</span>';
+                    }
+                })
+                .catch(err => {
+                    console.error('[Settings] Gagal memuat detail lokasi BMKG:', err);
+                    locationEl.innerHTML = '<span class="text-danger">Gagal memuat detail lokasi.</span>';
+                });
+        }
+    });
 </script>
 <?= $this->endSection() ?>

@@ -19,9 +19,13 @@ class SettingController extends BaseController
             'running_text_aktif' => '0',
             'media_mode'         => 'video',
             'media_file'         => '',
+            'bmkg_adm4'          => '72.71.01.1004',
         ];
 
         $settings = array_merge($defaults, $settings);
+        if (env('BMKG_ADM4')) {
+            $settings['bmkg_adm4'] = env('BMKG_ADM4');
+        }
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
 
         return view('admin/pengaturan/index', [
@@ -39,6 +43,11 @@ class SettingController extends BaseController
         $settingModel->upsert('running_text_aktif', $this->request->getPost('running_text_aktif') ? '1' : '0');
         $settingModel->upsert('media_mode',         $this->request->getPost('media_mode') ?? 'video');
         $settingModel->upsert('tema_signage',       $this->request->getPost('tema_signage') ?? 'dark');
+        $settingModel->upsert('bmkg_adm4',          trim($this->request->getPost('bmkg_adm4') ?? '72.71.01.1004'));
+
+        // Hapus cache cuaca BMKG jika kode wilayah diubah
+        $cacheFile = WRITEPATH . 'cache/bmkg_cuaca.json';
+        if (file_exists($cacheFile)) { @unlink($cacheFile); }
 
         // Proses upload file media jika ada
         $file = $this->request->getFile('media_file');
