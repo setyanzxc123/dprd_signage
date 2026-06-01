@@ -6,19 +6,17 @@ $userInit  = strtoupper(substr($userName, 0, 1));
 $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 ?>
 
-<nav id="sidebar">
+<nav id="sidebar" aria-label="Navigasi utama">
 
     <div class="sidebar-brand">
-        <div class="d-flex align-items-center gap-2">
-            <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD" class="brand-logo-img" />
-            <div>
-                <div class="brand-title">Panel Admin</div>
-                <div class="brand-sub">Signage DPRD Sulteng</div>
-            </div>
+        <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD" class="brand-logo-img" />
+        <div>
+            <div class="brand-title">DPRD Signage</div>
+            <div class="brand-sub">Panel Admin</div>
         </div>
     </div>
 
-    <ul class="sidebar-nav list-unstyled mb-0">
+    <ul class="sidebar-nav">
 
         <li class="nav-section-label">Utama</li>
         <li class="nav-item-custom">
@@ -28,32 +26,19 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             </a>
         </li>
 
-        <hr class="sidebar-divider" />
-
         <li class="nav-section-label">Master Data</li>
         <li class="nav-item-custom">
-            <button class="nav-link-custom" onclick="toggleSubmenu('sub-master', this)">
-                <i class="bi bi-database-fill nav-icon"></i>
-                Master Data
-                <i class="bi bi-chevron-right nav-arrow"></i>
-            </button>
+            <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
+                <i class="bi bi-people-fill nav-icon"></i>
+                Anggota DPRD
+            </a>
         </li>
-        <ul class="nav-sub list-unstyled" id="sub-master">
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
-                    <i class="bi bi-people-fill nav-icon"></i>
-                    Anggota DPRD
-                </a>
-            </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
-                    <i class="bi bi-door-open-fill nav-icon"></i>
-                    Ruangan Rapat
-                </a>
-            </li>
-        </ul>
-
-        <hr class="sidebar-divider" />
+        <li class="nav-item-custom">
+            <a class="nav-link-custom" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
+                <i class="bi bi-door-open-fill nav-icon"></i>
+                Ruangan Rapat
+            </a>
+        </li>
 
         <li class="nav-section-label">Operasional</li>
         <li class="nav-item-custom">
@@ -71,8 +56,6 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             </a>
         </li>
 
-        <hr class="sidebar-divider" />
-
         <li class="nav-section-label">Sistem</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
@@ -88,5 +71,9 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         </li>
 
     </ul>
+
+    <div class="sidebar-note">
+        Sistem signage dan notifikasi DPRD Provinsi Sulawesi Tengah. Kelola jadwal rapat, kirim pengingat WhatsApp, dan atur tampilan layar TV.
+    </div>
 
 </nav>

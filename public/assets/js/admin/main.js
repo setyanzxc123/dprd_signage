@@ -1,34 +1,15 @@
+/* main.js — Open Design v2 Admin Shell */
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const wrapper = document.getElementById('main-wrapper');
     const overlay = document.getElementById('sidebar-overlay');
-    const isMobile = window.innerWidth <= 992;
-
-    if (isMobile) {
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('visible');
-    } else {
-        sidebar.classList.toggle('collapsed');
-        wrapper.classList.toggle('expanded');
-    }
+    sidebar.classList.toggle('mobile-open');
+    overlay.classList.toggle('visible');
 }
-
-
-function toggleSubmenu(subId, triggerEl) {
-    const sub = document.getElementById(subId);
-    const arrow = triggerEl.querySelector('.nav-arrow');
-
-    if (!sub) return;
-
-    sub.classList.toggle('open');
-    if (arrow) arrow.classList.toggle('rotated');
-}
-
 
 function updateClock() {
     const el = document.getElementById('topbar-clock');
     if (!el) return;
-
     const formatter = new Intl.DateTimeFormat('id-ID', {
         hour: '2-digit',
         minute: '2-digit',
@@ -36,15 +17,12 @@ function updateClock() {
         hour12: false,
         timeZone: 'Asia/Makassar'
     });
-
     el.textContent = formatter.format(new Date()) + ' WITA';
 }
-
 
 function updatePageDate() {
     const el = document.getElementById('page-date');
     if (!el) return;
-
     const formatter = new Intl.DateTimeFormat('id-ID', {
         weekday: 'long',
         day: 'numeric',
@@ -52,24 +30,22 @@ function updatePageDate() {
         year: 'numeric',
         timeZone: 'Asia/Makassar'
     });
-
     el.textContent = formatter.format(new Date());
 }
-
 
 function setActiveNav() {
     const currentPath = window.location.pathname;
 
+    // Sidebar nav
     document.querySelectorAll('.nav-link-custom[data-path]').forEach(function (link) {
         const linkPath = link.getAttribute('data-path');
-
         if (currentPath.startsWith(linkPath)) {
             link.classList.add('active');
 
+            // If inside submenu, open it
             const parentSub = link.closest('.nav-sub');
             if (parentSub) {
                 parentSub.classList.add('open');
-
                 const triggerBtn = parentSub.previousElementSibling;
                 if (triggerBtn) {
                     const arrow = triggerBtn.querySelector('.nav-arrow');
@@ -78,8 +54,15 @@ function setActiveNav() {
             }
         }
     });
-}
 
+    // Mobile bottom nav
+    document.querySelectorAll('.mobile-nav a[data-path]').forEach(function (link) {
+        const linkPath = link.getAttribute('data-path');
+        if (currentPath.startsWith(linkPath)) {
+            link.classList.add('active');
+        }
+    });
+}
 
 function initFlashMessages() {
     document.querySelectorAll('.alert-flash').forEach(function (alert) {
@@ -91,17 +74,23 @@ function initFlashMessages() {
     });
 }
 
-
 function initOverlayClose() {
     const overlay = document.getElementById('sidebar-overlay');
     if (!overlay) return;
-
     overlay.addEventListener('click', function () {
         document.getElementById('sidebar').classList.remove('mobile-open');
         overlay.classList.remove('visible');
     });
 }
 
+// Submenu toggle (if any page still uses it)
+function toggleSubmenu(subId, triggerEl) {
+    const sub = document.getElementById(subId);
+    const arrow = triggerEl.querySelector('.nav-arrow');
+    if (!sub) return;
+    sub.classList.toggle('open');
+    if (arrow) arrow.classList.toggle('rotated');
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     updateClock();

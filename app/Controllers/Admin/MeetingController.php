@@ -16,36 +16,48 @@ class MeetingController extends BaseController
 
     public function index(): string
     {
-        $filterDate = $this->request->getGet('date') ?? date('Y-m-d');
+        $tahun    = (int) ($this->request->getGet('tahun')    ?? date('Y'));
+        $semester = (int) ($this->request->getGet('semester') ?? (date('n') <= 6 ? 1 : 2));
 
-        $db      = \Config\Database::connect();
-        $jadwals = $db->table('jadwal j')
-            ->select('j.id, j.judul, j.keterangan, j.tanggal,
-                      j.waktu_mulai, j.waktu_selesai, j.komisi_target, j.status,
+        $db   = \Config\Database::connect();
+        $rows = $db->table('jadwal j')
+            ->select('j.id, j.judul, j.keterangan, j.tanggal, j.waktu_mulai, j.waktu_selesai,
+                      j.komisi_target, j.status, j.jenis, j.is_publik, j.stream_url,
                       r.name AS nama_ruangan')
             ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
-            ->where('j.tanggal', $filterDate)
+            ->where("YEAR(j.tanggal)", $tahun)
+            ->orderBy('j.tanggal', 'ASC')
             ->orderBy('j.waktu_mulai', 'ASC')
             ->get()->getResultArray();
 
-        $meetings = [];
-        foreach ($jadwals as $j) {
-            $meetings[] = [
-                'id'            => $j['id'],
-                'judul'         => $j['judul'],
-                'keterangan'    => $j['keterangan'] ?? '',
-                'waktu_mulai'   => substr($j['waktu_mulai'], 0, 5),
-                'waktu_selesai' => substr($j['waktu_selesai'], 0, 5),
-                'ruangan'       => $j['nama_ruangan'] ?? '-',
-                'komisi_target' => $j['komisi_target'] ?? '-',
-                'status'        => $j['status'],
+        // Format untuk JavaScript (kalender Open Design)
+        $jadwalJs = [];
+        foreach ($rows as $r) {
+            $jadwalJs[] = [
+                'id'          => (int) $r['id'],
+                'title'       => $r['judul'],
+                'description' => $r['keterangan'] ?? '',
+                'date'        => $r['tanggal'],
+                'start'       => substr($r['waktu_mulai'],  0, 5),
+                'end'         => substr($r['waktu_selesai'], 0, 5),
+                'room'        => $r['nama_ruangan'] ?? '-',
+                'group'       => implode(', ', json_decode($r['komisi_target'] ?? '[]', true)),
+                'status'      => $r['status'],
+                'jenis'       => $r['jenis'],
+                'public'      => (bool)(int)$r['is_publik'],
+                'stream'      => !empty($r['stream_url']),
+                'stream_url'  => $r['stream_url'] ?? '',
+                'edit_url'    => base_url("admin/jadwal/{$r['id']}/edit"),
+                'delete_url'  => base_url("admin/jadwal/{$r['id']}/delete"),
             ];
         }
 
         return view('admin/jadwal/index', [
-            'pageTitle'   => 'Jadwal Rapat',
-            'filter_date' => $filterDate,
-            'meetings'    => $meetings,
+            'pageTitle'  => 'Jadwal Rapat — ' . $tahun,
+            'tahun'      => $tahun,
+            'semester'   => $semester,
+            'jadwalJson' => json_encode($jadwalJs, JSON_UNESCAPED_UNICODE),
+            'totalRapat' => count($rows),
         ]);
     }
 
