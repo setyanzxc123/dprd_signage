@@ -52,8 +52,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
     $routes->post('jadwal/(:num)/toggle-publik', 'Admin\MeetingController::togglePublik/$1');
 
-    // Bamus — Jadwal Semesteran (view-only)
-    $routes->get('bamus', 'Admin\BamusController::index');
 
     // Notifikasi WA
     $routes->get( 'notifikasi',                  'Admin\NotificationController::index');

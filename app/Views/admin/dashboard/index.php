@@ -56,9 +56,9 @@
            class="btn btn-sm btn-outline-primary btn-header-sm ms-auto">
             <i class="bi bi-plus-lg me-1"></i>Tambah Jadwal
         </a>
-        <a href="<?= base_url('admin/bamus') ?>"
+        <a href="<?= base_url('admin/jadwal') ?>"
            class="btn btn-sm btn-outline-secondary btn-header-sm">
-            <i class="bi bi-calendar3-week me-1"></i>Jadwal Bamus
+            <i class="bi bi-calendar3-week me-1"></i>Kalender Semester
         </a>
     </div>
 

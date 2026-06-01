@@ -27,35 +27,63 @@
 
     <div id="sidebar-overlay"></div>
 
-    <?= $this->include('admin/layouts/_sidebar') ?>
+    <div class="od-shell">
 
-    <div id="main-wrapper">
+        <?= $this->include('admin/layouts/_sidebar') ?>
 
-        <?= $this->include('admin/layouts/_topbar') ?>
+        <div id="main-wrapper">
 
-        <main id="content">
+            <?= $this->include('admin/layouts/_topbar') ?>
 
-            <?php if (session()->getFlashdata('success')): ?>
-                <div class="alert alert-success alert-dismissible alert-flash mb-4" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                    <?= session()->getFlashdata('success') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
+            <main id="content">
 
-            <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger alert-dismissible alert-flash mb-4" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <?= session()->getFlashdata('error') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
+                <?php if (session()->getFlashdata('success')): ?>
+                    <div class="alert alert-success alert-dismissible alert-flash mb-4" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <?= session()->getFlashdata('success') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
 
-            <?= $this->renderSection('content') ?>
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger alert-dismissible alert-flash mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <?= session()->getFlashdata('error') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
 
-        </main>
+                <?= $this->renderSection('content') ?>
+
+            </main>
+
+        </div>
 
     </div>
+
+    <!-- Mobile bottom nav -->
+    <nav class="mobile-nav" aria-label="Navigasi mobile">
+        <a href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
+            <i class="bi bi-grid-1x2-fill"></i>
+            Home
+        </a>
+        <a href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
+            <i class="bi bi-calendar3-week-fill"></i>
+            Jadwal
+        </a>
+        <a href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
+            <i class="bi bi-whatsapp"></i>
+            Notifikasi
+        </a>
+        <a href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
+            <i class="bi bi-tv-fill"></i>
+            Signage
+        </a>
+        <a href="<?= base_url('admin/logout') ?>" onclick="return confirm('Yakin ingin keluar?')">
+            <i class="bi bi-box-arrow-right"></i>
+            Keluar
+        </a>
+    </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
