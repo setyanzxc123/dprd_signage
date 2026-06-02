@@ -7,6 +7,10 @@
     min-height: 100vh;
     display: grid;
     grid-template-columns: var(--od-sidebar-w) minmax(0, 1fr);
+    transition: grid-template-columns var(--od-motion-base) var(--od-ease);
+}
+body.sidebar-collapsed .od-shell {
+    grid-template-columns: 88px minmax(0, 1fr);
 }
 
 /* ══ SIDEBAR ════════════════════════════════════════════════════ */
@@ -23,6 +27,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     z-index: 100;
+    transition: padding var(--od-motion-base) var(--od-ease);
 }
 #sidebar::-webkit-scrollbar { width: 4px; }
 #sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -363,4 +368,139 @@
 #sidebar-overlay.visible {
     display: block;
     opacity: 1;
+}
+
+/* ══ COLLAPSIBLE SIDEBAR ════════════════════════════════════════ */
+.sidebar-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px;
+    gap: var(--od-space-3);
+    align-items: center;
+    width: 100%;
+}
+.sidebar-toggle {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-radius-md);
+    background: var(--od-surface);
+    color: var(--od-fg2);
+    box-shadow: var(--od-ring);
+    transition: background var(--od-motion-fast) var(--od-ease),
+                color var(--od-motion-fast) var(--od-ease),
+                transform var(--od-motion-fast) var(--od-ease);
+}
+.sidebar-toggle:hover {
+    background: color-mix(in oklab, var(--od-surface-warm), transparent 24%);
+    color: var(--od-fg);
+}
+.sidebar-toggle:focus-visible {
+    outline: none;
+    box-shadow: var(--od-focus);
+}
+.sidebar-toggle svg {
+    transition: transform var(--od-motion-base) var(--od-ease);
+    width: 18px;
+    height: 18px;
+}
+
+.brand-copy,
+.nav-text,
+.nav-section-label,
+.sidebar-note {
+    transition: opacity var(--od-motion-fast) var(--od-ease), transform var(--od-motion-fast) var(--od-ease);
+}
+
+body.sidebar-collapsed #sidebar {
+    padding: var(--od-space-4) var(--od-space-3);
+    align-items: center;
+}
+body.sidebar-collapsed .sidebar-top {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: var(--od-space-2);
+}
+body.sidebar-collapsed .sidebar-brand {
+    grid-template-columns: 44px;
+    justify-content: center;
+}
+body.sidebar-collapsed .brand-copy,
+body.sidebar-collapsed .nav-text,
+body.sidebar-collapsed .nav-section-label,
+body.sidebar-collapsed .sidebar-note,
+body.sidebar-collapsed .nav-badge {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transform: translateX(-4px);
+}
+body.sidebar-collapsed .sidebar-nav {
+    width: 100%;
+    justify-items: center;
+}
+body.sidebar-collapsed .nav-item-custom {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+body.sidebar-collapsed .nav-link-custom {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    padding: 0;
+}
+body.sidebar-collapsed .sidebar-toggle svg {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 1180px) {
+    /* Disable layout collapse and toggle button on mobile screens */
+    .sidebar-toggle {
+        display: none !important;
+    }
+    .sidebar-top {
+        grid-template-columns: 1fr;
+    }
+    body.sidebar-collapsed .od-shell {
+        grid-template-columns: 1fr;
+    }
+    body.sidebar-collapsed #sidebar {
+        padding: var(--od-space-5);
+        align-items: stretch;
+    }
+    body.sidebar-collapsed .sidebar-brand {
+        grid-template-columns: 44px 1fr;
+        justify-content: start;
+    }
+    body.sidebar-collapsed .brand-copy,
+    body.sidebar-collapsed .nav-text,
+    body.sidebar-collapsed .nav-section-label,
+    body.sidebar-collapsed .sidebar-note {
+        width: auto;
+        height: auto;
+        opacity: 1;
+        overflow: visible;
+        pointer-events: auto;
+        transform: none;
+    }
+    body.sidebar-collapsed .sidebar-nav {
+        width: auto;
+        justify-items: start;
+    }
+    body.sidebar-collapsed .nav-item-custom {
+        width: auto;
+        display: block;
+    }
+    body.sidebar-collapsed .nav-link-custom {
+        width: 100%;
+        height: auto;
+        justify-content: start;
+        padding: var(--od-space-2) var(--od-space-3);
+    }
 }
