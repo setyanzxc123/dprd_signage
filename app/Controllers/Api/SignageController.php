@@ -2,7 +2,9 @@
 
 namespace App\Controllers\Api;
 
+use App\Commands\SendWaNotifications;
 use App\Controllers\BaseController;
+use App\Models\SettingModel;
 
 class SignageController extends BaseController
 {
@@ -12,6 +14,12 @@ class SignageController extends BaseController
      */
     public function jadwal()
     {
+        // ── Pseudo Cron: trigger cek notifikasi WA ───────────────────────
+        // Layar signage sudah polling endpoint ini setiap 1 menit.
+        // Manfaatkan request yang ada sebagai scheduler notifikasi.
+        $this->_triggerWaNotifications();
+        // ────────────────────────────────────────────────────────────────
+
         $db    = \Config\Database::connect();
         $today = date('Y-m-d');
 
@@ -62,6 +70,24 @@ class SignageController extends BaseController
                 'date'   => $today,
                 'jadwal' => $jadwal,
             ]);
+    }
+
+    /**
+     * Pseudo Cron — trigger pengiriman notifikasi WA pending.
+     * Dipanggil setiap kali layar signage polling jadwal (interval 1 menit).
+     * Hanya aktif jika wa_notif_aktif = 1 di settings.
+     */
+    private function _triggerWaNotifications(): void
+    {
+        $settingModel = new SettingModel();
+        $aktif        = $settingModel->getValue('wa_notif_aktif', '0');
+
+        if ($aktif !== '1') {
+            return;
+        }
+
+        $command = new SendWaNotifications();
+        $command->run([]);
     }
 
     /**

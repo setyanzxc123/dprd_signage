@@ -73,3 +73,7 @@ $routes->group('api/v1/publik', function ($routes) {
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
 $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
 
+// ── Cron HTTP trigger — dilindungi CRON_SECRET_TOKEN di .env ─────────
+// Gunakan untuk: cron-job.org, cPanel, atau VPS tanpa akses Spark CLI
+// Contoh: GET /cron/wa-notif?token=your_secret_token
+$routes->get('cron/wa-notif', 'CronController::sendWaNotifications');
