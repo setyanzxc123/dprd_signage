@@ -1,5 +1,16 @@
 /* main.js — Open Design v2 Admin Shell */
 
+function setSidebarCollapsed(isCollapsed) {
+    document.body.classList.toggle("sidebar-collapsed", isCollapsed);
+    const toggleBtn = document.getElementById("sidebarToggle");
+    if (toggleBtn) {
+        toggleBtn.setAttribute("aria-expanded", String(!isCollapsed));
+        toggleBtn.setAttribute("aria-label", isCollapsed ? "Buka sidebar" : "Ciutkan sidebar");
+        toggleBtn.setAttribute("title", isCollapsed ? "Buka sidebar" : "Ciutkan sidebar");
+    }
+    localStorage.setItem("dprd-sidebar-collapsed", isCollapsed ? "collapsed" : "expanded");
+}
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
@@ -93,6 +104,14 @@ function toggleSubmenu(subId, triggerEl) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById("sidebarToggle");
+    if (toggleBtn) {
+        setSidebarCollapsed(localStorage.getItem("dprd-sidebar-collapsed") === "collapsed");
+        toggleBtn.addEventListener("click", function () {
+            setSidebarCollapsed(!document.body.classList.contains("sidebar-collapsed"));
+        });
+    }
+
     updateClock();
     setInterval(updateClock, 1000);
     updatePageDate();
