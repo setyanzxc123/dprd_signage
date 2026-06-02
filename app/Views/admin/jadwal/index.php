@@ -12,26 +12,48 @@
     </a>
 </div>
 
+<?php
+    $filters = $filters ?? [
+        'tahun'    => date('Y'),
+        'semester' => 'all',
+        'jenis'    => 'all',
+            'status'   => 'all',
+            'q'        => '',
+            'per_page' => 10,
+        ];
+    $pagination = $pagination ?? [
+        'page'       => 1,
+        'perPage'    => 10,
+        'total'      => count($meetings),
+        'totalPages' => 1,
+        'from'       => count($meetings) ? 1 : 0,
+        'to'         => count($meetings),
+    ];
+    $paginationBase = base_url('admin/jadwal');
+    $paginationQuery = array_filter([
+        'tahun'    => $filters['tahun'],
+        'semester' => $filters['semester'] !== 'all' ? $filters['semester'] : null,
+        'jenis'    => $filters['jenis'] !== 'all' ? $filters['jenis'] : null,
+        'status'   => $filters['status'] !== 'all' ? $filters['status'] : null,
+        'q'        => $filters['q'] !== '' ? $filters['q'] : null,
+        'per_page' => (int) $filters['per_page'] !== 10 ? $filters['per_page'] : null,
+    ], static fn($value) => $value !== null && $value !== '');
+?>
+
 <div class="section-card">
     <div class="section-card-header">
         <div class="header-icon"><i class="bi bi-calendar3-week-fill"></i></div>
         <div>
             <h6>Daftar Jadwal</h6>
             <p class="header-sub">
-                <?= count($meetings) ?> jadwal ditemukan
+                <?= $pagination['total'] ?> jadwal ditemukan
+                <?php if ($pagination['total'] > 0): ?>
+                    &bull; Menampilkan <?= $pagination['from'] ?>-<?= $pagination['to'] ?>
+                <?php endif; ?>
             </p>
         </div>
     </div>
 
-    <?php
-        $filters = $filters ?? [
-            'tahun'    => date('Y'),
-            'semester' => 'all',
-            'jenis'    => 'all',
-            'status'   => 'all',
-            'q'        => '',
-        ];
-    ?>
     <form method="get" class="p-3 border-bottom">
         <div class="row g-2 align-items-end">
             <div class="col-md-2 col-6">
@@ -72,6 +94,14 @@
                 <label class="form-label small text-muted fw-semibold" for="filter-q">Cari</label>
                 <input class="form-control form-control-sm" id="filter-q" name="q" value="<?= esc($filters['q']) ?>"
                     placeholder="Agenda, ruangan, peserta">
+            </div>
+            <div class="col-md-1 col-6">
+                <label class="form-label small text-muted fw-semibold" for="filter-per-page">Tampil</label>
+                <select class="form-select form-select-sm" id="filter-per-page" name="per_page" onchange="this.form.submit()">
+                    <?php foreach ([10, 25, 50, 100] as $size): ?>
+                        <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             <div class="col-md-1 d-flex gap-2">
                 <button class="btn btn-sm btn-outline-primary" type="submit" title="Terapkan filter">
@@ -165,6 +195,13 @@
             </table>
         <?php endif; ?>
     </div>
+
+    <?= view('admin/components/_pagination', [
+        'pagination'      => $pagination,
+        'paginationBase'  => $paginationBase,
+        'paginationQuery' => $paginationQuery,
+        'ariaLabel'       => 'Pagination jadwal',
+    ]) ?>
 
 </div>
 

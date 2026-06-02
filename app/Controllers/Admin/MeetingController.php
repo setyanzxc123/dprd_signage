@@ -21,44 +21,61 @@ class MeetingController extends BaseController
         $jenis    = $this->request->getGet('jenis') ?? 'all';
         $status   = $this->request->getGet('status') ?? 'all';
         $q        = trim((string) ($this->request->getGet('q') ?? ''));
+        $page     = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $perPage  = (int) ($this->request->getGet('per_page') ?? 10);
+        $perPage  = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
 
         $db      = \Config\Database::connect();
-        $builder = $db->table('jadwal j')
-            ->select('j.id, j.judul, j.keterangan, j.tanggal,
-                      j.waktu_mulai, j.waktu_selesai, j.komisi_target, j.status,
-                      j.jenis, j.is_publik, r.name AS nama_ruangan')
-            ->join('ruangan r', 'r.id = j.ruangan_id', 'left');
+        $applyFilters = static function ($builder) use ($tahun, $semester, $jenis, $status, $q) {
+            $builder->where('j.tanggal >=', "{$tahun}-01-01");
+            $builder->where('j.tanggal <=', "{$tahun}-12-31");
 
-        $builder->where('j.tanggal >=', "{$tahun}-01-01");
-        $builder->where('j.tanggal <=', "{$tahun}-12-31");
+            if ($semester === '1') {
+                $builder->where('j.tanggal <=', "{$tahun}-06-30");
+            } elseif ($semester === '2') {
+                $builder->where('j.tanggal >=', "{$tahun}-07-01");
+            }
 
-        if ($semester === '1') {
-            $builder->where('j.tanggal <=', "{$tahun}-06-30");
-        } elseif ($semester === '2') {
-            $builder->where('j.tanggal >=', "{$tahun}-07-01");
-        }
+            if ($jenis !== 'all') {
+                $builder->where('j.jenis', $jenis);
+            }
 
-        if ($jenis !== 'all') {
-            $builder->where('j.jenis', $jenis);
-        }
+            if ($status !== 'all') {
+                $builder->where('j.status', $status);
+            }
 
-        if ($status !== 'all') {
-            $builder->where('j.status', $status);
-        }
-
-        if ($q !== '') {
-            $builder
+            if ($q !== '') {
+                $builder
                 ->groupStart()
                     ->like('j.judul', $q)
                     ->orLike('j.keterangan', $q)
                     ->orLike('j.komisi_target', $q)
                     ->orLike('r.name', $q)
                 ->groupEnd();
-        }
+            }
 
-        $jadwals = $builder
+            return $builder;
+        };
+
+        $total = $applyFilters(
+            $db->table('jadwal j')
+                ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
+        )->countAllResults();
+
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page       = min($page, $totalPages);
+        $offset     = ($page - 1) * $perPage;
+
+        $jadwals = $applyFilters(
+            $db->table('jadwal j')
+                ->select('j.id, j.judul, j.keterangan, j.tanggal,
+                          j.waktu_mulai, j.waktu_selesai, j.komisi_target, j.status,
+                          j.jenis, j.is_publik, r.name AS nama_ruangan')
+                ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
+        )
             ->orderBy('j.tanggal', 'DESC')
             ->orderBy('j.waktu_mulai', 'ASC')
+            ->limit($perPage, $offset)
             ->get()
             ->getResultArray();
 
@@ -84,12 +101,21 @@ class MeetingController extends BaseController
         return view('admin/jadwal/index', [
             'pageTitle'   => 'Jadwal Rapat',
             'meetings'    => $meetings,
+            'pagination'  => [
+                'page'       => $page,
+                'perPage'    => $perPage,
+                'total'      => $total,
+                'totalPages' => $totalPages,
+                'from'       => $total ? $offset + 1 : 0,
+                'to'         => min($offset + $perPage, $total),
+            ],
             'filters'     => [
                 'tahun'    => $tahun,
                 'semester' => $semester,
                 'jenis'    => $jenis,
                 'status'   => $status,
                 'q'        => $q,
+                'per_page' => $perPage,
             ],
         ]);
     }

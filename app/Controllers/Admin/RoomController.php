@@ -9,11 +9,34 @@ class RoomController extends BaseController
 {
     public function index(): string
     {
-        $model = new RuanganModel();
+        $model   = new RuanganModel();
+        $page    = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $perPage = (int) ($this->request->getGet('per_page') ?? 10);
+        $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
+
+        $total      = $model->countAllResults();
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page       = min($page, $totalPages);
+        $offset     = ($page - 1) * $perPage;
+
+        $rooms = $model
+            ->orderBy('name', 'ASC')
+            ->findAll($perPage, $offset);
 
         return view('admin/ruangan/index', [
             'pageTitle' => 'Ruangan Rapat',
-            'rooms'     => $model->orderBy('name', 'ASC')->findAll(),
+            'rooms'     => $rooms,
+            'filters'   => [
+                'per_page' => $perPage,
+            ],
+            'pagination' => [
+                'page'       => $page,
+                'perPage'    => $perPage,
+                'total'      => $total,
+                'totalPages' => $totalPages,
+                'from'       => $total ? $offset + 1 : 0,
+                'to'         => min($offset + $perPage, $total),
+            ],
         ]);
     }
 

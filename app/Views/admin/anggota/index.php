@@ -12,6 +12,23 @@
     </a>
 </div>
 
+<?php
+    $filters = $filters ?? ['q' => '', 'per_page' => 10];
+    $pagination = $pagination ?? [
+        'page'       => 1,
+        'perPage'    => 10,
+        'total'      => count($members),
+        'totalPages' => 1,
+        'from'       => count($members) ? 1 : 0,
+        'to'         => count($members),
+    ];
+    $paginationBase = base_url('admin/anggota');
+    $paginationQuery = array_filter([
+        'q'        => $filters['q'] !== '' ? $filters['q'] : null,
+        'per_page' => (int) $filters['per_page'] !== 10 ? $filters['per_page'] : null,
+    ], static fn($value) => $value !== null && $value !== '');
+?>
+
 <div class="section-card">
 
     <div class="section-card-header">
@@ -19,14 +36,29 @@
         <div>
             <h6>Daftar Anggota</h6>
             <p class="header-sub">
-                <?= count($members) ?> anggota terdaftar
+                <?= $pagination['total'] ?> anggota terdaftar
+                <?php if ($pagination['total'] > 0): ?>
+                    &bull; Menampilkan <?= $pagination['from'] ?>-<?= $pagination['to'] ?>
+                <?php endif; ?>
             </p>
         </div>
-        <!-- Search -->
-        <div class="ms-auto">
+        <form method="get" class="ms-auto d-flex gap-2">
             <input type="search" class="form-control form-control-sm input-search"
-                placeholder="Cari nama anggota..." id="search-anggota" />
-        </div>
+                placeholder="Cari nama anggota..." name="q" value="<?= esc($filters['q']) ?>" />
+            <select class="form-select form-select-sm" name="per_page" style="width:auto;" onchange="this.form.submit()">
+                <?php foreach ([10, 25, 50, 100] as $size): ?>
+                    <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-primary" title="Cari">
+                <i class="bi bi-search"></i>
+            </button>
+            <?php if ($filters['q'] !== ''): ?>
+                <a href="<?= base_url('admin/anggota') ?>" class="btn btn-sm btn-outline-secondary" title="Reset">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            <?php endif; ?>
+        </form>
     </div>
 
     <div class="section-card-body">
@@ -53,7 +85,7 @@
                     <?php foreach ($members as $i => $m): ?>
                         <tr>
                             <td>
-                                <?= $i + 1 ?>
+                                <?= $pagination['from'] + $i ?>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
@@ -106,18 +138,13 @@
         <?php endif; ?>
     </div>
 
+    <?= view('admin/components/_pagination', [
+        'pagination'      => $pagination,
+        'paginationBase'  => $paginationBase,
+        'paginationQuery' => $paginationQuery,
+        'ariaLabel'       => 'Pagination anggota',
+    ]) ?>
+
 </div>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<script>
-    // Filter tabel sederhana via input search
-    document.getElementById('search-anggota')?.addEventListener('input', function () {
-        const keyword = this.value.toLowerCase();
-        document.querySelectorAll('#table-anggota tbody tr').forEach(function (row) {
-            row.style.display = row.textContent.toLowerCase().includes(keyword) ? '' : 'none';
-        });
-    });
-</script>
 <?= $this->endSection() ?>
