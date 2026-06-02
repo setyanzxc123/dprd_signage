@@ -20,13 +20,23 @@ class SettingController extends BaseController
             'media_mode'         => 'video',
             'media_file'         => '',
             'bmkg_adm4'          => '72.71.01.1004',
+            // WA Notification
+            'wa_api_key'         => '',
+            'wa_notif_aktif'     => '0',
+            'wa_sender_name'     => 'Sekretariat DPRD',
         ];
 
         $settings = array_merge($defaults, $settings);
         if (env('BMKG_ADM4')) {
             $settings['bmkg_adm4'] = env('BMKG_ADM4');
         }
+        // Jika WA_API_KEY di .env — override settings DB (lebih aman)
+        if (env('WA_API_KEY')) {
+            $settings['wa_api_key']     = '*** dikonfigurasi via .env ***';
+            $settings['wa_from_env']    = true;
+        }
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
+        $settings['wa_notif_aktif']     = (bool) $settings['wa_notif_aktif'];
 
         return view('admin/pengaturan/index', [
             'pageTitle' => 'Pengaturan Signage',
@@ -44,6 +54,15 @@ class SettingController extends BaseController
         $settingModel->upsert('media_mode',         $this->request->getPost('media_mode') ?? 'video');
         $settingModel->upsert('tema_signage',       $this->request->getPost('tema_signage') ?? 'dark');
         $settingModel->upsert('bmkg_adm4',          trim($this->request->getPost('bmkg_adm4') ?? '72.71.01.1004'));
+
+        // Simpan pengaturan WA Notification
+        // Hanya update api_key jika diisi (biarkan kosong = tidak ubah)
+        $waApiKey = trim($this->request->getPost('wa_api_key') ?? '');
+        if (!empty($waApiKey)) {
+            $settingModel->upsert('wa_api_key', $waApiKey);
+        }
+        $settingModel->upsert('wa_notif_aktif',  $this->request->getPost('wa_notif_aktif')  ? '1' : '0');
+        $settingModel->upsert('wa_sender_name',  trim($this->request->getPost('wa_sender_name') ?? 'Sekretariat DPRD'));
 
         // Hapus cache cuaca BMKG jika kode wilayah diubah
         $cacheFile = WRITEPATH . 'cache/bmkg_cuaca.json';
