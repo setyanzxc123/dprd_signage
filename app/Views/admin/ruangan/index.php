@@ -12,6 +12,22 @@
     </a>
 </div>
 
+<?php
+    $filters = $filters ?? ['per_page' => 10];
+    $pagination = $pagination ?? [
+        'page'       => 1,
+        'perPage'    => 10,
+        'total'      => count($rooms),
+        'totalPages' => 1,
+        'from'       => count($rooms) ? 1 : 0,
+        'to'         => count($rooms),
+    ];
+    $paginationBase = base_url('admin/ruangan');
+    $paginationQuery = array_filter([
+        'per_page' => (int) $filters['per_page'] !== 10 ? $filters['per_page'] : null,
+    ], static fn($value) => $value !== null && $value !== '');
+?>
+
 <div class="section-card">
 
     <div class="section-card-header">
@@ -19,9 +35,20 @@
         <div>
             <h6>Daftar Ruangan</h6>
             <p class="header-sub">
-                <?= count($rooms) ?> ruangan terdaftar
+                <?= $pagination['total'] ?> ruangan terdaftar
+                <?php if ($pagination['total'] > 0): ?>
+                    &bull; Menampilkan <?= $pagination['from'] ?>-<?= $pagination['to'] ?>
+                <?php endif; ?>
             </p>
         </div>
+        <form method="get" class="ms-auto d-flex gap-2 align-items-center">
+            <label class="small text-muted mb-0" for="ruangan-per-page">Tampilkan</label>
+            <select class="form-select form-select-sm" id="ruangan-per-page" name="per_page" style="width:auto;" onchange="this.form.submit()">
+                <?php foreach ([10, 25, 50, 100] as $size): ?>
+                    <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
+                <?php endforeach; ?>
+            </select>
+        </form>
     </div>
 
     <div class="section-card-body">
@@ -47,7 +74,7 @@
                     <?php foreach ($rooms as $i => $r): ?>
                         <tr>
                             <td>
-                                <?= $i + 1 ?>
+                                <?= $pagination['from'] + $i ?>
                             </td>
                             <td>
                                 <div class="cell-title">
@@ -95,6 +122,13 @@
             </table>
         <?php endif; ?>
     </div>
+
+    <?= view('admin/components/_pagination', [
+        'pagination'      => $pagination,
+        'paginationBase'  => $paginationBase,
+        'paginationQuery' => $paginationQuery,
+        'ariaLabel'       => 'Pagination ruangan',
+    ]) ?>
 
 </div>
 

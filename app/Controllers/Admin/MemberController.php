@@ -18,11 +18,53 @@ class MemberController extends BaseController
 
     public function index(): string
     {
-        $model = new AnggotaModel();
+        $model   = new AnggotaModel();
+        $q       = trim((string) ($this->request->getGet('q') ?? ''));
+        $page    = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $perPage = (int) ($this->request->getGet('per_page') ?? 10);
+        $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
+
+        $applyFilters = static function ($builder) use ($q) {
+            if ($q !== '') {
+                $builder
+                    ->groupStart()
+                        ->like('name', $q)
+                        ->orLike('jabatan', $q)
+                        ->orLike('fraksi', $q)
+                        ->orLike('komisi', $q)
+                        ->orLike('no_wa', $q)
+                    ->groupEnd();
+            }
+
+            return $builder;
+        };
+
+        $total = $applyFilters($model->builder())->countAllResults();
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page       = min($page, $totalPages);
+        $offset     = ($page - 1) * $perPage;
+
+        $members = $applyFilters($model->builder())
+            ->orderBy('name', 'ASC')
+            ->limit($perPage, $offset)
+            ->get()
+            ->getResultArray();
 
         return view('admin/anggota/index', [
             'pageTitle' => 'Anggota DPRD',
-            'members'   => $model->orderBy('name', 'ASC')->findAll(),
+            'members'   => $members,
+            'filters'   => [
+                'q'        => $q,
+                'per_page' => $perPage,
+            ],
+            'pagination' => [
+                'page'       => $page,
+                'perPage'    => $perPage,
+                'total'      => $total,
+                'totalPages' => $totalPages,
+                'from'       => $total ? $offset + 1 : 0,
+                'to'         => min($offset + $perPage, $total),
+            ],
         ]);
     }
 
