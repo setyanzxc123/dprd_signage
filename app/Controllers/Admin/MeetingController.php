@@ -16,48 +16,81 @@ class MeetingController extends BaseController
 
     public function index(): string
     {
-        $tahun    = (int) ($this->request->getGet('tahun')    ?? date('Y'));
-        $semester = (int) ($this->request->getGet('semester') ?? (date('n') <= 6 ? 1 : 2));
+        $tahun    = (int) ($this->request->getGet('tahun') ?? date('Y'));
+        $semester = $this->request->getGet('semester') ?? 'all';
+        $jenis    = $this->request->getGet('jenis') ?? 'all';
+        $status   = $this->request->getGet('status') ?? 'all';
+        $q        = trim((string) ($this->request->getGet('q') ?? ''));
 
-        $db   = \Config\Database::connect();
-        $rows = $db->table('jadwal j')
-            ->select('j.id, j.judul, j.keterangan, j.tanggal, j.waktu_mulai, j.waktu_selesai,
-                      j.komisi_target, j.status, j.jenis, j.is_publik, j.stream_url,
-                      r.name AS nama_ruangan')
-            ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
-            ->where("YEAR(j.tanggal)", $tahun)
-            ->orderBy('j.tanggal', 'ASC')
+        $db      = \Config\Database::connect();
+        $builder = $db->table('jadwal j')
+            ->select('j.id, j.judul, j.keterangan, j.tanggal,
+                      j.waktu_mulai, j.waktu_selesai, j.komisi_target, j.status,
+                      j.jenis, j.is_publik, r.name AS nama_ruangan')
+            ->join('ruangan r', 'r.id = j.ruangan_id', 'left');
+
+        $builder->where('j.tanggal >=', "{$tahun}-01-01");
+        $builder->where('j.tanggal <=', "{$tahun}-12-31");
+
+        if ($semester === '1') {
+            $builder->where('j.tanggal <=', "{$tahun}-06-30");
+        } elseif ($semester === '2') {
+            $builder->where('j.tanggal >=', "{$tahun}-07-01");
+        }
+
+        if ($jenis !== 'all') {
+            $builder->where('j.jenis', $jenis);
+        }
+
+        if ($status !== 'all') {
+            $builder->where('j.status', $status);
+        }
+
+        if ($q !== '') {
+            $builder
+                ->groupStart()
+                    ->like('j.judul', $q)
+                    ->orLike('j.keterangan', $q)
+                    ->orLike('j.komisi_target', $q)
+                    ->orLike('r.name', $q)
+                ->groupEnd();
+        }
+
+        $jadwals = $builder
+            ->orderBy('j.tanggal', 'DESC')
             ->orderBy('j.waktu_mulai', 'ASC')
-            ->get()->getResultArray();
+            ->get()
+            ->getResultArray();
 
-        // Format untuk JavaScript (kalender Open Design)
-        $jadwalJs = [];
-        foreach ($rows as $r) {
-            $jadwalJs[] = [
-                'id'          => (int) $r['id'],
-                'title'       => $r['judul'],
-                'description' => $r['keterangan'] ?? '',
-                'date'        => $r['tanggal'],
-                'start'       => substr($r['waktu_mulai'],  0, 5),
-                'end'         => substr($r['waktu_selesai'], 0, 5),
-                'room'        => $r['nama_ruangan'] ?? '-',
-                'group'       => implode(', ', json_decode($r['komisi_target'] ?? '[]', true)),
-                'status'      => $r['status'],
-                'jenis'       => $r['jenis'],
-                'public'      => (bool)(int)$r['is_publik'],
-                'stream'      => !empty($r['stream_url']),
-                'stream_url'  => $r['stream_url'] ?? '',
-                'edit_url'    => base_url("admin/jadwal/{$r['id']}/edit"),
-                'delete_url'  => base_url("admin/jadwal/{$r['id']}/delete"),
+        $meetings = [];
+        foreach ($jadwals as $j) {
+            $komisi = json_decode($j['komisi_target'] ?? '[]', true);
+
+            $meetings[] = [
+                'id'            => $j['id'],
+                'judul'         => $j['judul'],
+                'keterangan'    => $j['keterangan'] ?? '',
+                'tanggal'       => $j['tanggal'],
+                'waktu_mulai'   => substr($j['waktu_mulai'], 0, 5),
+                'waktu_selesai' => substr($j['waktu_selesai'], 0, 5),
+                'ruangan'       => $j['nama_ruangan'] ?? '-',
+                'komisi_target' => is_array($komisi) && $komisi ? implode(', ', $komisi) : '-',
+                'status'        => $j['status'],
+                'jenis'         => $j['jenis'] ?? 'insidental',
+                'is_publik'     => (int) ($j['is_publik'] ?? 0),
             ];
         }
 
         return view('admin/jadwal/index', [
-            'pageTitle'  => 'Jadwal Rapat — ' . $tahun,
-            'tahun'      => $tahun,
-            'semester'   => $semester,
-            'jadwalJson' => json_encode($jadwalJs, JSON_UNESCAPED_UNICODE),
-            'totalRapat' => count($rows),
+            'pageTitle'   => 'Jadwal Rapat',
+            'meetings'    => $meetings,
+            'filters'     => [
+                'tahun'    => $tahun,
+                'semester' => $semester,
+                'jenis'    => $jenis,
+                'status'   => $status,
+                'q'        => $q,
+            ],
         ]);
     }
 
