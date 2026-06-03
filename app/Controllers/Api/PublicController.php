@@ -35,6 +35,7 @@ class PublicController extends BaseController
                 j.komisi_target,
                 j.status,
                 j.stream_url,
+                j.jenis,
                 r.name AS nama_ruangan
             ')
             ->join('ruangan r', 'r.id = j.ruangan_id', 'left')

@@ -34,7 +34,7 @@
                     <div class="weather-left-block">
                         <div class="weather-top-row">
                             <img v-if="cuaca.icon_url" :src="cuaca.icon_url" class="weather-img" alt="ikon cuaca" />
-                            <span v-else class="weather-icon">🌤️</span>
+                            <span v-else class="weather-icon"></span>
                             <span class="weather-temp">{{ cuaca.suhu }}</span>
                         </div>
                         <div class="weather-cond">{{ cuaca.kondisi }}</div>
@@ -42,7 +42,7 @@
                     
                     <div class="weather-details">
                         <div class="weather-details-row">
-                            <span class="weather-loc" v-if="cuaca.desa">📍 {{ cuaca.desa }}, {{ cuaca.kecamatan }}</span>
+                            <span class="weather-loc" v-if="cuaca.desa">{{ cuaca.desa }}, {{ cuaca.kecamatan }}</span>
                         </div>
                         <div class="weather-details-row">
                             <span class="weather-hum">💧 {{ cuaca.kelembapan }} &nbsp;&nbsp;💨 {{ cuaca.kec_angin }}</span>
@@ -68,9 +68,15 @@
             <video v-if="media.mode === 'video' && media.url" :src="media.url" autoplay loop muted playsinline></video>
             <img v-else-if="media.mode === 'image' && media.url" :src="media.url" alt="Media Signage DPRD" />
 
-            <div class="qr-panel" v-if="qrTarget">
-                <div class="qr-label">📥 Unduh Materi Rapat</div>
-                <div id="qr-container"></div>
+            <!-- QR Publik — selalu tampil, arahkan ke halaman jadwal publik -->
+            <div class="qr-panel">
+                <div class="qr-label">📱 Scan untuk Info Jadwal</div>
+                <div id="qr-publik"></div>
+                <!-- QR Materi — hanya muncul jika rapat berlangsung & ada materi -->
+                <div v-if="qrTarget" style="margin-top:.8vh;border-top:1px solid rgba(255,255,255,.1);padding-top:.8vh;">
+                    <div class="qr-label">📥 Unduh Materi Rapat</div>
+                    <div id="qr-container"></div>
+                </div>
             </div>
         </div>
 
@@ -140,7 +146,8 @@
                     kecamatan: '',
                 });
 
-                const qrTarget = ref('');
+                const qrTarget   = ref('');
+                const PUBLIC_URL = '<?= base_url('jadwal') ?>';
 
 
                 let clockTimer = null;
@@ -173,23 +180,29 @@
                     return map[status] ?? status;
                 }
 
-                function renderQR(url) {
+                function makeQR(containerId, url, size = 120) {
                     nextTick(() => {
-                        const container = document.getElementById('qr-container');
+                        const container = document.getElementById(containerId);
                         if (!container) return;
                         container.innerHTML = '';
                         if (url) {
                             const theme = document.documentElement.getAttribute('data-signage-theme') || 'dark';
                             new QRCode(container, {
                                 text: url,
-                                width: 128,
-                                height: 128,
+                                width: size,
+                                height: size,
                                 colorDark:  theme === 'dark' ? '#ffffff' : '#1e293b',
                                 colorLight: 'transparent',
                             });
                         }
                     });
                 }
+
+                // QR Publik — render sekali saat mount
+                function renderPublicQR() { makeQR('qr-publik', PUBLIC_URL, 110); }
+
+                // QR Materi — render saat berlangsung dengan materi
+                function renderQR(url) { makeQR('qr-container', url, 100); }
 
                 watch(qrTarget, (url) => renderQR(url));
 
@@ -231,6 +244,7 @@
 
                     loadData();
                     loadCuaca();
+                    renderPublicQR();
                     dataTimer = setInterval(loadData, 60000);
                     // Cuaca refresh setiap 15 menit (cache BMKG 30 menit)
                     setInterval(loadCuaca, 900000);

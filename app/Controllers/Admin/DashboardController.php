@@ -48,13 +48,14 @@ class DashboardController extends BaseController
         }
 
         return view('admin/dashboard/index', [
-            'pageTitle' => 'Dashboard Ringkasan',
-            'stats'     => [
+            'pageTitle'   => 'Dashboard',
+            'breadcrumbs' => [],
+            'stats'       => [
                 'rapat_hari_ini' => $rapatHariIni,
                 'wa_terkirim'    => $waTerkirim,
                 'wa_gagal'       => $waGagal,
             ],
-            'meetings'  => $meetings,
+            'meetings'    => $meetings,
         ]);
     }
 }
