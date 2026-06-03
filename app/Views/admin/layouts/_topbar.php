@@ -16,17 +16,21 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
     </button>
 
     <nav class="topbar-breadcrumb" aria-label="breadcrumb">
-        <span>Admin</span>
-        <span>/</span>
-        <?php foreach ($breadcrumbs as $crumb): ?>
-            <?php if (!empty($crumb['url'])): ?>
-                <a href="<?= base_url($crumb['url']) ?>"><?= esc($crumb['label']) ?></a>
-            <?php else: ?>
-                <?= esc($crumb['label']) ?>
-            <?php endif; ?>
-            <span>/</span>
-        <?php endforeach; ?>
-        <strong class="current"><?= esc($pageTitle) ?></strong>
+        <?php if ($pageTitle === 'Dashboard' && empty($breadcrumbs)): ?>
+            <strong class="current"><?= esc($pageTitle) ?></strong>
+        <?php else: ?>
+            <a href="<?= base_url('admin/dashboard') ?>">Dashboard</a>
+            <?php foreach ($breadcrumbs as $crumb): ?>
+                <span class="bc-sep">/</span>
+                <?php if (!empty($crumb['url'])): ?>
+                    <a href="<?= base_url($crumb['url']) ?>"><?= esc($crumb['label']) ?></a>
+                <?php else: ?>
+                    <span><?= esc($crumb['label']) ?></span>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            <span class="bc-sep">/</span>
+            <strong class="current"><?= esc($pageTitle) ?></strong>
+        <?php endif; ?>
     </nav>
 
     <div class="topbar-actions">

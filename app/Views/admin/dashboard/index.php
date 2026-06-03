@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 
 <div class="page-header">
-    <h1 class="page-title">Dashboard Ringkasan</h1>
+    <h1 class="page-title">Dashboard</h1>
     <p class="page-subtitle">
         <span id="page-date">—</span> &bull; Data diperbarui secara real-time
     </p>
