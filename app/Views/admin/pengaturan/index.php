@@ -491,7 +491,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const locationEl = document.getElementById('bmkg-resolved-location');
         if (locationEl) {
-            fetch('<?= base_url('api/signage/cuaca') ?>')
+            fetch('/api/signage/cuaca')
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'success' && data.lokasi) {
@@ -558,7 +558,7 @@
         result.style.display = 'none';
 
         try {
-            const resp = await fetch('<?= base_url('admin/pengaturan/wa-test') ?>', {
+            const resp = await fetch('/admin/pengaturan/wa-test', {
                 method : 'POST',
                 headers: {
                     'Content-Type'     : 'application/x-www-form-urlencoded',
@@ -591,7 +591,7 @@
         const connEl = document.getElementById('wa-conn-status');
         if (!connEl) return;
         try {
-            const resp = await fetch('<?= base_url('admin/pengaturan/wa-status') ?>', {
+            const resp = await fetch('/admin/pengaturan/wa-status', {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             const data = await resp.json();
