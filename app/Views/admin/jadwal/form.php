@@ -1,5 +1,15 @@
 <?= $this->extend('admin/layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    /* Menyelaraskan Flatpickr dengan tema admin */
+    .flatpickr-input[readonly] {
+        background-color: #fff !important;
+    }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 
 <div class="page-header">
@@ -53,7 +63,8 @@
                         <label class="form-label fw-semibold" for="waktu_mulai">
                             Waktu Mulai <span class="text-danger">*</span>
                         </label>
-                        <input type="datetime-local" class="form-control" id="waktu_mulai" name="waktu_mulai"
+                        <input type="text" class="form-control" id="waktu_mulai" name="waktu_mulai"
+                            placeholder="Pilih tanggal & waktu mulai..."
                             value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_mulai'])
                                 ? $meeting['tanggal'] . 'T' . $meeting['waktu_mulai']
                                 : '') ?>" required />
@@ -63,7 +74,8 @@
                         <label class="form-label fw-semibold" for="waktu_selesai">
                             Waktu Selesai <span class="text-danger">*</span>
                         </label>
-                        <input type="datetime-local" class="form-control" id="waktu_selesai" name="waktu_selesai"
+                        <input type="text" class="form-control" id="waktu_selesai" name="waktu_selesai"
+                            placeholder="Pilih tanggal & waktu selesai..."
                             value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_selesai'])
                                 ? $meeting['tanggal'] . 'T' . $meeting['waktu_selesai']
                                 : '') ?>" required />
@@ -221,8 +233,32 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- Flatpickr JS & Indonesian Locale -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Flatpickr Waktu Mulai
+        flatpickr("#waktu_mulai", {
+            enableTime: true,
+            dateFormat: "Y-m-d\\TH:i",
+            altInput: true,
+            altFormat: "d-m-Y H:i",
+            time_24hr: true,
+            locale: "id"
+        });
+
+        // Flatpickr Waktu Selesai
+        flatpickr("#waktu_selesai", {
+            enableTime: true,
+            dateFormat: "Y-m-d\\TH:i",
+            altInput: true,
+            altFormat: "d-m-Y H:i",
+            time_24hr: true,
+            locale: "id"
+        });
+
+        // Toggle Label Visibilitas
         const toggle = document.getElementById('is_publik');
         const label  = document.getElementById('publik-label');
         if (toggle && label) {
