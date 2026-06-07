@@ -14,8 +14,8 @@ class PublicController extends BaseController
 
         return view('publik/index', [
             'namaInstansi' => 'DPRD Provinsi Sulawesi Tengah',
-            'logoUrl'      => base_url('assets/images/logo_dprd.jpg'),
-            'apiUrl'       => base_url('api/v1/publik/jadwal'),
+            'logoUrl'      => '/assets/images/logo_dprd.jpg',
+            'apiUrl'       => '/api/v1/publik/jadwal',
         ]);
     }
 }

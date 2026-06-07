@@ -214,7 +214,7 @@
         btn.addEventListener('click', function() {
             const id  = this.dataset.id;
             const btn = this;
-            fetch(`<?= base_url('admin/jadwal') ?>/${id}/toggle-publik`, {
+            fetch(`/admin/jadwal/${id}/toggle-publik`, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
                 body: JSON.stringify({ '<?= csrf_token() ?>': '<?= csrf_hash() ?>' })

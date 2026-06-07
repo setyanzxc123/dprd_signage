@@ -148,9 +148,9 @@
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch"
                             id="is_publik" name="is_publik" value="1"
-                            <?= ($meeting['is_publik'] ?? 0) ? 'checked' : '' ?> />
+                            <?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'checked' : '' ?> />
                         <label class="form-check-label" for="is_publik">
-                            <span id="publik-label"><?= ($meeting['is_publik'] ?? 0) ? 'Tampil di Publik' : 'Hanya Internal' ?></span>
+                            <span id="publik-label"><?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'Tampil di Publik' : 'Hanya Internal' ?></span>
                         </label>
                     </div>
                 </div>
@@ -219,3 +219,18 @@
 </form>
 
 <?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle = document.getElementById('is_publik');
+        const label  = document.getElementById('publik-label');
+        if (toggle && label) {
+            toggle.addEventListener('change', function() {
+                label.textContent = this.checked ? 'Tampil di Publik' : 'Hanya Internal';
+            });
+        }
+    });
+</script>
+<?= $this->endSection() ?>
+

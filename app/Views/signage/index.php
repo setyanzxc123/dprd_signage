@@ -207,7 +207,7 @@
                 watch(qrTarget, (url) => renderQR(url));
 
                 function loadData() {
-                    fetch('<?= base_url('api/signage/jadwal') ?>')
+                    fetch('/api/signage/jadwal')
                         .then(r => r.json())
                         .then(data => {
                             jadwal.value = data.jadwal ?? [];
@@ -218,7 +218,7 @@
                 }
 
                 function loadCuaca() {
-                    fetch('<?= base_url('api/signage/cuaca') ?>')
+                    fetch('/api/signage/cuaca')
                         .then(r => r.json())
                         .then(data => {
                             if (data.status === 'success' && data.cuaca) {
