@@ -75,8 +75,7 @@ COPY --from=vendor /app/vendor ./vendor
 
 # Salin cron job
 COPY docker/cron/wa-notif /etc/cron.d/wa-notif
-RUN chmod 0644 /etc/cron.d/wa-notif \
- && crontab /etc/cron.d/wa-notif
+RUN chmod 0644 /etc/cron.d/wa-notif
 
 # Permission untuk writable dan uploads
 RUN mkdir -p writable/logs writable/cache writable/session writable/uploads public/uploads/media \

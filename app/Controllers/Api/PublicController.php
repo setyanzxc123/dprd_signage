@@ -15,6 +15,9 @@ class PublicController extends BaseController
      */
     public function jadwal()
     {
+        // Otomatis perbarui status semua rapat berdasarkan waktu saat ini
+        (new \App\Models\JadwalModel())->autoUpdateStatuses();
+
         $db   = \Config\Database::connect();
         $date = $this->request->getGet('date');
 

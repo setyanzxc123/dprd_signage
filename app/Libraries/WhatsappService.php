@@ -42,6 +42,9 @@ class WhatsappService
             ];
         }
 
+        // Normalisasi nomor ke format 628xxx sebelum dikirim
+        $noWa = $this->normalizePhone($noWa);
+
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL            => $this->apiUrl,
@@ -50,8 +53,8 @@ class WhatsappService
             CURLOPT_POSTFIELDS     => [
                 'target'      => $noWa,
                 'message'     => $message,
-                // Nomor di DB sudah format 628xxx — nonaktifkan filter Fonnte
-                'countryCode' => '0',
+                // Nomor sudah format 628xxx — countryCode tidak diperlukan
+                'countryCode' => '62',
             ],
             CURLOPT_HTTPHEADER => [
                 'Authorization: ' . $this->token,
@@ -81,6 +84,103 @@ class WhatsappService
                 ? ($decoded['reason'] ?? 'Unknown error dari Fonnte')
                 : null,
         ];
+    }
+
+    /**
+     * Normalisasi nomor telepon ke format internasional Indonesia (628xxx).
+     * Menerima berbagai format: 08xxx, 8xxx, 628xxx, +628xxx.
+     */
+    private function normalizePhone(string $phone): string
+    {
+        // Hapus semua karakter non-digit
+        $phone = preg_replace('/\D/', '', $phone);
+
+        if (str_starts_with($phone, '62')) {
+            return $phone;           // sudah 628xxx
+        }
+        if (str_starts_with($phone, '08')) {
+            return '62' . substr($phone, 1); // 08xxx → 628xxx
+        }
+        if (str_starts_with($phone, '8')) {
+            return '62' . $phone;    // 8xxx → 628xxx
+        }
+
+        return $phone; // kembalikan apa adanya jika format tidak dikenali
+    }
+
+    /**
+     * Proses dan kirim semua notifikasi WA pending dalam window 10 menit.
+     *
+     * Method ini adalah inti eksekusi yang bisa dipanggil dari:
+     *   - CLI Spark Command  : App\Commands\SendWaNotifications
+     *   - HTTP pseudo-cron   : Api\SignageController::_triggerWaNotifications()
+     *   - HTTP cron endpoint : CronController::sendWaNotifications()
+     *
+     * @return array{total: int, sent: int, failed: int}
+     */
+    public function sendPendingNotifications(): array
+    {
+        $db = \Config\Database::connect();
+
+        $rows = $db->query("
+            SELECT
+                n.id             AS notif_id,
+                n.no_wa,
+                n.retry_count,
+                a.name           AS nama_anggota,
+                j.judul,
+                j.tanggal,
+                j.waktu_mulai,
+                j.waktu_selesai,
+                j.keterangan,
+                j.komisi_target,
+                j.materi_url,
+                r.name           AS nama_ruangan
+            FROM notifikasi n
+            JOIN jadwal  j ON j.id = n.jadwal_id
+            JOIN anggota a ON a.id = n.anggota_id
+            LEFT JOIN ruangan r ON r.id = j.ruangan_id
+            WHERE n.status = 'pending'
+              AND j.reminder_time <= NOW()
+              AND j.reminder_time >= NOW() - INTERVAL 10 MINUTE
+            ORDER BY n.id ASC
+        ")->getResultArray();
+
+        if (empty($rows)) {
+            return ['total' => 0, 'sent' => 0, 'failed' => 0];
+        }
+
+        $sent   = 0;
+        $failed = 0;
+
+        foreach ($rows as $row) {
+            $message    = self::buildMessage($row);
+            $result     = $this->send($row['no_wa'], $message);
+
+            $updateData = [
+                'executed_at' => date('Y-m-d H:i:s'),
+                'message'     => $message,
+                'retry_count' => (int) $row['retry_count'] + 1,
+            ];
+
+            if ($result['success']) {
+                $updateData['status'] = 'sent';
+                $sent++;
+            } else {
+                $updateData['status']        = 'failed';
+                $updateData['error_message'] = $result['error'] ?? 'Unknown error';
+                $failed++;
+            }
+
+            $db->table('notifikasi')
+               ->where('id', $row['notif_id'])
+               ->update($updateData);
+        }
+
+        $total = count($rows);
+        log_message('info', "[WhatsappService] Diproses: {$total} | Terkirim: {$sent} | Gagal: {$failed}");
+
+        return compact('total', 'sent', 'failed');
     }
 
     /**

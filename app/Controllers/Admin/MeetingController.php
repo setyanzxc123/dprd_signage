@@ -16,6 +16,9 @@ class MeetingController extends BaseController
 
     public function index(): string
     {
+        // Otomatis perbarui status semua rapat berdasarkan waktu saat ini
+        (new JadwalModel())->autoUpdateStatuses();
+
         $tahun    = (int) ($this->request->getGet('tahun') ?? date('Y'));
         $semester = $this->request->getGet('semester') ?? 'all';
         $jenis    = $this->request->getGet('jenis') ?? 'all';
@@ -230,7 +233,13 @@ class MeetingController extends BaseController
             'jenis'         => $this->request->getPost('jenis') ?? 'insidental',
         ]);
 
-        session()->setFlashdata('success', 'Jadwal berhasil diperbarui.');
+        // Hapus notifikasi pending lama, lalu buat ulang dengan target & waktu terbaru.
+        // Notifikasi yang sudah 'sent' atau 'failed' dibiarkan (sebagai histori).
+        $notifModel = new NotifikasiModel();
+        $notifModel->where('jadwal_id', $id)->where('status', 'pending')->delete();
+        $this->_createNotifikasi($id, $komisiArray);
+
+        session()->setFlashdata('success', 'Jadwal berhasil diperbarui dan notifikasi dijadwalkan ulang.');
         return redirect()->to(base_url('admin/jadwal'));
     }
 
@@ -281,6 +290,16 @@ class MeetingController extends BaseController
 
         $notifModel = new NotifikasiModel();
         foreach ($targets as $anggota) {
+            // Skip jika sudah ada notif pending/sent untuk anggota ini di jadwal ini
+            // (mencegah double-insert saat store dipanggil ulang)
+            $exists = $notifModel
+                ->where('jadwal_id', $jadwalId)
+                ->where('anggota_id', $anggota['id'])
+                ->whereIn('status', ['pending', 'sent'])
+                ->first();
+
+            if ($exists) continue;
+
             $notifModel->insert([
                 'jadwal_id'  => $jadwalId,
                 'anggota_id' => $anggota['id'],

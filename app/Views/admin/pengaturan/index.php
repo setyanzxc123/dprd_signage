@@ -219,9 +219,135 @@
         </div>
     </div>
 
+    <!-- Seksi WhatsApp Notification -->
+    <div class="form-card mt-3 mb-3" id="wa-notif-card">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="form-section-title mb-0">📲 Notifikasi WhatsApp</div>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Badge status realtime -->
+                <span id="wa-status-badge" class="badge <?= $settings['wa_notif_aktif'] ? 'bg-success' : 'bg-secondary' ?> wa-status-badge">
+                    <i class="bi bi-circle-fill me-1" style="font-size:.5rem;vertical-align:middle;"></i>
+                    <?= $settings['wa_notif_aktif'] ? 'Aktif' : 'Nonaktif' ?>
+                </span>
+                <!-- Toggle aktif/nonaktif -->
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch"
+                        id="wa_notif_aktif" name="wa_notif_aktif" value="1"
+                        <?= $settings['wa_notif_aktif'] ? 'checked' : '' ?>
+                        onchange="updateWaBadge(this.checked)" />
+                    <label class="form-check-label fw-semibold" for="wa_notif_aktif">
+                        Aktifkan
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+
+                <!-- API Key -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" for="wa_api_key">
+                        Token API Fonnte
+                        <?php if (!empty($settings['wa_from_env'])): ?>
+                            <span class="badge bg-success ms-1" style="font-size:.65rem;">
+                                <i class="bi bi-shield-lock-fill me-1"></i>.env
+                            </span>
+                        <?php endif; ?>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                        <input type="password" class="form-control font-monospace" id="wa_api_key"
+                            name="wa_api_key"
+                            value="<?= esc($settings['wa_api_key']) ?>"
+                            placeholder="<?= !empty($settings['wa_from_env']) ? 'Dikonfigurasi via .env — tidak dapat diubah dari sini' : 'Masukkan token Fonnte Anda' ?>"
+                            <?= !empty($settings['wa_from_env']) ? 'readonly' : '' ?> />
+                        <?php if (empty($settings['wa_from_env'])): ?>
+                            <button class="btn btn-outline-secondary" type="button"
+                                onclick="toggleWaKey()" id="wa-key-toggle-btn" title="Tampilkan/sembunyikan token">
+                                <i class="bi bi-eye" id="wa-key-eye"></i>
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($settings['wa_from_env'])): ?>
+                        <div class="text-success mt-1" style="font-size:.8rem;">
+                            <i class="bi bi-shield-lock-fill me-1"></i>
+                            Terkunci via <code>.env</code> (<code>WA_API_KEY</code>). Kosongkan env untuk mengatur dari sini.
+                        </div>
+                    <?php else: ?>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Dapatkan token di <a href="https://fonnte.com" target="_blank" rel="noopener">fonnte.com</a>.
+                            Biarkan kosong jika tidak ingin mengubah token yang sudah tersimpan.
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Sender Name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" for="wa_sender_name">
+                        Nama Pengirim
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person-badge-fill"></i></span>
+                        <input type="text" class="form-control" id="wa_sender_name" name="wa_sender_name"
+                            value="<?= esc($settings['wa_sender_name'] ?? 'Sekretariat DPRD') ?>"
+                            placeholder="Contoh: Sekretariat DPRD" maxlength="60" />
+                    </div>
+                    <div class="form-text">
+                        Nama ini muncul di teks pesan undangan sebagai identitas pengirim.
+                    </div>
+                </div>
+
+                <!-- Test kirim pesan -->
+                <?php if (empty($settings['wa_from_env']) || !empty($settings['wa_api_key'])): ?>
+                <div class="mb-1">
+                    <label class="form-label fw-semibold" for="wa_test_number">
+                        Uji Kirim Pesan
+                    </label>
+                    <div class="input-group" style="max-width:380px;">
+                        <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
+                        <input type="text" class="form-control font-monospace" id="wa_test_number"
+                            placeholder="628xxxxxxxxxx" maxlength="15" />
+                        <button class="btn btn-outline-success" type="button"
+                            onclick="kirimWaTest()" id="wa-test-btn">
+                            <i class="bi bi-send-fill me-1"></i>Kirim Test
+                        </button>
+                    </div>
+                    <div class="form-text">Masukkan nomor format <code>628xxx</code> untuk menguji koneksi API Fonnte.</div>
+                    <div id="wa-test-result" class="mt-2" style="display:none;"></div>
+                </div>
+                <?php endif; ?>
+
+            </div>
+
+            <div class="col-lg-4">
+                <div class="wa-info-box">
+                    <div class="wa-info-title">
+                        <i class="bi bi-whatsapp me-1"></i> Cara Kerja
+                    </div>
+                    <ul class="tips-list mt-2 mb-0">
+                        <li>Notifikasi dikirim otomatis saat layar signage aktif dan polling data jadwal setiap <strong>1 menit</strong></li>
+                        <li>Pesan dikirim ke nomor WA anggota sesuai <strong>reminder_time</strong> jadwal</li>
+                        <li>Status pengiriman dapat dilihat di menu <a href="<?= base_url('admin/notifikasi') ?>">Log Notifikasi</a></li>
+                        <li>Gunakan <a href="https://fonnte.com" target="_blank" rel="noopener">Fonnte</a> sebagai gateway WhatsApp</li>
+                    </ul>
+                </div>
+
+                <!-- Status koneksi API -->
+                <div class="mt-3" id="wa-conn-status">
+                    <div class="d-flex align-items-center gap-2 text-muted" style="font-size:.82rem;">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        Memeriksa koneksi API...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save me-1"></i>Simpan Perubahan Tampilan
+            <i class="bi bi-save me-1"></i>Simpan Semua Pengaturan
         </button>
     </div>
 
@@ -296,6 +422,49 @@
         background: #eff6ff;
         color: #2563eb;
     }
+
+    /* WhatsApp Notification Card */
+    #wa-notif-card {
+        border-left: 3px solid #25d366;
+    }
+
+    .wa-info-box {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid #86efac;
+        border-radius: var(--radius-card);
+        padding: 14px 16px;
+    }
+
+    .wa-info-title {
+        font-weight: 700;
+        color: #15803d;
+        font-size: .85rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .wa-info-title .bi-whatsapp {
+        color: #25d366;
+        font-size: 1rem;
+    }
+
+    .wa-status-badge {
+        font-size: .75rem;
+        padding: .35em .65em;
+        transition: all .3s ease;
+    }
+
+    #wa-conn-status .conn-ok {
+        color: #15803d;
+        font-size: .82rem;
+        font-weight: 600;
+    }
+
+    #wa-conn-status .conn-err {
+        color: #dc2626;
+        font-size: .82rem;
+        font-weight: 600;
+    }
 </style>
 <?= $this->endSection() ?>
 
@@ -340,6 +509,102 @@
                     locationEl.innerHTML = '<span class="text-danger">Gagal memuat detail lokasi.</span>';
                 });
         }
+
+        // Auto-check koneksi Fonnte API
+        checkWaConn();
     });
+
+    // Toggle show/hide WA API key
+    function toggleWaKey() {
+        const input = document.getElementById('wa_api_key');
+        const eye   = document.getElementById('wa-key-eye');
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            eye.className = 'bi bi-eye';
+        }
+    }
+
+    // Update badge Aktif/Nonaktif secara realtime saat toggle diubah
+    function updateWaBadge(isChecked) {
+        const badge = document.getElementById('wa-status-badge');
+        if (!badge) return;
+        if (isChecked) {
+            badge.className = 'badge bg-success wa-status-badge';
+            badge.innerHTML = '<i class="bi bi-circle-fill me-1" style="font-size:.5rem;vertical-align:middle;"></i>Aktif';
+        } else {
+            badge.className = 'badge bg-secondary wa-status-badge';
+            badge.innerHTML = '<i class="bi bi-circle-fill me-1" style="font-size:.5rem;vertical-align:middle;"></i>Nonaktif';
+        }
+    }
+
+    // Kirim pesan WA test via endpoint
+    async function kirimWaTest() {
+        const noWa   = document.getElementById('wa_test_number')?.value.trim();
+        const result = document.getElementById('wa-test-result');
+        const btn    = document.getElementById('wa-test-btn');
+
+        if (!noWa || !/^62\d{8,13}$/.test(noWa)) {
+            result.style.display = 'block';
+            result.innerHTML = '<div class="alert alert-warning py-2 px-3 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Nomor tidak valid. Gunakan format <code>628xxxxxxxxxx</code>.</div>';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Mengirim...';
+        result.style.display = 'none';
+
+        try {
+            const resp = await fetch('<?= base_url('admin/pengaturan/wa-test') ?>', {
+                method : 'POST',
+                headers: {
+                    'Content-Type'     : 'application/x-www-form-urlencoded',
+                    'X-Requested-With' : 'XMLHttpRequest',
+                    'X-CSRF-TOKEN'     : document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+                },
+                body: new URLSearchParams({
+                    no_wa            : noWa,
+                    <?= csrf_token() ?>: document.querySelector('input[name="<?= csrf_token() ?>"]')?.value ?? ''
+                })
+            });
+            const data = await resp.json();
+            result.style.display = 'block';
+            if (data.success) {
+                result.innerHTML = '<div class="alert alert-success py-2 px-3 mb-0"><i class="bi bi-check-circle-fill me-1"></i>Pesan test berhasil dikirim ke <strong>' + noWa + '</strong>.</div>';
+            } else {
+                result.innerHTML = '<div class="alert alert-danger py-2 px-3 mb-0"><i class="bi bi-x-circle-fill me-1"></i>Gagal: ' + (data.error || 'Unknown error') + '</div>';
+            }
+        } catch(e) {
+            result.style.display = 'block';
+            result.innerHTML = '<div class="alert alert-danger py-2 px-3 mb-0"><i class="bi bi-x-circle-fill me-1"></i>Error jaringan: ' + e.message + '</div>';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send-fill me-1"></i>Kirim Test';
+        }
+    }
+
+    // Cek status koneksi Fonnte API (apakah token valid)
+    async function checkWaConn() {
+        const connEl = document.getElementById('wa-conn-status');
+        if (!connEl) return;
+        try {
+            const resp = await fetch('<?= base_url('admin/pengaturan/wa-status') ?>', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await resp.json();
+            if (data.configured && data.connected) {
+                connEl.innerHTML = '<div class="conn-ok"><i class="bi bi-check-circle-fill me-1"></i>Token valid — terhubung ke Fonnte</div>';
+            } else if (data.configured && !data.connected) {
+                connEl.innerHTML = '<div class="conn-err"><i class="bi bi-x-circle-fill me-1"></i>Token tidak valid atau Fonnte tidak dapat dijangkau.<br><small class="text-muted">' + (data.error ?? '') + '</small></div>';
+            } else {
+                connEl.innerHTML = '<div class="text-muted" style="font-size:.82rem;"><i class="bi bi-dash-circle me-1"></i>Token API belum dikonfigurasi.</div>';
+            }
+        } catch(e) {
+            connEl.innerHTML = '<div class="text-muted" style="font-size:.82rem;"><i class="bi bi-wifi-off me-1"></i>Tidak dapat memeriksa status koneksi.</div>';
+        }
+    }
 </script>
 <?= $this->endSection() ?>
