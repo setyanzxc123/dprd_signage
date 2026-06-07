@@ -2,8 +2,8 @@
 
 namespace App\Controllers\Api;
 
-use App\Commands\SendWaNotifications;
 use App\Controllers\BaseController;
+use App\Libraries\WhatsappService;
 use App\Models\SettingModel;
 
 class SignageController extends BaseController
@@ -19,6 +19,9 @@ class SignageController extends BaseController
         // Manfaatkan request yang ada sebagai scheduler notifikasi.
         $this->_triggerWaNotifications();
         // ────────────────────────────────────────────────────────────────
+
+        // Otomatis perbarui status semua rapat berdasarkan waktu saat ini
+        (new \App\Models\JadwalModel())->autoUpdateStatuses();
 
         $db    = \Config\Database::connect();
         $today = date('Y-m-d');
@@ -86,8 +89,9 @@ class SignageController extends BaseController
             return;
         }
 
-        $command = new SendWaNotifications();
-        $command->run([]);
+        // Panggil langsung ke WhatsappService — tidak melalui BaseCommand
+        // agar tidak terjadi ArgumentCountError saat dipanggil via HTTP
+        (new WhatsappService())->sendPendingNotifications();
     }
 
     /**

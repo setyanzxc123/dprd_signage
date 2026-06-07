@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Commands\SendWaNotifications;
+use App\Libraries\WhatsappService;
 
 /**
  * CronController
@@ -45,12 +45,14 @@ class CronController extends BaseController
                 ]);
         }
 
-        $command = new SendWaNotifications();
-        $command->run([]);
+        $result = (new WhatsappService())->sendPendingNotifications();
 
         return $this->response->setJSON([
             'success'   => true,
             'message'   => 'Notifikasi diproses.',
+            'total'     => $result['total'],
+            'sent'      => $result['sent'],
+            'failed'    => $result['failed'],
             'timestamp' => date('Y-m-d H:i:s'),
         ]);
     }

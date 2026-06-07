@@ -50,8 +50,6 @@ services:
     volumes:
       # Persist data database
       - db_data:/var/lib/mysql
-      # Import schema awal otomatis saat pertama kali container dibuat
-      - ./dprd_signage.sql:/docker-entrypoint-initdb.d/01_schema.sql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s

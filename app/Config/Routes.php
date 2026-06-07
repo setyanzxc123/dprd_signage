@@ -59,9 +59,11 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('notifikasi/(:num)/cancel',    'Admin\NotificationController::cancel/$1');
 
     // Pengaturan Signage
-    $routes->get( 'pengaturan',            'Admin\SettingController::index');
-    $routes->post('pengaturan/save',       'Admin\SettingController::save');
+    $routes->get( 'pengaturan',              'Admin\SettingController::index');
+    $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
+    $routes->post('pengaturan/wa-test',      'Admin\SettingController::waTest');
+    $routes->get( 'pengaturan/wa-status',    'Admin\SettingController::waStatus');
 });
 
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────
