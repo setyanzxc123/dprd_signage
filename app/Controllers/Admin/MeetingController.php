@@ -173,7 +173,7 @@ class MeetingController extends BaseController
         ], true); // true = return insert ID
 
         // Buat entri notifikasi pending untuk anggota yang relevan
-        $this->_createNotifikasi($jadwalId, $komisiArray);
+        $this->_syncNotifikasi($jadwalId, $komisiArray, false);
 
         session()->setFlashdata('success', 'Jadwal berhasil disimpan dan notifikasi dijadwalkan.');
         return redirect()->to(base_url('admin/jadwal'));
@@ -233,11 +233,8 @@ class MeetingController extends BaseController
             'jenis'         => $this->request->getPost('jenis') ?? 'insidental',
         ]);
 
-        // Hapus notifikasi pending lama, lalu buat ulang dengan target & waktu terbaru.
-        // Notifikasi yang sudah 'sent' atau 'failed' dibiarkan (sebagai histori).
-        $notifModel = new NotifikasiModel();
-        $notifModel->where('jadwal_id', $id)->where('status', 'pending')->delete();
-        $this->_createNotifikasi($id, $komisiArray);
+        // Sinkronisasi dan reset status notifikasi agar dikirim ulang dengan detail terbaru
+        $this->_syncNotifikasi($id, $komisiArray, true);
 
         session()->setFlashdata('success', 'Jadwal berhasil diperbarui dan notifikasi dijadwalkan ulang.');
         return redirect()->to(base_url('admin/jadwal'));
@@ -272,8 +269,8 @@ class MeetingController extends BaseController
         ]);
     }
 
-    // ── Helper: buat entri notifikasi pending ──────────────────────────
-    private function _createNotifikasi(int $jadwalId, array $komisiArray): void
+    // ── Helper: sinkronisasi dan buat/reset entri notifikasi ──────────
+    private function _syncNotifikasi(int $jadwalId, array $komisiArray, bool $isUpdate = false): void
     {
         $anggotaModel = new AnggotaModel();
 
@@ -286,27 +283,53 @@ class MeetingController extends BaseController
                 ->findAll();
         }
 
+        $notifModel = new NotifikasiModel();
+
+        if ($isUpdate) {
+            $targetAnggotaIds = array_column($targets, 'id');
+
+            // Hapus notifikasi pending untuk anggota yang sudah tidak menjadi target lagi
+            if (!empty($targetAnggotaIds)) {
+                $notifModel->where('jadwal_id', $jadwalId)
+                           ->where('status', 'pending')
+                           ->whereNotIn('anggota_id', $targetAnggotaIds)
+                           ->delete();
+            } else {
+                $notifModel->where('jadwal_id', $jadwalId)
+                           ->where('status', 'pending')
+                           ->delete();
+            }
+        }
+
         if (empty($targets)) return;
 
-        $notifModel = new NotifikasiModel();
         foreach ($targets as $anggota) {
-            // Skip jika sudah ada notif pending/sent untuk anggota ini di jadwal ini
-            // (mencegah double-insert saat store dipanggil ulang)
             $exists = $notifModel
                 ->where('jadwal_id', $jadwalId)
                 ->where('anggota_id', $anggota['id'])
-                ->whereIn('status', ['pending', 'sent'])
                 ->first();
 
-            if ($exists) continue;
-
-            $notifModel->insert([
-                'jadwal_id'  => $jadwalId,
-                'anggota_id' => $anggota['id'],
-                'no_wa'      => $anggota['no_wa'],
-                'status'     => 'pending',
-                'created_at' => date('Y-m-d H:i:s'),
-            ]);
+            if ($exists) {
+                // Jika update jadwal, reset status notifikasi agar dikirim ulang dengan detail terbaru
+                if ($isUpdate) {
+                    $notifModel->update($exists['id'], [
+                        'no_wa'         => $anggota['no_wa'],
+                        'status'        => 'pending',
+                        'executed_at'   => null,
+                        'retry_count'   => 0,
+                        'error_message' => null,
+                    ]);
+                }
+            } else {
+                // Jika belum ada, buat baru
+                $notifModel->insert([
+                    'jadwal_id'  => $jadwalId,
+                    'anggota_id' => $anggota['id'],
+                    'no_wa'      => $anggota['no_wa'],
+                    'status'     => 'pending',
+                    'created_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
         }
     }
 }
