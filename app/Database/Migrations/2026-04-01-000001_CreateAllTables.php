@@ -12,12 +12,14 @@ class CreateAllTables extends Migration
         $this->forge->addField([
             'id'         => ['type' => 'INT', 'auto_increment' => true],
             'name'       => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => false],
-            'email'      => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => false],
+            'username'   => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => false],
+            'email'      => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true, 'default' => null],
             'password'   => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => false],
             'role'       => ['type' => 'ENUM', 'constraint' => ['superadmin', 'operator'], 'default' => 'operator'],
             'created_at' => ['type' => 'DATETIME', 'null' => true, 'default' => null],
         ]);
         $this->forge->addPrimaryKey('id');
+        $this->forge->addUniqueKey('username');
         $this->forge->addUniqueKey('email');
         $this->forge->createTable('users', true);
 

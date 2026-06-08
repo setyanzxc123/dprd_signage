@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — Panel Admin Signage DPRD Sulteng</title>
+    <title>Login - Panel Admin Signage DPRD Sulteng</title>
     <meta name="robots" content="noindex, nofollow" />
 
     <!-- Bootstrap 5 -->
@@ -180,13 +180,13 @@
             <form action="<?= base_url('admin/login') ?>" method="POST" id="login-form">
                 <?= csrf_field() ?>
 
-                <!-- Email -->
+                <!-- Username -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" for="email">Email</label>
+                    <label class="form-label fw-semibold" for="username">Username</label>
                     <div class="input-icon-wrap">
-                        <i class="bi bi-envelope input-icon"></i>
-                        <input type="email" class="form-control" id="email" name="email"
-                            placeholder="Masukkan Email" autocomplete="email" required />
+                        <i class="bi bi-person input-icon"></i>
+                        <input type="text" class="form-control" id="username" name="username"
+                            placeholder="Masukkan username" autocomplete="username" required />
                     </div>
                 </div>
 
@@ -195,7 +195,7 @@
                     <label class="form-label fw-semibold" for="password">Password</label>
                     <div class="input-icon-wrap">
                         <i class="bi bi-lock input-icon"></i>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="••••••••"
+                        <input type="password" class="form-control" id="password" name="password" placeholder="********"
                             autocomplete="current-password" required />
                         <button type="button" class="btn-eye" id="btn-toggle-pwd"
                             aria-label="Toggle password visibility">
