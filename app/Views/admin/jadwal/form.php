@@ -128,15 +128,15 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Jenis Rapat</label>
-                    <div class="form-text mb-2">Apakah rapat ini terencana dalam SK Bamus atau mendadak?</div>
+                    <div class="form-text mb-2">Apakah rapat ini terjadwal secara reguler atau mendadak?</div>
                     <?php $jenis = $meeting['jenis'] ?? 'insidental'; ?>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="jenis"
-                            id="jenis-bamus" value="bamus"
-                            <?= $jenis === 'bamus' ? 'checked' : '' ?> />
-                        <label class="form-check-label" for="jenis-bamus">
-                            <span class="badge bg-purple-subtle text-purple">Bamus</span>
-                            Terencana dalam SK Bamus
+                            id="jenis-reguler" value="reguler"
+                            <?= $jenis === 'reguler' ? 'checked' : '' ?> />
+                        <label class="form-check-label" for="jenis-reguler">
+                            <span class="badge bg-primary-subtle text-primary">Reguler</span>
+                            Rapat terjadwal / terencana
                         </label>
                     </div>
                     <div class="form-check mt-1">
@@ -145,10 +145,11 @@
                             <?= $jenis === 'insidental' ? 'checked' : '' ?> />
                         <label class="form-check-label" for="jenis-insidental">
                             <span class="badge bg-secondary-subtle text-secondary">Insidental</span>
-                            Rapat mendadak / di luar SK
+                            Rapat mendadak / di luar jadwal
                         </label>
                     </div>
                 </div>
+
 
                 <hr />
 
