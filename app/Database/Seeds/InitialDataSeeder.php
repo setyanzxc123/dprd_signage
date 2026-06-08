@@ -22,6 +22,7 @@ class InitialDataSeeder extends Seeder
         // ── User admin pertama (password: admin) ────────────────────
         $this->db->table('users')->insert([
             'name'       => 'Administrator',
+            'username'   => 'admin',
             'email'      => 'admin@gmail.com',
             'password'   => password_hash('admin', PASSWORD_BCRYPT),
             'role'       => 'superadmin',
