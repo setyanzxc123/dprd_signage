@@ -183,6 +183,7 @@
 
     </div>
 
+    <?php if (false): ?>
     <!-- Seksi BMKG -->
     <div class="form-card mt-3 mb-3">
         <div class="form-section-title">🌤️ Integrasi Cuaca BMKG</div>
@@ -344,6 +345,8 @@
             </div>
         </div>
     </div>
+
+    <?php endif; ?>
 
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary">

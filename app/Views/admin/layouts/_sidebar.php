@@ -61,7 +61,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             </a>
         </li>
 
-        <li class="nav-section-label">Sistem</li>
+        <li class="nav-section-label">Tampilan Publik</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
                 <i class="bi bi-tv-fill nav-icon"></i>
@@ -74,11 +74,17 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 <span class="nav-text">Pratinjau Layar TV</span>
             </a>
         </li>
+        <li class="nav-item-custom">
+            <a class="nav-link-custom" href="<?= base_url('jadwal') ?>" target="_blank" title="Buka di tab baru">
+                <i class="bi bi-calendar-check nav-icon"></i>
+                <span class="nav-text">Pratinjau Jadwal Publik</span>
+            </a>
+        </li>
 
     </ul>
 
     <div class="sidebar-note">
-        Sistem signage dan notifikasi DPRD Provinsi Sulawesi Tengah. Kelola jadwal rapat, kirim pengingat WhatsApp, dan atur tampilan layar TV.
+        Sistem signage dan notifikasi DPRD Provinsi Sulawesi Tengah. Kelola jadwal rapat, kirim pengingat WhatsApp, dan pantau tampilan publik.
     </div>
 
 </nav>
