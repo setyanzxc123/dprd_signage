@@ -72,14 +72,16 @@
                     <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
                 </select>
             </div>
+
             <div class="col-md-2 col-6">
                 <label class="form-label small text-muted fw-semibold" for="filter-jenis">Jenis</label>
                 <select class="form-select form-select-sm" id="filter-jenis" name="jenis" onchange="this.form.submit()">
                     <option value="all" <?= $filters['jenis'] === 'all' ? 'selected' : '' ?>>Semua</option>
-                    <option value="bamus" <?= $filters['jenis'] === 'bamus' ? 'selected' : '' ?>>Bamus</option>
+                    <option value="reguler" <?= $filters['jenis'] === 'reguler' ? 'selected' : '' ?>>Reguler</option>
                     <option value="insidental" <?= $filters['jenis'] === 'insidental' ? 'selected' : '' ?>>Insidental</option>
                 </select>
             </div>
+
             <div class="col-md-2 col-6">
                 <label class="form-label small text-muted fw-semibold" for="filter-status">Status</label>
                 <select class="form-select form-select-sm" id="filter-status" name="status" onchange="this.form.submit()">
@@ -156,8 +158,8 @@
                             <td><?= esc($m['ruangan']) ?></td>
                             <td><span class="badge-group"><?= esc($m['komisi_target']) ?></span></td>
                             <td>
-                                <?php if (($m['jenis'] ?? 'insidental') === 'bamus'): ?>
-                                    <span class="badge bg-primary-subtle text-primary" style="font-size:.7rem;">Bamus</span>
+                                <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
+                                    <span class="badge bg-primary-subtle text-primary" style="font-size:.7rem;">Reguler</span>
                                 <?php else: ?>
                                     <span class="badge bg-secondary-subtle text-secondary" style="font-size:.7rem;">Insidental</span>
                                 <?php endif; ?>
