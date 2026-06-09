@@ -62,7 +62,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'jadwal/(:num)/edit',          'Admin\MeetingController::edit/$1');
     $routes->post('jadwal/(:num)/update',        'Admin\MeetingController::update/$1');
     $routes->get( 'jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
-    $routes->post('jadwal/(:num)/toggle-publik', 'Admin\MeetingController::togglePublik/$1');
 
 
     // Notifikasi WA

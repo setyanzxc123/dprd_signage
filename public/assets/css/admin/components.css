@@ -145,6 +145,19 @@
     vertical-align: middle;
 }
 
+.custom-table tbody td:last-child {
+    white-space: nowrap;
+}
+
+.custom-table tbody td:last-child .btn-action {
+    margin-left: 6px !important;
+}
+
+.custom-table tbody td:last-child .btn-action:first-child,
+.custom-table tbody td:last-child form:first-child .btn-action {
+    margin-left: 0 !important;
+}
+
 .table-avatar {
     width: 34px;
     height: 34px;
@@ -350,8 +363,8 @@
 .tips-list { font-size: 0.80rem; line-height: 1.8; padding-left: 1.2rem; color: var(--text-muted); }
 
 .col-num         { width: 50px; }
-.col-action      { width: 100px; }
-.col-action-wide { width: 120px; }
+.col-action      { width: 112px; min-width: 112px; text-align: center; }
+.col-action-wide { width: 136px; min-width: 136px; text-align: center; }
 
 .text-mono { font-family: monospace; font-size: 0.82rem; }
 

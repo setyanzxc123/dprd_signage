@@ -11,8 +11,8 @@ class AddColumnsToJadwal extends Migration
         // Tambah kolom jenis, is_publik, stream_url ke tabel jadwal
         $this->db->query("
             ALTER TABLE jadwal
-                ADD COLUMN jenis      ENUM('bamus','insidental') NOT NULL DEFAULT 'insidental'
-                           COMMENT 'Klasifikasi rapat: bamus=terencana SK, insidental=mendadak',
+                ADD COLUMN jenis      ENUM('reguler','insidental') NOT NULL DEFAULT 'insidental'
+                           COMMENT 'Klasifikasi rapat: reguler=terencana, insidental=mendadak',
                 ADD COLUMN is_publik  TINYINT(1) NOT NULL DEFAULT 0
                            COMMENT '1 = tampil di signage TV & portal publik',
                 ADD COLUMN stream_url VARCHAR(500) DEFAULT NULL

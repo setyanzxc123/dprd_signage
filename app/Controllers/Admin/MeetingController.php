@@ -36,7 +36,9 @@ class MeetingController extends BaseController
                 $builder->where('j.tanggal >=', "{$tahun}-07-01");
             }
 
-            if ($jenis !== 'all') {
+            if ($jenis === 'reguler') {
+                $builder->whereIn('j.jenis', ['reguler', 'bamus']);
+            } elseif ($jenis !== 'all') {
                 $builder->where('j.jenis', $jenis);
             }
 
@@ -103,7 +105,7 @@ class MeetingController extends BaseController
                 'ruangan'       => $j['nama_ruangan'] ?? '-',
                 'target_peserta' => $targetMap[$j['id']] ?? '-',
                 'status'        => $j['status'],
-                'jenis'         => $j['jenis'] ?? 'insidental',
+                'jenis'         => $this->normalizeJenis($j['jenis'] ?? null),
                 'is_publik'     => (int) ($j['is_publik'] ?? 0),
             ];
         }
@@ -174,7 +176,7 @@ class MeetingController extends BaseController
             'materi_url'    => $this->request->getPost('materi_url'),
             'stream_url'    => $this->request->getPost('stream_url') ?: null,
             'is_publik'     => $this->request->getPost('is_publik') ? 1 : 0,
-            'jenis'         => $this->request->getPost('jenis') ?? 'insidental',
+            'jenis'         => $this->postedJenis(),
             'status'        => 'menunggu',
         ], true); // true = return insert ID
 
@@ -199,6 +201,7 @@ class MeetingController extends BaseController
         }
 
         $jadwal['target_unit_ids'] = $this->jadwalUnitIds($id);
+        $jadwal['jenis'] = $this->normalizeJenis($jadwal['jenis'] ?? null);
 
         return view('admin/jadwal/form', [
             'pageTitle'   => 'Edit Jadwal Rapat',
@@ -237,7 +240,7 @@ class MeetingController extends BaseController
             'materi_url'    => $this->request->getPost('materi_url'),
             'stream_url'    => $this->request->getPost('stream_url') ?: null,
             'is_publik'     => $this->request->getPost('is_publik') ? 1 : 0,
-            'jenis'         => $this->request->getPost('jenis') ?? 'insidental',
+            'jenis'         => $this->postedJenis(),
         ]);
 
         $this->syncJadwalUnits($id, $unitIds);
@@ -256,26 +259,6 @@ class MeetingController extends BaseController
 
         session()->setFlashdata('success', 'Jadwal berhasil dihapus.');
         return redirect()->to(base_url('admin/jadwal'));
-    }
-
-    // ── Toggle is_publik ───────────────────────────────────────────────
-    public function togglePublik(int $id)
-    {
-        $jadwalModel = new JadwalModel();
-        $jadwal      = $jadwalModel->find($id);
-
-        if (!$jadwal) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Jadwal tidak ditemukan.']);
-        }
-
-        $newVal = $jadwal['is_publik'] ? 0 : 1;
-        $jadwalModel->update($id, ['is_publik' => $newVal]);
-
-        return $this->response->setJSON([
-            'success'    => true,
-            'is_publik'  => $newVal,
-            'message'    => $newVal ? 'Jadwal ditampilkan di publik.' : 'Jadwal disembunyikan dari publik.',
-        ]);
     }
 
     // ── Helper: sinkronisasi dan buat/reset entri notifikasi ──────────
@@ -375,6 +358,20 @@ class MeetingController extends BaseController
         $ids = array_filter($ids, static fn (int $id): bool => $id > 0);
 
         return array_values(array_unique($ids));
+    }
+
+    private function postedJenis(): string
+    {
+        return $this->normalizeJenis($this->request->getPost('jenis'));
+    }
+
+    private function normalizeJenis(?string $jenis): string
+    {
+        if ($jenis === 'bamus' || $jenis === 'reguler') {
+            return 'reguler';
+        }
+
+        return 'insidental';
     }
 
     private function unitNamesByIds(array $unitIds): array

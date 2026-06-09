@@ -165,13 +165,11 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <button
-                                    class="btn-toggle-publik btn btn-sm <?= ($m['is_publik'] ?? 0) ? 'btn-success' : 'btn-outline-secondary' ?>"
-                                    data-id="<?= $m['id'] ?>"
-                                    title="<?= ($m['is_publik'] ?? 0) ? 'Tampil di Publik (klik untuk sembunyikan)' : 'Hanya Internal (klik untuk tampilkan)' ?>"
-                                    style="font-size:.7rem; padding:.2rem .5rem;">
-                                    <?= ($m['is_publik'] ?? 0) ? 'Publik' : 'Internal' ?>
-                                </button>
+                                <?php if ($m['is_publik'] ?? 0): ?>
+                                    <span class="badge bg-success-subtle text-success" title="Ubah publikasi melalui halaman edit" style="font-size:.7rem;">Publik</span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary-subtle text-secondary" title="Ubah publikasi melalui halaman edit" style="font-size:.7rem;">Internal</span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <span class="status-badge <?= $badge['class'] ?>">
@@ -207,36 +205,4 @@
 
 </div>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<script>
-    // Toggle is_publik via AJAX
-    document.querySelectorAll('.btn-toggle-publik').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id  = this.dataset.id;
-            const btn = this;
-            fetch(`/admin/jadwal/${id}/toggle-publik`, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ '<?= csrf_token() ?>': '<?= csrf_hash() ?>' })
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.success) {
-                    if (res.is_publik) {
-                        btn.textContent = 'Publik';
-                        btn.className = btn.className.replace('btn-outline-secondary', 'btn-success');
-                        btn.title = 'Tampil di Publik (klik untuk sembunyikan)';
-                    } else {
-                        btn.textContent = 'Internal';
-                        btn.className = btn.className.replace('btn-success', 'btn-outline-secondary');
-                        btn.title = 'Hanya Internal (klik untuk tampilkan)';
-                    }
-                }
-            })
-            .catch(err => console.error('Toggle gagal:', err));
-        });
-    });
-</script>
 <?= $this->endSection() ?>
