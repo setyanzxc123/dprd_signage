@@ -156,7 +156,6 @@ class MeetingController extends BaseController
 
         $blastBefore  = (int) $this->request->getPost('blast_before');
         $unitIds      = $this->postedUnitIds();
-        $unitNames    = $this->unitNamesByIds($unitIds);
 
         // Hitung waktu pengiriman notifikasi
         $reminderTime = date('Y-m-d H:i:s',
@@ -183,7 +182,7 @@ class MeetingController extends BaseController
         $this->syncJadwalUnits((int) $jadwalId, $unitIds);
 
         // Buat entri notifikasi pending untuk anggota yang relevan
-        $this->_syncNotifikasi((int) $jadwalId, $unitNames, false);
+        $this->_syncNotifikasi((int) $jadwalId, $unitIds, false);
 
         session()->setFlashdata('success', 'Jadwal berhasil disimpan dan notifikasi dijadwalkan.');
         return redirect()->to(base_url('admin/jadwal'));
@@ -222,7 +221,6 @@ class MeetingController extends BaseController
 
         $blastBefore  = (int) $this->request->getPost('blast_before');
         $unitIds      = $this->postedUnitIds();
-        $unitNames    = $this->unitNamesByIds($unitIds);
         $reminderTime = date('Y-m-d H:i:s',
             strtotime("{$tanggal} {$waktuMulai}") - ($blastBefore * 60)
         );
@@ -246,7 +244,7 @@ class MeetingController extends BaseController
         $this->syncJadwalUnits($id, $unitIds);
 
         // Sinkronisasi dan reset status notifikasi agar dikirim ulang dengan detail terbaru
-        $this->_syncNotifikasi($id, $unitNames, true);
+        $this->_syncNotifikasi($id, $unitIds, true);
 
         session()->setFlashdata('success', 'Jadwal berhasil diperbarui dan notifikasi dijadwalkan ulang.');
         return redirect()->to(base_url('admin/jadwal'));
@@ -262,18 +260,9 @@ class MeetingController extends BaseController
     }
 
     // ── Helper: sinkronisasi dan buat/reset entri notifikasi ──────────
-    private function _syncNotifikasi(int $jadwalId, array $komisiArray, bool $isUpdate = false): void
+    private function _syncNotifikasi(int $jadwalId, array $unitIds, bool $isUpdate = false): void
     {
-        $anggotaModel = new AnggotaModel();
-
-        if (in_array('All Komisi', $komisiArray, true) || in_array('Seluruh Anggota', $komisiArray, true) || empty($komisiArray)) {
-            $targets = $anggotaModel->where('aktif', 1)->findAll();
-        } else {
-            $targets = $anggotaModel
-                ->where('aktif', 1)
-                ->whereIn('komisi', $komisiArray)
-                ->findAll();
-        }
+        $targets = $this->targetAnggotaByUnitIds($unitIds);
 
         $notifModel = new NotifikasiModel();
 
@@ -374,18 +363,50 @@ class MeetingController extends BaseController
         return 'insidental';
     }
 
-    private function unitNamesByIds(array $unitIds): array
+    private function targetAnggotaByUnitIds(array $unitIds): array
     {
+        $anggotaModel = new AnggotaModel();
+        $unitIds = array_values(array_filter(array_map('intval', $unitIds)));
+
         if (empty($unitIds)) {
-            return [];
+            return $anggotaModel->where('aktif', 1)->findAll();
         }
 
         $units = (new UnitRapatModel())
-            ->select('nama')
+            ->select('id, nama, membership_type')
             ->whereIn('id', $unitIds)
             ->findAll();
 
-        return array_column($units, 'nama');
+        if (empty($units)) {
+            return [];
+        }
+
+        foreach ($units as $unit) {
+            if ($unit['membership_type'] === 'semua_anggota' || $unit['nama'] === 'All Komisi') {
+                return $anggotaModel->where('aktif', 1)->findAll();
+            }
+        }
+
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('anggota_unit_rapat')) {
+            return [];
+        }
+
+        $targets = $db
+            ->table('anggota_unit_rapat aur')
+            ->select('a.*')
+            ->join('anggota a', 'a.id = aur.anggota_id')
+            ->where('a.aktif', 1)
+            ->whereIn('aur.unit_rapat_id', $unitIds)
+            ->get()
+            ->getResultArray();
+
+        $targetsById = [];
+        foreach ($targets as $anggota) {
+            $targetsById[$anggota['id']] = $anggota;
+        }
+
+        return array_values($targetsById);
     }
 
     private function jadwalUnitIds(int $jadwalId): array

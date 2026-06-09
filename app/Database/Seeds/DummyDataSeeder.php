@@ -11,6 +11,7 @@ class DummyDataSeeder extends Seeder
         $this->insertMissing('ruangan', 'name', $this->rooms());
         $this->insertMissing('unit_rapat', 'nama', $this->meetingUnits());
         $this->insertMissing('anggota', 'no_wa', $this->members());
+        $this->syncUnitMembers();
     }
 
     private function insertMissing(string $table, string $uniqueField, array $rows): void
@@ -119,5 +120,107 @@ class DummyDataSeeder extends Seeder
             ['name' => 'Mariani Lestari, S.E.', 'jabatan' => 'Wakil Ketua DPRD I',    'fraksi' => 'Fraksi B', 'komisi' => '',           'no_wa' => '6281100000016', 'aktif' => 1],
             ['name' => 'Faisal Taufik, S.H.',  'jabatan' => 'Wakil Ketua DPRD II',    'fraksi' => 'Fraksi C', 'komisi' => '',           'no_wa' => '6281100000017', 'aktif' => 1],
         ];
+    }
+
+    private function syncUnitMembers(): void
+    {
+        if (! $this->db->tableExists('anggota_unit_rapat')) {
+            return;
+        }
+
+        $membersByPhone = array_column(
+            $this->db->table('anggota')
+                ->select('id, no_wa')
+                ->get()
+                ->getResultArray(),
+            'id',
+            'no_wa'
+        );
+
+        $unitsByName = array_column(
+            $this->db->table('unit_rapat')
+                ->select('id, nama')
+                ->get()
+                ->getResultArray(),
+            'id',
+            'nama'
+        );
+
+        $unitMembers = [
+            'Pansus Ranperda Pajak Daerah' => [
+                '6281100000002',
+                '6281100000007',
+                '6281100000014',
+                '6281100000015',
+            ],
+            'Tim Pembahas RAPBD' => [
+                '6281100000005',
+                '6281100000009',
+                '6281100000012',
+                '6281100000016',
+            ],
+        ];
+
+        $now = date('Y-m-d H:i:s');
+        foreach ($unitMembers as $unitName => $phones) {
+            if (! isset($unitsByName[$unitName])) {
+                continue;
+            }
+
+            $unitId = (int) $unitsByName[$unitName];
+            foreach ($phones as $phone) {
+                if (! isset($membersByPhone[$phone])) {
+                    continue;
+                }
+
+                $anggotaId = (int) $membersByPhone[$phone];
+                $exists = $this->db->table('anggota_unit_rapat')
+                    ->where('anggota_id', $anggotaId)
+                    ->where('unit_rapat_id', $unitId)
+                    ->countAllResults() > 0;
+
+                if (! $exists) {
+                    $this->db->table('anggota_unit_rapat')->insert([
+                        'anggota_id'    => $anggotaId,
+                        'unit_rapat_id' => $unitId,
+                        'created_at'    => $now,
+                    ]);
+                }
+            }
+        }
+
+        // Sinkronisasikan juga data komisi dari anggota ke anggota_unit_rapat
+        $members = $this->db->table('anggota')
+            ->select('id, komisi')
+            ->where('komisi !=', '')
+            ->where('komisi IS NOT NULL')
+            ->get()
+            ->getResultArray();
+
+        $units = $this->db->table('unit_rapat')
+            ->select('id, nama')
+            ->where('jenis', 'komisi')
+            ->get()
+            ->getResultArray();
+
+        $unitMap = array_column($units, 'id', 'nama');
+        foreach ($members as $member) {
+            $komisiName = trim($member['komisi']);
+            if (isset($unitMap[$komisiName])) {
+                $unitId = (int) $unitMap[$komisiName];
+                $exists = $this->db->table('anggota_unit_rapat')
+                    ->where('anggota_id', $member['id'])
+                    ->where('unit_rapat_id', $unitId)
+                    ->countAllResults() > 0;
+
+                if (! $exists) {
+                    $this->db->table('anggota_unit_rapat')->insert([
+                        'anggota_id'    => $member['id'],
+                        'unit_rapat_id' => $unitId,
+                        'created_at'    => $now,
+                    ]);
+                }
+            }
+        }
     }
 }

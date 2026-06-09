@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\AnggotaModel;
 use App\Models\UnitRapatModel;
 
 class UnitRapatController extends BaseController
@@ -53,6 +54,8 @@ class UnitRapatController extends BaseController
         return view('admin/unit_rapat/form', [
             'pageTitle'    => 'Tambah Unit Rapat',
             'unit'         => null,
+            'members'      => $this->memberOptions(),
+            'selectedAnggotaIds' => [],
             'jenisOptions' => $this->jenisOptions,
             'action_url'   => base_url('admin/unit-rapat/store'),
         ]);
@@ -61,7 +64,9 @@ class UnitRapatController extends BaseController
     public function store()
     {
         $model = new UnitRapatModel();
-        $model->insert($this->payload());
+        $payload = $this->payload();
+        $unitId = (int) $model->insert($payload, true);
+        $this->syncUnitMembers($unitId, $payload);
 
         session()->setFlashdata('success', 'Unit rapat berhasil ditambahkan.');
         return redirect()->to(base_url('admin/unit-rapat'));
@@ -80,6 +85,8 @@ class UnitRapatController extends BaseController
         return view('admin/unit_rapat/form', [
             'pageTitle'    => 'Edit Unit Rapat',
             'unit'         => $unit,
+            'members'      => $this->memberOptions(),
+            'selectedAnggotaIds' => $this->selectedAnggotaIds($id),
             'jenisOptions' => $this->jenisOptions,
             'action_url'   => base_url("admin/unit-rapat/{$id}/update"),
         ]);
@@ -88,7 +95,9 @@ class UnitRapatController extends BaseController
     public function update(int $id)
     {
         $model = new UnitRapatModel();
-        $model->update($id, $this->payload());
+        $payload = $this->payload();
+        $model->update($id, $payload);
+        $this->syncUnitMembers($id, $payload);
 
         session()->setFlashdata('success', 'Unit rapat berhasil diperbarui.');
         return redirect()->to(base_url('admin/unit-rapat'));
@@ -106,12 +115,91 @@ class UnitRapatController extends BaseController
     private function payload(): array
     {
         $jenis = $this->request->getPost('jenis') ?? 'lainnya';
+        $nama = trim((string) $this->request->getPost('nama'));
+
+        $membershipType = 'manual';
+        if ($jenis === 'komisi') {
+            $membershipType = 'komisi_anggota';
+        } elseif (strcasecmp($nama, 'Seluruh Anggota') === 0) {
+            $membershipType = 'semua_anggota';
+        }
 
         return [
-            'nama'   => trim((string) $this->request->getPost('nama')),
-            'jenis'  => array_key_exists($jenis, $this->jenisOptions) ? $jenis : 'lainnya',
-            'aktif'  => $this->request->getPost('aktif') ? 1 : 0,
-            'urutan' => (int) ($this->request->getPost('urutan') ?? 0),
+            'nama'            => $nama,
+            'jenis'           => array_key_exists($jenis, $this->jenisOptions) ? $jenis : 'lainnya',
+            'membership_type' => $membershipType,
+            'aktif'           => $this->request->getPost('aktif') ? 1 : 0,
+            'urutan'          => (int) ($this->request->getPost('urutan') ?? 0),
         ];
+    }
+
+    private function memberOptions(): array
+    {
+        return (new AnggotaModel())
+            ->where('aktif', 1)
+            ->orderBy('komisi', 'ASC')
+            ->orderBy('name', 'ASC')
+            ->findAll();
+    }
+
+    private function selectedAnggotaIds(int $unitId): array
+    {
+        if (! $this->db()->tableExists('anggota_unit_rapat')) {
+            return [];
+        }
+
+        $rows = $this->db()
+            ->table('anggota_unit_rapat')
+            ->select('anggota_id')
+            ->where('unit_rapat_id', $unitId)
+            ->get()
+            ->getResultArray();
+
+        return array_map('intval', array_column($rows, 'anggota_id'));
+    }
+
+    private function postedAnggotaIds(): array
+    {
+        $ids = $this->request->getPost('anggota_unit_rapat') ?? [];
+        $ids = is_array($ids) ? $ids : [$ids];
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, static fn (int $id): bool => $id > 0);
+
+        return array_values(array_unique($ids));
+    }
+
+    private function syncUnitMembers(int $unitId, array $unit): void
+    {
+        $db = $this->db();
+        if (! $db->tableExists('anggota_unit_rapat')) {
+            return;
+        }
+
+        $db->table('anggota_unit_rapat')
+            ->where('unit_rapat_id', $unitId)
+            ->delete();
+
+        if ($unit['membership_type'] !== 'manual') {
+            return;
+        }
+
+        $anggotaIds = $this->postedAnggotaIds();
+        if (empty($anggotaIds)) {
+            return;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $rows = array_map(static fn (int $anggotaId): array => [
+            'anggota_id'    => $anggotaId,
+            'unit_rapat_id' => $unitId,
+            'created_at'    => $now,
+        ], $anggotaIds);
+
+        $db->table('anggota_unit_rapat')->insertBatch($rows);
+    }
+
+    private function db(): \CodeIgniter\Database\BaseConnection
+    {
+        return \Config\Database::connect();
     }
 }
