@@ -68,14 +68,17 @@
             <video v-if="media.mode === 'video' && media.url" :src="media.url" autoplay loop muted playsinline></video>
             <img v-else-if="media.mode === 'image' && media.url" :src="media.url" alt="Media Signage DPRD" />
 
-            <!-- QR Publik — selalu tampil, arahkan ke halaman jadwal publik -->
-            <div class="qr-panel">
-                <div class="qr-label">📱 Scan untuk Info Jadwal</div>
-                <div id="qr-publik"></div>
-                <!-- QR Materi — hanya muncul jika rapat berlangsung & ada materi -->
-                <div v-if="qrTarget" style="margin-top:.8vh;border-top:1px solid rgba(255,255,255,.1);padding-top:.8vh;">
-                    <div class="qr-label">📥 Unduh Materi Rapat</div>
-                    <div id="qr-container"></div>
+            <!-- Panel QR — satu slot, slide bergantian jika keduanya ada -->
+            <div class="qr-panel" v-if="qrBerkas || qrLive">
+                <!-- Label dinamis -->
+                <div class="qr-label" v-if="activeQR === 'berkas'">📥 Unduh Berkas Rapat</div>
+                <div class="qr-label" v-else><span class="live-badge">🔴 LIVE</span>&nbsp;Tonton Siaran</div>
+                <!-- Container QR tunggal -->
+                <div id="qr-display" :class="{ 'qr-fading': qrFading }"></div>
+                <!-- Dot indicator — hanya muncul jika keduanya ada -->
+                <div v-if="qrBerkas && qrLive" class="qr-dots">
+                    <span :class="['qr-dot', { active: activeQR === 'berkas' }]"></span>
+                    <span :class="['qr-dot', { active: activeQR === 'live' }]"></span>
                 </div>
             </div>
         </div>
@@ -146,8 +149,13 @@
                     kecamatan: '',
                 });
 
-                const qrTarget   = ref('');
-                const PUBLIC_URL = '<?= base_url('jadwal') ?>';
+                const qrBerkas  = ref(false);
+                const qrLive    = ref(false);
+                const activeQR  = ref('berkas'); // 'berkas' | 'live'
+                const qrFading  = ref(false);
+                const activeJadwalId = ref(null);
+                const BASE_URL  = '<?= rtrim(base_url(), '/') ?>';
+                let qrSlideTimer = null;
 
 
                 let clockTimer = null;
@@ -198,21 +206,58 @@
                     });
                 }
 
-                // QR Publik — render sekali saat mount
-                function renderPublicQR() { makeQR('qr-publik', PUBLIC_URL, 110); }
+                // Render QR ke container tunggal #qr-display
+                function renderActiveQR() {
+                    if (!activeJadwalId.value || (!qrBerkas.value && !qrLive.value)) {
+                        makeQR('qr-display', '', 110);
+                        return;
+                    }
 
-                // QR Materi — render saat berlangsung dengan materi
-                function renderQR(url) { makeQR('qr-container', url, 100); }
+                    const url = `${BASE_URL}/go/jadwal/${activeJadwalId.value}/${activeQR.value}`;
+                    makeQR('qr-display', url, 110);
+                }
 
-                watch(qrTarget, (url) => renderQR(url));
+                // Fade-out → ganti → fade-in
+                function switchQR() {
+                    qrFading.value = true;
+                    setTimeout(() => {
+                        activeQR.value = activeQR.value === 'berkas' ? 'live' : 'berkas';
+                        renderActiveQR();
+                        setTimeout(() => { qrFading.value = false; }, 50);
+                    }, 300);
+                }
+
+                // Kelola slide timer berdasarkan ketersediaan QR
+                function syncQrSlide() {
+                    clearInterval(qrSlideTimer);
+                    qrSlideTimer = null;
+
+                    if (!qrBerkas.value && !qrLive.value) {
+                        makeQR('qr-display', '', 110);
+                        return;
+                    }
+
+                    if (qrBerkas.value && qrLive.value) {
+                        // Keduanya ada — jalankan slide setiap 8 detik
+                        qrSlideTimer = setInterval(switchQR, 8000);
+                    }
+                    // Pastikan activeQR valid (jika salah satu hilang)
+                    if (!qrBerkas.value && activeQR.value === 'berkas') activeQR.value = 'live';
+                    if (!qrLive.value   && activeQR.value === 'live')   activeQR.value = 'berkas';
+
+                    renderActiveQR();
+                }
 
                 function loadData() {
                     fetch('/api/signage/jadwal')
                         .then(r => r.json())
                         .then(data => {
                             jadwal.value = data.jadwal ?? [];
-                            const berlangsung = jadwal.value.find(j => j.status === 'berlangsung');
-                            qrTarget.value = berlangsung?.materi_url ?? '';
+                            const aktif  = jadwal.value.find(j => j.status === 'berlangsung');
+                            activeJadwalId.value = aktif?.id ?? null;
+                            qrBerkas.value = !!(aktif?.materi_url);
+                            qrLive.value   = !!(aktif?.stream_url);
+                            syncQrSlide();
                         })
                         .catch(err => console.error('[Signage] Gagal ambil data jadwal:', err));
                 }
@@ -244,7 +289,6 @@
 
                     loadData();
                     loadCuaca();
-                    renderPublicQR();
                     dataTimer = setInterval(loadData, 60000);
                     // Cuaca refresh setiap 15 menit (cache BMKG 30 menit)
                     setInterval(loadCuaca, 900000);
@@ -253,11 +297,12 @@
                 onUnmounted(() => {
                     clearInterval(clockTimer);
                     clearInterval(dataTimer);
+                    clearInterval(qrSlideTimer);
                 });
 
                 return {
                     clock, dateDay, dateFull,
-                    cuaca, qrTarget,
+                    cuaca, qrBerkas, qrLive, activeQR, qrFading,
                     jadwal, runningText, runningTextAktif, media,
                     statusLabel
                 };

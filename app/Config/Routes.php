@@ -15,6 +15,10 @@ $routes->get('signage', 'SignageController::index');
 // Portal Publik — akses via QR Code / direct link
 $routes->get('jadwal', 'PublicController::index');
 
+// Redirect QR Code signage — mengarahkan ke URL asli dari jadwal publik tertentu
+$routes->get('go/jadwal/(:num)/live',   'RedirectController::live/$1');
+$routes->get('go/jadwal/(:num)/berkas', 'RedirectController::berkas/$1');
+
 // Auth (login/logout, di luar group admin)
 $routes->get( 'admin/login',  'Admin\AuthController::loginPage');
 $routes->post('admin/login',  'Admin\AuthController::loginProcess');

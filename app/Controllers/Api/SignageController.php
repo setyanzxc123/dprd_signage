@@ -61,10 +61,8 @@ class SignageController extends BaseController
             $j['komisi'] = implode(', ', json_decode($j['komisi_target'] ?? '[]', true));
             unset($j['komisi_target']);
 
-            // Generate QR URL jika materi_url tersedia
-            $j['qr_url'] = $j['materi_url']
-                ? 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($j['materi_url'])
-                : null;
+            // QR dirender di frontend signage menggunakan URL pendek:
+            // /go/jadwal/{id}/berkas atau /go/jadwal/{id}/live.
         }
 
         return $this->response
