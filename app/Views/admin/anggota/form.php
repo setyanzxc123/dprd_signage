@@ -2,6 +2,11 @@
 
 <?= $this->section('content') ?>
 
+<?php
+    $manual_units = $manual_units ?? [];
+    $selected_unit_ids = array_map('intval', $selected_unit_ids ?? []);
+?>
+
 <div class="page-header">
     <h1 class="page-title">
         <?= esc($pageTitle) ?>
@@ -81,7 +86,7 @@
             </div>
         </div>
 
-        <!-- Kolom kanan: Data WhatsApp -->
+        <!-- Kolom kanan: Kontak & Keanggotaan -->
         <div class="col-lg-4">
             <div class="form-card">
 
@@ -107,6 +112,36 @@
                     </div>
                 <?php endif; ?>
 
+            </div>
+
+            <div class="form-card mt-3">
+                <div class="form-section-title">Keanggotaan Badan / Pansus</div>
+
+                <?php if (empty($manual_units)): ?>
+                    <div class="alert alert-warning py-2 px-3 mb-0">
+                        Belum ada unit rapat manual aktif.
+                    </div>
+                <?php else: ?>
+                    <div class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto;">
+                        <?php foreach ($manual_units as $unit):
+                            $unitId = (int) $unit['id'];
+                            $checked = in_array($unitId, $selected_unit_ids, true) ? 'checked' : '';
+                            $inputId = 'unit-manual-' . $unitId;
+                        ?>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                    id="<?= esc($inputId, 'attr') ?>"
+                                    name="manual_units[]"
+                                    value="<?= $unitId ?>"
+                                    <?= $checked ?> />
+                                <label class="form-check-label fw-semibold" for="<?= esc($inputId, 'attr') ?>">
+                                    <?= esc($unit['nama']) ?>
+                                    <span class="d-block text-muted small fw-normal"><?= esc(ucfirst($unit['jenis'])) ?></span>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
