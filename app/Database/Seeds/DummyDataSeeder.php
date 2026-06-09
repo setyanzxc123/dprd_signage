@@ -98,7 +98,7 @@ class DummyDataSeeder extends Seeder
                 'waktu_mulai'   => '09:00:00',
                 'waktu_selesai' => '12:00:00',
                 'ruangan_id'    => $rId['Ruang Rapat Paripurna'] ?? 1,
-                'komisi_target' => json_encode(['All Komisi']),
+                'target_units'  => ['Seluruh Anggota'],
                 'blast_before'  => 60,
                 'reminder_time' => date('Y-m-d H:i:s', strtotime("$today 08:00:00")),
                 'status'        => 'berlangsung',
@@ -111,7 +111,7 @@ class DummyDataSeeder extends Seeder
                 'waktu_mulai'   => '13:00:00',
                 'waktu_selesai' => '15:00:00',
                 'ruangan_id'    => $rId['Ruang Komisi II'] ?? 3,
-                'komisi_target' => json_encode(['Komisi II']),
+                'target_units'  => ['Komisi II'],
                 'blast_before'  => 60,
                 'reminder_time' => date('Y-m-d H:i:s', strtotime("$today 12:00:00")),
                 'status'        => 'persiapan',
@@ -124,7 +124,7 @@ class DummyDataSeeder extends Seeder
                 'waktu_mulai'   => '15:30:00',
                 'waktu_selesai' => '17:00:00',
                 'ruangan_id'    => $rId['Ruang Komisi III'] ?? 4,
-                'komisi_target' => json_encode(['Komisi III']),
+                'target_units'  => ['Komisi III'],
                 'blast_before'  => 60,
                 'reminder_time' => date('Y-m-d H:i:s', strtotime("$today 14:30:00")),
                 'status'        => 'menunggu',
@@ -138,7 +138,7 @@ class DummyDataSeeder extends Seeder
                 'waktu_mulai'   => '10:00:00',
                 'waktu_selesai' => '13:00:00',
                 'ruangan_id'    => $rId['Ruang Pansus'] ?? 6,
-                'komisi_target' => json_encode(['Pansus']),
+                'target_units'  => ['Pansus'],
                 'blast_before'  => 120,
                 'reminder_time' => date('Y-m-d H:i:s', strtotime("$yesterday 08:00:00")),
                 'status'        => 'selesai',
@@ -152,7 +152,7 @@ class DummyDataSeeder extends Seeder
                 'waktu_mulai'   => '09:00:00',
                 'waktu_selesai' => '11:30:00',
                 'ruangan_id'    => $rId['Ruang Komisi I'] ?? 2,
-                'komisi_target' => json_encode(['Komisi I']),
+                'target_units'  => ['Komisi I'],
                 'blast_before'  => 60,
                 'reminder_time' => date('Y-m-d H:i:s', strtotime("$tomorrow 08:00:00")),
                 'status'        => 'menunggu',
@@ -165,7 +165,7 @@ class DummyDataSeeder extends Seeder
                 'waktu_mulai'   => '13:30:00',
                 'waktu_selesai' => '15:30:00',
                 'ruangan_id'    => $rId['Ruang Komisi IV'] ?? 5,
-                'komisi_target' => json_encode(['Komisi IV']),
+                'target_units'  => ['Komisi IV'],
                 'blast_before'  => 60,
                 'reminder_time' => date('Y-m-d H:i:s', strtotime("$tomorrow 12:30:00")),
                 'status'        => 'menunggu',
@@ -174,17 +174,36 @@ class DummyDataSeeder extends Seeder
         ];
 
         foreach ($jadwalList as $jadwal) {
+            $targetUnits = $jadwal['target_units'];
+            unset($jadwal['target_units']);
+
             $this->db->table('jadwal')->insert($jadwal);
             $jadwalId    = $this->db->insertID();
-            $komisiArray = json_decode($jadwal['komisi_target'], true);
+            $unitRows = $this->db->table('unit_rapat')
+                ->whereIn('nama', $targetUnits)
+                ->get()
+                ->getResultArray();
+            $unitIds = array_column($unitRows, 'id', 'nama');
+
+            foreach ($targetUnits as $unitName) {
+                if (!isset($unitIds[$unitName])) {
+                    continue;
+                }
+
+                $this->db->table('jadwal_unit_rapat')->insert([
+                    'jadwal_id'     => $jadwalId,
+                    'unit_rapat_id' => $unitIds[$unitName],
+                    'created_at'    => date('Y-m-d H:i:s'),
+                ]);
+            }
 
             // Buat entri notifikasi pending untuk anggota terkait
-            if (in_array('All Komisi', $komisiArray)) {
+            if (in_array('Seluruh Anggota', $targetUnits, true)) {
                 $targets = $this->db->table('anggota')->where('aktif', 1)->get()->getResultArray();
             } else {
                 $targets = $this->db->table('anggota')
                     ->where('aktif', 1)
-                    ->whereIn('komisi', $komisiArray)
+                    ->whereIn('komisi', $targetUnits)
                     ->get()->getResultArray();
             }
 

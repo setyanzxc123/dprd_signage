@@ -34,7 +34,6 @@ class SignageController extends BaseController
                 j.tanggal,
                 j.waktu_mulai,
                 j.waktu_selesai,
-                j.komisi_target,
                 j.status,
                 j.materi_url,
                 j.stream_url,
@@ -47,6 +46,8 @@ class SignageController extends BaseController
             ->get()
             ->getResultArray();
 
+        $targetMap = $this->targetNamesByJadwalIds(array_column($jadwal, 'id'));
+
         // Format data dan tambahkan qr_url otomatis
         foreach ($jadwal as &$j) {
             // Waktu format HH:MM
@@ -57,9 +58,7 @@ class SignageController extends BaseController
             $j['ruangan'] = $j['nama_ruangan'] ?? '-';
             unset($j['nama_ruangan']);
 
-            // Decode komisi_target dari JSON
-            $j['komisi'] = implode(', ', json_decode($j['komisi_target'] ?? '[]', true));
-            unset($j['komisi_target']);
+            $j['komisi'] = $targetMap[$j['id']] ?? '';
 
             // QR dirender di frontend signage menggunakan URL pendek:
             // /go/jadwal/{id}/berkas atau /go/jadwal/{id}/live.
@@ -90,6 +89,31 @@ class SignageController extends BaseController
         // Panggil langsung ke WhatsappService — tidak melalui BaseCommand
         // agar tidak terjadi ArgumentCountError saat dipanggil via HTTP
         (new WhatsappService())->sendPendingNotifications();
+    }
+
+    private function targetNamesByJadwalIds(array $jadwalIds): array
+    {
+        $jadwalIds = array_values(array_filter(array_map('intval', $jadwalIds)));
+        if (empty($jadwalIds)) {
+            return [];
+        }
+
+        $rows = \Config\Database::connect()
+            ->table('jadwal_unit_rapat jur')
+            ->select('jur.jadwal_id, ur.nama')
+            ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
+            ->whereIn('jur.jadwal_id', $jadwalIds)
+            ->orderBy('ur.urutan', 'ASC')
+            ->orderBy('ur.nama', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row['jadwal_id']][] = $row['nama'];
+        }
+
+        return array_map(static fn (array $names): string => implode(', ', $names), $map);
     }
 
     /**

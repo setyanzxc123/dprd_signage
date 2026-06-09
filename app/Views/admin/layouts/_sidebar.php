@@ -44,6 +44,12 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 <span class="nav-text">Ruangan Rapat</span>
             </a>
         </li>
+        <li class="nav-item-custom">
+            <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
+                <i class="bi bi-diagram-3-fill nav-icon"></i>
+                <span class="nav-text">Unit Rapat</span>
+            </a>
+        </li>
 
         <li class="nav-section-label">Operasional</li>
         <li class="nav-item-custom">

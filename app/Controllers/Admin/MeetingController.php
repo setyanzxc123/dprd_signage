@@ -7,13 +7,10 @@ use App\Models\AnggotaModel;
 use App\Models\JadwalModel;
 use App\Models\NotifikasiModel;
 use App\Models\RuanganModel;
+use App\Models\UnitRapatModel;
 
 class MeetingController extends BaseController
 {
-    private array $komisiList = [
-        'Komisi I', 'Komisi II', 'Komisi III', 'Komisi IV', 'Pansus', 'All Komisi',
-    ];
-
     public function index(): string
     {
         // Otomatis perbarui status semua rapat berdasarkan waktu saat ini
@@ -29,7 +26,7 @@ class MeetingController extends BaseController
         $perPage  = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
 
         $db      = \Config\Database::connect();
-        $applyFilters = static function ($builder) use ($tahun, $semester, $jenis, $status, $q) {
+        $applyFilters = static function ($builder) use ($db, $tahun, $semester, $jenis, $status, $q) {
             $builder->where('j.tanggal >=', "{$tahun}-01-01");
             $builder->where('j.tanggal <=', "{$tahun}-12-31");
 
@@ -48,12 +45,23 @@ class MeetingController extends BaseController
             }
 
             if ($q !== '') {
+                $unitLike = $db->escape('%' . $db->escapeLikeString($q) . '%');
                 $builder
                 ->groupStart()
                     ->like('j.judul', $q)
                     ->orLike('j.keterangan', $q)
-                    ->orLike('j.komisi_target', $q)
                     ->orLike('r.name', $q)
+                    ->orWhere(
+                        "EXISTS (
+                            SELECT 1
+                            FROM jadwal_unit_rapat jur
+                            JOIN unit_rapat ur ON ur.id = jur.unit_rapat_id
+                            WHERE jur.jadwal_id = j.id
+                              AND ur.nama LIKE {$unitLike} ESCAPE '!'
+                        )",
+                        null,
+                        false
+                    )
                 ->groupEnd();
             }
 
@@ -72,7 +80,7 @@ class MeetingController extends BaseController
         $jadwals = $applyFilters(
             $db->table('jadwal j')
                 ->select('j.id, j.judul, j.keterangan, j.tanggal,
-                          j.waktu_mulai, j.waktu_selesai, j.komisi_target, j.status,
+                          j.waktu_mulai, j.waktu_selesai, j.status,
                           j.jenis, j.is_publik, r.name AS nama_ruangan')
                 ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
         )
@@ -82,10 +90,9 @@ class MeetingController extends BaseController
             ->get()
             ->getResultArray();
 
+        $targetMap = $this->targetNamesByJadwalIds(array_column($jadwals, 'id'));
         $meetings = [];
         foreach ($jadwals as $j) {
-            $komisi = json_decode($j['komisi_target'] ?? '[]', true);
-
             $meetings[] = [
                 'id'            => $j['id'],
                 'judul'         => $j['judul'],
@@ -94,7 +101,7 @@ class MeetingController extends BaseController
                 'waktu_mulai'   => substr($j['waktu_mulai'], 0, 5),
                 'waktu_selesai' => substr($j['waktu_selesai'], 0, 5),
                 'ruangan'       => $j['nama_ruangan'] ?? '-',
-                'komisi_target' => is_array($komisi) && $komisi ? implode(', ', $komisi) : '-',
+                'target_peserta' => $targetMap[$j['id']] ?? '-',
                 'status'        => $j['status'],
                 'jenis'         => $j['jenis'] ?? 'insidental',
                 'is_publik'     => (int) ($j['is_publik'] ?? 0),
@@ -131,7 +138,7 @@ class MeetingController extends BaseController
             'pageTitle'   => 'Tambah Jadwal Rapat',
             'meeting'     => null,
             'rooms'       => $ruanganModel->orderBy('name')->findAll(),
-            'komisi_list' => $this->komisiList,
+            'unit_rapat_list' => $this->unitRapatOptions(),
             'action_url'  => base_url('admin/jadwal/store'),
         ]);
     }
@@ -146,8 +153,8 @@ class MeetingController extends BaseController
         [,             $waktuSelesai] = explode('T', $waktuSelesaiRaw);
 
         $blastBefore  = (int) $this->request->getPost('blast_before');
-        $komisiArray  = $this->request->getPost('target_komisi') ?? [];
-        $komisiJson   = json_encode($komisiArray);
+        $unitIds      = $this->postedUnitIds();
+        $unitNames    = $this->unitNamesByIds($unitIds);
 
         // Hitung waktu pengiriman notifikasi
         $reminderTime = date('Y-m-d H:i:s',
@@ -162,7 +169,6 @@ class MeetingController extends BaseController
             'waktu_mulai'   => $waktuMulai,
             'waktu_selesai' => $waktuSelesai,
             'ruangan_id'    => $this->request->getPost('ruangan_id'),
-            'komisi_target' => $komisiJson,
             'blast_before'  => $blastBefore,
             'reminder_time' => $reminderTime,
             'materi_url'    => $this->request->getPost('materi_url'),
@@ -172,8 +178,10 @@ class MeetingController extends BaseController
             'status'        => 'menunggu',
         ], true); // true = return insert ID
 
+        $this->syncJadwalUnits((int) $jadwalId, $unitIds);
+
         // Buat entri notifikasi pending untuk anggota yang relevan
-        $this->_syncNotifikasi($jadwalId, $komisiArray, false);
+        $this->_syncNotifikasi((int) $jadwalId, $unitNames, false);
 
         session()->setFlashdata('success', 'Jadwal berhasil disimpan dan notifikasi dijadwalkan.');
         return redirect()->to(base_url('admin/jadwal'));
@@ -190,14 +198,13 @@ class MeetingController extends BaseController
             return redirect()->to(base_url('admin/jadwal'));
         }
 
-        // Decode komisi_target dari JSON
-        $jadwal['target_komisi'] = json_decode($jadwal['komisi_target'] ?? '[]', true);
+        $jadwal['target_unit_ids'] = $this->jadwalUnitIds($id);
 
         return view('admin/jadwal/form', [
             'pageTitle'   => 'Edit Jadwal Rapat',
             'meeting'     => $jadwal,
             'rooms'       => $ruanganModel->orderBy('name')->findAll(),
-            'komisi_list' => $this->komisiList,
+            'unit_rapat_list' => $this->unitRapatOptions($jadwal['target_unit_ids']),
             'action_url'  => base_url("admin/jadwal/{$id}/update"),
         ]);
     }
@@ -211,7 +218,8 @@ class MeetingController extends BaseController
         [,             $waktuSelesai] = explode('T', $waktuSelesaiRaw);
 
         $blastBefore  = (int) $this->request->getPost('blast_before');
-        $komisiArray  = $this->request->getPost('target_komisi') ?? [];
+        $unitIds      = $this->postedUnitIds();
+        $unitNames    = $this->unitNamesByIds($unitIds);
         $reminderTime = date('Y-m-d H:i:s',
             strtotime("{$tanggal} {$waktuMulai}") - ($blastBefore * 60)
         );
@@ -224,7 +232,6 @@ class MeetingController extends BaseController
             'waktu_mulai'   => $waktuMulai,
             'waktu_selesai' => $waktuSelesai,
             'ruangan_id'    => $this->request->getPost('ruangan_id'),
-            'komisi_target' => json_encode($komisiArray),
             'blast_before'  => $blastBefore,
             'reminder_time' => $reminderTime,
             'materi_url'    => $this->request->getPost('materi_url'),
@@ -233,8 +240,10 @@ class MeetingController extends BaseController
             'jenis'         => $this->request->getPost('jenis') ?? 'insidental',
         ]);
 
+        $this->syncJadwalUnits($id, $unitIds);
+
         // Sinkronisasi dan reset status notifikasi agar dikirim ulang dengan detail terbaru
-        $this->_syncNotifikasi($id, $komisiArray, true);
+        $this->_syncNotifikasi($id, $unitNames, true);
 
         session()->setFlashdata('success', 'Jadwal berhasil diperbarui dan notifikasi dijadwalkan ulang.');
         return redirect()->to(base_url('admin/jadwal'));
@@ -274,7 +283,7 @@ class MeetingController extends BaseController
     {
         $anggotaModel = new AnggotaModel();
 
-        if (in_array('All Komisi', $komisiArray) || empty($komisiArray)) {
+        if (in_array('All Komisi', $komisiArray, true) || in_array('Seluruh Anggota', $komisiArray, true) || empty($komisiArray)) {
             $targets = $anggotaModel->where('aktif', 1)->findAll();
         } else {
             $targets = $anggotaModel
@@ -331,5 +340,110 @@ class MeetingController extends BaseController
                 ]);
             }
         }
+    }
+
+    private function unitRapatOptions(array $selectedIds = []): array
+    {
+        $model = new UnitRapatModel();
+        $builder = $model
+            ->where('aktif', 1)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('nama', 'ASC');
+
+        $units = $builder->findAll();
+        $existingIds = array_map('intval', array_column($units, 'id'));
+        $missingIds = array_values(array_diff($selectedIds, $existingIds));
+
+        if (!empty($missingIds)) {
+            $inactiveUnits = $model
+                ->whereIn('id', $missingIds)
+                ->orderBy('urutan', 'ASC')
+                ->orderBy('nama', 'ASC')
+                ->findAll();
+
+            $units = array_merge($units, $inactiveUnits);
+        }
+
+        return $units;
+    }
+
+    private function postedUnitIds(): array
+    {
+        $ids = $this->request->getPost('target_unit_rapat') ?? [];
+        $ids = is_array($ids) ? $ids : [$ids];
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, static fn (int $id): bool => $id > 0);
+
+        return array_values(array_unique($ids));
+    }
+
+    private function unitNamesByIds(array $unitIds): array
+    {
+        if (empty($unitIds)) {
+            return [];
+        }
+
+        $units = (new UnitRapatModel())
+            ->select('nama')
+            ->whereIn('id', $unitIds)
+            ->findAll();
+
+        return array_column($units, 'nama');
+    }
+
+    private function jadwalUnitIds(int $jadwalId): array
+    {
+        $rows = \Config\Database::connect()
+            ->table('jadwal_unit_rapat')
+            ->select('unit_rapat_id')
+            ->where('jadwal_id', $jadwalId)
+            ->get()
+            ->getResultArray();
+
+        return array_map('intval', array_column($rows, 'unit_rapat_id'));
+    }
+
+    private function syncJadwalUnits(int $jadwalId, array $unitIds): void
+    {
+        $db = \Config\Database::connect();
+        $db->table('jadwal_unit_rapat')->where('jadwal_id', $jadwalId)->delete();
+
+        if (empty($unitIds)) {
+            return;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $rows = array_map(static fn (int $unitId): array => [
+            'jadwal_id'     => $jadwalId,
+            'unit_rapat_id' => $unitId,
+            'created_at'    => $now,
+        ], $unitIds);
+
+        $db->table('jadwal_unit_rapat')->insertBatch($rows);
+    }
+
+    private function targetNamesByJadwalIds(array $jadwalIds): array
+    {
+        $jadwalIds = array_values(array_filter(array_map('intval', $jadwalIds)));
+        if (empty($jadwalIds)) {
+            return [];
+        }
+
+        $rows = \Config\Database::connect()
+            ->table('jadwal_unit_rapat jur')
+            ->select('jur.jadwal_id, ur.nama')
+            ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
+            ->whereIn('jur.jadwal_id', $jadwalIds)
+            ->orderBy('ur.urutan', 'ASC')
+            ->orderBy('ur.nama', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row['jadwal_id']][] = $row['nama'];
+        }
+
+        return array_map(static fn (array $names): string => implode(', ', $names), $map);
     }
 }

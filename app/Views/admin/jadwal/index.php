@@ -156,7 +156,7 @@
                                 <div class="cell-subtitle"><?= esc($m['keterangan'] ?? '') ?></div>
                             </td>
                             <td><?= esc($m['ruangan']) ?></td>
-                            <td><span class="badge-group"><?= esc($m['komisi_target']) ?></span></td>
+                            <td><span class="badge-group"><?= esc($m['target_peserta']) ?></span></td>
                             <td>
                                 <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
                                     <span class="badge bg-primary-subtle text-primary" style="font-size:.7rem;">Reguler</span>

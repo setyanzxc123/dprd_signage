@@ -35,7 +35,6 @@ class PublicController extends BaseController
                 j.tanggal,
                 j.waktu_mulai,
                 j.waktu_selesai,
-                j.komisi_target,
                 j.status,
                 j.stream_url,
                 j.jenis,
@@ -48,13 +47,15 @@ class PublicController extends BaseController
             ->get()
             ->getResultArray();
 
+        $targetMap = $this->targetNamesByJadwalIds(array_column($jadwal, 'id'));
+
         foreach ($jadwal as &$j) {
             $j['waktu_mulai']   = substr($j['waktu_mulai'],   0, 5);
             $j['waktu_selesai'] = substr($j['waktu_selesai'], 0, 5);
             $j['ruangan']       = $j['nama_ruangan'] ?? '-';
-            $j['komisi']        = implode(', ', json_decode($j['komisi_target'] ?? '[]', true));
+            $j['komisi']        = $targetMap[$j['id']] ?? '';
             $j['has_stream']    = !empty($j['stream_url']);
-            unset($j['nama_ruangan'], $j['komisi_target']);
+            unset($j['nama_ruangan']);
         }
 
         return $this->response
@@ -65,5 +66,30 @@ class PublicController extends BaseController
                 'date'   => $date,
                 'data'   => $jadwal,
             ]);
+    }
+
+    private function targetNamesByJadwalIds(array $jadwalIds): array
+    {
+        $jadwalIds = array_values(array_filter(array_map('intval', $jadwalIds)));
+        if (empty($jadwalIds)) {
+            return [];
+        }
+
+        $rows = \Config\Database::connect()
+            ->table('jadwal_unit_rapat jur')
+            ->select('jur.jadwal_id, ur.nama')
+            ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
+            ->whereIn('jur.jadwal_id', $jadwalIds)
+            ->orderBy('ur.urutan', 'ASC')
+            ->orderBy('ur.nama', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row['jadwal_id']][] = $row['nama'];
+        }
+
+        return array_map(static fn (array $names): string => implode(', ', $names), $map);
     }
 }
