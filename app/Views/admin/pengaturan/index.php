@@ -194,7 +194,7 @@
                     Kode Wilayah (ADM4 — Kelurahan/Desa)
                 </label>
                 <input type="text" class="form-control font-monospace" id="bmkg_adm4" name="bmkg_adm4"
-                    value="<?= esc($settings['bmkg_adm4'] ?? '72.71.01.1004') ?>"
+                    value="<?= esc(env('BMKG_ADM4') ?: '72.71.01.1004') ?>"
                     placeholder="Contoh: 72.71.01.1004"
                     pattern="\d{2}\.\d{2}\.\d{2}\.\d{4}"
                     <?= env('BMKG_ADM4') ? 'readonly' : '' ?> />

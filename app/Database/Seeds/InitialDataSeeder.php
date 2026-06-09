@@ -16,7 +16,6 @@ class InitialDataSeeder extends Seeder
             ['key_name' => 'media_mode',         'value' => 'video'],
             ['key_name' => 'media_file',         'value' => ''],
             ['key_name' => 'logo_path',          'value' => './assets/images/logo_dprd.jpg'],
-            ['key_name' => 'bmkg_adm4',          'value' => '72.71.04.1001'],
         ]);
 
         // ── User admin pertama (password: admin) ────────────────────
