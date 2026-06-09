@@ -4,8 +4,6 @@ namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
 use App\Libraries\WhatsappService;
-use App\Models\SettingModel;
-
 class SignageController extends BaseController
 {
     /**
@@ -75,17 +73,9 @@ class SignageController extends BaseController
     /**
      * Pseudo Cron — trigger pengiriman notifikasi WA pending.
      * Dipanggil setiap kali layar signage polling jadwal (interval 1 menit).
-     * Hanya aktif jika wa_notif_aktif = 1 di settings.
      */
     private function _triggerWaNotifications(): void
     {
-        $settingModel = new SettingModel();
-        $aktif        = $settingModel->getValue('wa_notif_aktif', '0');
-
-        if ($aktif !== '1') {
-            return;
-        }
-
         // Panggil langsung ke WhatsappService — tidak melalui BaseCommand
         // agar tidak terjadi ArgumentCountError saat dipanggil via HTTP
         (new WhatsappService())->sendPendingNotifications();
@@ -138,9 +128,8 @@ class SignageController extends BaseController
             }
         }
 
-        // Ambil kode wilayah dari .env (prioritas) atau database settings (fallback)
-        $settingModel = new \App\Models\SettingModel();
-        $adm4 = env('BMKG_ADM4') ?: ($settingModel->getValue('bmkg_adm4') ?: '72.71.01.1004');
+        // Kode wilayah BMKG dikelola di .env, bukan di tabel settings.
+        $adm4 = env('BMKG_ADM4') ?: '72.71.01.1004';
 
         $url  = 'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=' . urlencode($adm4);
         $body = @file_get_contents($url);

@@ -2,14 +2,11 @@
 
 namespace App\Libraries;
 
-use App\Models\SettingModel;
-
 /**
  * WhatsappService
  *
  * Adapter pengiriman pesan WhatsApp via Fonnte API.
- * Token diambil dari .env (prioritas) atau tabel settings (fallback),
- * mengikuti pola yang sama dengan BMKG_ADM4.
+ * Token diambil dari .env agar kredensial teknis tidak dikelola dari UI/admin DB.
  *
  * Dokumentasi Fonnte: https://api.fonnte.com
  */
@@ -20,9 +17,8 @@ class WhatsappService
 
     public function __construct()
     {
-        // Prioritas: .env → fallback: settings DB
-        $this->token = env('WA_API_KEY')
-            ?: (new SettingModel())->getValue('wa_api_key', '');
+        // Token dikelola di .env, bukan di tabel settings.
+        $this->token = env('WA_API_KEY') ?: '';
     }
 
     /**

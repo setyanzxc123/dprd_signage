@@ -130,8 +130,7 @@ class SettingController extends BaseController
             return redirect()->to(base_url('admin/pengaturan'));
         }
 
-        $settingModel = new SettingModel();
-        $token = env('WA_API_KEY') ?: $settingModel->getValue('wa_api_key', '');
+        $token = env('WA_API_KEY') ?: '';
 
         if (empty($token)) {
             return $this->response->setJSON([
