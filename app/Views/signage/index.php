@@ -88,8 +88,12 @@
             <div class="signage-schedule">
                 <div class="schedule-title">⬡ Agenda Rapat Hari Ini</div>
 
-                <div v-if="jadwal.length === 0" class="schedule-empty">
+                <div v-if="jadwal.length === 0 && upcoming.length === 0" class="schedule-empty">
                     <div class="empty-icon">📅</div>
+                    <p>Tidak ada jadwal rapat hari ini</p>
+                </div>
+
+                <div v-else-if="jadwal.length === 0" class="schedule-empty compact-empty">
                     <p>Tidak ada jadwal rapat hari ini</p>
                 </div>
 
@@ -107,6 +111,28 @@
                             <span :class="['status-dot', item.status === 'berlangsung' ? 'pulse' : '']"></span>
                             {{ statusLabel(item.status) }}
                         </span>
+                    </div>
+                </div>
+
+                <div v-if="upcoming.length > 0" class="upcoming-section">
+                    <div class="schedule-title upcoming-title">Agenda Berikutnya</div>
+
+                    <div v-for="item in upcoming" :key="'upcoming-' + item.id" class="schedule-item upcoming-item">
+                        <div class="item-time">
+                            <div class="time-date">{{ upcomingDateLabel(item.tanggal) }}</div>
+                            <div class="time-range">{{ item.waktu_mulai }} - {{ item.waktu_selesai }}</div>
+                            <div class="time-room">{{ item.ruangan }}</div>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">{{ item.judul }}</div>
+                            <div class="item-group">{{ item.komisi }}</div>
+                        </div>
+                        <div class="item-status">
+                            <span class="status-pill upcoming">
+                                <span class="status-dot"></span>
+                                Mendatang
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -132,6 +158,7 @@
                 const dateDay = ref('');
                 const dateFull = ref('');
                 const jadwal = ref([]);
+                const upcoming = ref([]);
                 const runningText = ref('<?= esc($runningText ?? 'Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah') ?>');
                 const runningTextAktif = ref(<?= ($runningTextAktif ?? false) ? 'true' : 'false' ?>);
                 const media = ref({
@@ -186,6 +213,29 @@
                         selesai: 'Selesai',
                     };
                     return map[status] ?? status;
+                }
+
+                function parseDateOnly(ymd) {
+                    const parts = String(ymd || '').split('-').map(Number);
+                    if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+                    return new Date(parts[0], parts[1] - 1, parts[2]);
+                }
+
+                function upcomingDateLabel(ymd) {
+                    const date = parseDateOnly(ymd);
+                    if (!date) return '';
+
+                    const now = new Date();
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const diffDays = Math.round((date - today) / 86400000);
+
+                    if (diffDays === 1) return 'Besok';
+
+                    return new Intl.DateTimeFormat('id-ID', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                    }).format(date);
                 }
 
                 function makeQR(containerId, url, size = 120) {
@@ -253,6 +303,7 @@
                         .then(r => r.json())
                         .then(data => {
                             jadwal.value = data.jadwal ?? [];
+                            upcoming.value = data.upcoming ?? [];
                             const aktif  = jadwal.value.find(j => j.status === 'berlangsung');
                             activeJadwalId.value = aktif?.id ?? null;
                             qrBerkas.value = !!(aktif?.materi_url);
@@ -303,8 +354,8 @@
                 return {
                     clock, dateDay, dateFull,
                     cuaca, qrBerkas, qrLive, activeQR, qrFading,
-                    jadwal, runningText, runningTextAktif, media,
-                    statusLabel
+                    jadwal, upcoming, runningText, runningTextAktif, media,
+                    statusLabel, upcomingDateLabel
                 };
             }
         }).mount('#app');

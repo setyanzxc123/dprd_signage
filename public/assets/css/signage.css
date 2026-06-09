@@ -367,6 +367,78 @@ body {
     margin: 0;
 }
 
+.compact-empty {
+    height: auto;
+    align-items: flex-start;
+    justify-content: flex-start;
+    opacity: 0.8;
+    padding: 0.4vh 0 0.9vh;
+}
+
+.compact-empty p {
+    font-size: 0.78vw;
+}
+
+.upcoming-section {
+    margin-top: 1.4vh;
+}
+
+.upcoming-title {
+    margin-top: 0;
+    margin-bottom: 0.8vh;
+}
+
+.upcoming-item {
+    gap: 0.9vw;
+    padding: 0.85vh 1.05vw;
+    border-radius: 8px;
+    margin-bottom: 0.55vh;
+    background: rgba(96, 165, 250, 0.07);
+    border-color: rgba(96, 165, 250, 0.14);
+}
+
+[data-signage-theme="light"] .upcoming-item {
+    background: rgba(37, 99, 235, 0.05);
+    border-color: rgba(37, 99, 235, 0.12);
+}
+
+.upcoming-item .item-time {
+    min-width: 8.2vw;
+}
+
+.upcoming-item .time-date {
+    font-size: 0.62vw;
+    font-weight: 800;
+    color: var(--sg-label);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.upcoming-item .time-range {
+    font-size: 0.9vw;
+}
+
+.upcoming-item .time-room,
+.upcoming-item .item-group {
+    font-size: 0.68vw;
+}
+
+.upcoming-item .item-title {
+    font-size: clamp(14px, 0.92vw, 20px);
+    line-height: 1.2;
+}
+
+.status-pill.upcoming {
+    background: rgba(96, 165, 250, 0.16);
+    color: #93c5fd;
+}
+
+[data-signage-theme="light"] .status-pill.upcoming {
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+}
+
 #panel-ticker {
     grid-area: ticker;
     background: var(--sg-ticker-bg);
