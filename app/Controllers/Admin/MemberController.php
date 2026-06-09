@@ -4,16 +4,13 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\AnggotaModel;
+use App\Models\UnitRapatModel;
 
 class MemberController extends BaseController
 {
     private array $fraksiList = [
         'Golkar', 'PDI-P', 'Gerindra', 'PKB', 'NasDem',
         'PKS', 'Demokrat', 'PAN', 'PPP', 'Hanura',
-    ];
-
-    private array $komisiList = [
-        'Komisi I', 'Komisi II', 'Komisi III', 'Komisi IV', 'Pansus', 'All Komisi',
     ];
 
     public function index(): string
@@ -74,7 +71,7 @@ class MemberController extends BaseController
             'pageTitle'   => 'Tambah Anggota',
             'member'      => null,
             'fraksi_list' => $this->fraksiList,
-            'komisi_list' => $this->komisiList,
+            'komisi_list' => $this->komisiOptions(),
             'action_url'  => base_url('admin/anggota/store'),
         ]);
     }
@@ -109,7 +106,7 @@ class MemberController extends BaseController
             'pageTitle'   => 'Edit Anggota',
             'member'      => $member,
             'fraksi_list' => $this->fraksiList,
-            'komisi_list' => $this->komisiList,
+            'komisi_list' => $this->komisiOptions($member['komisi'] ?? ''),
             'action_url'  => base_url("admin/anggota/{$id}/update"),
         ]);
     }
@@ -137,5 +134,24 @@ class MemberController extends BaseController
 
         session()->setFlashdata('success', 'Anggota berhasil dihapus.');
         return redirect()->to(base_url('admin/anggota'));
+    }
+
+    private function komisiOptions(string $selected = ''): array
+    {
+        $model = new UnitRapatModel();
+        $units = $model
+            ->where('aktif', 1)
+            ->where('jenis', 'komisi')
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('nama', 'ASC')
+            ->findAll();
+
+        $options = array_column($units, 'nama');
+
+        if ($selected !== '' && !in_array($selected, $options, true)) {
+            $options[] = $selected;
+        }
+
+        return $options;
     }
 }

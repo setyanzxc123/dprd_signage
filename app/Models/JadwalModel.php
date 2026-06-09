@@ -10,7 +10,7 @@ class JadwalModel extends Model
     protected $primaryKey    = 'id';
     protected $allowedFields = [
         'judul', 'keterangan', 'tanggal', 'waktu_mulai', 'waktu_selesai',
-        'ruangan_id', 'komisi_target', 'blast_before', 'reminder_time',
+        'ruangan_id', 'blast_before', 'reminder_time',
         'status', 'materi_url', 'stream_url', 'is_publik', 'jenis',
     ];
     protected $useTimestamps = false;
@@ -66,4 +66,3 @@ class JadwalModel extends Model
         ", [$today, $today, $nowTime]);
     }
 }
-

@@ -549,20 +549,23 @@
                         <div class="form-section">
                             <div class="form-section-title">Peserta & WA</div>
 
-                            <label class="form-label fw-semibold">Target Peserta</label>
+                            <label class="form-label fw-semibold">Target Peserta / Unit Rapat</label>
 
                             <div class="target-grid">
                                 <?php
-                                $targetKomisi = $meeting['target_komisi'] ?? [];
-                                foreach ($komisi_list as $k):
-                                    $checked = in_array($k, $targetKomisi, true) ? 'checked' : '';
+                                $targetUnitIds = $meeting['target_unit_ids'] ?? [];
+                                foreach ($unit_rapat_list as $unit):
+                                    $unitId = (int) $unit['id'];
+                                    $unitName = $unit['nama'];
+                                    $checked = in_array($unitId, $targetUnitIds, true) ? 'checked' : '';
                                     $selectedClass = $checked ? ' is-selected' : '';
-                                    $targetId = 'komisi-' . trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($k)), '-');
+                                    $targetId = 'unit-rapat-' . $unitId;
                                 ?>
                                     <label class="target-option<?= $selectedClass ?>" for="<?= esc($targetId, 'attr') ?>">
-                                        <input class="form-check-input me-2" type="checkbox" name="target_komisi[]"
-                                            value="<?= esc($k, 'attr') ?>" id="<?= esc($targetId, 'attr') ?>" <?= $checked ?> />
-                                        <span><?= esc($k) ?></span>
+                                        <input class="form-check-input me-2" type="checkbox" name="target_unit_rapat[]"
+                                            value="<?= $unitId ?>" data-name="<?= esc($unitName, 'attr') ?>"
+                                            id="<?= esc($targetId, 'attr') ?>" <?= $checked ?> />
+                                        <span><?= esc($unitName) ?></span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
@@ -636,7 +639,7 @@
 
         const targetInputs = Array.from(document.querySelectorAll('.target-option input[type="checkbox"]'));
         const allKomisiInput = targetInputs.find(function(input) {
-            return input.value === 'All Komisi';
+            return input.dataset.name === 'All Komisi' || input.dataset.name === 'Seluruh Anggota';
         });
 
         const syncTargetVisual = function(input) {

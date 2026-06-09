@@ -133,9 +133,14 @@ class WhatsappService
                 j.waktu_mulai,
                 j.waktu_selesai,
                 j.keterangan,
-                j.komisi_target,
                 j.materi_url,
-                r.name           AS nama_ruangan
+                r.name           AS nama_ruangan,
+                (
+                    SELECT GROUP_CONCAT(ur.nama ORDER BY ur.urutan ASC, ur.nama ASC SEPARATOR ', ')
+                    FROM jadwal_unit_rapat jur
+                    JOIN unit_rapat ur ON ur.id = jur.unit_rapat_id
+                    WHERE jur.jadwal_id = j.id
+                ) AS target_peserta
             FROM notifikasi n
             JOIN jadwal  j ON j.id = n.jadwal_id
             JOIN anggota a ON a.id = n.anggota_id
@@ -194,8 +199,8 @@ class WhatsappService
         $tanggal  = date('d F Y', strtotime($data['tanggal'] ?? ''));
         $mulai    = substr($data['waktu_mulai']   ?? '', 0, 5);
         $selesai  = substr($data['waktu_selesai'] ?? '', 0, 5);
-        $komisi   = is_array($k = json_decode($data['komisi_target'] ?? '[]', true))
-                    ? implode(', ', $k) : '-';
+        $komisi   = trim((string) ($data['target_peserta'] ?? ''));
+        $komisi   = $komisi !== '' ? $komisi : '-';
 
         $lines = [];
         $lines[] = "📋 *UNDANGAN RAPAT DPRD*";
