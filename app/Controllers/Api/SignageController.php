@@ -8,7 +8,7 @@ class SignageController extends BaseController
 {
     /**
      * GET api/signage/jadwal
-     * Mengembalikan JSON daftar jadwal rapat hari ini beserta nama ruangan dan QR URL.
+     * Mengembalikan JSON jadwal hari ini dan beberapa agenda publik berikutnya.
      */
     public function jadwal()
     {
@@ -44,30 +44,56 @@ class SignageController extends BaseController
             ->get()
             ->getResultArray();
 
-        $targetMap = $this->targetNamesByJadwalIds(array_column($jadwal, 'id'));
+        $upcoming = $db->table('jadwal j')
+            ->select('
+                j.id,
+                j.judul,
+                j.keterangan,
+                j.tanggal,
+                j.waktu_mulai,
+                j.waktu_selesai,
+                j.status,
+                j.materi_url,
+                j.stream_url,
+                r.name AS nama_ruangan
+            ')
+            ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
+            ->where('j.tanggal >', $today)
+            ->where('j.is_publik', 1)
+            ->orderBy('j.tanggal', 'ASC')
+            ->orderBy('j.waktu_mulai', 'ASC')
+            ->limit(5)
+            ->get()
+            ->getResultArray();
 
-        // Format data dan tambahkan qr_url otomatis
-        foreach ($jadwal as &$j) {
-            // Waktu format HH:MM
-            $j['waktu_mulai']   = substr($j['waktu_mulai'],   0, 5);
-            $j['waktu_selesai'] = substr($j['waktu_selesai'], 0, 5);
+        $targetMap = $this->targetNamesByJadwalIds(array_merge(
+            array_column($jadwal, 'id'),
+            array_column($upcoming, 'id')
+        ));
 
-            // Nama ruangan fallback
-            $j['ruangan'] = $j['nama_ruangan'] ?? '-';
-            unset($j['nama_ruangan']);
-
-            $j['komisi'] = $targetMap[$j['id']] ?? '';
-
-            // QR dirender di frontend signage menggunakan URL pendek:
-            // /go/jadwal/{id}/berkas atau /go/jadwal/{id}/live.
-        }
+        $jadwal   = $this->formatRows($jadwal, $targetMap);
+        $upcoming = $this->formatRows($upcoming, $targetMap);
 
         return $this->response
             ->setHeader('Cache-Control', 'no-store')
             ->setJSON([
-                'date'   => $today,
-                'jadwal' => $jadwal,
+                'date'     => $today,
+                'jadwal'   => $jadwal,
+                'upcoming' => $upcoming,
             ]);
+    }
+
+    private function formatRows(array $rows, array $targetMap): array
+    {
+        foreach ($rows as &$row) {
+            $row['waktu_mulai']   = substr($row['waktu_mulai'],   0, 5);
+            $row['waktu_selesai'] = substr($row['waktu_selesai'], 0, 5);
+            $row['ruangan']       = $row['nama_ruangan'] ?? '-';
+            $row['komisi']        = $targetMap[$row['id']] ?? '';
+            unset($row['nama_ruangan']);
+        }
+
+        return $rows;
     }
 
     /**
