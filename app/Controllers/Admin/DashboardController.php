@@ -24,7 +24,7 @@ class DashboardController extends BaseController
         $db      = \Config\Database::connect();
         $jadwals = $db->table('jadwal j')
             ->select('j.id, j.judul, j.keterangan, j.waktu_mulai, j.waktu_selesai,
-                      j.status, j.materi_url,
+                      j.status, j.materi_url, j.lokasi_lainnya,
                       r.name AS nama_ruangan')
             ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
             ->where('j.tanggal', $today)
@@ -41,7 +41,7 @@ class DashboardController extends BaseController
                 'end'        => substr($j['waktu_selesai'], 0, 5),
                 'title'      => $j['judul'],
                 'subtitle'   => $j['keterangan'] ?? '',
-                'room'       => $j['nama_ruangan'] ?? '-',
+                'room'       => $this->displayLocation($j),
                 'group'      => $targetMap[$j['id']] ?? '-',
                 'status'     => $j['status'],
                 'detail_url' => base_url("admin/jadwal/{$j['id']}/edit"),
@@ -84,5 +84,15 @@ class DashboardController extends BaseController
         }
 
         return array_map(static fn (array $names): string => implode(', ', $names), $map);
+    }
+
+    private function displayLocation(array $row): string
+    {
+        $other = trim((string) ($row['lokasi_lainnya'] ?? ''));
+        if ($other !== '') {
+            return $other;
+        }
+
+        return $row['nama_ruangan'] ?? '-';
     }
 }

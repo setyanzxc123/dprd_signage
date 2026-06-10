@@ -1,11 +1,24 @@
 <?= $this->extend('admin/layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<style>
+    .room-list .compact-alert {
+        font-size: 0.75rem;
+        line-height: 1.35;
+    }
+
+    .room-list .section-card-body {
+        padding-top: 14px;
+    }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
 
 <div class="page-header d-flex align-items-center justify-content-between">
     <div>
         <h1 class="page-title">Ruangan Rapat</h1>
-        <p class="page-subtitle">Kelola data ruangan untuk jadwal rapat</p>
+        <p class="page-subtitle">Kelola ruangan tetap DPRD untuk jadwal rapat</p>
     </div>
     <a href="<?= base_url('admin/ruangan/create') ?>" class="btn btn-primary btn-sm">
         <i class="bi bi-plus-lg me-1"></i>Tambah Ruangan
@@ -28,7 +41,7 @@
     ], static fn($value) => $value !== null && $value !== '');
 ?>
 
-<div class="section-card">
+<div class="section-card room-list">
 
     <div class="section-card-header">
         <div class="header-icon"><i class="bi bi-door-open-fill"></i></div>
@@ -52,6 +65,11 @@
     </div>
 
     <div class="section-card-body">
+        <div class="alert alert-info py-2 px-3 mb-2 compact-alert">
+            <i class="bi bi-info-circle me-1"></i>
+            Master ini hanya untuk ruangan tetap DPRD. Tempat lain diisi melalui <strong>Lokasi Lainnya</strong> di form jadwal.
+        </div>
+
         <?php if (empty($rooms)): ?>
             <div class="empty-state">
                 <i class="bi bi-door-open"></i>
@@ -65,7 +83,6 @@
                         <th class="col-num">No</th>
                         <th>Nama Ruangan</th>
                         <th>Kapasitas</th>
-                        <th>Lantai</th>
                         <th>Status</th>
                         <th class="col-action">Aksi</th>
                     </tr>
@@ -89,9 +106,6 @@
                                     <i class="bi bi-people me-1"></i>
                                     <?= esc($r['kapasitas']) ?> orang
                                 </span>
-                            </td>
-                            <td>
-                                <?= esc($r['lantai'] ?? '-') ?>
                             </td>
                             <td>
                                 <?php if ($r['tersedia']): ?>

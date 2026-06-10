@@ -9,7 +9,7 @@ class RuanganModel extends Model
     protected $table         = 'ruangan';
     protected $primaryKey    = 'id';
     protected $allowedFields = [
-        'name', 'keterangan', 'kapasitas', 'lantai', 'tersedia',
+        'name', 'keterangan', 'kapasitas', 'tersedia',
     ];
     protected $useTimestamps = false;
     protected $returnType    = 'array';

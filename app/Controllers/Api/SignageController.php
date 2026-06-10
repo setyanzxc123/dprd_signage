@@ -35,6 +35,7 @@ class SignageController extends BaseController
                 j.status,
                 j.materi_url,
                 j.stream_url,
+                j.lokasi_lainnya,
                 r.name AS nama_ruangan
             ')
             ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
@@ -55,6 +56,7 @@ class SignageController extends BaseController
                 j.status,
                 j.materi_url,
                 j.stream_url,
+                j.lokasi_lainnya,
                 r.name AS nama_ruangan
             ')
             ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
@@ -88,12 +90,22 @@ class SignageController extends BaseController
         foreach ($rows as &$row) {
             $row['waktu_mulai']   = substr($row['waktu_mulai'],   0, 5);
             $row['waktu_selesai'] = substr($row['waktu_selesai'], 0, 5);
-            $row['ruangan']       = $row['nama_ruangan'] ?? '-';
+            $row['ruangan']       = $this->displayLocation($row);
             $row['komisi']        = $targetMap[$row['id']] ?? '';
-            unset($row['nama_ruangan']);
+            unset($row['nama_ruangan'], $row['lokasi_lainnya']);
         }
 
         return $rows;
+    }
+
+    private function displayLocation(array $row): string
+    {
+        $other = trim((string) ($row['lokasi_lainnya'] ?? ''));
+        if ($other !== '') {
+            return $other;
+        }
+
+        return $row['nama_ruangan'] ?? '-';
     }
 
     /**
