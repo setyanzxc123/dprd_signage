@@ -4,11 +4,11 @@
 
 <div class="page-header d-flex align-items-center justify-content-between">
     <div>
-        <h1 class="page-title">Unit Rapat</h1>
-        <p class="page-subtitle">Kelola komisi, badan, pansus, dan target peserta rapat</p>
+        <h1 class="page-title">Kelompok Peserta</h1>
+        <p class="page-subtitle">Kelola kelompok internal DPRD untuk target rapat dan notifikasi WA</p>
     </div>
     <a href="<?= base_url('admin/unit-rapat/create') ?>" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>Tambah Unit
+        <i class="bi bi-plus-lg me-1"></i>Tambah Kelompok
     </a>
 </div>
 
@@ -32,9 +32,9 @@
     <div class="section-card-header">
         <div class="header-icon"><i class="bi bi-diagram-3-fill"></i></div>
         <div>
-            <h6>Daftar Unit Rapat</h6>
+            <h6>Daftar Kelompok Peserta</h6>
             <p class="header-sub">
-                <?= $pagination['total'] ?> unit terdaftar
+                <?= $pagination['total'] ?> kelompok terdaftar
                 <?php if ($pagination['total'] > 0): ?>
                     &bull; Menampilkan <?= $pagination['from'] ?>-<?= $pagination['to'] ?>
                 <?php endif; ?>
@@ -54,17 +54,15 @@
         <?php if (empty($units)): ?>
             <div class="empty-state">
                 <i class="bi bi-diagram-3"></i>
-                <p>Belum ada unit rapat.</p>
-                <small>Klik "Tambah Unit" untuk menambahkan komisi, badan, atau pansus.</small>
+                <p>Belum ada kelompok peserta.</p>
+                <small>Klik "Tambah Kelompok" untuk membuat kelompok internal DPRD.</small>
             </div>
         <?php else: ?>
             <table class="custom-table">
                 <thead>
                     <tr>
                         <th class="col-num">No</th>
-                        <th>Nama Unit</th>
-                        <th>Jenis</th>
-                        <th>Urutan</th>
+                        <th>Nama Kelompok</th>
                         <th>Status</th>
                         <th class="col-action">Aksi</th>
                     </tr>
@@ -76,12 +74,6 @@
                             <td>
                                 <div class="cell-title"><?= esc($unit['nama']) ?></div>
                             </td>
-                            <td>
-                                <span class="badge bg-primary-subtle text-primary" style="font-size:.7rem;">
-                                    <?= esc($jenisOptions[$unit['jenis']] ?? ucfirst($unit['jenis'])) ?>
-                                </span>
-                            </td>
-                            <td><?= esc($unit['urutan']) ?></td>
                             <td>
                                 <?php if ($unit['aktif']): ?>
                                     <span class="status-badge badge-selesai"><span class="dot"></span>Aktif</span>
@@ -97,7 +89,7 @@
                                 <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
                                     class="btn-action btn-action-red ms-1"
                                     title="Nonaktifkan"
-                                    onclick="return confirm('Nonaktifkan unit rapat ini? Unit tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman.')">
+                                    onclick="return confirm('Nonaktifkan kelompok peserta ini? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman.')">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>
@@ -112,7 +104,7 @@
         'pagination'      => $pagination,
         'paginationBase'  => $paginationBase,
         'paginationQuery' => $paginationQuery,
-        'ariaLabel'       => 'Pagination unit rapat',
+        'ariaLabel'       => 'Pagination kelompok peserta',
     ]) ?>
 </div>
 

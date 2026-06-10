@@ -8,14 +8,6 @@ use App\Models\UnitRapatModel;
 
 class UnitRapatController extends BaseController
 {
-    private array $jenisOptions = [
-        'komisi'   => 'Komisi',
-        'badan'    => 'Badan',
-        'pansus'   => 'Pansus',
-        'gabungan' => 'Gabungan',
-        'lainnya'  => 'Lainnya',
-    ];
-
     public function index(): string
     {
         $model   = new UnitRapatModel();
@@ -34,11 +26,10 @@ class UnitRapatController extends BaseController
             ->findAll($perPage, $offset);
 
         return view('admin/unit_rapat/index', [
-            'pageTitle'    => 'Unit Rapat',
-            'units'        => $units,
-            'jenisOptions' => $this->jenisOptions,
-            'filters'      => ['per_page' => $perPage],
-            'pagination'   => [
+            'pageTitle'  => 'Kelompok Peserta',
+            'units'      => $units,
+            'filters'    => ['per_page' => $perPage],
+            'pagination' => [
                 'page'       => $page,
                 'perPage'    => $perPage,
                 'total'      => $total,
@@ -52,23 +43,23 @@ class UnitRapatController extends BaseController
     public function create(): string
     {
         return view('admin/unit_rapat/form', [
-            'pageTitle'    => 'Tambah Unit Rapat',
-            'unit'         => null,
-            'members'      => $this->memberOptions(),
+            'pageTitle'          => 'Tambah Kelompok Peserta',
+            'unit'               => null,
+            'members'            => $this->memberOptions(),
             'selectedAnggotaIds' => [],
-            'jenisOptions' => $this->jenisOptions,
-            'action_url'   => base_url('admin/unit-rapat/store'),
+            'action_url'         => base_url('admin/unit-rapat/store'),
         ]);
     }
 
     public function store()
     {
-        $model = new UnitRapatModel();
+        $model   = new UnitRapatModel();
         $payload = $this->payload();
-        $unitId = (int) $model->insert($payload, true);
-        $this->syncUnitMembers($unitId, $payload);
+        $unitId  = (int) $model->insert($payload, true);
 
-        session()->setFlashdata('success', 'Unit rapat berhasil ditambahkan.');
+        $this->syncUnitMembers($unitId);
+
+        session()->setFlashdata('success', 'Kelompok peserta berhasil ditambahkan.');
         return redirect()->to(base_url('admin/unit-rapat'));
     }
 
@@ -77,29 +68,29 @@ class UnitRapatController extends BaseController
         $model = new UnitRapatModel();
         $unit  = $model->find($id);
 
-        if (!$unit) {
+        if (! $unit) {
             session()->setFlashdata('error', 'Unit rapat tidak ditemukan.');
             return redirect()->to(base_url('admin/unit-rapat'));
         }
 
         return view('admin/unit_rapat/form', [
-            'pageTitle'    => 'Edit Unit Rapat',
-            'unit'         => $unit,
-            'members'      => $this->memberOptions(),
+            'pageTitle'          => 'Edit Kelompok Peserta',
+            'unit'               => $unit,
+            'members'            => $this->memberOptions(),
             'selectedAnggotaIds' => $this->selectedAnggotaIds($id),
-            'jenisOptions' => $this->jenisOptions,
-            'action_url'   => base_url("admin/unit-rapat/{$id}/update"),
+            'action_url'         => base_url("admin/unit-rapat/{$id}/update"),
         ]);
     }
 
     public function update(int $id)
     {
-        $model = new UnitRapatModel();
+        $model   = new UnitRapatModel();
         $payload = $this->payload();
-        $model->update($id, $payload);
-        $this->syncUnitMembers($id, $payload);
 
-        session()->setFlashdata('success', 'Unit rapat berhasil diperbarui.');
+        $model->update($id, $payload);
+        $this->syncUnitMembers($id);
+
+        session()->setFlashdata('success', 'Kelompok peserta berhasil diperbarui.');
         return redirect()->to(base_url('admin/unit-rapat'));
     }
 
@@ -108,28 +99,15 @@ class UnitRapatController extends BaseController
         $model = new UnitRapatModel();
         $model->update($id, ['aktif' => 0]);
 
-        session()->setFlashdata('success', 'Unit rapat berhasil dinonaktifkan.');
+        session()->setFlashdata('success', 'Kelompok peserta berhasil dinonaktifkan.');
         return redirect()->to(base_url('admin/unit-rapat'));
     }
 
     private function payload(): array
     {
-        $jenis = $this->request->getPost('jenis') ?? 'lainnya';
-        $nama = trim((string) $this->request->getPost('nama'));
-
-        $membershipType = 'manual';
-        if ($jenis === 'komisi') {
-            $membershipType = 'komisi_anggota';
-        } elseif (strcasecmp($nama, 'Seluruh Anggota') === 0) {
-            $membershipType = 'semua_anggota';
-        }
-
         return [
-            'nama'            => $nama,
-            'jenis'           => array_key_exists($jenis, $this->jenisOptions) ? $jenis : 'lainnya',
-            'membership_type' => $membershipType,
-            'aktif'           => $this->request->getPost('aktif') ? 1 : 0,
-            'urutan'          => (int) ($this->request->getPost('urutan') ?? 0),
+            'nama'  => trim((string) $this->request->getPost('nama')),
+            'aktif' => $this->request->getPost('aktif') ? 1 : 0,
         ];
     }
 
@@ -168,7 +146,7 @@ class UnitRapatController extends BaseController
         return array_values(array_unique($ids));
     }
 
-    private function syncUnitMembers(int $unitId, array $unit): void
+    private function syncUnitMembers(int $unitId): void
     {
         $db = $this->db();
         if (! $db->tableExists('anggota_unit_rapat')) {
@@ -178,10 +156,6 @@ class UnitRapatController extends BaseController
         $db->table('anggota_unit_rapat')
             ->where('unit_rapat_id', $unitId)
             ->delete();
-
-        if ($unit['membership_type'] !== 'manual') {
-            return;
-        }
 
         $anggotaIds = $this->postedAnggotaIds();
         if (empty($anggotaIds)) {

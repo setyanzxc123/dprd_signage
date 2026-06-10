@@ -33,6 +33,12 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 
         <li class="nav-section-label">Master Data</li>
         <li class="nav-item-custom">
+            <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
+                <i class="bi bi-diagram-3-fill nav-icon"></i>
+                <span class="nav-text">Kelompok Peserta</span>
+            </a>
+        </li>
+        <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
                 <i class="bi bi-people-fill nav-icon"></i>
                 <span class="nav-text">Anggota DPRD</span>
@@ -42,12 +48,6 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             <a class="nav-link-custom" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
                 <i class="bi bi-door-open-fill nav-icon"></i>
                 <span class="nav-text">Ruangan Rapat</span>
-            </a>
-        </li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
-                <i class="bi bi-diagram-3-fill nav-icon"></i>
-                <span class="nav-text">Unit Rapat</span>
             </a>
         </li>
 
