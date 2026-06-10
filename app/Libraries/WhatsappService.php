@@ -130,6 +130,7 @@ class WhatsappService
                 j.waktu_selesai,
                 j.keterangan,
                 j.materi_url,
+                j.lokasi_lainnya,
                 r.name           AS nama_ruangan,
                 (
                     SELECT GROUP_CONCAT(ur.nama ORDER BY ur.urutan ASC, ur.nama ASC SEPARATOR ', ')
@@ -197,6 +198,8 @@ class WhatsappService
         $selesai  = substr($data['waktu_selesai'] ?? '', 0, 5);
         $komisi   = trim((string) ($data['target_peserta'] ?? ''));
         $komisi   = $komisi !== '' ? $komisi : '-';
+        $lokasi   = trim((string) ($data['lokasi_lainnya'] ?? ''));
+        $lokasi   = $lokasi !== '' ? $lokasi : ($data['nama_ruangan'] ?? '-');
 
         $lines = [];
         $lines[] = "📋 *UNDANGAN RAPAT DPRD*";
@@ -205,7 +208,7 @@ class WhatsappService
         $lines[] = "Anda diundang menghadiri:";
         $lines[] = "📌 *{$data['judul']}*";
         $lines[] = "📅 {$tanggal} | ⏰ {$mulai} – {$selesai} WITA";
-        $lines[] = "🏛️ Ruangan: " . ($data['nama_ruangan'] ?? '-');
+        $lines[] = "🏛️ Lokasi: {$lokasi}";
         $lines[] = "💼 Komisi: {$komisi}";
 
         if (!empty($data['keterangan'])) {

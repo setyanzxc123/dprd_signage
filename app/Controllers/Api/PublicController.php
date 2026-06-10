@@ -38,6 +38,7 @@ class PublicController extends BaseController
                 j.status,
                 j.stream_url,
                 j.jenis,
+                j.lokasi_lainnya,
                 r.name AS nama_ruangan
             ')
             ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
@@ -52,10 +53,10 @@ class PublicController extends BaseController
         foreach ($jadwal as &$j) {
             $j['waktu_mulai']   = substr($j['waktu_mulai'],   0, 5);
             $j['waktu_selesai'] = substr($j['waktu_selesai'], 0, 5);
-            $j['ruangan']       = $j['nama_ruangan'] ?? '-';
+            $j['ruangan']       = $this->displayLocation($j);
             $j['komisi']        = $targetMap[$j['id']] ?? '';
             $j['has_stream']    = !empty($j['stream_url']);
-            unset($j['nama_ruangan']);
+            unset($j['nama_ruangan'], $j['lokasi_lainnya']);
         }
 
         return $this->response
@@ -91,5 +92,15 @@ class PublicController extends BaseController
         }
 
         return array_map(static fn (array $names): string => implode(', ', $names), $map);
+    }
+
+    private function displayLocation(array $row): string
+    {
+        $other = trim((string) ($row['lokasi_lainnya'] ?? ''));
+        if ($other !== '') {
+            return $other;
+        }
+
+        return $row['nama_ruangan'] ?? '-';
     }
 }

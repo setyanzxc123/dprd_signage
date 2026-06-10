@@ -209,7 +209,7 @@
 
     </div>
 
-    <div class="d-flex justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
+    <div class="d-flex gap-2 mt-3">
         <a href="<?= base_url('admin/unit-rapat') ?>" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Batal
         </a>

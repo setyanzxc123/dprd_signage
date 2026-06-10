@@ -246,6 +246,14 @@
         text-align: center;
     }
 
+    .location-fields {
+        margin-top: 10px;
+    }
+
+    .location-panel[hidden] {
+        display: none;
+    }
+
     .target-picker {
         border: 1px solid var(--od-border);
         border-radius: var(--od-radius-md);
@@ -366,6 +374,11 @@
 
 <?= $this->section('content') ?>
 
+<?php
+    $lokasiLainnya = trim((string) ($meeting['lokasi_lainnya'] ?? ''));
+    $lokasiMode = $lokasiLainnya !== '' ? 'lainnya' : 'ruangan';
+?>
+
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
     <p class="page-subtitle text-muted">
@@ -402,25 +415,65 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label fw-semibold" for="ruangan_id">
-                                    Ruangan <span class="required-mark">*</span>
+                                <label class="form-label fw-semibold d-block">
+                                    Lokasi Rapat <span class="required-mark">*</span>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                    <select class="form-select" id="ruangan_id" name="ruangan_id" required>
-                                        <option value="">-- Pilih Ruangan --</option>
-                                        <?php if (empty($rooms)): ?>
-                                            <option disabled>Belum ada ruangan - tambah di Master Data dulu</option>
-                                        <?php else: ?>
-                                            <?php foreach ($rooms as $r):
-                                                $selected = ($meeting['ruangan_id'] ?? '') == $r['id'] ? 'selected' : '';
-                                            ?>
-                                                <option value="<?= $r['id'] ?>" <?= $selected ?>>
-                                                    <?= esc($r['name'] ?? '') ?><?= isset($r['kapasitas']) ? ' (Kap. ' . $r['kapasitas'] . ' orang)' : '' ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
+
+                                <div class="option-group two-col">
+                                    <label class="choice-option" for="lokasi-ruangan">
+                                        <input type="radio" name="lokasi_mode" id="lokasi-ruangan" value="ruangan"
+                                            <?= $lokasiMode === 'ruangan' ? 'checked' : '' ?> />
+                                        <span class="choice-option-body">
+                                            <span class="choice-icon"><i class="bi bi-building"></i></span>
+                                            <span>
+                                                <span class="choice-title">Ruangan DPRD</span>
+                                                <span class="choice-desc">Pilih dari master ruangan</span>
+                                            </span>
+                                        </span>
+                                    </label>
+
+                                    <label class="choice-option" for="lokasi-lainnya">
+                                        <input type="radio" name="lokasi_mode" id="lokasi-lainnya" value="lainnya"
+                                            <?= $lokasiMode === 'lainnya' ? 'checked' : '' ?> />
+                                        <span class="choice-option-body">
+                                            <span class="choice-icon"><i class="bi bi-geo-alt"></i></span>
+                                            <span>
+                                                <span class="choice-title">Lokasi Lainnya</span>
+                                                <span class="choice-desc">Isi nama/tempat rapat</span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div class="location-fields">
+                                    <div class="location-panel" id="ruangan-panel">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <select class="form-select" id="ruangan_id" name="ruangan_id">
+                                                <option value="">-- Pilih Ruangan --</option>
+                                                <?php if (empty($rooms)): ?>
+                                                    <option disabled>Belum ada ruangan - tambah di Master Data dulu</option>
+                                                <?php else: ?>
+                                                    <?php foreach ($rooms as $r):
+                                                        $selected = ($meeting['ruangan_id'] ?? '') == $r['id'] ? 'selected' : '';
+                                                    ?>
+                                                        <option value="<?= $r['id'] ?>" <?= $selected ?>>
+                                                            <?= esc($r['name'] ?? '') ?><?= isset($r['kapasitas']) ? ' (Kap. ' . $r['kapasitas'] . ' orang)' : '' ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="location-panel" id="lokasi-lainnya-panel" hidden>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-pin-map"></i></span>
+                                            <input type="text" class="form-control" id="lokasi_lainnya" name="lokasi_lainnya"
+                                                value="<?= esc($lokasiLainnya) ?>"
+                                                placeholder="Contoh: Aula Kantor Gubernur, Gedung Serbaguna, atau tempat rapat lainnya" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -659,6 +712,38 @@
                 label.textContent = this.checked ? 'Publik' : 'Internal';
             });
         }
+
+        const lokasiModeInputs = Array.from(document.querySelectorAll('input[name="lokasi_mode"]'));
+        const ruanganPanel = document.getElementById('ruangan-panel');
+        const lokasiLainnyaPanel = document.getElementById('lokasi-lainnya-panel');
+        const ruanganSelect = document.getElementById('ruangan_id');
+        const lokasiLainnyaInput = document.getElementById('lokasi_lainnya');
+
+        const syncLocationMode = function() {
+            const mode = lokasiModeInputs.find(function(input) {
+                return input.checked;
+            })?.value || 'ruangan';
+
+            const isOther = mode === 'lainnya';
+
+            if (ruanganPanel) ruanganPanel.hidden = isOther;
+            if (lokasiLainnyaPanel) lokasiLainnyaPanel.hidden = !isOther;
+
+            if (ruanganSelect) {
+                ruanganSelect.required = !isOther;
+                ruanganSelect.disabled = isOther;
+            }
+
+            if (lokasiLainnyaInput) {
+                lokasiLainnyaInput.required = isOther;
+                lokasiLainnyaInput.disabled = !isOther;
+            }
+        };
+
+        lokasiModeInputs.forEach(function(input) {
+            input.addEventListener('change', syncLocationMode);
+        });
+        syncLocationMode();
 
         const targetInputs = Array.from(document.querySelectorAll('.target-option input[type="checkbox"]'));
         const targetOptions = Array.from(document.querySelectorAll('.target-option'));

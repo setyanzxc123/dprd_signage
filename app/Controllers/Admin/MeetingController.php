@@ -53,6 +53,7 @@ class MeetingController extends BaseController
                     ->like('j.judul', $q)
                     ->orLike('j.keterangan', $q)
                     ->orLike('r.name', $q)
+                    ->orLike('j.lokasi_lainnya', $q)
                     ->orWhere(
                         "EXISTS (
                             SELECT 1
@@ -83,7 +84,7 @@ class MeetingController extends BaseController
             $db->table('jadwal j')
                 ->select('j.id, j.judul, j.keterangan, j.tanggal,
                           j.waktu_mulai, j.waktu_selesai, j.status,
-                          j.jenis, j.is_publik, r.name AS nama_ruangan')
+                          j.jenis, j.is_publik, j.lokasi_lainnya, r.name AS nama_ruangan')
                 ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
         )
             ->orderBy('j.tanggal', 'DESC')
@@ -102,7 +103,7 @@ class MeetingController extends BaseController
                 'tanggal'       => $j['tanggal'],
                 'waktu_mulai'   => substr($j['waktu_mulai'], 0, 5),
                 'waktu_selesai' => substr($j['waktu_selesai'], 0, 5),
-                'ruangan'       => $j['nama_ruangan'] ?? '-',
+                'ruangan'       => $this->displayLocation($j),
                 'target_peserta' => $targetMap[$j['id']] ?? '-',
                 'status'        => $j['status'],
                 'jenis'         => $this->normalizeJenis($j['jenis'] ?? null),
@@ -134,12 +135,10 @@ class MeetingController extends BaseController
 
     public function create(): string
     {
-        $ruanganModel = new RuanganModel();
-
         return view('admin/jadwal/form', [
             'pageTitle'   => 'Tambah Jadwal Rapat',
             'meeting'     => null,
-            'rooms'       => $ruanganModel->orderBy('name')->findAll(),
+            'rooms'       => $this->roomOptions(),
             'unit_rapat_list' => $this->unitRapatOptions(),
             'action_url'  => base_url('admin/jadwal/store'),
         ]);
@@ -156,6 +155,7 @@ class MeetingController extends BaseController
 
         $blastBefore  = (int) $this->request->getPost('blast_before');
         $unitIds      = $this->postedUnitIds();
+        $locationData = $this->postedLocationData();
 
         // Hitung waktu pengiriman notifikasi
         $reminderTime = date('Y-m-d H:i:s',
@@ -169,7 +169,8 @@ class MeetingController extends BaseController
             'tanggal'       => $tanggal,
             'waktu_mulai'   => $waktuMulai,
             'waktu_selesai' => $waktuSelesai,
-            'ruangan_id'    => $this->request->getPost('ruangan_id'),
+            'ruangan_id'    => $locationData['ruangan_id'],
+            'lokasi_lainnya' => $locationData['lokasi_lainnya'],
             'blast_before'  => $blastBefore,
             'reminder_time' => $reminderTime,
             'materi_url'    => $this->request->getPost('materi_url'),
@@ -191,7 +192,6 @@ class MeetingController extends BaseController
     public function edit(int $id): string
     {
         $jadwalModel  = new JadwalModel();
-        $ruanganModel = new RuanganModel();
         $jadwal       = $jadwalModel->find($id);
 
         if (!$jadwal) {
@@ -205,7 +205,7 @@ class MeetingController extends BaseController
         return view('admin/jadwal/form', [
             'pageTitle'   => 'Edit Jadwal Rapat',
             'meeting'     => $jadwal,
-            'rooms'       => $ruanganModel->orderBy('name')->findAll(),
+            'rooms'       => $this->roomOptions((int) ($jadwal['ruangan_id'] ?? 0)),
             'unit_rapat_list' => $this->unitRapatOptions($jadwal['target_unit_ids']),
             'action_url'  => base_url("admin/jadwal/{$id}/update"),
         ]);
@@ -221,6 +221,7 @@ class MeetingController extends BaseController
 
         $blastBefore  = (int) $this->request->getPost('blast_before');
         $unitIds      = $this->postedUnitIds();
+        $locationData = $this->postedLocationData();
         $reminderTime = date('Y-m-d H:i:s',
             strtotime("{$tanggal} {$waktuMulai}") - ($blastBefore * 60)
         );
@@ -232,7 +233,8 @@ class MeetingController extends BaseController
             'tanggal'       => $tanggal,
             'waktu_mulai'   => $waktuMulai,
             'waktu_selesai' => $waktuSelesai,
-            'ruangan_id'    => $this->request->getPost('ruangan_id'),
+            'ruangan_id'    => $locationData['ruangan_id'],
+            'lokasi_lainnya' => $locationData['lokasi_lainnya'],
             'blast_before'  => $blastBefore,
             'reminder_time' => $reminderTime,
             'materi_url'    => $this->request->getPost('materi_url'),
@@ -339,6 +341,25 @@ class MeetingController extends BaseController
         return $units;
     }
 
+    private function roomOptions(int $selectedId = 0): array
+    {
+        $model = new RuanganModel();
+        $rooms = $model
+            ->where('tersedia', 1)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $existingIds = array_map('intval', array_column($rooms, 'id'));
+        if ($selectedId > 0 && ! in_array($selectedId, $existingIds, true)) {
+            $selectedRoom = $model->find($selectedId);
+            if ($selectedRoom) {
+                $rooms[] = $selectedRoom;
+            }
+        }
+
+        return $rooms;
+    }
+
     private function postedUnitIds(): array
     {
         $ids = $this->request->getPost('target_unit_rapat') ?? [];
@@ -352,6 +373,37 @@ class MeetingController extends BaseController
     private function postedJenis(): string
     {
         return $this->normalizeJenis($this->request->getPost('jenis'));
+    }
+
+    private function postedLocationData(): array
+    {
+        $mode = $this->request->getPost('lokasi_mode') === 'lainnya' ? 'lainnya' : 'ruangan';
+
+        if ($mode === 'lainnya') {
+            $lokasi = trim((string) $this->request->getPost('lokasi_lainnya'));
+
+            return [
+                'ruangan_id'     => null,
+                'lokasi_lainnya' => $lokasi !== '' ? $lokasi : null,
+            ];
+        }
+
+        $ruanganId = (int) $this->request->getPost('ruangan_id');
+
+        return [
+            'ruangan_id'     => $ruanganId > 0 ? $ruanganId : null,
+            'lokasi_lainnya' => null,
+        ];
+    }
+
+    private function displayLocation(array $row): string
+    {
+        $other = trim((string) ($row['lokasi_lainnya'] ?? ''));
+        if ($other !== '') {
+            return $other;
+        }
+
+        return $row['nama_ruangan'] ?? '-';
     }
 
     private function normalizeJenis(?string $jenis): string
