@@ -9,8 +9,23 @@ use App\Models\UnitRapatModel;
 class MemberController extends BaseController
 {
     private array $fraksiList = [
-        'Golkar', 'PDI-P', 'Gerindra', 'PKB', 'NasDem',
-        'PKS', 'Demokrat', 'PAN', 'PPP', 'Hanura',
+        'Amanat Nasional',
+        'Bulan Bintang',
+        'Demokrat',
+        'Gerindra',
+        'Golongan Karya',
+        'Hanura',
+        'Keadilan Sejahtra',
+        'PDIP',
+        'Persatuan Indonesia',
+        'Persatuan Pembangunan',
+    ];
+
+    private array $komisiList = [
+        'Komisi I',
+        'Komisi II',
+        'Komisi III',
+        'Komisi IV',
     ];
 
     public function index(): string
@@ -82,6 +97,13 @@ class MemberController extends BaseController
     {
         $model = new AnggotaModel();
         $komisi = $this->request->getPost('komisi');
+        $unitIds = $this->postedUnitIds();
+
+        if (empty($unitIds)) {
+            session()->setFlashdata('error', 'Pilih minimal satu kelompok peserta untuk anggota.');
+            return redirect()->back()->withInput();
+        }
+
         $anggotaId = $model->insert([
             'name'    => $this->request->getPost('name'),
             'jabatan' => $this->request->getPost('jabatan'),
@@ -92,7 +114,7 @@ class MemberController extends BaseController
         ], true);
 
         if ($anggotaId) {
-            $this->syncMemberUnits((int) $anggotaId, $komisi, $this->postedUnitIds());
+            $this->syncMemberUnits((int) $anggotaId, $unitIds);
         }
 
         session()->setFlashdata('success', 'Anggota berhasil ditambahkan.');
@@ -124,6 +146,13 @@ class MemberController extends BaseController
     {
         $model = new AnggotaModel();
         $komisi = $this->request->getPost('komisi');
+        $unitIds = $this->postedUnitIds();
+
+        if (empty($unitIds)) {
+            session()->setFlashdata('error', 'Pilih minimal satu kelompok peserta untuk anggota.');
+            return redirect()->back()->withInput();
+        }
+
         $model->update($id, [
             'name'    => $this->request->getPost('name'),
             'jabatan' => $this->request->getPost('jabatan'),
@@ -133,7 +162,7 @@ class MemberController extends BaseController
             'aktif'   => $this->request->getPost('aktif') ?? 1,
         ]);
 
-        $this->syncMemberUnits($id, $komisi, $this->postedUnitIds());
+        $this->syncMemberUnits($id, $unitIds);
 
         session()->setFlashdata('success', 'Data anggota berhasil diperbarui.');
         return redirect()->to(base_url('admin/anggota'));
@@ -150,15 +179,7 @@ class MemberController extends BaseController
 
     private function komisiOptions(string $selected = ''): array
     {
-        $model = new UnitRapatModel();
-        $units = $model
-            ->where('aktif', 1)
-            ->where('jenis', 'komisi')
-            ->orderBy('urutan', 'ASC')
-            ->orderBy('nama', 'ASC')
-            ->findAll();
-
-        $options = array_column($units, 'nama');
+        $options = $this->komisiList;
 
         if ($selected !== '' && !in_array($selected, $options, true)) {
             $options[] = $selected;
@@ -171,7 +192,6 @@ class MemberController extends BaseController
     {
         return (new UnitRapatModel())
             ->where('aktif', 1)
-            ->where('membership_type', 'manual')
             ->orderBy('urutan', 'ASC')
             ->orderBy('nama', 'ASC')
             ->findAll();
@@ -203,7 +223,7 @@ class MemberController extends BaseController
         return array_values(array_unique($ids));
     }
 
-    private function syncMemberUnits(int $anggotaId, ?string $komisiName, array $manualUnitIds): void
+    private function syncMemberUnits(int $anggotaId, array $manualUnitIds): void
     {
         $db = \Config\Database::connect();
         if (!$db->tableExists('anggota_unit_rapat')) {
@@ -216,21 +236,6 @@ class MemberController extends BaseController
 
         $now = date('Y-m-d H:i:s');
         $rows = [];
-
-        if (!empty($komisiName)) {
-            $komisiUnit = (new UnitRapatModel())
-                ->where('jenis', 'komisi')
-                ->where('nama', trim($komisiName))
-                ->first();
-
-            if ($komisiUnit) {
-                $rows[] = [
-                    'anggota_id'    => $anggotaId,
-                    'unit_rapat_id' => (int) $komisiUnit['id'],
-                    'created_at'    => $now,
-                ];
-            }
-        }
 
         foreach ($manualUnitIds as $unitId) {
             $rows[] = [

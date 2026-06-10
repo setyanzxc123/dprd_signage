@@ -82,7 +82,6 @@ class DummyDataSeeder extends Seeder
         return [
             [
                 'nama'       => 'Pansus Ranperda Pajak Daerah',
-                'jenis'      => 'pansus',
                 'aktif'      => 1,
                 'urutan'     => 96,
                 'created_at' => $now,
@@ -90,7 +89,6 @@ class DummyDataSeeder extends Seeder
             ],
             [
                 'nama'       => 'Tim Pembahas RAPBD',
-                'jenis'      => 'lainnya',
                 'aktif'      => 1,
                 'urutan'     => 97,
                 'created_at' => $now,
@@ -102,23 +100,23 @@ class DummyDataSeeder extends Seeder
     private function members(): array
     {
         return [
-            ['name' => 'Budi Santoso, S.H.',   'jabatan' => 'Ketua Komisi I',         'fraksi' => 'Fraksi A', 'komisi' => 'Komisi I',   'no_wa' => '6281100000001', 'aktif' => 1],
-            ['name' => 'Dewi Kartika, S.E.',   'jabatan' => 'Wakil Ketua Komisi I',   'fraksi' => 'Fraksi B', 'komisi' => 'Komisi I',   'no_wa' => '6281100000002', 'aktif' => 1],
-            ['name' => 'Agus Salim',           'jabatan' => 'Anggota',                'fraksi' => 'Fraksi C', 'komisi' => 'Komisi I',   'no_wa' => '6281100000003', 'aktif' => 1],
-            ['name' => 'Sari Wulandari, S.Pd.', 'jabatan' => 'Anggota',               'fraksi' => 'Fraksi D', 'komisi' => 'Komisi I',   'no_wa' => '6281100000004', 'aktif' => 1],
-            ['name' => 'Hendra Gunawan, M.M.', 'jabatan' => 'Ketua Komisi II',        'fraksi' => 'Fraksi A', 'komisi' => 'Komisi II',  'no_wa' => '6281100000005', 'aktif' => 1],
-            ['name' => 'Ratna Sari, M.Si.',    'jabatan' => 'Wakil Ketua Komisi II',  'fraksi' => 'Fraksi B', 'komisi' => 'Komisi II',  'no_wa' => '6281100000006', 'aktif' => 1],
-            ['name' => 'Irwan Setiawan',       'jabatan' => 'Anggota',                'fraksi' => 'Fraksi C', 'komisi' => 'Komisi II',  'no_wa' => '6281100000007', 'aktif' => 1],
-            ['name' => 'Fitriani, S.T.',       'jabatan' => 'Anggota',                'fraksi' => 'Fraksi D', 'komisi' => 'Komisi II',  'no_wa' => '6281100000008', 'aktif' => 1],
-            ['name' => 'Mahmud Hidayat, M.T.', 'jabatan' => 'Ketua Komisi III',       'fraksi' => 'Fraksi A', 'komisi' => 'Komisi III', 'no_wa' => '6281100000009', 'aktif' => 1],
-            ['name' => 'Nurul Azizah, S.H.',   'jabatan' => 'Wakil Ketua Komisi III', 'fraksi' => 'Fraksi B', 'komisi' => 'Komisi III', 'no_wa' => '6281100000010', 'aktif' => 1],
-            ['name' => 'Rusdi Pratama',        'jabatan' => 'Anggota',                'fraksi' => 'Fraksi C', 'komisi' => 'Komisi III', 'no_wa' => '6281100000011', 'aktif' => 1],
-            ['name' => 'Siti Halimah, M.Pd.',  'jabatan' => 'Ketua Komisi IV',        'fraksi' => 'Fraksi A', 'komisi' => 'Komisi IV',  'no_wa' => '6281100000012', 'aktif' => 1],
-            ['name' => 'Andi Syahrir',         'jabatan' => 'Wakil Ketua Komisi IV',  'fraksi' => 'Fraksi B', 'komisi' => 'Komisi IV',  'no_wa' => '6281100000013', 'aktif' => 1],
-            ['name' => 'Yuliana Putri',        'jabatan' => 'Anggota',                'fraksi' => 'Fraksi C', 'komisi' => 'Komisi IV',  'no_wa' => '6281100000014', 'aktif' => 1],
-            ['name' => 'Abdul Rahman, S.H.',   'jabatan' => 'Ketua DPRD',             'fraksi' => 'Fraksi A', 'komisi' => '',           'no_wa' => '6281100000015', 'aktif' => 1],
-            ['name' => 'Mariani Lestari, S.E.', 'jabatan' => 'Wakil Ketua DPRD I',    'fraksi' => 'Fraksi B', 'komisi' => '',           'no_wa' => '6281100000016', 'aktif' => 1],
-            ['name' => 'Faisal Taufik, S.H.',  'jabatan' => 'Wakil Ketua DPRD II',    'fraksi' => 'Fraksi C', 'komisi' => '',           'no_wa' => '6281100000017', 'aktif' => 1],
+            ['name' => 'Budi Santoso, S.H.',   'jabatan' => 'Ketua Komisi I',         'fraksi' => 'Amanat Nasional',        'komisi' => 'Komisi I',   'no_wa' => '6281100000001', 'aktif' => 1],
+            ['name' => 'Dewi Kartika, S.E.',   'jabatan' => 'Wakil Ketua Komisi I',   'fraksi' => 'Bulan Bintang',          'komisi' => 'Komisi I',   'no_wa' => '6281100000002', 'aktif' => 1],
+            ['name' => 'Agus Salim',           'jabatan' => 'Anggota',                'fraksi' => 'Demokrat',               'komisi' => 'Komisi I',   'no_wa' => '6281100000003', 'aktif' => 1],
+            ['name' => 'Sari Wulandari, S.Pd.', 'jabatan' => 'Anggota',               'fraksi' => 'Gerindra',               'komisi' => 'Komisi I',   'no_wa' => '6281100000004', 'aktif' => 1],
+            ['name' => 'Hendra Gunawan, M.M.', 'jabatan' => 'Ketua Komisi II',        'fraksi' => 'Golongan Karya',         'komisi' => 'Komisi II',  'no_wa' => '6281100000005', 'aktif' => 1],
+            ['name' => 'Ratna Sari, M.Si.',    'jabatan' => 'Wakil Ketua Komisi II',  'fraksi' => 'Hanura',                 'komisi' => 'Komisi II',  'no_wa' => '6281100000006', 'aktif' => 1],
+            ['name' => 'Irwan Setiawan',       'jabatan' => 'Anggota',                'fraksi' => 'Keadilan Sejahtra',      'komisi' => 'Komisi II',  'no_wa' => '6281100000007', 'aktif' => 1],
+            ['name' => 'Fitriani, S.T.',       'jabatan' => 'Anggota',                'fraksi' => 'PDIP',                   'komisi' => 'Komisi II',  'no_wa' => '6281100000008', 'aktif' => 1],
+            ['name' => 'Mahmud Hidayat, M.T.', 'jabatan' => 'Ketua Komisi III',       'fraksi' => 'Persatuan Indonesia',    'komisi' => 'Komisi III', 'no_wa' => '6281100000009', 'aktif' => 1],
+            ['name' => 'Nurul Azizah, S.H.',   'jabatan' => 'Wakil Ketua Komisi III', 'fraksi' => 'Persatuan Pembangunan',  'komisi' => 'Komisi III', 'no_wa' => '6281100000010', 'aktif' => 1],
+            ['name' => 'Rusdi Pratama',        'jabatan' => 'Anggota',                'fraksi' => 'Amanat Nasional',        'komisi' => 'Komisi III', 'no_wa' => '6281100000011', 'aktif' => 1],
+            ['name' => 'Siti Halimah, M.Pd.',  'jabatan' => 'Ketua Komisi IV',        'fraksi' => 'Bulan Bintang',          'komisi' => 'Komisi IV',  'no_wa' => '6281100000012', 'aktif' => 1],
+            ['name' => 'Andi Syahrir',         'jabatan' => 'Wakil Ketua Komisi IV',  'fraksi' => 'Demokrat',               'komisi' => 'Komisi IV',  'no_wa' => '6281100000013', 'aktif' => 1],
+            ['name' => 'Yuliana Putri',        'jabatan' => 'Anggota',                'fraksi' => 'Gerindra',               'komisi' => 'Komisi IV',  'no_wa' => '6281100000014', 'aktif' => 1],
+            ['name' => 'Abdul Rahman, S.H.',   'jabatan' => 'Ketua DPRD',             'fraksi' => 'Golongan Karya',         'komisi' => '',           'no_wa' => '6281100000015', 'aktif' => 1],
+            ['name' => 'Mariani Lestari, S.E.', 'jabatan' => 'Wakil Ketua DPRD I',    'fraksi' => 'Hanura',                 'komisi' => '',           'no_wa' => '6281100000016', 'aktif' => 1],
+            ['name' => 'Faisal Taufik, S.H.',  'jabatan' => 'Wakil Ketua DPRD II',    'fraksi' => 'Keadilan Sejahtra',      'komisi' => '',           'no_wa' => '6281100000017', 'aktif' => 1],
         ];
     }
 
@@ -147,6 +145,7 @@ class DummyDataSeeder extends Seeder
         );
 
         $unitMembers = [
+            'Seluruh Anggota' => array_keys($membersByPhone),
             'Pansus Ranperda Pajak Daerah' => [
                 '6281100000002',
                 '6281100000007',
@@ -189,7 +188,7 @@ class DummyDataSeeder extends Seeder
             }
         }
 
-        // Sinkronisasikan juga data komisi dari anggota ke anggota_unit_rapat
+        // Isi relasi awal unit komisi untuk kebutuhan testing.
         $members = $this->db->table('anggota')
             ->select('id, komisi')
             ->where('komisi !=', '')
@@ -199,7 +198,6 @@ class DummyDataSeeder extends Seeder
 
         $units = $this->db->table('unit_rapat')
             ->select('id, nama')
-            ->where('jenis', 'komisi')
             ->get()
             ->getResultArray();
 

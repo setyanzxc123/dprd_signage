@@ -1,127 +1,221 @@
 <?= $this->extend('admin/layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<style>
+    .participant-group-form .form-card {
+        padding: 18px;
+    }
+
+    .participant-group-form .form-section-title {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+
+    .participant-group-form .form-label {
+        margin-bottom: 4px;
+        font-size: 0.82rem;
+    }
+
+    .participant-group-form .form-text {
+        font-size: 0.72rem;
+    }
+
+    .participant-group-form .compact-list {
+        max-height: 240px;
+        overflow-y: auto;
+    }
+
+    .participant-group-form .compact-target-list {
+        max-height: 282px;
+        overflow-y: auto;
+    }
+
+    .participant-group-form .member-row {
+        min-height: 42px;
+    }
+</style>
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
+
+<?php
+    $members = $members ?? [];
+    $selectedAnggotaIds = array_map('intval', $selectedAnggotaIds ?? []);
+    $unitNama = $unit['nama'] ?? '';
+?>
 
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
     <p class="page-subtitle">
-        <?= $unit ? 'Perbarui unit target rapat' : 'Tambahkan komisi, badan, pansus, atau target rapat baru' ?>
+        <?= $unit ? 'Perbarui kelompok internal DPRD' : 'Tambahkan kelompok internal DPRD untuk target rapat' ?>
     </p>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST">
+<form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form">
     <?= csrf_field() ?>
 
-    <?php
-        $members = $members ?? [];
-        $selectedAnggotaIds = array_map('intval', $selectedAnggotaIds ?? []);
-    ?>
-
-    <div class="row g-3">
-        <div class="col-lg-8">
+    <div class="row g-2">
+        <div class="col-lg-4">
             <div class="form-card">
-                <div class="form-section-title">Informasi Unit</div>
+                <div class="form-section-title">Informasi Kelompok</div>
 
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label class="form-label fw-semibold" for="nama">
-                            Nama Unit <span class="text-danger">*</span>
+                <div class="mb-2">
+                    <label class="form-label fw-semibold" for="nama">
+                        Nama Kelompok <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="nama" name="nama"
+                        value="<?= esc($unitNama) ?>"
+                        placeholder="Contoh: Pimpinan DPRD, Komisi I, Badan Anggaran"
+                        required />
+                    <div class="form-text mt-1">
+                        Kelompok peserta adalah target internal DPRD untuk rapat dan notifikasi WA. Bisa berisi satu atau banyak anggota.
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label fw-semibold">Status</label>
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                            id="aktif" name="aktif" value="1"
+                            <?= ($unit['aktif'] ?? 1) ? 'checked' : '' ?> />
+                        <label class="form-check-label fw-semibold" for="aktif" id="aktif-label">
+                            <?= ($unit['aktif'] ?? 1) ? 'Aktif' : 'Nonaktif' ?>
                         </label>
-                        <input type="text" class="form-control" id="nama" name="nama"
-                            value="<?= esc($unit['nama'] ?? '') ?>"
-                            placeholder="Contoh: Pansus Ranperda Pajak Daerah" required />
                     </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="jenis">Jenis</label>
-                        <select class="form-select" id="jenis" name="jenis">
-                            <?php foreach ($jenisOptions as $value => $label): ?>
-                                <option value="<?= esc($value, 'attr') ?>" <?= ($unit['jenis'] ?? 'lainnya') === $value ? 'selected' : '' ?>>
-                                    <?= esc($label) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="urutan">Urutan Tampil</label>
-                        <input type="number" class="form-control" id="urutan" name="urutan"
-                            value="<?= esc($unit['urutan'] ?? 0) ?>" min="0" step="1" />
-                    </div>
+                    <div class="form-text mt-1">Nonaktif tidak muncul di pilihan target jadwal baru.</div>
                 </div>
             </div>
 
-            <div class="form-card mt-3" id="manual-member-card">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
-                    <div class="form-section-title mb-0">Anggota Unit</div>
-                    <div class="position-relative" style="width: 100%; max-width: 250px;">
-                        <span class="position-absolute start-0 top-50 translate-middle-y ps-3 text-muted">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text" class="form-control form-control-sm ps-5" id="search-anggota" placeholder="Cari nama atau komisi..." />
-                    </div>
+            <div class="form-card mt-2">
+                <div class="form-section-title">Ringkasan</div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary rounded-pill fs-6" id="sidebar-selected-count"><?= count($selectedAnggotaIds) ?></span>
+                    <small class="text-muted">anggota terpilih</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="form-card">
+                <div class="form-section-title">
+                    Anggota Kelompok
+                    <span class="badge bg-secondary ms-2" id="member-count-badge" style="font-size:11px;">
+                        <?= count($selectedAnggotaIds) ?>
+                    </span>
                 </div>
 
                 <?php if (empty($members)): ?>
-                    <div class="alert alert-warning py-2 px-3 mb-0">
-                        Belum ada anggota aktif.
+                    <div class="alert alert-warning mb-0 py-2 px-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Belum ada anggota DPRD aktif. Tambahkan melalui menu <strong>Anggota DPRD</strong>.
                     </div>
                 <?php else: ?>
-                    <div class="row g-2 overflow-y-auto" style="max-height: 300px; padding-right: 5px;" id="anggota-list-container">
-                        <?php foreach ($members as $member):
-                            $memberId = (int) $member['id'];
-                            $checked = in_array($memberId, $selectedAnggotaIds, true) ? 'checked' : '';
-                            $inputId = 'anggota-unit-' . $memberId;
-                        ?>
-                            <div class="col-md-6 anggota-item"
-                                 data-name="<?= esc(strtolower($member['name']), 'attr') ?>"
-                                 data-komisi="<?= esc(strtolower($member['komisi'] ?: 'tanpa komisi'), 'attr') ?>">
-                                <label class="form-check border rounded px-3 py-2 h-100" for="<?= esc($inputId, 'attr') ?>" style="cursor: pointer;">
-                                    <input class="form-check-input me-2" type="checkbox"
-                                        id="<?= esc($inputId, 'attr') ?>"
-                                        name="anggota_unit_rapat[]"
-                                        value="<?= $memberId ?>"
-                                        <?= $checked ?> />
-                                    <span class="fw-semibold"><?= esc($member['name']) ?></span>
-                                    <span class="d-block text-muted small"><?= esc($member['komisi'] ?: 'Tanpa komisi') ?></span>
-                                </label>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="border rounded overflow-hidden">
+                                <div class="d-flex align-items-center justify-content-between px-3 py-1 border-bottom bg-light">
+                                    <span class="small fw-bold text-muted text-uppercase">Tersedia</span>
+                                    <span class="badge bg-secondary rounded-pill" id="source-count"><?= count($members) ?></span>
+                                </div>
+                                <div class="p-2 border-bottom">
+                                    <input type="text" class="form-control form-control-sm" id="source-search"
+                                        placeholder="Cari nama, jabatan, atau komisi..." autocomplete="off" />
+                                </div>
+                                <div class="compact-list" id="source-list">
+                                    <?php foreach ($members as $member):
+                                        $memberId = (int) $member['id'];
+                                        $checked = in_array($memberId, $selectedAnggotaIds, true);
+                                        $inputId = 'src-' . $memberId;
+                                        $komisiLabel = $member['komisi'] ?: 'Tanpa komisi';
+                                    ?>
+                                        <label class="d-flex align-items-center gap-2 px-3 py-1 border-bottom mb-0 anggota-source member-row"
+                                            for="<?= esc($inputId, 'attr') ?>"
+                                            data-id="<?= $memberId ?>"
+                                            data-name="<?= esc(strtolower($member['name']), 'attr') ?>"
+                                            data-komisi="<?= esc(strtolower($komisiLabel), 'attr') ?>"
+                                            data-jabatan="<?= esc(strtolower($member['jabatan'] ?? ''), 'attr') ?>"
+                                            style="cursor: pointer;">
+                                            <input class="form-check-input source-checkbox"
+                                                type="checkbox"
+                                                id="<?= esc($inputId, 'attr') ?>"
+                                                name="anggota_unit_rapat[]"
+                                                value="<?= $memberId ?>"
+                                                <?= $checked ? 'checked' : '' ?> />
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="small fw-semibold text-truncate"><?= esc($member['name']) ?></div>
+                                                <div class="text-muted text-truncate" style="font-size:11px;">
+                                                    <?= esc($member['jabatan'] ?: '-') ?>
+                                                    &middot; <?= esc($komisiLabel) ?>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
-                        <?php endforeach; ?>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="border rounded overflow-hidden">
+                                <div class="d-flex align-items-center justify-content-between px-3 py-1 border-bottom bg-light">
+                                    <span class="small fw-bold text-muted text-uppercase">Terpilih</span>
+                                    <span class="badge bg-primary rounded-pill" id="target-count"><?= count($selectedAnggotaIds) ?></span>
+                                </div>
+                                <div class="compact-target-list" id="target-list">
+                                    <?php
+                                    $hasSelected = false;
+                                    foreach ($members as $member):
+                                        $memberId = (int) $member['id'];
+                                        if (! in_array($memberId, $selectedAnggotaIds, true)) {
+                                            continue;
+                                        }
+                                        $hasSelected = true;
+                                        $komisiLabel = $member['komisi'] ?: 'Tanpa komisi';
+                                        $initial = mb_strtoupper(mb_substr($member['name'], 0, 1));
+                                    ?>
+                                        <div class="d-flex align-items-center gap-2 px-3 py-1 border-bottom transfer-target-item member-row"
+                                            id="target-<?= $memberId ?>" data-id="<?= $memberId ?>">
+                                            <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-primary text-white"
+                                                style="width:28px;height:28px;font-size:12px;font-weight:700;">
+                                                <?= esc($initial) ?>
+                                            </span>
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="small fw-semibold text-truncate"><?= esc($member['name']) ?></div>
+                                                <div class="text-muted text-truncate" style="font-size:11px;">
+                                                    <?= esc($member['jabatan'] ?: '-') ?>
+                                                    &middot; <?= esc($komisiLabel) ?>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-sm text-muted p-0 border-0"
+                                                title="Hapus dari unit"
+                                                onclick="removeMember(<?= $memberId ?>)"
+                                                style="width:24px;height:24px;line-height:1;">
+                                                <i class="bi bi-x-lg" style="font-size:12px;"></i>
+                                            </button>
+                                        </div>
+                                    <?php endforeach; ?>
+                                    <?php if (! $hasSelected): ?>
+                                        <div class="d-flex flex-column align-items-center justify-content-center text-muted py-4 gap-1" id="target-empty">
+                                            <i class="bi bi-arrow-left-right" style="font-size:20px;opacity:0.4;"></i>
+                                            <small>Pilih anggota dari panel kiri</small>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="form-card">
-                <div class="form-section-title">Status</div>
-
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch"
-                        id="aktif" name="aktif" value="1" <?= ($unit['aktif'] ?? 1) ? 'checked' : '' ?> />
-                    <label class="form-check-label fw-semibold" for="aktif">Aktif</label>
-                </div>
-                <div class="form-text mt-2">
-                    Unit nonaktif tidak muncul sebagai pilihan target peserta pada form jadwal baru.
-                </div>
-            </div>
-
-            <div class="form-card mt-3" id="auto-member-card">
-                <div class="form-section-title">Keanggotaan Otomatis</div>
-                <div class="form-text">
-                    Unit jenis komisi memakai data komisi utama pada menu Anggota DPRD. Unit Seluruh Anggota memakai semua anggota aktif.
-                </div>
-            </div>
-        </div>
     </div>
 
-    <div class="d-flex gap-2 mt-3">
+    <div class="d-flex justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
         <a href="<?= base_url('admin/unit-rapat') ?>" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Batal
         </a>
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-check-lg me-1"></i>
-            <?= $unit ? 'Simpan Perubahan' : 'Tambah Unit' ?>
+            <?= $unit ? 'Simpan Perubahan' : 'Simpan Kelompok' ?>
         </button>
     </div>
 </form>
@@ -131,43 +225,100 @@
 <?= $this->section('scripts') ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const jenisInput = document.getElementById('jenis');
-        const namaInput = document.getElementById('nama');
-        const manualCard = document.getElementById('manual-member-card');
-        const autoCard = document.getElementById('auto-member-card');
+        const aktifToggle = document.getElementById('aktif');
+        const aktifLabel = document.getElementById('aktif-label');
+        const sourceSearch = document.getElementById('source-search');
+        const targetList = document.getElementById('target-list');
+        const targetCount = document.getElementById('target-count');
+        const sourceCount = document.getElementById('source-count');
+        const memberCountBadge = document.getElementById('member-count-badge');
+        const sidebarSelectedCount = document.getElementById('sidebar-selected-count');
+        const allSourceItems = document.querySelectorAll('.anggota-source');
+        const allCheckboxes = document.querySelectorAll('.source-checkbox');
 
-        const syncMemberMode = function() {
-            const jenis = jenisInput?.value || 'lainnya';
-            const nama = (namaInput?.value || '').trim().toLowerCase();
-            const isAutomatic = jenis === 'komisi' || nama === 'seluruh anggota';
+        aktifToggle?.addEventListener('change', function() {
+            if (aktifLabel) aktifLabel.textContent = this.checked ? 'Aktif' : 'Nonaktif';
+        });
 
-            if (manualCard) {
-                manualCard.style.display = isAutomatic ? 'none' : '';
+        const updateTargetPanel = function() {
+            if (!targetList || !targetCount) return;
+
+            const checked = document.querySelectorAll('.source-checkbox:checked');
+            const count = checked.length;
+
+            targetCount.textContent = count;
+            if (memberCountBadge) memberCountBadge.textContent = count;
+            if (sidebarSelectedCount) sidebarSelectedCount.textContent = count;
+
+            targetList.querySelectorAll('.transfer-target-item').forEach(el => el.remove());
+
+            const emptyEl = targetList.querySelector('#target-empty');
+            if (emptyEl) emptyEl.remove();
+
+            if (count === 0) {
+                const div = document.createElement('div');
+                div.className = 'd-flex flex-column align-items-center justify-content-center text-muted py-4 gap-1';
+                div.id = 'target-empty';
+                div.innerHTML = '<i class="bi bi-arrow-left-right" style="font-size:20px;opacity:0.4;"></i><small>Pilih anggota dari panel kiri</small>';
+                targetList.appendChild(div);
+                return;
             }
-            if (autoCard) {
-                autoCard.style.display = isAutomatic ? '' : 'none';
+
+            checked.forEach(function(cb) {
+                const src = cb.closest('.anggota-source');
+                if (!src) return;
+
+                const id = src.getAttribute('data-id');
+                const name = src.querySelector('.fw-semibold')?.textContent || '';
+                const detail = src.querySelector('.text-muted')?.textContent?.trim() || '';
+                const initial = name.trim().charAt(0).toUpperCase();
+
+                const el = document.createElement('div');
+                el.className = 'd-flex align-items-center gap-2 px-3 py-1 border-bottom transfer-target-item member-row';
+                el.id = 'target-' + id;
+                el.setAttribute('data-id', id);
+                el.innerHTML =
+                    '<span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-primary text-white" style="width:28px;height:28px;font-size:12px;font-weight:700;">' + initial + '</span>' +
+                    '<div class="flex-grow-1 min-w-0">' +
+                        '<div class="small fw-semibold text-truncate">' + name + '</div>' +
+                        '<div class="text-muted text-truncate" style="font-size:11px;">' + detail + '</div>' +
+                    '</div>' +
+                    '<button type="button" class="btn btn-sm text-muted p-0 border-0" title="Hapus dari unit" style="width:24px;height:24px;line-height:1;">' +
+                        '<i class="bi bi-x-lg" style="font-size:12px;"></i>' +
+                    '</button>';
+
+                el.querySelector('button').addEventListener('click', function() {
+                    removeMember(parseInt(id));
+                });
+
+                targetList.appendChild(el);
+            });
+        };
+
+        allCheckboxes.forEach(function(cb) {
+            cb.addEventListener('change', updateTargetPanel);
+        });
+
+        window.removeMember = function(memberId) {
+            const cb = document.getElementById('src-' + memberId);
+            if (cb) {
+                cb.checked = false;
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
             }
         };
 
-        jenisInput?.addEventListener('change', syncMemberMode);
-        namaInput?.addEventListener('input', syncMemberMode);
-        syncMemberMode();
-
-        // Pencarian/filtering anggota secara real-time
-        const searchInput = document.getElementById('search-anggota');
-        const items = document.querySelectorAll('.anggota-item');
-
-        searchInput?.addEventListener('input', function() {
-            const query = (this.value || '').trim().toLowerCase();
-            items.forEach(function(item) {
+        sourceSearch?.addEventListener('input', function() {
+            const q = (this.value || '').trim().toLowerCase();
+            let n = 0;
+            allSourceItems.forEach(function(item) {
                 const name = item.getAttribute('data-name') || '';
                 const komisi = item.getAttribute('data-komisi') || '';
-                if (name.includes(query) || komisi.includes(query)) {
-                    item.style.setProperty('display', '', 'important');
-                } else {
-                    item.style.setProperty('display', 'none', 'important');
-                }
+                const jabatan = item.getAttribute('data-jabatan') || '';
+                const match = name.includes(q) || komisi.includes(q) || jabatan.includes(q);
+                item.style.display = match ? '' : 'none';
+                if (match) n++;
             });
+            if (sourceCount) sourceCount.textContent = n;
         });
     });
 </script>

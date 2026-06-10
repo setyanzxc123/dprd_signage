@@ -47,7 +47,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('ruangan/(:num)/update', 'Admin\RoomController::update/$1');
     $routes->get( 'ruangan/(:num)/delete', 'Admin\RoomController::delete/$1');
 
-    // Master Data: Unit Rapat / Target Peserta
+    // Master Data: Kelompok Peserta
     $routes->get( 'unit-rapat',               'Admin\UnitRapatController::index');
     $routes->get( 'unit-rapat/create',        'Admin\UnitRapatController::create');
     $routes->post('unit-rapat/store',         'Admin\UnitRapatController::store');

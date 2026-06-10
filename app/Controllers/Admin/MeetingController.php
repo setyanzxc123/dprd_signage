@@ -372,21 +372,6 @@ class MeetingController extends BaseController
             return $anggotaModel->where('aktif', 1)->findAll();
         }
 
-        $units = (new UnitRapatModel())
-            ->select('id, nama, membership_type')
-            ->whereIn('id', $unitIds)
-            ->findAll();
-
-        if (empty($units)) {
-            return [];
-        }
-
-        foreach ($units as $unit) {
-            if ($unit['membership_type'] === 'semua_anggota' || $unit['nama'] === 'All Komisi') {
-                return $anggotaModel->where('aktif', 1)->findAll();
-            }
-        }
-
         $db = \Config\Database::connect();
         if (!$db->tableExists('anggota_unit_rapat')) {
             return [];

@@ -28,41 +28,41 @@
     .form-card-header {
         display: flex;
         align-items: center;
-        gap: 12px;
-        min-height: 74px;
-        padding: 18px 24px;
+        gap: 10px;
+        min-height: 56px;
+        padding: 12px 18px;
         border-bottom: 1px solid var(--od-border-soft);
         background: #fbfdff;
     }
 
     .form-card-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 36px;
+        flex: 0 0 32px;
         background: var(--od-surface-warm);
         color: var(--od-accent);
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .form-card-title {
         margin: 0;
         color: var(--od-fg);
-        font-size: 0.98rem;
+        font-size: 0.92rem;
         font-weight: 700;
         line-height: 1.2;
     }
 
     .form-card-body {
-        padding: 24px;
+        padding: 18px;
     }
 
     .form-section {
-        padding-top: 20px;
-        margin-top: 22px;
+        padding-top: 16px;
+        margin-top: 16px;
         border-top: 1px solid var(--od-border-soft);
     }
 
@@ -76,9 +76,9 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         color: var(--od-fg2);
-        font-size: 0.8rem;
+        font-size: 0.76rem;
         font-weight: 700;
         letter-spacing: 0.5px;
         text-transform: uppercase;
@@ -94,8 +94,8 @@
 
     .form-label {
         color: var(--od-fg2);
-        font-size: var(--od-text-sm);
-        margin-bottom: 7px;
+        font-size: 0.82rem;
+        margin-bottom: 5px;
     }
 
     .required-mark {
@@ -146,9 +146,9 @@
     .choice-option-body {
         display: flex;
         align-items: center;
-        gap: 10px;
-        min-height: 68px;
-        padding: 12px;
+        gap: 8px;
+        min-height: 54px;
+        padding: 9px;
         border: 1px solid var(--od-border);
         border-radius: var(--od-radius-md);
         background: var(--od-surface);
@@ -173,13 +173,13 @@
     }
 
     .choice-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 9px;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 32px;
+        flex: 0 0 28px;
         background: #f1f5f9;
         color: var(--od-muted);
     }
@@ -203,9 +203,9 @@
     .visibility-row {
         display: flex;
         justify-content: space-between;
-        gap: 14px;
+        gap: 12px;
         align-items: center;
-        padding: 12px;
+        padding: 10px;
         border: 1px solid var(--od-border-soft);
         border-radius: var(--od-radius-md);
         background: #fbfdff;
@@ -246,19 +246,54 @@
         text-align: center;
     }
 
-    .target-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+    .target-picker {
+        border: 1px solid var(--od-border);
+        border-radius: var(--od-radius-md);
+        overflow: hidden;
+        background: var(--od-surface);
+    }
+
+    .target-picker-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--od-border-soft);
+        background: #f8fafc;
+    }
+
+    .target-picker-title {
+        color: var(--od-muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.45px;
+        text-transform: uppercase;
+    }
+
+    .target-picker-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .target-picker-search {
+        padding: 8px;
+        border-bottom: 1px solid var(--od-border-soft);
+    }
+
+    .target-list {
+        max-height: 190px;
+        overflow-y: auto;
     }
 
     .target-option {
         display: flex;
         align-items: center;
-        min-height: 42px;
-        padding: 9px 11px;
-        border: 1px solid var(--od-border);
-        border-radius: var(--od-radius-sm);
+        min-height: 36px;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--od-border-soft);
         background: var(--od-surface);
         color: var(--od-fg2);
         font-size: var(--od-text-sm);
@@ -269,13 +304,15 @@
         transition: border-color 0.15s ease, background-color 0.15s ease;
     }
 
+    .target-option:last-child {
+        border-bottom: 0;
+    }
+
     .target-option:hover {
         background: #fbfdff;
-        border-color: var(--od-accent);
     }
 
     .target-option.is-selected {
-        border-color: var(--od-accent);
         background-color: var(--od-surface-warm);
         color: var(--od-fg);
         font-weight: 700;
@@ -299,30 +336,6 @@
         top: 88px;
     }
 
-    .form-action-bar {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 12px;
-        margin-top: 18px;
-        padding: 16px 18px;
-        border: 1px solid var(--od-border);
-        border-radius: var(--od-radius-lg);
-        background: var(--od-surface);
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    .action-buttons .btn {
-        min-width: 148px;
-    }
-
     @media (max-width: 991.98px) {
         .side-stack {
             position: static;
@@ -330,33 +343,22 @@
     }
 
     @media (max-width: 575.98px) {
-        .form-card-header,
+        .form-card-header {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
         .form-card-body {
-            padding-left: 18px;
-            padding-right: 18px;
+            padding-left: 14px;
+            padding-right: 14px;
         }
 
-        .option-group.two-col,
-        .target-grid {
+        .option-group.two-col {
             grid-template-columns: 1fr;
-        }
-
-        .form-action-bar {
-            align-items: stretch;
-            flex-direction: column;
         }
 
         .visibility-row {
             align-items: center;
-        }
-
-        .action-buttons,
-        .action-buttons .btn {
-            width: 100%;
-        }
-
-        .action-buttons .btn {
-            justify-content: center;
         }
     }
 </style>
@@ -374,7 +376,7 @@
 <form action="<?= esc($action_url) ?>" method="POST" class="schedule-form">
     <?= csrf_field() ?>
 
-    <div class="row g-3">
+    <div class="row g-2">
         <div class="col-lg-8">
             <div class="form-card">
                 <div class="form-card-header">
@@ -386,7 +388,7 @@
                     <div class="form-section">
                         <div class="form-section-title">Informasi Dasar</div>
 
-                        <div class="row g-3">
+                        <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label fw-semibold" for="judul">
                                     Judul Rapat <span class="required-mark">*</span>
@@ -461,7 +463,7 @@
                     <div class="form-section">
                         <div class="form-section-title">Publikasi & Materi</div>
 
-                        <div class="row g-3">
+                        <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label fw-semibold" for="materi_url">
                                     Link Materi Rapat <span class="text-muted fw-normal">(Opsional)</span>
@@ -549,9 +551,28 @@
                         <div class="form-section">
                             <div class="form-section-title">Peserta & WA</div>
 
-                            <label class="form-label fw-semibold">Target Peserta / Unit Rapat</label>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <label class="form-label fw-semibold mb-0">Peserta Rapat</label>
+                                <span class="badge bg-primary-subtle text-primary" id="target-selected-count">0 dipilih</span>
+                            </div>
 
-                            <div class="target-grid">
+                            <div class="target-picker">
+                                <div class="target-picker-head">
+                                    <span class="target-picker-title">Kelompok Peserta</span>
+                                    <span class="target-picker-meta">
+                                        <span class="badge bg-secondary rounded-pill" id="target-visible-count"><?= count($unit_rapat_list) ?></span>
+                                    </span>
+                                </div>
+                                <div class="target-picker-search">
+                                    <div class="position-relative">
+                                        <span class="position-absolute start-0 top-50 translate-middle-y ps-3 text-muted">
+                                            <i class="bi bi-search"></i>
+                                        </span>
+                                        <input type="text" class="form-control form-control-sm ps-5"
+                                            id="target-search" placeholder="Cari kelompok peserta..." autocomplete="off" />
+                                    </div>
+                                </div>
+                                <div class="target-list" id="target-list">
                                 <?php
                                 $targetUnitIds = $meeting['target_unit_ids'] ?? [];
                                 foreach ($unit_rapat_list as $unit):
@@ -561,13 +582,18 @@
                                     $selectedClass = $checked ? ' is-selected' : '';
                                     $targetId = 'unit-rapat-' . $unitId;
                                 ?>
-                                    <label class="target-option<?= $selectedClass ?>" for="<?= esc($targetId, 'attr') ?>">
+                                    <label class="target-option<?= $selectedClass ?>" for="<?= esc($targetId, 'attr') ?>"
+                                        data-name="<?= esc(strtolower($unitName), 'attr') ?>">
                                         <input class="form-check-input me-2" type="checkbox" name="target_unit_rapat[]"
                                             value="<?= $unitId ?>" data-name="<?= esc($unitName, 'attr') ?>"
                                             id="<?= esc($targetId, 'attr') ?>" <?= $checked ?> />
                                         <span><?= esc($unitName) ?></span>
                                     </label>
                                 <?php endforeach; ?>
+                                    <div class="text-muted text-center py-3 d-none" id="target-empty">
+                                        <small>Kelompok peserta tidak ditemukan.</small>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mt-3">
@@ -590,17 +616,14 @@
         </div>
     </div>
 
-    <div class="form-action-bar">
-        <div class="action-buttons">
-            <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
-                <i class="bi bi-arrow-left"></i>
-                <span>Batal</span>
-            </a>
-            <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">
-                <i class="bi bi-calendar-check"></i>
-                <span><?= $meeting ? 'Simpan Perubahan' : 'Simpan & Jadwalkan Notifikasi' ?></span>
-            </button>
-        </div>
+    <div class="d-flex gap-2 mt-3">
+        <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Batal
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-calendar-check me-1"></i>
+            <?= $meeting ? 'Simpan Perubahan' : 'Simpan & Jadwalkan Notifikasi' ?>
+        </button>
     </div>
 </form>
 
@@ -638,59 +661,57 @@
         }
 
         const targetInputs = Array.from(document.querySelectorAll('.target-option input[type="checkbox"]'));
-        const allKomisiInput = targetInputs.find(function(input) {
-            return input.dataset.name === 'All Komisi' || input.dataset.name === 'Seluruh Anggota';
-        });
+        const targetOptions = Array.from(document.querySelectorAll('.target-option'));
+        const targetSearch = document.getElementById('target-search');
+        const targetSelectedCount = document.getElementById('target-selected-count');
+        const targetVisibleCount = document.getElementById('target-visible-count');
+        const targetEmpty = document.getElementById('target-empty');
 
         const syncTargetVisual = function(input) {
             const option = input.closest('.target-option');
             if (!option) return;
 
             option.classList.toggle('is-selected', input.checked);
-            option.classList.toggle('is-disabled', input.disabled);
         };
 
-        const syncAllKomisi = function(savePreviousState) {
-            if (!allKomisiInput) return;
+        const syncTargetCount = function() {
+            const count = targetInputs.filter(function(input) {
+                return input.checked;
+            }).length;
 
-            const isAllKomisi = allKomisiInput.checked;
-            targetInputs.forEach(function(input) {
-                if (input === allKomisiInput) {
-                    input.disabled = false;
-                    syncTargetVisual(input);
-                    return;
-                }
-
-                if (isAllKomisi) {
-                    if (savePreviousState) {
-                        input.dataset.beforeAllKomisi = input.checked ? '1' : '0';
-                    }
-                    input.checked = true;
-                    input.disabled = true;
-                } else {
-                    input.disabled = false;
-                    if (input.dataset.beforeAllKomisi !== undefined) {
-                        input.checked = input.dataset.beforeAllKomisi === '1';
-                        delete input.dataset.beforeAllKomisi;
-                    }
-                }
-
-                syncTargetVisual(input);
-            });
+            if (targetSelectedCount) {
+                targetSelectedCount.textContent = count + ' dipilih';
+            }
         };
 
         targetInputs.forEach(function(input) {
             input.addEventListener('change', function() {
-                if (this === allKomisiInput) {
-                    syncAllKomisi(true);
-                    return;
-                }
-
                 syncTargetVisual(this);
+                syncTargetCount();
             });
+
+            syncTargetVisual(input);
         });
 
-        syncAllKomisi(true);
+        targetSearch?.addEventListener('input', function() {
+            const q = (this.value || '').trim().toLowerCase();
+            let shown = 0;
+
+            targetOptions.forEach(function(option) {
+                const match = (option.getAttribute('data-name') || '').includes(q);
+                option.style.display = match ? '' : 'none';
+                if (match) shown++;
+            });
+
+            if (targetVisibleCount) {
+                targetVisibleCount.textContent = shown;
+            }
+            if (targetEmpty) {
+                targetEmpty.classList.toggle('d-none', shown > 0);
+            }
+        });
+
+        syncTargetCount();
     });
 </script>
 <?= $this->endSection() ?>
