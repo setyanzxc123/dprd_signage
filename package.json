@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
+    "watch:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
