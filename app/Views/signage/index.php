@@ -1,17 +1,20 @@
+<?php
+$signageCssVersion = is_file(FCPATH . 'assets/css/signage.css') ? filemtime(FCPATH . 'assets/css/signage.css') : time();
+?>
 <!DOCTYPE html>
 <html lang="id" data-signage-theme="<?= esc($signageTema ?? 'dark') ?>">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Layar Informasi — DPRD Sulawesi Tengah</title>
+    <title>Layar Informasi - DPRD Sulawesi Tengah</title>
     <meta name="robots" content="noindex, nofollow" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet" />
 
-    <link href="<?= base_url('assets/css/signage.css') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/signage.css?v=' . $signageCssVersion) ?>" rel="stylesheet" />
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
@@ -45,8 +48,8 @@
                             <span class="weather-loc" v-if="cuaca.desa">{{ cuaca.desa }}, {{ cuaca.kecamatan }}</span>
                         </div>
                         <div class="weather-details-row">
-                            <span class="weather-hum">💧 {{ cuaca.kelembapan }} &nbsp;&nbsp;💨 {{ cuaca.kec_angin }}</span>
-                            <span class="weather-separator">·</span>
+                            <span class="weather-hum">Kelembapan {{ cuaca.kelembapan }} &nbsp;&nbsp;Angin {{ cuaca.kec_angin }}</span>
+                            <span class="weather-separator">-</span>
                             <span class="weather-src">Sumber: BMKG</span>
                         </div>
                     </div>
@@ -68,14 +71,14 @@
             <video v-if="media.mode === 'video' && media.url" :src="media.url" autoplay loop muted playsinline></video>
             <img v-else-if="media.mode === 'image' && media.url" :src="media.url" alt="Media Signage DPRD" />
 
-            <!-- Panel QR — satu slot, slide bergantian jika keduanya ada -->
+            <!-- Panel QR - satu slot, slide bergantian jika keduanya ada -->
             <div class="qr-panel" v-if="qrBerkas || qrLive">
                 <!-- Label dinamis -->
-                <div class="qr-label" v-if="activeQR === 'berkas'">📥 Unduh Berkas Rapat</div>
-                <div class="qr-label" v-else><span class="live-badge">🔴 LIVE</span>&nbsp;Tonton Siaran</div>
+                <div class="qr-label" v-if="activeQR === 'berkas'">Unduh Berkas Rapat</div>
+                <div class="qr-label" v-else><span class="live-badge">LIVE</span>&nbsp;Tonton Siaran</div>
                 <!-- Container QR tunggal -->
                 <div id="qr-display" :class="{ 'qr-fading': qrFading }"></div>
-                <!-- Dot indicator — hanya muncul jika keduanya ada -->
+                <!-- Dot indicator - hanya muncul jika keduanya ada -->
                 <div v-if="qrBerkas && qrLive" class="qr-dots">
                     <span :class="['qr-dot', { active: activeQR === 'berkas' }]"></span>
                     <span :class="['qr-dot', { active: activeQR === 'live' }]"></span>
@@ -86,10 +89,10 @@
 
         <div id="panel-info">
             <div class="signage-schedule">
-                <div class="schedule-title">⬡ Agenda Rapat Hari Ini</div>
+                <div class="schedule-title">Agenda Rapat Hari Ini</div>
 
                 <div v-if="jadwal.length === 0 && upcoming.length === 0" class="schedule-empty">
-                    <div class="empty-icon">📅</div>
+                    <div class="empty-icon">--</div>
                     <p>Tidak ada jadwal rapat hari ini</p>
                 </div>
 
@@ -99,7 +102,7 @@
 
                 <div v-for="item in jadwal" :key="item.id" :class="['schedule-item', item.status]">
                     <div class="item-time">
-                        <div class="time-range">{{ item.waktu_mulai }} – {{ item.waktu_selesai }}</div>
+                        <div class="time-range">{{ item.waktu_mulai }} - {{ item.waktu_selesai }}</div>
                         <div class="time-room">{{ item.ruangan }}</div>
                     </div>
                     <div class="item-content">
@@ -139,7 +142,7 @@
         </div>
 
         <div id="panel-ticker" v-if="runningTextAktif">
-            <div class="ticker-label">📢 Pengumuman</div>
+            <div class="ticker-label">Pengumuman</div>
             <div class="ticker-track">
                 <span class="ticker-text">{{ runningText }}</span>
             </div>
@@ -167,7 +170,7 @@
                 });
 
                 const cuaca = ref({
-                    suhu: '--°C',
+                    suhu: '-- C',
                     kondisi: 'Memuat...',
                     kelembapan: '--%',
                     kec_angin: '-- km/j',
@@ -267,7 +270,7 @@
                     makeQR('qr-display', url, 110);
                 }
 
-                // Fade-out → ganti → fade-in
+                // Fade-out, ganti QR, lalu fade-in
                 function switchQR() {
                     qrFading.value = true;
                     setTimeout(() => {
@@ -288,7 +291,7 @@
                     }
 
                     if (qrBerkas.value && qrLive.value) {
-                        // Keduanya ada — jalankan slide setiap 8 detik
+                        // Keduanya ada - jalankan slide setiap 8 detik
                         qrSlideTimer = setInterval(switchQR, 8000);
                     }
                     // Pastikan activeQR valid (jika salah satu hilang)
