@@ -1,121 +1,245 @@
-/* main.js — Open Design v2 Admin Shell */
-
-function setSidebarCollapsed(isCollapsed) {
-    document.body.classList.toggle("sidebar-collapsed", isCollapsed);
-    const toggleBtn = document.getElementById("sidebarToggle");
-    if (toggleBtn) {
-        toggleBtn.setAttribute("aria-expanded", String(!isCollapsed));
-        toggleBtn.setAttribute("aria-label", isCollapsed ? "Buka sidebar" : "Ciutkan sidebar");
-        toggleBtn.setAttribute("title", isCollapsed ? "Buka sidebar" : "Ciutkan sidebar");
+/* Admin shell - Vue controller island for CodeIgniter-rendered pages. */
+(function () {
+    function renderAdminIcons() {
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     }
-    localStorage.setItem("dprd-sidebar-collapsed", isCollapsed ? "collapsed" : "expanded");
-}
 
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    sidebar.classList.toggle('mobile-open');
-    overlay.classList.toggle('visible');
-}
+    window.renderAdminIcons = renderAdminIcons;
 
-function updateClock() {
-    const el = document.getElementById('topbar-clock');
-    if (!el) return;
-    const formatter = new Intl.DateTimeFormat('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Makassar'
-    });
-    el.textContent = formatter.format(new Date()) + ' WITA';
-}
+    function formatClock(date) {
+        return new Intl.DateTimeFormat('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+            timeZone: 'Asia/Makassar'
+        }).format(date) + ' WITA';
+    }
 
-function updatePageDate() {
-    const el = document.getElementById('page-date');
-    if (!el) return;
-    const formatter = new Intl.DateTimeFormat('id-ID', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'Asia/Makassar'
-    });
-    el.textContent = formatter.format(new Date());
-}
+    function formatPageDate(date) {
+        return new Intl.DateTimeFormat('id-ID', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Asia/Makassar'
+        }).format(date);
+    }
 
-function setActiveNav() {
-    const currentPath = window.location.pathname;
+    function isActivePath(currentPath, linkPath) {
+        return currentPath === linkPath || currentPath.startsWith(linkPath + '/');
+    }
 
-    // Sidebar nav
-    document.querySelectorAll('.nav-link-custom[data-path]').forEach(function (link) {
-        const linkPath = link.getAttribute('data-path');
-        if (currentPath.startsWith(linkPath)) {
-            link.classList.add('active');
+    function setupIconObserver() {
+        if (!window.MutationObserver) return;
 
-            // If inside submenu, open it
-            const parentSub = link.closest('.nav-sub');
-            if (parentSub) {
-                parentSub.classList.add('open');
-                const triggerBtn = parentSub.previousElementSibling;
-                if (triggerBtn) {
-                    const arrow = triggerBtn.querySelector('.nav-arrow');
-                    if (arrow) arrow.classList.add('rotated');
-                }
+        let renderQueued = false;
+        const queueRender = function () {
+            if (renderQueued) return;
+            renderQueued = true;
+            window.requestAnimationFrame(function () {
+                renderQueued = false;
+                renderAdminIcons();
+            });
+        };
+
+        const observer = new MutationObserver(function (mutations) {
+            const hasIconChanges = mutations.some(function (mutation) {
+                return Array.from(mutation.addedNodes).some(function (node) {
+                    return node.nodeType === 1 && (
+                        node.matches?.('[data-lucide]') ||
+                        node.querySelector?.('[data-lucide]')
+                    );
+                });
+            });
+
+            if (hasIconChanges) queueRender();
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    function setSidebarToggleState(isCollapsed) {
+        const toggleButton = document.getElementById('sidebarToggle');
+        if (!toggleButton) return;
+
+        toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
+        toggleButton.setAttribute('aria-label', isCollapsed ? 'Buka sidebar' : 'Ciutkan sidebar');
+        toggleButton.setAttribute('title', isCollapsed ? 'Buka sidebar' : 'Ciutkan sidebar');
+    }
+
+    function bindAlertHandlers() {
+        if (document.documentElement.dataset.adminAlertBound === '1') {
+            return;
+        }
+        document.documentElement.dataset.adminAlertBound = '1';
+
+        document.addEventListener('click', (event) => {
+            const closeButton = event.target.closest('.ta-alert-close');
+            if (closeButton) {
+                closeButton.closest('.ta-alert')?.remove();
             }
-        }
-    });
-
-    // Mobile bottom nav
-    document.querySelectorAll('.mobile-nav a[data-path]').forEach(function (link) {
-        const linkPath = link.getAttribute('data-path');
-        if (currentPath.startsWith(linkPath)) {
-            link.classList.add('active');
-        }
-    });
-}
-
-function initFlashMessages() {
-    document.querySelectorAll('.alert-flash').forEach(function (alert) {
-        setTimeout(function () {
-            alert.style.transition = 'opacity 0.5s ease';
-            alert.style.opacity = '0';
-            setTimeout(function () { alert.remove(); }, 500);
-        }, 4000);
-    });
-}
-
-function initOverlayClose() {
-    const overlay = document.getElementById('sidebar-overlay');
-    if (!overlay) return;
-    overlay.addEventListener('click', function () {
-        document.getElementById('sidebar').classList.remove('mobile-open');
-        overlay.classList.remove('visible');
-    });
-}
-
-// Submenu toggle (if any page still uses it)
-function toggleSubmenu(subId, triggerEl) {
-    const sub = document.getElementById(subId);
-    const arrow = triggerEl.querySelector('.nav-arrow');
-    if (!sub) return;
-    sub.classList.toggle('open');
-    if (arrow) arrow.classList.toggle('rotated');
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    const toggleBtn = document.getElementById("sidebarToggle");
-    if (toggleBtn) {
-        setSidebarCollapsed(localStorage.getItem("dprd-sidebar-collapsed") === "collapsed");
-        toggleBtn.addEventListener("click", function () {
-            setSidebarCollapsed(!document.body.classList.contains("sidebar-collapsed"));
         });
     }
 
-    updateClock();
-    setInterval(updateClock, 1000);
-    updatePageDate();
-    setActiveNav();
-    initFlashMessages();
-    initOverlayClose();
-});
+    function bindFallbackShellHandlers() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const topbarToggle = document.querySelector('.topbar-toggle');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const savedCollapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
+
+        document.body.classList.toggle('sidebar-collapsed', savedCollapsed);
+        setSidebarToggleState(savedCollapsed);
+
+        topbarToggle?.addEventListener('click', function () {
+            sidebar?.classList.toggle('mobile-open');
+            overlay?.classList.toggle('visible');
+        });
+
+        overlay?.addEventListener('click', function () {
+            sidebar?.classList.remove('mobile-open');
+            overlay.classList.remove('visible');
+        });
+
+        sidebarToggle?.addEventListener('click', function () {
+            const isCollapsed = !document.body.classList.contains('sidebar-collapsed');
+            document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+            localStorage.setItem('dprd-sidebar-collapsed', isCollapsed ? 'collapsed' : 'expanded');
+            setSidebarToggleState(isCollapsed);
+        });
+    }
+
+    function applyFallbackActiveNavigation() {
+        const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+        document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach((link) => {
+            const path = link.getAttribute('data-path');
+            const isDashboard = path === '/admin/dashboard' && currentPath === '/admin';
+            link.classList.toggle('active', isDashboard || isActivePath(currentPath, path));
+        });
+    }
+
+    function startFallbackClock() {
+        const update = function () {
+            const clock = document.getElementById('topbar-clock');
+            if (clock) {
+                clock.textContent = formatClock(new Date());
+            }
+
+            const pageDate = document.getElementById('page-date');
+            if (pageDate) {
+                pageDate.textContent = formatPageDate(new Date());
+            }
+        };
+
+        update();
+        window.setInterval(update, 1000);
+    }
+
+    function mountAdminController() {
+        const controllerRoot = document.getElementById('admin-vue-controller');
+
+        if (!window.Vue || !controllerRoot) {
+            bindAlertHandlers();
+            bindFallbackShellHandlers();
+            applyFallbackActiveNavigation();
+            startFallbackClock();
+            renderAdminIcons();
+            return;
+        }
+
+        window.Vue.createApp({
+            data() {
+                return {
+                    currentPath: window.location.pathname.replace(/\/$/, '') || '/',
+                    sidebarOpen: false,
+                    sidebarCollapsed: localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed',
+                    clockTimer: null
+                };
+            },
+            mounted() {
+                this.applySidebarState();
+                this.applyActiveNavigation();
+                this.updateClock();
+                this.updatePageDate();
+                this.bindEvents();
+                this.autoDismissFlashMessages();
+                setupIconObserver();
+                renderAdminIcons();
+
+                this.clockTimer = window.setInterval(this.updateClock, 1000);
+                window.addEventListener('keydown', this.handleKeydown);
+            },
+            beforeUnmount() {
+                if (this.clockTimer) {
+                    window.clearInterval(this.clockTimer);
+                }
+                window.removeEventListener('keydown', this.handleKeydown);
+            },
+            methods: {
+                bindEvents() {
+                    document.querySelector('.topbar-toggle')?.addEventListener('click', this.toggleMobileSidebar);
+                    document.getElementById('sidebarToggle')?.addEventListener('click', this.toggleSidebarCollapsed);
+                    document.getElementById('sidebar-overlay')?.addEventListener('click', this.closeMobileSidebar);
+                    bindAlertHandlers();
+                },
+                updateClock() {
+                    const clock = document.getElementById('topbar-clock');
+                    if (clock) {
+                        clock.textContent = formatClock(new Date());
+                    }
+                },
+                updatePageDate() {
+                    const pageDate = document.getElementById('page-date');
+                    if (pageDate) {
+                        pageDate.textContent = formatPageDate(new Date());
+                    }
+                },
+                applyActiveNavigation() {
+                    document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach((link) => {
+                        const path = link.getAttribute('data-path');
+                        const isDashboard = path === '/admin/dashboard' && this.currentPath === '/admin';
+                        link.classList.toggle('active', isDashboard || isActivePath(this.currentPath, path));
+                    });
+                },
+                applySidebarState() {
+                    document.body.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+                    document.getElementById('sidebar')?.classList.toggle('mobile-open', this.sidebarOpen);
+                    document.getElementById('sidebar-overlay')?.classList.toggle('visible', this.sidebarOpen);
+                    setSidebarToggleState(this.sidebarCollapsed);
+                    localStorage.setItem('dprd-sidebar-collapsed', this.sidebarCollapsed ? 'collapsed' : 'expanded');
+                },
+                toggleMobileSidebar() {
+                    this.sidebarOpen = !this.sidebarOpen;
+                    this.applySidebarState();
+                },
+                closeMobileSidebar() {
+                    this.sidebarOpen = false;
+                    this.applySidebarState();
+                },
+                toggleSidebarCollapsed() {
+                    this.sidebarCollapsed = !this.sidebarCollapsed;
+                    this.applySidebarState();
+                },
+                autoDismissFlashMessages() {
+                    document.querySelectorAll('.ta-alert-flash').forEach(function (alert) {
+                        window.setTimeout(function () {
+                            alert.style.transition = 'opacity 0.5s ease';
+                            alert.style.opacity = '0';
+                            window.setTimeout(function () { alert.remove(); }, 500);
+                        }, 4000);
+                    });
+                },
+                handleKeydown(event) {
+                    if (event.key === 'Escape') {
+                        this.closeMobileSidebar();
+                    }
+                }
+            }
+        }).mount(controllerRoot);
+    }
+
+    document.addEventListener('DOMContentLoaded', mountAdminController);
+})();

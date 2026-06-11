@@ -1,3 +1,7 @@
+<?php
+$adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
+$adminJsVersion  = is_file(FCPATH . 'assets/js/admin/main.js') ? filemtime(FCPATH . 'assets/js/admin/main.js') : time();
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -6,20 +10,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>
-        <?= esc($pageTitle ?? 'Admin') ?> — Panel Admin Signage DPRD Sulawesi Tengah
+        <?= esc($pageTitle ?? 'Admin') ?> - Panel Admin Signage DPRD Sulawesi Tengah
     </title>
     <meta name="description"
         content="Panel manajemen sistem informasi digital signage dan notifikasi WhatsApp DPRD Provinsi Sulawesi Tengah." />
     <meta name="robots" content="noindex, nofollow" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-
-    <link href="<?= base_url('assets/css/admin/token.css') ?>" rel="stylesheet" />
-    <link href="<?= base_url('assets/css/admin/layout.css') ?>" rel="stylesheet" />
-    <link href="<?= base_url('assets/css/admin/components.css') ?>" rel="stylesheet" />
-    <link href="<?= base_url('assets/css/admin/responsive.css') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
     <?= $this->renderSection('styles') ?>
 </head>
 
@@ -38,18 +35,18 @@
             <main id="content">
 
                 <?php if (session()->getFlashdata('success')): ?>
-                    <div class="alert alert-success alert-dismissible alert-flash mb-4" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i>
+                    <div class="ta-alert ta-alert-success ta-alert-dismissible ta-alert-flash mb-4" role="alert">
+                        <i data-lucide="circle-check" class="mr-2"></i>
                         <?= session()->getFlashdata('success') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="ta-alert-close" aria-label="Tutup notifikasi"></button>
                     </div>
                 <?php endif; ?>
 
                 <?php if (session()->getFlashdata('error')): ?>
-                    <div class="alert alert-danger alert-dismissible alert-flash mb-4" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div class="ta-alert ta-alert-danger ta-alert-dismissible ta-alert-flash mb-4" role="alert">
+                        <i data-lucide="triangle-alert" class="mr-2"></i>
                         <?= session()->getFlashdata('error') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="ta-alert-close" aria-label="Tutup notifikasi"></button>
                     </div>
                 <?php endif; ?>
 
@@ -64,30 +61,32 @@
     <!-- Mobile bottom nav -->
     <nav class="mobile-nav" aria-label="Navigasi mobile">
         <a href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
-            <i class="bi bi-grid-1x2-fill"></i>
+            <i data-lucide="layout-dashboard"></i>
             Home
         </a>
         <a href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
-            <i class="bi bi-calendar3-week-fill"></i>
+            <i data-lucide="calendar-days"></i>
             Jadwal
         </a>
         <a href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
-            <i class="bi bi-whatsapp"></i>
+            <i data-lucide="message-circle"></i>
             Notifikasi
         </a>
         <a href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
-            <i class="bi bi-tv-fill"></i>
+            <i data-lucide="tv"></i>
             Signage
         </a>
         <a href="<?= base_url('admin/logout') ?>" onclick="return confirm('Yakin ingin keluar?')">
-            <i class="bi bi-box-arrow-right"></i>
+            <i data-lucide="log-out"></i>
             Keluar
         </a>
     </nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div id="admin-vue-controller" hidden></div>
 
-    <script src="<?= base_url('assets/js/admin/main.js') ?>"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="<?= base_url('assets/js/admin/main.js?v=' . $adminJsVersion) ?>"></script>
 
     <?= $this->renderSection('scripts') ?>
 

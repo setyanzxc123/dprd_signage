@@ -11,8 +11,8 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 
 <header id="topbar">
 
-    <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
-        <i class="bi bi-list"></i>
+    <button class="topbar-toggle" type="button" aria-label="Toggle sidebar">
+        <i data-lucide="menu"></i>
     </button>
 
     <nav class="topbar-breadcrumb" aria-label="breadcrumb">
@@ -36,9 +36,9 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
     <div class="topbar-actions">
         <div class="topbar-clock" id="topbar-clock">--:--:-- WITA</div>
 
-        <a class="topbar-icon-btn" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
-            <i class="bi bi-bell"></i>
-            <span class="notif-dot d-none" id="topbar-notif-dot"></span>
+        <a class="ta-topbar-button" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
+            <i data-lucide="bell"></i>
+            <span class="notif-dot hidden" id="topbar-notif-dot"></span>
         </a>
 
         <div class="topbar-user">
@@ -49,9 +49,9 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             </div>
         </div>
 
-        <a class="topbar-icon-btn topbar-logout" href="<?= base_url('admin/logout') ?>" title="Logout"
+        <a class="ta-topbar-button topbar-logout" href="<?= base_url('admin/logout') ?>" title="Logout"
            onclick="return confirm('Yakin ingin keluar?')">
-            <i class="bi bi-box-arrow-right"></i>
+            <i data-lucide="log-out"></i>
         </a>
     </div>
 

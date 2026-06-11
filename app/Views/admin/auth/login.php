@@ -1,3 +1,6 @@
+<?php
+$adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -7,12 +10,7 @@
     <title>Login - Panel Admin Signage DPRD Sulteng</title>
     <meta name="robots" content="noindex, nofollow" />
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-    <!-- Tokens (untuk font Inter + variabel warna) -->
-    <link href="<?= base_url('assets/css/admin/token.css') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
 
     <style>
         /* Login */
@@ -89,7 +87,7 @@
             position: relative;
         }
 
-        .input-icon-wrap .form-control {
+        .input-icon-wrap .ta-input {
             padding-left: 42px;
         }
 
@@ -104,7 +102,7 @@
         }
 
         /* Tombol toggle show/hide password */
-        .btn-eye {
+        .ta-eye-button {
             position: absolute;
             top: 50%;
             right: 12px;
@@ -117,12 +115,12 @@
             font-size: .95rem;
         }
 
-        .btn-eye:hover {
+        .ta-eye-button:hover {
             color: var(--text-primary);
         }
 
         /* Tombol login */
-        .btn-login {
+        .ta-login-button {
             width: 100%;
             padding: 11px;
             font-weight: 600;
@@ -171,8 +169,8 @@
 
             <!-- Flash Error -->
             <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger alert-sm py-2 px-3 mb-3">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                <div class="ta-alert ta-alert-danger ta-alert-sm py-2 px-3 mb-3">
+                    <i data-lucide="triangle-alert" class="mr-1"></i>
                     <?= session()->getFlashdata('error') ?>
                 </div>
             <?php endif; ?>
@@ -182,31 +180,31 @@
 
                 <!-- Username -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" for="username">Username</label>
+                    <label class="ta-label font-semibold" for="username">Username</label>
                     <div class="input-icon-wrap">
-                        <i class="bi bi-person input-icon"></i>
-                        <input type="text" class="form-control" id="username" name="username"
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" class="ta-input" id="username" name="username"
                             placeholder="Masukkan username" autocomplete="username" required />
                     </div>
                 </div>
 
                 <!-- Password -->
                 <div class="mb-4">
-                    <label class="form-label fw-semibold" for="password">Password</label>
+                    <label class="ta-label font-semibold" for="password">Password</label>
                     <div class="input-icon-wrap">
-                        <i class="bi bi-lock input-icon"></i>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="********"
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" class="ta-input" id="password" name="password" placeholder="********"
                             autocomplete="current-password" required />
-                        <button type="button" class="btn-eye" id="btn-toggle-pwd"
+                        <button type="button" class="ta-eye-button" id="btn-toggle-pwd"
                             aria-label="Toggle password visibility">
-                            <i class="bi bi-eye" id="eye-icon"></i>
+                            <i data-lucide="eye" id="eye-icon"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Tombol Login -->
-                <button type="submit" class="btn btn-primary btn-login" id="btn-login">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Masuk
+                <button type="submit" class="ta-btn ta-btn-primary ta-login-button" id="ta-login-button">
+                    <i data-lucide="log-in" class="mr-2"></i>Masuk
                 </button>
 
             </form>
@@ -219,23 +217,45 @@
 
     </div><!-- /.login-wrapper -->
 
+    <div id="login-vue-controller" hidden></div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        // Toggle show/hide password
-        document.getElementById('btn-toggle-pwd')?.addEventListener('click', function () {
-            const input = document.getElementById('password');
-            const icon = document.getElementById('eye-icon');
-            const isHidden = input.type === 'password';
+        window.renderAdminIcons = function () {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        };
 
-            input.type = isHidden ? 'text' : 'password';
-            icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
-        });
+        function initLoginInteractions() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('btn-toggle-pwd');
+            const loginForm = document.getElementById('login-form');
+            const loginButton = document.getElementById('ta-login-button');
+            let passwordVisible = false;
 
-        // Disable tombol saat submit (cegah double submit)
-        document.getElementById('login-form')?.addEventListener('submit', function () {
-            const btn = document.getElementById('btn-login');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memverifikasi...';
-        });
+            toggleButton?.addEventListener('click', function () {
+                passwordVisible = !passwordVisible;
+                passwordInput.type = passwordVisible ? 'text' : 'password';
+                toggleButton.innerHTML = '<i data-lucide="' + (passwordVisible ? 'eye-off' : 'eye') + '" id="eye-icon"></i>';
+                window.renderAdminIcons();
+            });
+
+            loginForm?.addEventListener('submit', function () {
+                if (!loginButton) return;
+                loginButton.disabled = true;
+                loginButton.innerHTML = '<span class="ta-spinner ta-spinner-sm mr-2"></span>Memverifikasi...';
+            });
+
+            window.renderAdminIcons();
+        }
+
+        if (window.Vue && document.getElementById('login-vue-controller')) {
+            window.Vue.createApp({ mounted: initLoginInteractions }).mount('#login-vue-controller');
+        } else {
+            initLoginInteractions();
+        }
     </script>
 </body>
 

@@ -27,7 +27,7 @@
 <div class="section-card">
 
     <div class="section-card-header">
-        <div class="header-icon green"><i class="bi bi-whatsapp"></i></div>
+        <div class="header-icon green"><i data-lucide="message-circle"></i></div>
         <div>
             <h6>Riwayat Pengiriman</h6>
             <p class="header-sub">
@@ -38,7 +38,7 @@
             </p>
         </div>
 
-        <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
+        <div class="ml-auto flex gap-2 items-center flex-wrap">
             <?php foreach ($filters as $key => $f):
                 $active = $filter_status === $key ? 'active' : '';
                 $statusQuery = array_filter([
@@ -47,16 +47,16 @@
                 ], static fn($value) => $value !== null && $value !== '');
                 ?>
                 <a href="<?= base_url('admin/notifikasi') ?><?= $statusQuery ? '?' . http_build_query($statusQuery) : '' ?>"
-                   class="btn btn-sm <?= $f['class'] ?> <?= $active ?>">
+                   class="ta-btn ta-btn-sm <?= $f['class'] ?> <?= $active ?>">
                     <?= $f['label'] ?>
                 </a>
             <?php endforeach; ?>
-            <form method="get" class="d-flex gap-2 align-items-center">
+            <form method="get" class="flex gap-2 items-center">
                 <?php if ($filter_status !== 'all'): ?>
                     <input type="hidden" name="status" value="<?= esc($filter_status) ?>">
                 <?php endif; ?>
-                <label class="small text-muted mb-0" for="notif-per-page">Tampilkan</label>
-                <select class="form-select form-select-sm" id="notif-per-page" name="per_page" style="width:auto;" onchange="this.form.submit()">
+                <label class="text-xs text-gray-500 mb-0" for="notif-per-page">Tampilkan</label>
+                <select class="ta-select ta-select-sm" id="notif-per-page" name="per_page" style="width:auto;" onchange="this.form.submit()">
                     <?php foreach ([10, 25, 50, 100] as $size): ?>
                         <option value="<?= $size ?>" <?= (int) $table_filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
                     <?php endforeach; ?>
@@ -68,7 +68,7 @@
     <div class="section-card-body">
         <?php if (empty($notifications)): ?>
             <div class="empty-state">
-                <i class="bi bi-chat-x"></i>
+                <i data-lucide="message-circle-x"></i>
                 <p>Tidak ada log notifikasi
                     <?= $filter_status !== 'all' ? ' dengan status ini' : '' ?>.
                 </p>
@@ -82,7 +82,7 @@
                         <th>Target</th>
                         <th>Jadwal Rapat</th>
                         <th>Status</th>
-                        <th class="col-action-wide">Aksi</th>
+                        <th class="ta-col-action-wide">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,7 +95,7 @@
                                     <?= esc($n['executed_at']) ?>
                                 </div>
                                 <div class="cell-subtitle">
-                                    <i class="bi bi-clock me-1"></i>
+                                    <i data-lucide="clock" class="mr-1"></i>
                                     <?= esc($n['created_at']) ?>
                                 </div>
                             </td>
@@ -104,7 +104,7 @@
                                     <?= esc($n['nama_anggota']) ?>
                                 </div>
                                 <div class="cell-subtitle">
-                                    <i class="bi bi-telephone me-1"></i>
+                                    <i data-lucide="phone" class="mr-1"></i>
                                     <?= esc($n['no_wa']) ?>
                                 </div>
                             </td>
@@ -113,7 +113,7 @@
                                     <?= esc($n['judul_rapat']) ?>
                                 </div>
                                 <div class="cell-subtitle">
-                                    <i class="bi bi-calendar me-1"></i>
+                                    <i data-lucide="calendar" class="mr-1"></i>
                                     <?= esc($n['tanggal_rapat']) ?>
                                     &nbsp;
                                     <?= esc($n['waktu_rapat']) ?>
@@ -121,30 +121,30 @@
                             </td>
                             <td>
                                 <span class="status-badge <?= $badge['class'] ?>">
-                                    <i class="bi <?= $badge['icon'] ?> me-1"></i>
+                                    <i data-lucide="<?= esc($badge['icon'], 'attr') ?>" class="mr-1"></i>
                                     <?= $badge['label'] ?>
                                 </span>
                             </td>
                             <td>
                                 <?php if ($n['status'] === 'failed'): ?>
                                     <form method="POST" action="<?= base_url("admin/notifikasi/{$n['id']}/resend") ?>"
-                                        class="d-inline">
+                                        class="inline">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn-action btn-action-green" title="Kirim Ulang">
-                                            <i class="bi bi-arrow-repeat"></i>
+                                        <button type="submit" class="ta-icon-action ta-icon-action-green" title="Kirim Ulang">
+                                            <i data-lucide="refresh-cw"></i>
                                         </button>
                                     </form>
                                 <?php elseif ($n['status'] === 'pending'): ?>
                                     <form method="POST" action="<?= base_url("admin/notifikasi/{$n['id']}/cancel") ?>"
-                                        class="d-inline"
+                                        class="inline"
                                         onsubmit="return confirm('Batalkan notifikasi ini?')">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn-action btn-action-red" title="Batalkan">
-                                            <i class="bi bi-x-lg"></i>
+                                        <button type="submit" class="ta-icon-action ta-icon-action-red" title="Batalkan">
+                                            <i data-lucide="x"></i>
                                         </button>
                                     </form>
                                 <?php else: ?>
-                                    <small class="text-muted">—</small>
+                                    <small class="text-gray-500">—</small>
                                 <?php endif; ?>
                             </td>
                         </tr>

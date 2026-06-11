@@ -11,12 +11,12 @@
         padding-bottom: 8px;
     }
 
-    .room-form .form-label {
+    .room-form .ta-label {
         margin-bottom: 4px;
         font-size: 0.82rem;
     }
 
-    .room-form .form-text,
+    .room-form .ta-help,
     .room-form .compact-alert {
         font-size: 0.72rem;
     }
@@ -41,43 +41,43 @@
 <form action="<?= esc($action_url) ?>" method="POST" class="room-form">
     <?= csrf_field() ?>
 
-    <div class="row g-2">
+    <div class="grid grid-cols-12 gap-3">
 
-        <div class="col-lg-7">
+        <div class="lg:col-span-7">
             <div class="form-card">
 
                 <div class="form-section-title">Informasi Ruangan</div>
 
-                <div class="alert alert-info py-2 px-3 mb-2 compact-alert">
-                    <i class="bi bi-info-circle me-1"></i>
+                <div class="ta-alert ta-alert-info py-2 px-3 mb-2 compact-alert">
+                    <i data-lucide="info" class="mr-1"></i>
                     Master ini untuk ruangan tetap DPRD. Tempat lain diisi dari form jadwal sebagai <strong>Lokasi Lainnya</strong>.
                 </div>
 
-                <div class="row g-2">
+                <div class="grid grid-cols-12 gap-3">
 
-                    <div class="col-12">
-                        <label class="form-label fw-semibold" for="name">
-                            Nama Ruangan <span class="text-danger">*</span>
+                    <div class="col-span-12">
+                        <label class="ta-label font-semibold" for="name">
+                            Nama Ruangan <span class="text-red-600">*</span>
                         </label>
-                        <input type="text" class="form-control" id="name" name="name"
+                        <input type="text" class="ta-input" id="name" name="name"
                             value="<?= esc($room['name'] ?? '') ?>" placeholder="Contoh: Ruang Paripurna Utama"
                             required />
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label fw-semibold" for="kapasitas">
-                            Kapasitas <span class="text-danger">*</span>
+                    <div class="col-span-12">
+                        <label class="ta-label font-semibold" for="kapasitas">
+                            Kapasitas <span class="text-red-600">*</span>
                         </label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="kapasitas" name="kapasitas"
+                        <div class="ta-input-group">
+                            <input type="number" class="ta-input" id="kapasitas" name="kapasitas"
                                 value="<?= esc($room['kapasitas'] ?? '') ?>" placeholder="0" min="1" required />
-                            <span class="input-group-text">orang</span>
+                            <span class="ta-input-addon">orang</span>
                         </div>
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label fw-semibold" for="keterangan">Keterangan</label>
-                        <textarea class="form-control" id="keterangan" name="keterangan" rows="2"
+                    <div class="col-span-12">
+                        <label class="ta-label font-semibold" for="keterangan">Keterangan</label>
+                        <textarea class="ta-input" id="keterangan" name="keterangan" rows="2"
                             placeholder="Contoh: Lantai 2, sisi barat gedung utama, atau catatan fasilitas singkat"><?= esc($room['keterangan'] ?? '') ?></textarea>
                     </div>
 
@@ -85,14 +85,14 @@
             </div>
         </div>
 
-        <div class="col-lg-5">
+        <div class="lg:col-span-5">
             <div class="form-card">
 
                 <div class="form-section-title">Status Ruangan</div>
 
                 <div>
-                    <label class="form-label fw-semibold" for="tersedia">Ketersediaan</label>
-                    <select class="form-select" id="tersedia" name="tersedia">
+                    <label class="ta-label font-semibold" for="tersedia">Ketersediaan</label>
+                    <select class="ta-select" id="tersedia" name="tersedia">
                         <option value="1" <?= ($room['tersedia'] ?? 1) ? 'selected' : '' ?>>
                             Tersedia
                         </option>
@@ -100,7 +100,7 @@
                             Tidak Tersedia
                         </option>
                     </select>
-                    <div class="form-text">
+                    <div class="ta-help">
                         Ruangan nonaktif tidak akan muncul di pilihan jadwal rapat.
                     </div>
                 </div>
@@ -110,12 +110,12 @@
 
     </div>
 
-    <div class="d-flex gap-2 mt-3">
-        <a href="<?= base_url('admin/ruangan') ?>" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Batal
+    <div class="flex gap-2 mt-3">
+        <a href="<?= base_url('admin/ruangan') ?>" class="ta-btn ta-btn-outline-gray">
+            <i data-lucide="arrow-left" class="mr-1"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg me-1"></i>
+        <button type="submit" class="ta-btn ta-btn-primary">
+            <i data-lucide="check" class="mr-1"></i>
             <?= $room ? 'Simpan Perubahan' : 'Tambah Ruangan' ?>
         </button>
     </div>

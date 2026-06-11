@@ -15,13 +15,13 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header d-flex align-items-center justify-content-between">
+<div class="page-header flex items-center justify-between">
     <div>
         <h1 class="page-title">Ruangan Rapat</h1>
         <p class="page-subtitle">Kelola ruangan tetap DPRD untuk jadwal rapat</p>
     </div>
-    <a href="<?= base_url('admin/ruangan/create') ?>" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>Tambah Ruangan
+    <a href="<?= base_url('admin/ruangan/create') ?>" class="ta-btn ta-btn-primary ta-btn-sm">
+        <i data-lucide="plus" class="mr-1"></i>Tambah Ruangan
     </a>
 </div>
 
@@ -44,7 +44,7 @@
 <div class="section-card room-list">
 
     <div class="section-card-header">
-        <div class="header-icon"><i class="bi bi-door-open-fill"></i></div>
+        <div class="header-icon"><i data-lucide="door-open"></i></div>
         <div>
             <h6>Daftar Ruangan</h6>
             <p class="header-sub">
@@ -54,9 +54,9 @@
                 <?php endif; ?>
             </p>
         </div>
-        <form method="get" class="ms-auto d-flex gap-2 align-items-center">
-            <label class="small text-muted mb-0" for="ruangan-per-page">Tampilkan</label>
-            <select class="form-select form-select-sm" id="ruangan-per-page" name="per_page" style="width:auto;" onchange="this.form.submit()">
+        <form method="get" class="ml-auto flex gap-2 items-center">
+            <label class="text-xs text-gray-500 mb-0" for="ruangan-per-page">Tampilkan</label>
+            <select class="ta-select ta-select-sm" id="ruangan-per-page" name="per_page" style="width:auto;" onchange="this.form.submit()">
                 <?php foreach ([10, 25, 50, 100] as $size): ?>
                     <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
                 <?php endforeach; ?>
@@ -65,14 +65,14 @@
     </div>
 
     <div class="section-card-body">
-        <div class="alert alert-info py-2 px-3 mb-2 compact-alert">
-            <i class="bi bi-info-circle me-1"></i>
+        <div class="ta-alert ta-alert-info py-2 px-3 mb-2 compact-alert">
+            <i data-lucide="info" class="mr-1"></i>
             Master ini hanya untuk ruangan tetap DPRD. Tempat lain diisi melalui <strong>Lokasi Lainnya</strong> di form jadwal.
         </div>
 
         <?php if (empty($rooms)): ?>
             <div class="empty-state">
-                <i class="bi bi-door-open"></i>
+                <i data-lucide="door-open"></i>
                 <p>Belum ada data ruangan.</p>
                 <small>Klik "Tambah Ruangan" untuk mulai menambahkan data.</small>
             </div>
@@ -80,11 +80,11 @@
             <table class="custom-table">
                 <thead>
                     <tr>
-                        <th class="col-num">No</th>
+                        <th class="ta-col-num">No</th>
                         <th>Nama Ruangan</th>
                         <th>Kapasitas</th>
                         <th>Status</th>
-                        <th class="col-action">Aksi</th>
+                        <th class="ta-col-action">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -103,7 +103,7 @@
                             </td>
                             <td>
                                 <span class="badge-group">
-                                    <i class="bi bi-people me-1"></i>
+                                    <i data-lucide="users" class="mr-1"></i>
                                     <?= esc($r['kapasitas']) ?> orang
                                 </span>
                             </td>
@@ -119,16 +119,19 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="<?= base_url("admin/ruangan/{$r['id']}/edit") ?>"
-                                    class="btn-action btn-action-blue" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="<?= base_url("admin/ruangan/{$r['id']}/delete") ?>"
-                                    class="btn-action btn-action-red ms-1"
-                                    title="Hapus"
-                                    onclick="return confirm('Hapus ruangan ini?')">
-                                    <i class="bi bi-trash"></i>
-                                </a>
+                                <div class="table-actions">
+                                <form method="get" action="<?= base_url("admin/ruangan/{$r['id']}/edit") ?>">
+                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-brand" title="Edit">
+                                        <i data-lucide="pencil" class="mr-1"></i>Edit
+                                    </button>
+                                </form>
+                                <form method="get" action="<?= base_url("admin/ruangan/{$r['id']}/delete") ?>"
+                                    onsubmit="return confirm('Hapus ruangan ini?')">
+                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-danger" title="Hapus">
+                                        <i data-lucide="trash-2" class="mr-1"></i>Hapus
+                                    </button>
+                                </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

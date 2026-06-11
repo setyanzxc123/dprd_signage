@@ -9,11 +9,11 @@
     </p>
 </div>
 
-<div class="row g-3 mb-4">
+<div class="grid grid-cols-12 gap-4 mb-4">
 
-    <div class="col-xl-4 col-sm-4">
+    <div class="xl:col-span-4 sm:col-span-4">
         <div class="stat-card">
-            <div class="stat-icon blue"><i class="bi bi-calendar-check-fill"></i></div>
+            <div class="stat-icon blue"><i data-lucide="calendar-check"></i></div>
             <div>
                 <div class="stat-value"><?= $stats['rapat_hari_ini'] ?></div>
                 <div class="stat-label">Rapat Hari Ini</div>
@@ -21,9 +21,9 @@
         </div>
     </div>
 
-    <div class="col-xl-4 col-sm-4">
+    <div class="xl:col-span-4 sm:col-span-4">
         <div class="stat-card">
-            <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-icon green"><i data-lucide="circle-check"></i></div>
             <div>
                 <div class="stat-value"><?= $stats['wa_terkirim'] ?></div>
                 <div class="stat-label">WA Terkirim</div>
@@ -31,9 +31,9 @@
         </div>
     </div>
 
-    <div class="col-xl-4 col-sm-4">
+    <div class="xl:col-span-4 sm:col-span-4">
         <div class="stat-card">
-            <div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div>
+            <div class="stat-icon red"><i data-lucide="circle-x"></i></div>
             <div>
                 <div class="stat-value"><?= $stats['wa_gagal'] ?></div>
                 <div class="stat-label">WA Gagal</div>
@@ -47,25 +47,25 @@
 <div class="section-card">
 
     <div class="section-card-header">
-        <div class="header-icon"><i class="bi bi-calendar3-week-fill"></i></div>
+        <div class="header-icon"><i data-lucide="calendar-days"></i></div>
         <div>
             <h6>Agenda Rapat Terdekat</h6>
             <p class="header-sub" id="header-date">—</p>
         </div>
         <a href="<?= base_url('admin/jadwal/create') ?>"
-           class="btn btn-sm btn-outline-primary btn-header-sm ms-auto">
-            <i class="bi bi-plus-lg me-1"></i>Tambah Jadwal
+           class="ta-btn ta-btn-sm ta-btn-outline-brand ta-btn-header-sm ml-auto">
+            <i data-lucide="plus" class="mr-1"></i>Tambah Jadwal
         </a>
         <a href="<?= base_url('admin/jadwal') ?>"
-           class="btn btn-sm btn-outline-secondary btn-header-sm">
-            <i class="bi bi-calendar3-week me-1"></i>Kalender Semester
+           class="ta-btn ta-btn-sm ta-btn-outline-gray ta-btn-header-sm">
+            <i data-lucide="calendar-days" class="mr-1"></i>Kalender Semester
         </a>
     </div>
 
     <div class="section-card-body">
         <?php if (empty($meetings)): ?>
             <div class="empty-state">
-                <i class="bi bi-calendar-x"></i>
+                <i data-lucide="calendar-x"></i>
                 <p>Tidak ada rapat hari ini.</p>
             </div>
         <?php else: ?>
@@ -100,11 +100,11 @@
                             </span>
                         </td>
                         <td>
-                            <a href="<?= esc($m['detail_url']) ?>" class="btn-action btn-action-blue" title="Detail">
-                                <i class="bi bi-eye"></i>
+                            <a href="<?= esc($m['detail_url']) ?>" class="ta-icon-action ta-icon-action-blue" title="Detail">
+                                <i data-lucide="eye"></i>
                             </a>
-                            <a href="<?= esc($m['edit_url']) ?>" class="btn-action ms-1" title="Edit">
-                                <i class="bi bi-pencil"></i>
+                            <a href="<?= esc($m['edit_url']) ?>" class="ta-icon-action ml-1" title="Edit">
+                                <i data-lucide="pencil"></i>
                             </a>
                         </td>
                     </tr>
