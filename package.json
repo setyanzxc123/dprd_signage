@@ -3,7 +3,9 @@
     "build:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
     "watch:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch",
     "build:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/assets/css/admin.css --minify",
-    "watch:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch"
+    "watch:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch",
+    "build:signage": "tailwindcss -c tailwind.signage.config.js -i ./resources/css/signage.css -o ./public/assets/css/signage.css --minify",
+    "watch:signage": "tailwindcss -c tailwind.signage.config.js -i ./resources/css/signage.css -o ./public/assets/css/signage.css --watch"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17"
