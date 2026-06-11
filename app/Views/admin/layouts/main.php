@@ -76,10 +76,14 @@ $adminJsVersion  = is_file(FCPATH . 'assets/js/admin/main.js') ? filemtime(FCPAT
             <i data-lucide="tv"></i>
             Signage
         </a>
-        <a href="<?= base_url('admin/logout') ?>" onclick="return confirm('Yakin ingin keluar?')">
-            <i data-lucide="log-out"></i>
-            Keluar
-        </a>
+        <form class="mobile-nav-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
+              onsubmit="return confirm('Yakin ingin keluar?')">
+            <?= csrf_field() ?>
+            <button type="submit">
+                <i data-lucide="log-out"></i>
+                Keluar
+            </button>
+        </form>
     </nav>
 
     <div id="admin-vue-controller" hidden></div>
