@@ -1,5 +1,8 @@
 <?php
 $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
+$fontVersion     = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
+$vueVersion      = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
+$lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -10,6 +13,7 @@ $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH .
     <title>Login - Panel Admin Signage DPRD Sulteng</title>
     <meta name="robots" content="noindex, nofollow" />
 
+    <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
 
     <style>
@@ -219,8 +223,8 @@ $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH .
 
     <div id="login-vue-controller" hidden></div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
+    <script src="<?= base_url('assets/vendor/lucide/lucide.min.js?v=' . $lucideVersion) ?>"></script>
     <script>
         window.renderAdminIcons = function () {
             if (window.lucide) {

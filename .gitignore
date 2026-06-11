@@ -85,6 +85,8 @@ php_errors.log
 # Composer
 #-------------------------
 vendor/
+!/public/assets/vendor/
+!/public/assets/vendor/**
 
 #-------------------------
 # Node / Frontend Build

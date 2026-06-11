@@ -1,7 +1,12 @@
+<?php
+$flatpickrCssVersion = is_file(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.css') ? filemtime(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.css') : time();
+$flatpickrJsVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.js') ? filemtime(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.js') : time();
+$flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? filemtime(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') : time();
+?>
 <?= $this->extend('admin/layouts/main') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="<?= base_url('assets/vendor/flatpickr/flatpickr.min.css?v=' . $flatpickrCssVersion) ?>">
 <style>
     .schedule-form {
         --form-gap: 18px;
@@ -683,8 +688,8 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+<script src="<?= base_url('assets/vendor/flatpickr/flatpickr.min.js?v=' . $flatpickrJsVersion) ?>"></script>
+<script src="<?= base_url('assets/vendor/flatpickr/l10n/id.js?v=' . $flatpickrIdVersion) ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         flatpickr("#waktu_mulai", {
