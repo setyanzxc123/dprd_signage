@@ -5,12 +5,11 @@
 <div class="page-header">
     <h1 class="page-title">Dashboard</h1>
     <p class="page-subtitle">
-        <span id="page-date">—</span> &bull; Data diperbarui secara real-time
+        <span id="page-date">-</span> &bull; Ringkasan aktivitas rapat
     </p>
 </div>
 
-<div class="grid grid-cols-12 gap-4 mb-4">
-
+<div class="dashboard-stat-grid grid grid-cols-12 gap-3 mb-3">
     <div class="xl:col-span-4 sm:col-span-4">
         <div class="stat-card">
             <div class="stat-icon blue"><i data-lucide="calendar-check"></i></div>
@@ -40,81 +39,158 @@
             </div>
         </div>
     </div>
-
 </div>
 
-<!-- Tabel Agenda Rapat Terdekat -->
-<div class="section-card">
-
-    <div class="section-card-header">
-        <div class="header-icon"><i data-lucide="calendar-days"></i></div>
-        <div>
-            <h6>Agenda Rapat Terdekat</h6>
-            <p class="header-sub" id="header-date">—</p>
-        </div>
-        <a href="<?= base_url('admin/jadwal/create') ?>"
-           class="ta-btn ta-btn-sm ta-btn-outline-brand ta-btn-header-sm ml-auto">
-            <i data-lucide="plus" class="mr-1"></i>Tambah Jadwal
-        </a>
-        <a href="<?= base_url('admin/jadwal') ?>"
-           class="ta-btn ta-btn-sm ta-btn-outline-gray ta-btn-header-sm">
-            <i data-lucide="calendar-days" class="mr-1"></i>Kalender Semester
-        </a>
-    </div>
-
-    <div class="section-card-body">
-        <?php if (empty($meetings)): ?>
-            <div class="empty-state">
-                <i data-lucide="calendar-x"></i>
-                <p>Tidak ada rapat hari ini.</p>
+<section class="dashboard-calendar-workspace">
+    <article class="dashboard-panel dashboard-calendar-panel" aria-labelledby="dashboard-calendar-title">
+        <header class="dashboard-panel-head">
+            <div class="dashboard-panel-title">
+                <h2 id="dashboard-calendar-title">Kalender Rapat <?= esc($monthLabel ?? '') ?></h2>
+                <p>Pilih tanggal untuk melihat agenda detail dan status operasionalnya.</p>
             </div>
-        <?php else: ?>
-            <table class="custom-table">
-                <thead>
-                    <tr>
-                        <th>Waktu</th>
-                        <th>Agenda</th>
-                        <th>Ruangan</th>
-                        <th>Peserta</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($meetings as $m):
-                        $badge = status_badge($m['status']);
-                    ?>
-                    <tr>
-                        <td>
-                            <span class="time-badge"><?= esc($m['start']) ?> – <?= esc($m['end']) ?></span>
-                        </td>
-                        <td>
-                            <div class="cell-title"><?= esc($m['title']) ?></div>
-                            <div class="cell-subtitle"><?= esc($m['subtitle']) ?></div>
-                        </td>
-                        <td><?= esc($m['room']) ?></td>
-                        <td><span class="badge-group"><?= esc($m['group']) ?></span></td>
-                        <td>
-                            <span class="status-badge <?= $badge['class'] ?>">
-                                <span class="dot"></span><?= $badge['label'] ?>
-                            </span>
-                        </td>
-                        <td>
-                            <a href="<?= esc($m['detail_url']) ?>" class="ta-icon-action ta-icon-action-blue" title="Detail">
-                                <i data-lucide="eye"></i>
-                            </a>
-                            <a href="<?= esc($m['edit_url']) ?>" class="ta-icon-action ml-1" title="Edit">
-                                <i data-lucide="pencil"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
-    </div>
+            <div class="dashboard-month-controls">
+                <a href="<?= esc($prevMonthUrl) ?>" class="ta-icon-action" title="Bulan sebelumnya">
+                    <i data-lucide="chevron-left"></i>
+                </a>
+                <a href="<?= esc($todayMonthUrl) ?>" class="ta-btn ta-btn-sm ta-btn-outline-gray ta-btn-header-sm">
+                    Bulan Ini
+                </a>
+                <a href="<?= esc($nextMonthUrl) ?>" class="ta-icon-action" title="Bulan berikutnya">
+                    <i data-lucide="chevron-right"></i>
+                </a>
+            </div>
+        </header>
 
-</div>
+        <div class="dashboard-calendar-wrap">
+            <div class="dashboard-weekday-grid" aria-hidden="true">
+                <?php foreach ($weekdayLabels as $label): ?>
+                    <span><?= esc($label) ?></span>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="dashboard-calendar-grid" role="listbox" aria-label="Kalender agenda bulanan">
+                <?php foreach ($calendarDays as $day): ?>
+                    <?php
+                        $isActive = ($day['date'] ?? '') === ($selectedDate ?? '');
+                        $isCurrentMonth = (bool) ($day['is_current_month'] ?? false);
+                        $dayClasses = ['dashboard-calendar-day'];
+                        if ($isActive) {
+                            $dayClasses[] = 'active';
+                        }
+                        if (! $isCurrentMonth) {
+                            $dayClasses[] = 'outside';
+                        }
+                        if ($day['is_today']) {
+                            $dayClasses[] = 'today';
+                        }
+                        if ((int) $day['count'] > 0) {
+                            $dayClasses[] = 'has-events';
+                        }
+                    ?>
+                    <button type="button"
+                            class="<?= esc(implode(' ', $dayClasses)) ?>"
+                            data-dashboard-day="<?= esc($day['date']) ?>"
+                            role="option"
+                            aria-selected="<?= $isActive ? 'true' : 'false' ?>">
+                        <span class="calendar-day-top">
+                            <span class="calendar-day-num"><?= esc((int) $day['date_num']) ?></span>
+                            <?php if ((int) $day['count'] > 0): ?>
+                                <span class="calendar-day-count"><?= (int) $day['count'] ?></span>
+                            <?php endif; ?>
+                        </span>
+                        <span class="calendar-day-events">
+                            <?php if (empty($day['meetings'])): ?>
+                                <span class="calendar-event-dot empty"><span>Kosong</span></span>
+                            <?php else: ?>
+                                <?php foreach (array_slice($day['meetings'], 0, 3) as $meeting): ?>
+                                    <span class="calendar-event-dot <?= esc($meeting['status_key']) ?>">
+                                        <span><?= esc(preg_replace('/^Rapat\s+/i', '', $meeting['title'])) ?></span>
+                                    </span>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </span>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="dashboard-calendar-legend" aria-label="Legenda status agenda">
+                <span class="calendar-event-dot done"><span>Selesai</span></span>
+                <span class="calendar-event-dot live"><span>Berlangsung</span></span>
+                <span class="calendar-event-dot next"><span>Mendatang</span></span>
+                <span class="calendar-event-dot empty"><span>Agenda kosong</span></span>
+            </div>
+
+            <button type="button" class="dashboard-mobile-agenda-trigger" data-mobile-agenda-open>
+                <i data-lucide="list-checks"></i>
+                <span>Lihat agenda terpilih</span>
+            </button>
+        </div>
+    </article>
+
+    <aside class="dashboard-panel dashboard-agenda-card" id="dashboard-agenda-sheet" aria-labelledby="dashboard-agenda-title">
+        <header class="dashboard-panel-head">
+            <div class="dashboard-panel-title">
+                <h2 id="dashboard-agenda-title">Agenda Terpilih</h2>
+                <?php foreach ($calendarDays as $day): ?>
+                    <p class="dashboard-panel-summary"
+                       data-dashboard-summary="<?= esc($day['date']) ?>"
+                       <?= (($day['date'] ?? '') === ($selectedDate ?? '')) ? '' : 'hidden' ?>>
+                        <?= esc($day['summary']) ?>
+                    </p>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="dashboard-agenda-close" data-mobile-agenda-close aria-label="Tutup agenda">
+                <i data-lucide="x"></i>
+            </button>
+        </header>
+
+        <div class="dashboard-agenda-panels">
+            <?php foreach ($calendarDays as $day): ?>
+                <?php
+                    $isActive = ($day['date'] ?? '') === ($selectedDate ?? '');
+                ?>
+                <section class="dashboard-agenda-panel <?= $isActive ? 'active' : '' ?>"
+                         data-dashboard-panel="<?= esc($day['date']) ?>"
+                         <?= $isActive ? '' : 'hidden' ?>>
+                    <div class="selected-date-card">
+                        <div class="selected-date-number"><?= esc((int) $day['date_num']) ?></div>
+                        <div>
+                            <h3><?= esc($day['day_name']) ?></h3>
+                            <p><?= esc($day['month']) ?> &bull; <?= (int) $day['count'] ?> agenda</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-agenda-list" aria-live="polite">
+                        <?php foreach ($day['meetings'] as $m): ?>
+                            <?php $badge = status_badge($m['status']); ?>
+                            <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item">
+                                <div class="agenda-time-block">
+                                    <?= esc($m['start']) ?>
+                                    <span><?= esc($m['end']) ?></span>
+                                </div>
+                                <div class="agenda-content">
+                                    <div class="agenda-title-row">
+                                        <h3><?= esc($m['title']) ?></h3>
+                                        <span class="status-badge <?= $badge['class'] ?>">
+                                            <span class="dot"></span><?= $badge['label'] ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="dashboard-agenda-empty <?= empty($day['meetings']) ? 'is-visible' : '' ?>">
+                        <i data-lucide="calendar-check"></i>
+                        <strong>Tidak ada agenda</strong>
+                    </div>
+                </section>
+            <?php endforeach; ?>
+        </div>
+    </aside>
+</section>
+
+<button type="button" class="dashboard-agenda-overlay" data-mobile-agenda-close aria-label="Tutup agenda"></button>
 
 <?= $this->endSection() ?>
 
@@ -124,11 +200,74 @@
     const dayNames   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
     function setDate() {
-        const now  = new Date();
-        const str  = `${dayNames[now.getDay()]}, ${now.getDate()} ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-        const els  = document.querySelectorAll('#page-date, #header-date');
-        els.forEach(el => { if (el) el.textContent = str; });
+        const now = new Date();
+        const str = `${dayNames[now.getDay()]}, ${now.getDate()} ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+        const el = document.getElementById('page-date');
+        if (el) el.textContent = str;
     }
+
+    function initDashboardCalendar() {
+        const buttons = document.querySelectorAll('[data-dashboard-day]');
+        const panels = document.querySelectorAll('[data-dashboard-panel]');
+        const summaries = document.querySelectorAll('[data-dashboard-summary]');
+        const mobileAgendaQuery = window.matchMedia('(max-width: 520px)');
+        const openAgendaButtons = document.querySelectorAll('[data-mobile-agenda-open]');
+        const closeAgendaButtons = document.querySelectorAll('[data-mobile-agenda-close]');
+
+        function openMobileAgenda() {
+            if (mobileAgendaQuery.matches) {
+                document.body.classList.add('mobile-agenda-open');
+            }
+        }
+
+        function closeMobileAgenda() {
+            document.body.classList.remove('mobile-agenda-open');
+        }
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const date = button.dataset.dashboardDay;
+
+                buttons.forEach(item => {
+                    const active = item === button;
+                    item.classList.toggle('active', active);
+                    item.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+
+                panels.forEach(panel => {
+                    const active = panel.dataset.dashboardPanel === date;
+                    panel.hidden = !active;
+                    panel.classList.toggle('active', active);
+                });
+
+                summaries.forEach(summary => {
+                    summary.hidden = summary.dataset.dashboardSummary !== date;
+                });
+
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+
+                openMobileAgenda();
+            });
+        });
+
+        openAgendaButtons.forEach(button => {
+            button.addEventListener('click', openMobileAgenda);
+        });
+
+        closeAgendaButtons.forEach(button => {
+            button.addEventListener('click', closeMobileAgenda);
+        });
+
+        mobileAgendaQuery.addEventListener('change', event => {
+            if (!event.matches) {
+                closeMobileAgenda();
+            }
+        });
+    }
+
     setDate();
+    initDashboardCalendar();
 </script>
 <?= $this->endSection() ?>

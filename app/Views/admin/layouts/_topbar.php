@@ -49,10 +49,13 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             </div>
         </div>
 
-        <a class="ta-topbar-button topbar-logout" href="<?= base_url('admin/logout') ?>" title="Logout"
-           onclick="return confirm('Yakin ingin keluar?')">
-            <i data-lucide="log-out"></i>
-        </a>
+        <form class="topbar-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
+              onsubmit="return confirm('Yakin ingin keluar?')">
+            <?= csrf_field() ?>
+            <button class="ta-topbar-button topbar-logout" type="submit" title="Logout" aria-label="Logout">
+                <i data-lucide="log-out"></i>
+            </button>
+        </form>
     </div>
 
 </header>

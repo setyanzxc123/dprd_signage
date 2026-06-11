@@ -22,7 +22,7 @@ $routes->get('go/jadwal/(:num)/berkas', 'RedirectController::berkas/$1');
 // Auth (login/logout, di luar group admin)
 $routes->get( 'admin/login',  'Admin\AuthController::loginPage');
 $routes->post('admin/login',  'Admin\AuthController::loginProcess');
-$routes->get( 'admin/logout', 'Admin\AuthController::logout');
+$routes->match(['get', 'post'], 'admin/logout', 'Admin\AuthController::logout');
 
 // Admin — semua route dilindungi filter auth
 $routes->group('admin', ['filter' => 'auth'], function ($routes) {
