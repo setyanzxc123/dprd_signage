@@ -1,3 +1,7 @@
+<?php
+$fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
+$vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -10,8 +14,7 @@
     <meta property="og:description" content="Pantau jadwal rapat DPRD Provinsi Sulawesi Tengah secara langsung." />
     <meta property="og:type" content="website" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script>
         (() => {
             const stored = localStorage.getItem('public_schedule_theme');
@@ -22,7 +25,7 @@
         })();
     </script>
     <link href="<?= base_url('assets/css/publik.css') ?>" rel="stylesheet" />
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100">
 
