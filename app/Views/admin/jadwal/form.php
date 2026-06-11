@@ -92,7 +92,7 @@
         background: var(--od-accent);
     }
 
-    .form-label {
+    .ta-label {
         color: var(--od-fg2);
         font-size: 0.82rem;
         margin-bottom: 5px;
@@ -102,7 +102,7 @@
         color: var(--od-danger);
     }
 
-    .input-group-text {
+    .ta-input-addon {
         min-width: 43px;
         justify-content: center;
         background-color: #f8fafc;
@@ -110,14 +110,14 @@
         color: var(--od-muted);
     }
 
-    .form-control,
-    .form-select {
+    .ta-input,
+    .ta-select {
         border-color: var(--od-border);
         color: var(--od-fg);
     }
 
-    .form-control:focus,
-    .form-select:focus {
+    .ta-input:focus,
+    .ta-select:focus {
         border-color: var(--od-accent);
         box-shadow: var(--od-focus);
     }
@@ -227,7 +227,7 @@
         white-space: nowrap;
     }
 
-    .visibility-row .form-check-input {
+    .visibility-row .ta-check-input {
         width: 2.55em;
         height: 1.35em;
         margin: 0;
@@ -331,11 +331,11 @@
         opacity: 0.72;
     }
 
-    .target-option.is-disabled .form-check-input {
+    .target-option.is-disabled .ta-check-input {
         pointer-events: none;
     }
 
-    .target-option .form-check-input {
+    .target-option .ta-check-input {
         margin-top: 0;
     }
 
@@ -381,7 +381,7 @@
 
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
-    <p class="page-subtitle text-muted">
+    <p class="page-subtitle text-gray-500">
         <?= $meeting ? 'Perbarui jadwal rapat' : 'Buat jadwal rapat baru' ?>
     </p>
 </div>
@@ -389,11 +389,11 @@
 <form action="<?= esc($action_url) ?>" method="POST" class="schedule-form">
     <?= csrf_field() ?>
 
-    <div class="row g-2">
-        <div class="col-lg-8">
+    <div class="grid grid-cols-12 gap-3">
+        <div class="lg:col-span-8">
             <div class="form-card">
                 <div class="form-card-header">
-                    <span class="form-card-icon"><i class="bi bi-calendar2-week"></i></span>
+                    <span class="form-card-icon"><i data-lucide="calendar-days"></i></span>
                     <h2 class="form-card-title">Detail Rapat</h2>
                 </div>
 
@@ -401,21 +401,21 @@
                     <div class="form-section">
                         <div class="form-section-title">Informasi Dasar</div>
 
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label class="form-label fw-semibold" for="judul">
+                        <div class="grid grid-cols-12 gap-3">
+                            <div class="col-span-12">
+                                <label class="ta-label font-semibold" for="judul">
                                     Judul Rapat <span class="required-mark">*</span>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-file-text"></i></span>
-                                    <input type="text" class="form-control" id="judul" name="judul"
+                                <div class="ta-input-group">
+                                    <span class="ta-input-addon"><i data-lucide="file-text"></i></span>
+                                    <input type="text" class="ta-input" id="judul" name="judul"
                                         value="<?= esc($meeting['judul'] ?? '') ?>"
                                         placeholder="Contoh: Rapat Paripurna Pembahasan APBD 2026" required />
                                 </div>
                             </div>
 
-                            <div class="col-12">
-                                <label class="form-label fw-semibold d-block">
+                            <div class="col-span-12">
+                                <label class="ta-label font-semibold block">
                                     Lokasi Rapat <span class="required-mark">*</span>
                                 </label>
 
@@ -424,7 +424,7 @@
                                         <input type="radio" name="lokasi_mode" id="lokasi-ruangan" value="ruangan"
                                             <?= $lokasiMode === 'ruangan' ? 'checked' : '' ?> />
                                         <span class="choice-option-body">
-                                            <span class="choice-icon"><i class="bi bi-building"></i></span>
+                                            <span class="choice-icon"><i data-lucide="building-2"></i></span>
                                             <span>
                                                 <span class="choice-title">Ruangan DPRD</span>
                                                 <span class="choice-desc">Pilih dari master ruangan</span>
@@ -436,7 +436,7 @@
                                         <input type="radio" name="lokasi_mode" id="lokasi-lainnya" value="lainnya"
                                             <?= $lokasiMode === 'lainnya' ? 'checked' : '' ?> />
                                         <span class="choice-option-body">
-                                            <span class="choice-icon"><i class="bi bi-geo-alt"></i></span>
+                                            <span class="choice-icon"><i data-lucide="map-pin"></i></span>
                                             <span>
                                                 <span class="choice-title">Lokasi Lainnya</span>
                                                 <span class="choice-desc">Isi nama/tempat rapat</span>
@@ -447,9 +447,9 @@
 
                                 <div class="location-fields">
                                     <div class="location-panel" id="ruangan-panel">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                            <select class="form-select" id="ruangan_id" name="ruangan_id">
+                                        <div class="ta-input-group">
+                                            <span class="ta-input-addon"><i data-lucide="map-pin"></i></span>
+                                            <select class="ta-select" id="ruangan_id" name="ruangan_id">
                                                 <option value="">-- Pilih Ruangan --</option>
                                                 <?php if (empty($rooms)): ?>
                                                     <option disabled>Belum ada ruangan - tambah di Master Data dulu</option>
@@ -467,9 +467,9 @@
                                     </div>
 
                                     <div class="location-panel" id="lokasi-lainnya-panel" hidden>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-pin-map"></i></span>
-                                            <input type="text" class="form-control" id="lokasi_lainnya" name="lokasi_lainnya"
+                                        <div class="ta-input-group">
+                                            <span class="ta-input-addon"><i data-lucide="map-pinned"></i></span>
+                                            <input type="text" class="ta-input" id="lokasi_lainnya" name="lokasi_lainnya"
                                                 value="<?= esc($lokasiLainnya) ?>"
                                                 placeholder="Contoh: Aula Kantor Gubernur, Gedung Serbaguna, atau tempat rapat lainnya" />
                                         </div>
@@ -477,13 +477,13 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold" for="waktu_mulai">
+                            <div class="md:col-span-6">
+                                <label class="ta-label font-semibold" for="waktu_mulai">
                                     Waktu Mulai <span class="required-mark">*</span>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-                                    <input type="text" class="form-control" id="waktu_mulai" name="waktu_mulai"
+                                <div class="ta-input-group">
+                                    <span class="ta-input-addon"><i data-lucide="calendar-clock"></i></span>
+                                    <input type="text" class="ta-input" id="waktu_mulai" name="waktu_mulai"
                                         placeholder="Pilih tanggal dan waktu"
                                         value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_mulai'])
                                             ? $meeting['tanggal'] . 'T' . $meeting['waktu_mulai']
@@ -491,13 +491,13 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold" for="waktu_selesai">
+                            <div class="md:col-span-6">
+                                <label class="ta-label font-semibold" for="waktu_selesai">
                                     Waktu Selesai <span class="required-mark">*</span>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
-                                    <input type="text" class="form-control" id="waktu_selesai" name="waktu_selesai"
+                                <div class="ta-input-group">
+                                    <span class="ta-input-addon"><i data-lucide="calendar-check"></i></span>
+                                    <input type="text" class="ta-input" id="waktu_selesai" name="waktu_selesai"
                                         placeholder="Pilih tanggal dan waktu"
                                         value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_selesai'])
                                             ? $meeting['tanggal'] . 'T' . $meeting['waktu_selesai']
@@ -505,9 +505,9 @@
                                 </div>
                             </div>
 
-                            <div class="col-12">
-                                <label class="form-label fw-semibold" for="keterangan">Keterangan / Agenda</label>
-                                <textarea class="form-control" id="keterangan" name="keterangan" rows="4"
+                            <div class="col-span-12">
+                                <label class="ta-label font-semibold" for="keterangan">Keterangan / Agenda</label>
+                                <textarea class="ta-input" id="keterangan" name="keterangan" rows="4"
                                     placeholder="Uraian singkat agenda rapat..."><?= esc($meeting['keterangan'] ?? '') ?></textarea>
                             </div>
                         </div>
@@ -516,27 +516,27 @@
                     <div class="form-section">
                         <div class="form-section-title">Publikasi & Materi</div>
 
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label class="form-label fw-semibold" for="materi_url">
-                                    Link Materi Rapat <span class="text-muted fw-normal">(Opsional)</span>
-                                    <span class="badge bg-primary-subtle text-primary ms-1">QR Code</span>
+                        <div class="grid grid-cols-12 gap-3">
+                            <div class="col-span-12">
+                                <label class="ta-label font-semibold" for="materi_url">
+                                    Link Materi Rapat <span class="text-gray-500 font-normal">(Opsional)</span>
+                                    <span class="ta-badge bg-brand-50 text-brand-600 ml-1">QR Code</span>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
-                                    <input type="url" class="form-control" id="materi_url" name="materi_url"
+                                <div class="ta-input-group">
+                                    <span class="ta-input-addon"><i data-lucide="qr-code"></i></span>
+                                    <input type="url" class="ta-input" id="materi_url" name="materi_url"
                                         value="<?= esc($meeting['materi_url'] ?? '') ?>"
                                         placeholder="https://drive.google.com/... atau link dokumen lainnya" />
                                 </div>
                             </div>
 
-                            <div class="col-12">
-                                <label class="form-label fw-semibold" for="stream_url">
-                                    Link Live Streaming / Arsip Video <span class="text-muted fw-normal">(Opsional)</span>
+                            <div class="col-span-12">
+                                <label class="ta-label font-semibold" for="stream_url">
+                                    Link Live Streaming / Arsip Video <span class="text-gray-500 font-normal">(Opsional)</span>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-play-btn"></i></span>
-                                    <input type="url" class="form-control" id="stream_url" name="stream_url"
+                                <div class="ta-input-group">
+                                    <span class="ta-input-addon"><i data-lucide="square-play"></i></span>
+                                    <input type="url" class="ta-input" id="stream_url" name="stream_url"
                                         value="<?= esc($meeting['stream_url'] ?? '') ?>"
                                         placeholder="https://youtube.com/live/... atau link streaming lainnya" />
                                 </div>
@@ -547,11 +547,11 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
+        <div class="lg:col-span-4">
             <div class="side-stack">
                 <div class="form-card">
                     <div class="form-card-header">
-                        <span class="form-card-icon"><i class="bi bi-sliders"></i></span>
+                        <span class="form-card-icon"><i data-lucide="sliders-horizontal"></i></span>
                         <h2 class="form-card-title">Pengaturan</h2>
                     </div>
 
@@ -560,14 +560,14 @@
                             <div class="form-section-title">Klasifikasi</div>
                             <?php $jenis = $meeting['jenis'] ?? 'insidental'; ?>
 
-                            <label class="form-label fw-semibold d-block">Jenis Rapat</label>
+                            <label class="ta-label font-semibold block">Jenis Rapat</label>
 
                             <div class="option-group two-col">
                                 <label class="choice-option" for="jenis-reguler">
                                     <input type="radio" name="jenis" id="jenis-reguler" value="reguler"
                                         <?= $jenis === 'reguler' ? 'checked' : '' ?> />
                                     <span class="choice-option-body">
-                                        <span class="choice-icon"><i class="bi bi-calendar-week"></i></span>
+                                        <span class="choice-icon"><i data-lucide="calendar-range"></i></span>
                                         <span>
                                             <span class="choice-title">Reguler</span>
                                             <span class="choice-desc">Agenda terencana</span>
@@ -579,7 +579,7 @@
                                     <input type="radio" name="jenis" id="jenis-insidental" value="insidental"
                                         <?= $jenis === 'insidental' ? 'checked' : '' ?> />
                                     <span class="choice-option-body">
-                                        <span class="choice-icon"><i class="bi bi-lightning-charge"></i></span>
+                                        <span class="choice-icon"><i data-lucide="zap"></i></span>
                                         <span>
                                             <span class="choice-title">Insidental</span>
                                             <span class="choice-desc">Agenda mendadak</span>
@@ -590,8 +590,8 @@
 
                             <div class="visibility-row mt-3">
                                 <label class="visibility-title" for="is_publik">Visibilitas Publik</label>
-                                <div class="form-check form-switch visibility-control">
-                                    <input class="form-check-input" type="checkbox" role="switch"
+                                <div class="ta-check ta-switch visibility-control">
+                                    <input class="ta-check-input" type="checkbox" role="switch"
                                         id="is_publik" name="is_publik" value="1"
                                         <?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'checked' : '' ?> />
                                     <label class="visibility-label" for="is_publik">
@@ -604,24 +604,24 @@
                         <div class="form-section">
                             <div class="form-section-title">Peserta & WA</div>
 
-                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                                <label class="form-label fw-semibold mb-0">Peserta Rapat</label>
-                                <span class="badge bg-primary-subtle text-primary" id="target-selected-count">0 dipilih</span>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <label class="ta-label font-semibold mb-0">Peserta Rapat</label>
+                                <span class="ta-badge bg-brand-50 text-brand-600" id="target-selected-count">0 dipilih</span>
                             </div>
 
                             <div class="target-picker">
                                 <div class="target-picker-head">
                                     <span class="target-picker-title">Kelompok Peserta</span>
                                     <span class="target-picker-meta">
-                                        <span class="badge bg-secondary rounded-pill" id="target-visible-count"><?= count($unit_rapat_list) ?></span>
+                                        <span class="ta-badge bg-gray-100 rounded-full" id="target-visible-count"><?= count($unit_rapat_list) ?></span>
                                     </span>
                                 </div>
                                 <div class="target-picker-search">
-                                    <div class="position-relative">
-                                        <span class="position-absolute start-0 top-50 translate-middle-y ps-3 text-muted">
-                                            <i class="bi bi-search"></i>
+                                    <div class="relative">
+                                        <span class="absolute left-0 top-1/2 -translate-y-1/2 pl-3 text-gray-500">
+                                            <i data-lucide="search"></i>
                                         </span>
-                                        <input type="text" class="form-control form-control-sm ps-5"
+                                        <input type="text" class="ta-input ta-input-sm pl-10"
                                             id="target-search" placeholder="Cari kelompok peserta..." autocomplete="off" />
                                     </div>
                                 </div>
@@ -637,23 +637,23 @@
                                 ?>
                                     <label class="target-option<?= $selectedClass ?>" for="<?= esc($targetId, 'attr') ?>"
                                         data-name="<?= esc(strtolower($unitName), 'attr') ?>">
-                                        <input class="form-check-input me-2" type="checkbox" name="target_unit_rapat[]"
+                                        <input class="ta-check-input mr-2" type="checkbox" name="target_unit_rapat[]"
                                             value="<?= $unitId ?>" data-name="<?= esc($unitName, 'attr') ?>"
                                             id="<?= esc($targetId, 'attr') ?>" <?= $checked ?> />
                                         <span><?= esc($unitName) ?></span>
                                     </label>
                                 <?php endforeach; ?>
-                                    <div class="text-muted text-center py-3 d-none" id="target-empty">
+                                    <div class="text-gray-500 text-center py-3 hidden" id="target-empty">
                                         <small>Kelompok peserta tidak ditemukan.</small>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mt-3">
-                                <label class="form-label fw-semibold" for="blast_before">
-                                    <i class="bi bi-whatsapp text-success me-1"></i> Jadwal Blast WA
+                                <label class="ta-label font-semibold" for="blast_before">
+                                    <i data-lucide="message-circle" class="text-emerald-600 mr-1"></i> Jadwal Blast WA
                                 </label>
-                                <select class="form-select" id="blast_before" name="blast_before">
+                                <select class="ta-select" id="blast_before" name="blast_before">
                                     <option value="1440" <?= ($meeting['blast_before'] ?? '') == 1440 ? 'selected' : '' ?>>H-1 hari sebelum rapat</option>
                                     <option value="120"  <?= ($meeting['blast_before'] ?? '') == 120  ? 'selected' : '' ?>>H-2 jam sebelum rapat</option>
                                     <option value="60"   <?= ($meeting['blast_before'] ?? '') == 60   ? 'selected' : '' ?>>H-1 jam sebelum rapat</option>
@@ -669,12 +669,12 @@
         </div>
     </div>
 
-    <div class="d-flex gap-2 mt-3">
-        <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Batal
+    <div class="flex gap-2 mt-3">
+        <a href="<?= base_url('admin/jadwal') ?>" class="ta-btn ta-btn-outline-gray">
+            <i data-lucide="arrow-left" class="mr-1"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-calendar-check me-1"></i>
+        <button type="submit" class="ta-btn ta-btn-primary">
+            <i data-lucide="calendar-check" class="mr-1"></i>
             <?= $meeting ? 'Simpan Perubahan' : 'Simpan & Jadwalkan Notifikasi' ?>
         </button>
     </div>
@@ -792,7 +792,7 @@
                 targetVisibleCount.textContent = shown;
             }
             if (targetEmpty) {
-                targetEmpty.classList.toggle('d-none', shown > 0);
+                targetEmpty.classList.toggle('hidden', shown > 0);
             }
         });
 

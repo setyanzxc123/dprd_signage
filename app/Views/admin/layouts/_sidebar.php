@@ -26,7 +26,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <li class="nav-section-label">Utama</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
-                <i class="bi bi-grid-1x2-fill nav-icon"></i>
+                <i data-lucide="layout-dashboard" class="nav-icon"></i>
                 <span class="nav-text">Dashboard</span>
             </a>
         </li>
@@ -34,19 +34,19 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <li class="nav-section-label">Master Data</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
-                <i class="bi bi-diagram-3-fill nav-icon"></i>
+                <i data-lucide="workflow" class="nav-icon"></i>
                 <span class="nav-text">Kelompok Peserta</span>
             </a>
         </li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
-                <i class="bi bi-people-fill nav-icon"></i>
+                <i data-lucide="users" class="nav-icon"></i>
                 <span class="nav-text">Anggota DPRD</span>
             </a>
         </li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
-                <i class="bi bi-door-open-fill nav-icon"></i>
+                <i data-lucide="door-open" class="nav-icon"></i>
                 <span class="nav-text">Ruangan Rapat</span>
             </a>
         </li>
@@ -54,35 +54,35 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <li class="nav-section-label">Operasional</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
-                <i class="bi bi-calendar3-week-fill nav-icon"></i>
+                <i data-lucide="calendar-days" class="nav-icon"></i>
                 <span class="nav-text">Jadwal Rapat</span>
-                <span class="nav-badge badge bg-primary d-none" id="badge-jadwal"></span>
+                <span class="nav-badge ta-badge bg-brand-500 text-white hidden" id="badge-jadwal"></span>
             </a>
         </li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
-                <i class="bi bi-whatsapp nav-icon"></i>
+                <i data-lucide="message-circle" class="nav-icon"></i>
                 <span class="nav-text">Notifikasi WA</span>
-                <span class="nav-badge badge bg-danger d-none" id="badge-wa-gagal"></span>
+                <span class="nav-badge ta-badge bg-red-50 text-red-600 hidden" id="badge-wa-gagal"></span>
             </a>
         </li>
 
         <li class="nav-section-label">Tampilan Publik</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
-                <i class="bi bi-tv-fill nav-icon"></i>
+                <i data-lucide="tv" class="nav-icon"></i>
                 <span class="nav-text">Pengaturan Signage</span>
             </a>
         </li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('signage') ?>" target="_blank" title="Buka di tab baru">
-                <i class="bi bi-display nav-icon"></i>
+                <i data-lucide="monitor" class="nav-icon"></i>
                 <span class="nav-text">Pratinjau Layar TV</span>
             </a>
         </li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('jadwal') ?>" target="_blank" title="Buka di tab baru">
-                <i class="bi bi-calendar-check nav-icon"></i>
+                <i data-lucide="calendar-check" class="nav-icon"></i>
                 <span class="nav-text">Pratinjau Jadwal Publik</span>
             </a>
         </li>

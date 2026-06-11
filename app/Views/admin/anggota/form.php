@@ -11,12 +11,12 @@
         padding-bottom: 8px;
     }
 
-    .member-form .form-label {
+    .member-form .ta-label {
         margin-bottom: 4px;
         font-size: 0.82rem;
     }
 
-    .member-form .form-text {
+    .member-form .ta-help {
         font-size: 0.72rem;
     }
 
@@ -55,36 +55,36 @@
 <form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form">
     <?= csrf_field() ?>
 
-    <div class="row g-2">
+    <div class="grid grid-cols-12 gap-3">
 
         <!-- Kolom kiri: Data Utama -->
-        <div class="col-lg-8">
+        <div class="lg:col-span-8">
             <div class="form-card">
 
                 <div class="form-section-title">Informasi Anggota</div>
 
-                <div class="row g-2">
+                <div class="grid grid-cols-12 gap-3">
 
-                    <div class="col-12">
-                        <label class="form-label fw-semibold" for="name">
-                            Nama Lengkap <span class="text-danger">*</span>
+                    <div class="col-span-12">
+                        <label class="ta-label font-semibold" for="name">
+                            Nama Lengkap <span class="text-red-600">*</span>
                         </label>
-                        <input type="text" class="form-control" id="name" name="name"
+                        <input type="text" class="ta-input" id="name" name="name"
                             value="<?= esc($member['name'] ?? '') ?>" placeholder="Contoh: H. Ahmad Fauzi, S.H., M.M."
                             required />
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="jabatan">Jabatan</label>
-                        <input type="text" class="form-control" id="jabatan" name="jabatan"
+                    <div class="md:col-span-6">
+                        <label class="ta-label font-semibold" for="jabatan">Jabatan</label>
+                        <input type="text" class="ta-input" id="jabatan" name="jabatan"
                             value="<?= esc($member['jabatan'] ?? '') ?>" placeholder="Contoh: Ketua Komisi III" />
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="fraksi">
-                            Fraksi <span class="text-danger">*</span>
+                    <div class="md:col-span-6">
+                        <label class="ta-label font-semibold" for="fraksi">
+                            Fraksi <span class="text-red-600">*</span>
                         </label>
-                        <select class="form-select" id="fraksi" name="fraksi" required>
+                        <select class="ta-select" id="fraksi" name="fraksi" required>
                             <option value="">-- Pilih Fraksi --</option>
                             <?php foreach ($fraksi_list as $f):
                                 $selected = ($member['fraksi'] ?? '') === $f ? 'selected' : '';
@@ -96,9 +96,9 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="komisi">Komisi</label>
-                        <select class="form-select" id="komisi" name="komisi">
+                    <div class="md:col-span-6">
+                        <label class="ta-label font-semibold" for="komisi">Komisi</label>
+                        <select class="ta-select" id="komisi" name="komisi">
                             <option value="">Tidak dalam komisi</option>
                             <?php foreach ($komisi_list as $k):
                                 $selected = ($member['komisi'] ?? '') === $k ? 'selected' : '';
@@ -110,9 +110,9 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="status">Status</label>
-                        <select class="form-select" id="status" name="aktif">
+                    <div class="md:col-span-6">
+                        <label class="ta-label font-semibold" for="status">Status</label>
+                        <select class="ta-select" id="status" name="aktif">
                             <option value="1" <?= ($member['aktif'] ?? 1) ? 'selected' : '' ?>>Aktif</option>
                             <option value="0" <?= !($member['aktif'] ?? 1) ? 'selected' : '' ?>>Nonaktif</option>
                         </select>
@@ -124,23 +124,23 @@
             <div class="form-card mt-2">
                 <div class="form-section-title">Kontak WhatsApp</div>
 
-                <div class="row g-2 align-items-start">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="no_wa">
-                            Nomor WhatsApp <span class="text-danger">*</span>
+                <div class="grid grid-cols-12 gap-3 items-start">
+                    <div class="md:col-span-6">
+                        <label class="ta-label font-semibold" for="no_wa">
+                            Nomor WhatsApp <span class="text-red-600">*</span>
                         </label>
-                        <div class="input-group">
-                            <span class="input-group-text">+62</span>
-                            <input type="text" class="form-control" id="no_wa" name="no_wa"
+                        <div class="ta-input-group">
+                            <span class="ta-input-addon">+62</span>
+                            <input type="text" class="ta-input" id="no_wa" name="no_wa"
                                 value="<?= esc($member['no_wa'] ?? '') ?>" placeholder="8123456789" required />
                         </div>
-                        <div class="form-text">Format tanpa 0 di depan. Contoh: 8123456789</div>
+                        <div class="ta-help">Format tanpa 0 di depan. Contoh: 8123456789</div>
                     </div>
 
                     <?php if ($member): ?>
-                        <div class="col-md-6">
-                            <div class="alert alert-info alert-sm compact-alert py-2 px-3 mb-0">
-                                <i class="bi bi-info-circle me-1"></i>
+                        <div class="md:col-span-6">
+                            <div class="ta-alert ta-alert-info ta-alert-sm compact-alert py-2 px-3 mb-0">
+                                <i data-lucide="info" class="mr-1"></i>
                                 Mengubah nomor WA akan mempengaruhi pengiriman notifikasi rapat.
                             </div>
                         </div>
@@ -150,65 +150,65 @@
         </div>
 
         <!-- Kolom kanan: Kelompok Peserta -->
-        <div class="col-lg-4">
+        <div class="lg:col-span-4">
             <div class="form-card">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                <div class="flex items-center justify-between gap-2 mb-2">
                     <div class="form-section-title mb-0">Kelompok Peserta</div>
                     <?php if (! empty($manual_units)): ?>
-                        <span class="badge bg-primary-subtle text-primary" id="kelompok-selected-count">
+                        <span class="ta-badge bg-brand-50 text-brand-600" id="kelompok-selected-count">
                             <?= $selected_group_count ?> dipilih
                         </span>
                     <?php endif; ?>
                 </div>
 
                 <?php if (empty($manual_units)): ?>
-                    <div class="alert alert-warning compact-alert py-2 px-3 mb-0">
+                    <div class="ta-alert ta-alert-warning compact-alert py-2 px-3 mb-0">
                         Belum ada kelompok peserta aktif.
-                        <a href="<?= base_url('admin/unit-rapat/create') ?>" class="alert-link">Buat kelompok peserta</a>
+                        <a href="<?= base_url('admin/unit-rapat/create') ?>" class="text-brand-600 font-semibold underline">Buat kelompok peserta</a>
                         sebelum menambahkan anggota.
                     </div>
                 <?php else: ?>
-                    <div class="form-text mb-2">Pilih minimal satu kelompok peserta.</div>
-                    <div class="position-relative mb-2">
-                        <span class="position-absolute start-0 top-50 translate-middle-y ps-3 text-muted">
-                            <i class="bi bi-search"></i>
+                    <div class="ta-help mb-2">Pilih minimal satu kelompok peserta.</div>
+                    <div class="relative mb-2">
+                        <span class="absolute left-0 top-1/2 -translate-y-1/2 pl-3 text-gray-500">
+                            <i data-lucide="search"></i>
                         </span>
-                        <input type="text" class="form-control form-control-sm ps-5"
+                        <input type="text" class="ta-input ta-input-sm pl-10"
                             id="kelompok-search" placeholder="Cari kelompok peserta..." autocomplete="off" />
                     </div>
 
                     <div class="border rounded overflow-hidden">
-                        <div class="d-flex align-items-center justify-content-between px-3 py-1 border-bottom bg-light">
-                            <span class="small fw-bold text-muted text-uppercase">Daftar Kelompok</span>
-                            <span class="badge bg-secondary rounded-pill" id="kelompok-visible-count"><?= count($manual_units) ?></span>
+                        <div class="flex items-center justify-between px-3 py-1 border-b bg-gray-50">
+                            <span class="text-xs font-bold text-gray-500 uppercase">Daftar Kelompok</span>
+                            <span class="ta-badge bg-gray-100 rounded-full" id="kelompok-visible-count"><?= count($manual_units) ?></span>
                         </div>
-                            <div class="d-flex flex-column" id="kelompok-list" style="overflow-y: auto;">
+                            <div class="flex flex-col" id="kelompok-list" style="overflow-y: auto;">
                                 <?php foreach ($manual_units as $unit):
                                     $unitId = (int) $unit['id'];
                                     $checked = in_array($unitId, $selected_unit_ids, true) ? 'checked' : '';
                                     $inputId = 'unit-manual-' . $unitId;
                                 ?>
-                                    <label class="d-flex align-items-center gap-2 px-3 py-1 border-bottom mb-0 kelompok-option <?= $checked ? 'bg-primary-subtle' : '' ?>"
+                                    <label class="flex items-center gap-2 px-3 py-1 border-b mb-0 kelompok-option <?= $checked ? 'bg-brand-50' : '' ?>"
                                         for="<?= esc($inputId, 'attr') ?>"
                                         data-name="<?= esc(strtolower($unit['nama']), 'attr') ?>"
                                         style="cursor: pointer;">
-                                        <input class="form-check-input" type="checkbox"
+                                        <input class="ta-check-input" type="checkbox"
                                             id="<?= esc($inputId, 'attr') ?>"
                                             name="manual_units[]"
                                             value="<?= $unitId ?>"
                                             data-kelompok-peserta="1"
                                             <?= $checked ?> />
-                                        <span class="small fw-semibold text-truncate">
+                                        <span class="text-xs font-semibold truncate">
                                             <?= esc($unit['nama']) ?>
                                         </span>
                                     </label>
                                 <?php endforeach; ?>
-                                <div class="text-muted text-center py-2 d-none" id="kelompok-empty">
+                                <div class="text-gray-500 text-center py-2 hidden" id="kelompok-empty">
                                     <small>Kelompok tidak ditemukan.</small>
                                 </div>
                             </div>
                     </div>
-                    <div class="text-danger small mt-2 d-none" id="kelompok-peserta-error">
+                    <div class="text-red-600 text-xs mt-2 hidden" id="kelompok-peserta-error">
                         Pilih minimal satu kelompok peserta.
                     </div>
                 <?php endif; ?>
@@ -218,12 +218,12 @@
     </div>
 
     <!-- Tombol Aksi -->
-    <div class="d-flex gap-2 mt-3">
-        <a href="<?= base_url('admin/anggota') ?>" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Batal
+    <div class="flex gap-2 mt-3">
+        <a href="<?= base_url('admin/anggota') ?>" class="ta-btn ta-btn-outline-gray">
+            <i data-lucide="arrow-left" class="mr-1"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary" <?= empty($manual_units) ? 'disabled' : '' ?>>
-            <i class="bi bi-check-lg me-1"></i>
+        <button type="submit" class="ta-btn ta-btn-primary" <?= empty($manual_units) ? 'disabled' : '' ?>>
+            <i data-lucide="check" class="mr-1"></i>
             <?= $member ? 'Simpan Perubahan' : 'Tambah Anggota' ?>
         </button>
     </div>
@@ -259,13 +259,13 @@
 
             checkboxes.forEach(function(input) {
                 const option = input.closest('.kelompok-option');
-                if (option) option.classList.toggle('bg-primary-subtle', input.checked);
+                if (option) option.classList.toggle('bg-brand-50', input.checked);
             });
         };
 
         const syncGroupValidity = function() {
             const valid = hasSelectedGroup();
-            if (error) error.classList.toggle('d-none', valid);
+            if (error) error.classList.toggle('hidden', valid);
             checkboxes.forEach(function(input) {
                 input.classList.toggle('is-invalid', !valid);
             });
@@ -288,7 +288,7 @@
             });
 
             if (visibleCount) visibleCount.textContent = shown;
-            if (emptyState) emptyState.classList.toggle('d-none', shown > 0);
+            if (emptyState) emptyState.classList.toggle('hidden', shown > 0);
         });
 
         form?.addEventListener('submit', function(event) {

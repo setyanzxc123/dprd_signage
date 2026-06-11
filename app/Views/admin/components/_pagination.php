@@ -15,14 +15,14 @@ $pageUrl = static function (int $page) use ($paginationBase, $paginationQuery): 
 ?>
 
 <?php if ($pagination['totalPages'] > 1): ?>
-    <div class="section-card-footer d-flex justify-content-between align-items-center gap-3 flex-wrap">
-        <div class="small text-muted">
+    <div class="section-card-footer flex justify-between items-center gap-3 flex-wrap">
+        <div class="text-xs text-gray-500">
             Halaman <?= $pagination['page'] ?> dari <?= $pagination['totalPages'] ?>
         </div>
         <nav aria-label="<?= esc($ariaLabel ?? 'Pagination') ?>">
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item <?= $pagination['page'] <= 1 ? 'disabled' : '' ?>">
-                    <a class="page-link" href="<?= $pagination['page'] <= 1 ? '#' : esc($pageUrl($pagination['page'] - 1)) ?>">
+            <ul class="ta-pagination ta-pagination-sm mb-0">
+                <li class="ta-page-item <?= $pagination['page'] <= 1 ? 'disabled' : '' ?>">
+                    <a class="ta-page-link" href="<?= $pagination['page'] <= 1 ? '#' : esc($pageUrl($pagination['page'] - 1)) ?>">
                         Sebelumnya
                     </a>
                 </li>
@@ -31,28 +31,28 @@ $pageUrl = static function (int $page) use ($paginationBase, $paginationQuery): 
                     $endPage   = min($pagination['totalPages'], $pagination['page'] + 2);
                 ?>
                 <?php if ($startPage > 1): ?>
-                    <li class="page-item">
-                        <a class="page-link" href="<?= esc($pageUrl(1)) ?>">1</a>
+                    <li class="ta-page-item">
+                        <a class="ta-page-link" href="<?= esc($pageUrl(1)) ?>">1</a>
                     </li>
                     <?php if ($startPage > 2): ?>
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <li class="ta-page-item disabled"><span class="ta-page-link">...</span></li>
                     <?php endif; ?>
                 <?php endif; ?>
                 <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                    <li class="page-item <?= $p === $pagination['page'] ? 'active' : '' ?>">
-                        <a class="page-link" href="<?= esc($pageUrl($p)) ?>"><?= $p ?></a>
+                    <li class="ta-page-item <?= $p === $pagination['page'] ? 'active' : '' ?>">
+                        <a class="ta-page-link" href="<?= esc($pageUrl($p)) ?>"><?= $p ?></a>
                     </li>
                 <?php endfor; ?>
                 <?php if ($endPage < $pagination['totalPages']): ?>
                     <?php if ($endPage < $pagination['totalPages'] - 1): ?>
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <li class="ta-page-item disabled"><span class="ta-page-link">...</span></li>
                     <?php endif; ?>
-                    <li class="page-item">
-                        <a class="page-link" href="<?= esc($pageUrl($pagination['totalPages'])) ?>"><?= $pagination['totalPages'] ?></a>
+                    <li class="ta-page-item">
+                        <a class="ta-page-link" href="<?= esc($pageUrl($pagination['totalPages'])) ?>"><?= $pagination['totalPages'] ?></a>
                     </li>
                 <?php endif; ?>
-                <li class="page-item <?= $pagination['page'] >= $pagination['totalPages'] ? 'disabled' : '' ?>">
-                    <a class="page-link" href="<?= $pagination['page'] >= $pagination['totalPages'] ? '#' : esc($pageUrl($pagination['page'] + 1)) ?>">
+                <li class="ta-page-item <?= $pagination['page'] >= $pagination['totalPages'] ? 'disabled' : '' ?>">
+                    <a class="ta-page-link" href="<?= $pagination['page'] >= $pagination['totalPages'] ? '#' : esc($pageUrl($pagination['page'] + 1)) ?>">
                         Berikutnya
                     </a>
                 </li>

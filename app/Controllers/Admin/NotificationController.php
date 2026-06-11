@@ -8,10 +8,10 @@ use App\Models\NotifikasiModel;
 class NotificationController extends BaseController
 {
     private array $filters = [
-        'all'     => ['label' => 'Semua',    'class' => 'btn-outline-secondary'],
-        'sent'    => ['label' => 'Terkirim', 'class' => 'btn-outline-success'],
-        'failed'  => ['label' => 'Gagal',    'class' => 'btn-outline-danger'],
-        'pending' => ['label' => 'Pending',  'class' => 'btn-outline-warning'],
+        'all'     => ['label' => 'Semua',    'class' => 'ta-btn-outline-gray'],
+        'sent'    => ['label' => 'Terkirim', 'class' => 'ta-btn-outline-success'],
+        'failed'  => ['label' => 'Gagal',    'class' => 'ta-btn-outline-danger'],
+        'pending' => ['label' => 'Pending',  'class' => 'ta-btn-outline-warning'],
     ];
 
     public function index(): string

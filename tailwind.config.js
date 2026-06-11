@@ -1,4 +1,5 @@
 module.exports = {
+  darkMode: 'class',
   content: [
     './app/Views/publik/**/*.php',
     './app/Views/publik/*.php',

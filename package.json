@@ -1,7 +1,9 @@
 {
   "scripts": {
     "build:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
-    "watch:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch"
+    "watch:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch",
+    "build:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/assets/css/admin.css --minify",
+    "watch:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17"

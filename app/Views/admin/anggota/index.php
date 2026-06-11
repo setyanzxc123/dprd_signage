@@ -2,13 +2,13 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header d-flex align-items-center justify-content-between">
+<div class="page-header flex items-center justify-between">
     <div>
         <h1 class="page-title">Anggota DPRD</h1>
         <p class="page-subtitle">Kelola data anggota dan nomor WhatsApp</p>
     </div>
-    <a href="<?= base_url('admin/anggota/create') ?>" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>Tambah Anggota
+    <a href="<?= base_url('admin/anggota/create') ?>" class="ta-btn ta-btn-primary ta-btn-sm">
+        <i data-lucide="plus" class="mr-1"></i>Tambah Anggota
     </a>
 </div>
 
@@ -32,7 +32,7 @@
 <div class="section-card">
 
     <div class="section-card-header">
-        <div class="header-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="header-icon"><i data-lucide="users"></i></div>
         <div>
             <h6>Daftar Anggota</h6>
             <p class="header-sub">
@@ -42,20 +42,20 @@
                 <?php endif; ?>
             </p>
         </div>
-        <form method="get" class="ms-auto d-flex gap-2">
-            <input type="search" class="form-control form-control-sm input-search"
+        <form method="get" class="ml-auto flex gap-2">
+            <input type="search" class="ta-input ta-input-sm input-search"
                 placeholder="Cari nama anggota..." name="q" value="<?= esc($filters['q']) ?>" />
-            <select class="form-select form-select-sm" name="per_page" style="width:auto;" onchange="this.form.submit()">
+            <select class="ta-select ta-select-sm" name="per_page" style="width:auto;" onchange="this.form.submit()">
                 <?php foreach ([10, 25, 50, 100] as $size): ?>
                     <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
                 <?php endforeach; ?>
             </select>
-            <button type="submit" class="btn btn-sm btn-outline-primary" title="Cari">
-                <i class="bi bi-search"></i>
+            <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-brand" title="Cari">
+                <i data-lucide="search"></i>
             </button>
             <?php if ($filters['q'] !== ''): ?>
-                <a href="<?= base_url('admin/anggota') ?>" class="btn btn-sm btn-outline-secondary" title="Reset">
-                    <i class="bi bi-arrow-counterclockwise"></i>
+                <a href="<?= base_url('admin/anggota') ?>" class="ta-btn ta-btn-sm ta-btn-outline-gray" title="Reset">
+                    <i data-lucide="rotate-ccw"></i>
                 </a>
             <?php endif; ?>
         </form>
@@ -64,7 +64,7 @@
     <div class="section-card-body">
         <?php if (empty($members)): ?>
             <div class="empty-state">
-                <i class="bi bi-people"></i>
+                <i data-lucide="users"></i>
                 <p>Belum ada data anggota.</p>
                 <small>Klik "Tambah Anggota" untuk mulai menambahkan data.</small>
             </div>
@@ -72,13 +72,13 @@
             <table class="custom-table" id="table-anggota">
                 <thead>
                     <tr>
-                        <th class="col-num">No</th>
+                        <th class="ta-col-num">No</th>
                         <th>Nama Lengkap</th>
                         <th>Fraksi</th>
                         <th>Komisi</th>
                         <th>No WhatsApp</th>
                         <th>Status</th>
-                        <th class="col-action">Aksi</th>
+                        <th class="ta-col-action">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,7 +88,7 @@
                                 <?= $pagination['from'] + $i ?>
                             </td>
                             <td>
-                                <div class="d-flex align-items-center gap-2">
+                                <div class="flex items-center gap-2">
                                     <div class="table-avatar">
                                         <?= strtoupper(substr($m['name'], 0, 1)) ?>
                                     </div>
@@ -115,21 +115,25 @@
                             </td>
                             <td>
                                 <?php if ($m['aktif']): ?>
-                                    <span class="badge bg-success-subtle text-success fw-semibold text-xs">Aktif</span>
+                                    <span class="ta-badge bg-emerald-50 text-emerald-600 font-semibold text-xs">Aktif</span>
                                 <?php else: ?>
-                                    <span class="badge bg-secondary-subtle text-secondary fw-semibold text-xs">Nonaktif</span>
+                                    <span class="ta-badge bg-gray-100 text-gray-500 font-semibold text-xs">Nonaktif</span>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn-action btn-action-blue"
-                                    title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
-                                    class="btn-action btn-action-red ms-1" title="Hapus"
-                                    onclick="return confirm('Hapus anggota ini?')">
-                                    <i class="bi bi-trash"></i>
-                                </a>
+                                <div class="table-actions">
+                                <form method="get" action="<?= base_url("admin/anggota/{$m['id']}/edit") ?>">
+                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-brand" title="Edit">
+                                        <i data-lucide="pencil" class="mr-1"></i>Edit
+                                    </button>
+                                </form>
+                                <form method="get" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
+                                    onsubmit="return confirm('Hapus anggota ini?')">
+                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-danger" title="Hapus">
+                                        <i data-lucide="trash-2" class="mr-1"></i>Hapus
+                                    </button>
+                                </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
