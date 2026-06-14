@@ -141,19 +141,6 @@
                 </div>
             </div>
 
-            <!-- Sub-section: Status koneksi -->
-            <div class="stg-section">
-                <div class="stg-wa-status-row">
-                    <div class="stg-wa-conn" id="wa-conn-status">
-                        <div class="flex items-center gap-2 text-gray-500" style="font-size:.82rem;">
-                            <span class="ta-spinner ta-spinner-sm" role="status"></span>
-                            Memeriksa status pengiriman...
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stg-divider"></div>
 
             <!-- Sub-section: Nama Pengirim -->
             <div class="stg-section">
@@ -1017,7 +1004,6 @@
                 locationEl.innerHTML = '<span class="text-red-600">Gagal memuat lokasi.</span>';
             });
         }
-        checkWaConn();
         window.renderAdminIcons?.();
     });
 
@@ -1066,24 +1052,6 @@
         }
     }
 
-    // WA connection check
-    async function checkWaConn() {
-        const el = document.getElementById('wa-conn-status');
-        if (!el) return;
-        try {
-            const resp = await fetch('/admin/pengaturan/wa-status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            const data = await resp.json();
-            if (data.configured && data.connected) {
-                el.innerHTML = '<div class="conn-ok"><i data-lucide="circle-check" class="mr-1"></i>Pengiriman WhatsApp siap</div>';
-            } else if (data.configured && !data.connected) {
-                el.innerHTML = '<div class="conn-err"><i data-lucide="circle-x" class="mr-1"></i>Belum siap<br><small class="text-gray-500">' + (data.error ?? '') + '</small></div>';
-            } else {
-                el.innerHTML = '<div class="text-gray-500" style="font-size:.82rem;"><i data-lucide="circle-minus" class="mr-1"></i>Belum dikonfigurasi.</div>';
-            }
-        } catch(e) {
-            el.innerHTML = '<div class="text-gray-500" style="font-size:.82rem;"><i data-lucide="wifi-off" class="mr-1"></i>Tidak dapat memeriksa status.</div>';
-        }
-        window.renderAdminIcons?.();
-    }
+
 </script>
 <?= $this->endSection() ?>

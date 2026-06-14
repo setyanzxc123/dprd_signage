@@ -138,6 +138,60 @@
         window.setInterval(update, 1000);
     }
 
+    async function checkTopbarWaStatus() {
+        const statusEl = document.getElementById('topbar-wa-status');
+        const badgeEl = document.getElementById('topbar-wa-badge');
+        const dotEl = document.getElementById('topbar-wa-dot');
+        const textEl = document.getElementById('topbar-wa-text');
+        if (!statusEl || !badgeEl || !dotEl || !textEl) return;
+
+        // Set loading state (pulse effect)
+        dotEl.classList.add('animate-pulse');
+        textEl.textContent = 'WhatsApp: Memeriksa...';
+        dotEl.style.backgroundColor = '#9ca3af';
+        badgeEl.style.backgroundColor = '#f9fafb';
+        badgeEl.style.color = '#667085';
+        badgeEl.style.borderColor = '#e4e7ec';
+
+        try {
+            const resp = await fetch('/admin/pengaturan/wa-status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await resp.json();
+
+            dotEl.classList.remove('animate-pulse');
+
+            if (data.configured && data.connected) {
+                dotEl.style.backgroundColor = '#10b981'; // Hijau (emerald-500)
+                badgeEl.style.backgroundColor = '#ecfdf3'; // bg-emerald-50
+                badgeEl.style.color = '#027a48'; // text-emerald-700
+                badgeEl.style.borderColor = '#abefc6';
+                textEl.textContent = 'WhatsApp: Siap';
+                statusEl.setAttribute('title', 'WhatsApp Terhubung (Siap)');
+            } else if (data.configured && !data.connected) {
+                dotEl.style.backgroundColor = '#ef4444'; // Merah (red-500)
+                badgeEl.style.backgroundColor = '#fef3f2'; // bg-red-50
+                badgeEl.style.color = '#b42318'; // text-red-700
+                badgeEl.style.borderColor = '#fecdca';
+                textEl.textContent = 'WhatsApp: Error';
+                statusEl.setAttribute('title', 'WhatsApp Terputus: ' + (data.error || 'Gagal terhubung'));
+            } else {
+                dotEl.style.backgroundColor = '#9ca3af'; // Abu-abu (gray-400)
+                badgeEl.style.backgroundColor = '#f9fafb';
+                badgeEl.style.color = '#667085';
+                badgeEl.style.borderColor = '#e4e7ec';
+                textEl.textContent = 'WhatsApp: Belum Aktif';
+                statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
+            }
+        } catch(e) {
+            dotEl.classList.remove('animate-pulse');
+            dotEl.style.backgroundColor = '#f59e0b'; // Kuning (amber-500)
+            badgeEl.style.backgroundColor = '#fffaeb';
+            badgeEl.style.color = '#b54708';
+            badgeEl.style.borderColor = '#fedf89';
+            textEl.textContent = 'WhatsApp: Gagal Pengecekan';
+            statusEl.setAttribute('title', 'Gagal memeriksa status WhatsApp');
+        }
+    }
+
     function mountAdminController() {
         const controllerRoot = document.getElementById('admin-vue-controller');
 
@@ -147,6 +201,7 @@
             applyFallbackActiveNavigation();
             startFallbackClock();
             renderAdminIcons();
+            checkTopbarWaStatus();
             return;
         }
 
@@ -168,6 +223,7 @@
                 this.autoDismissFlashMessages();
                 setupIconObserver();
                 renderAdminIcons();
+                checkTopbarWaStatus();
 
                 this.clockTimer = window.setInterval(this.updateClock, 1000);
                 window.addEventListener('keydown', this.handleKeydown);

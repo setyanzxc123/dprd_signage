@@ -343,6 +343,28 @@
         border-radius: 50%;
         border: 2px solid var(--od-surface);
     }
+    .topbar-wa-status-link {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .topbar-wa-status-link .status-badge {
+        height: 38px;
+        padding: 0 14px;
+        border-radius: var(--od-radius-pill);
+        border: 1px solid var(--od-border);
+        background: var(--od-surface);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        transition: all var(--od-motion-fast) var(--od-ease);
+    }
+    .topbar-wa-status-link:hover .status-badge {
+        border-color: #d0d5dd;
+        background: #f9fafb;
+    }
     .topbar-user {
         display: inline-flex;
         align-items: center;
