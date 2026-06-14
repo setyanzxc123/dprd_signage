@@ -6,7 +6,7 @@ $userInit  = strtoupper(substr($userName, 0, 1));
 $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 ?>
 
-<nav id="sidebar" aria-label="Navigasi utama">
+<nav id="sidebar" class="border-r border-base-300 bg-base-100" aria-label="Navigasi utama">
 
     <div class="sidebar-top">
         <div class="sidebar-brand">
@@ -21,77 +21,75 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         </button>
     </div>
 
-    <ul class="sidebar-nav">
+    <div class="sidebar-menu-wrapper">
+        <ul class="sidebar-nav menu menu-md p-0 gap-1 bg-base-100">
 
-        <li class="nav-section-label">Utama</li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
-                <i data-lucide="layout-dashboard" class="nav-icon"></i>
-                <span class="nav-text">Dashboard</span>
-            </a>
-        </li>
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Utama</li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
+                    <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
 
-        <li class="nav-section-label">Master Data</li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
-                <i data-lucide="workflow" class="nav-icon"></i>
-                <span class="nav-text">Kelompok Peserta</span>
-            </a>
-        </li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
-                <i data-lucide="users" class="nav-icon"></i>
-                <span class="nav-text">Anggota DPRD</span>
-            </a>
-        </li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
-                <i data-lucide="door-open" class="nav-icon"></i>
-                <span class="nav-text">Ruangan Rapat</span>
-            </a>
-        </li>
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Master Data</li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
+                    <i data-lucide="workflow" class="nav-icon"></i>
+                    <span class="nav-text">Kelompok Peserta</span>
+                </a>
+            </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
+                    <i data-lucide="users" class="nav-icon"></i>
+                    <span class="nav-text">Anggota DPRD</span>
+                </a>
+            </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
+                    <i data-lucide="door-open" class="nav-icon"></i>
+                    <span class="nav-text">Ruangan Rapat</span>
+                </a>
+            </li>
 
-        <li class="nav-section-label">Operasional</li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
-                <i data-lucide="calendar-days" class="nav-icon"></i>
-                <span class="nav-text">Jadwal Rapat</span>
-                <span class="nav-badge ta-badge bg-brand-500 text-white hidden" id="badge-jadwal"></span>
-            </a>
-        </li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
-                <i data-lucide="message-circle" class="nav-icon"></i>
-                <span class="nav-text">Notifikasi WA</span>
-                <span class="nav-badge ta-badge bg-red-50 text-red-600 hidden" id="badge-wa-gagal"></span>
-            </a>
-        </li>
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Operasional</li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
+                    <i data-lucide="calendar-days" class="nav-icon"></i>
+                    <span class="nav-text">Jadwal Rapat</span>
+                    <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
+                </a>
+            </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
+                    <i data-lucide="message-circle" class="nav-icon"></i>
+                    <span class="nav-text">Notifikasi WA</span>
+                    <span class="nav-badge badge badge-error badge-sm ml-auto hidden" id="badge-wa-gagal"></span>
+                </a>
+            </li>
 
-        <li class="nav-section-label">Sistem</li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
-                <i data-lucide="settings" class="nav-icon"></i>
-                <span class="nav-text">Pengaturan Sistem</span>
-            </a>
-        </li>
-        <li class="nav-section-label">Tampilan Publik</li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('signage') ?>" target="_blank" title="Buka di tab baru">
-                <i data-lucide="monitor" class="nav-icon"></i>
-                <span class="nav-text">Pratinjau Layar TV</span>
-            </a>
-        </li>
-        <li class="nav-item-custom">
-            <a class="nav-link-custom" href="<?= base_url('jadwal') ?>" target="_blank" title="Buka di tab baru">
-                <i data-lucide="calendar-check" class="nav-icon"></i>
-                <span class="nav-text">Pratinjau Jadwal Publik</span>
-            </a>
-        </li>
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Sistem</li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
+                    <i data-lucide="settings" class="nav-icon"></i>
+                    <span class="nav-text">Pengaturan Sistem</span>
+                </a>
+            </li>
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Tampilan Publik</li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('signage') ?>" target="_blank" title="Buka di tab baru">
+                    <i data-lucide="monitor" class="nav-icon"></i>
+                    <span class="nav-text">Pratinjau Layar TV</span>
+                </a>
+            </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('jadwal') ?>" target="_blank" title="Buka di tab baru">
+                    <i data-lucide="calendar-check" class="nav-icon"></i>
+                    <span class="nav-text">Pratinjau Jadwal Publik</span>
+                </a>
+            </li>
 
-    </ul>
+        </ul>
 
-    <div class="sidebar-note">
-        Sistem signage dan notifikasi DPRD Provinsi Sulawesi Tengah. Kelola jadwal rapat, kirim pengingat WhatsApp, dan pantau tampilan publik.
     </div>
-
 </nav>

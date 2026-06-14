@@ -63,7 +63,7 @@ class RoomController extends BaseController
         return redirect()->to(base_url('admin/ruangan'));
     }
 
-    public function edit(int $id): string
+    public function edit(int $id)
     {
         $model  = new RuanganModel();
         $room   = $model->find($id);

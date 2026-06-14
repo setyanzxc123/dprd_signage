@@ -7,8 +7,8 @@
         <h1 class="page-title">Jadwal Rapat</h1>
         <p class="page-subtitle">Kelola jadwal rapat dan notifikasi WhatsApp</p>
     </div>
-    <a href="<?= base_url('admin/jadwal/create') ?>" class="ta-btn ta-btn-primary ta-btn-sm">
-        <i data-lucide="plus" class="mr-1"></i>Tambah Jadwal
+    <a href="<?= base_url('admin/jadwal/create') ?>" class="btn btn-sm btn-primary gap-1">
+        <i data-lucide="plus" class="w-4 h-4"></i>Tambah Jadwal
     </a>
 </div>
 
@@ -57,16 +57,16 @@
     <form method="get" class="p-3 border-b">
         <div class="grid grid-cols-12 gap-3 items-end">
             <div class="md:col-span-2 col-span-6">
-                <label class="ta-label text-xs text-gray-500 font-semibold" for="filter-tahun">Tahun</label>
-                <select class="ta-select ta-select-sm" id="filter-tahun" name="tahun" onchange="this.form.submit()">
+                <label class="label-text font-bold text-xs mb-1 block" for="filter-tahun">Tahun</label>
+                <select class="select select-sm select-bordered w-full" id="filter-tahun" name="tahun" onchange="this.form.submit()">
                     <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?>
                         <option value="<?= $y ?>" <?= (int) $filters['tahun'] === $y ? 'selected' : '' ?>><?= $y ?></option>
                     <?php endfor; ?>
                 </select>
             </div>
             <div class="md:col-span-2 col-span-6">
-                <label class="ta-label text-xs text-gray-500 font-semibold" for="filter-semester">Semester</label>
-                <select class="ta-select ta-select-sm" id="filter-semester" name="semester" onchange="this.form.submit()">
+                <label class="label-text font-bold text-xs mb-1 block" for="filter-semester">Semester</label>
+                <select class="select select-sm select-bordered w-full" id="filter-semester" name="semester" onchange="this.form.submit()">
                     <option value="all" <?= $filters['semester'] === 'all' ? 'selected' : '' ?>>Semua</option>
                     <option value="1" <?= $filters['semester'] === '1' ? 'selected' : '' ?>>Semester I</option>
                     <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
@@ -74,8 +74,8 @@
             </div>
 
             <div class="md:col-span-2 col-span-6">
-                <label class="ta-label text-xs text-gray-500 font-semibold" for="filter-jenis">Jenis</label>
-                <select class="ta-select ta-select-sm" id="filter-jenis" name="jenis" onchange="this.form.submit()">
+                <label class="label-text font-bold text-xs mb-1 block" for="filter-jenis">Jenis</label>
+                <select class="select select-sm select-bordered w-full" id="filter-jenis" name="jenis" onchange="this.form.submit()">
                     <option value="all" <?= $filters['jenis'] === 'all' ? 'selected' : '' ?>>Semua</option>
                     <option value="reguler" <?= $filters['jenis'] === 'reguler' ? 'selected' : '' ?>>Reguler</option>
                     <option value="insidental" <?= $filters['jenis'] === 'insidental' ? 'selected' : '' ?>>Insidental</option>
@@ -83,8 +83,8 @@
             </div>
 
             <div class="md:col-span-2 col-span-6">
-                <label class="ta-label text-xs text-gray-500 font-semibold" for="filter-status">Status</label>
-                <select class="ta-select ta-select-sm" id="filter-status" name="status" onchange="this.form.submit()">
+                <label class="label-text font-bold text-xs mb-1 block" for="filter-status">Status</label>
+                <select class="select select-sm select-bordered w-full" id="filter-status" name="status" onchange="this.form.submit()">
                     <option value="all" <?= $filters['status'] === 'all' ? 'selected' : '' ?>>Semua</option>
                     <option value="menunggu" <?= $filters['status'] === 'menunggu' ? 'selected' : '' ?>>Menunggu</option>
                     <option value="persiapan" <?= $filters['status'] === 'persiapan' ? 'selected' : '' ?>>Persiapan</option>
@@ -93,109 +93,118 @@
                 </select>
             </div>
             <div class="md:col-span-3">
-                <label class="ta-label text-xs text-gray-500 font-semibold" for="filter-q">Cari</label>
-                <input class="ta-input ta-input-sm" id="filter-q" name="q" value="<?= esc($filters['q']) ?>"
+                <label class="label-text font-bold text-xs mb-1 block" for="filter-q">Cari</label>
+                <input class="input input-sm input-bordered w-full" id="filter-q" name="q" value="<?= esc($filters['q']) ?>"
                     placeholder="Agenda, ruangan, peserta">
             </div>
             <div class="md:col-span-1 col-span-6">
-                <label class="ta-label text-xs text-gray-500 font-semibold" for="filter-per-page">Tampil</label>
-                <select class="ta-select ta-select-sm" id="filter-per-page" name="per_page" onchange="this.form.submit()">
+                <label class="label-text font-bold text-xs mb-1 block" for="filter-per-page">Tampil</label>
+                <select class="select select-sm select-bordered w-full" id="filter-per-page" name="per_page" onchange="this.form.submit()">
                     <?php foreach ([10, 25, 50, 100] as $size): ?>
                         <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="md:col-span-1 flex gap-2">
-                <button class="ta-btn ta-btn-sm ta-btn-outline-brand" type="submit" title="Terapkan filter">
-                    <i data-lucide="search"></i>
+                <button class="btn btn-sm btn-outline btn-primary" type="submit" title="Terapkan filter">
+                    <i data-lucide="search" class="w-4 h-4"></i>
                 </button>
-                <a href="<?= base_url('admin/jadwal') ?>" class="ta-btn ta-btn-sm ta-btn-outline-gray" title="Reset filter">
-                    <i data-lucide="rotate-ccw"></i>
+                <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-sm btn-outline btn-ghost" title="Reset filter">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                 </a>
             </div>
         </div>
     </form>
 
-    <div class="section-card-body">
+    <div class="section-card-body p-0">
         <?php if (empty($meetings)): ?>
-            <div class="empty-state">
-                <i data-lucide="calendar-x"></i>
-                <p>Tidak ada jadwal rapat sesuai filter.</p>
-                <small>Ubah filter atau klik "Tambah Jadwal".</small>
+            <div class="empty-state p-8 text-center flex flex-col items-center justify-center">
+                <i data-lucide="calendar-x" class="w-12 h-12 text-base-content/40 mb-3"></i>
+                <p class="font-bold text-base-content">Tidak ada jadwal rapat sesuai filter.</p>
+                <small class="text-base-content/60 mt-1">Ubah filter atau klik "Tambah Jadwal".</small>
             </div>
         <?php else: ?>
-            <table class="custom-table">
-                <thead>
-                    <tr>
-                        <th class="ta-col-num">Tanggal & Waktu</th>
-                        <th>Judul Rapat</th>
-                        <th>Ruangan</th>
-                        <th>Peserta</th>
-                        <th>Jenis</th>
-                        <th>Publik</th>
-                        <th>Status</th>
-                        <th class="ta-col-action">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($meetings as $m):
-                        $badge = status_badge($m['status']);
-                    ?>
-                        <tr>
-                            <td>
-                                <span class="time-badge">
-                                    <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
-                                </span>
-                                <div class="cell-subtitle mt-1">
-                                    <?= esc($m['waktu_mulai']) ?> -
-                                    <?= esc($m['waktu_selesai']) ?>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="cell-title"><?= esc($m['judul']) ?></div>
-                                <div class="cell-subtitle"><?= esc($m['keterangan'] ?? '') ?></div>
-                            </td>
-                            <td><?= esc($m['ruangan']) ?></td>
-                            <td><span class="badge-group"><?= esc($m['target_peserta']) ?></span></td>
-                            <td>
-                                <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
-                                    <span class="ta-badge bg-brand-50 text-brand-600" style="font-size:.7rem;">Reguler</span>
-                                <?php else: ?>
-                                    <span class="ta-badge bg-gray-100 text-gray-500" style="font-size:.7rem;">Insidental</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($m['is_publik'] ?? 0): ?>
-                                    <span class="ta-badge bg-emerald-50 text-emerald-600" title="Ubah publikasi melalui halaman edit" style="font-size:.7rem;">Publik</span>
-                                <?php else: ?>
-                                    <span class="ta-badge bg-gray-100 text-gray-500" title="Ubah publikasi melalui halaman edit" style="font-size:.7rem;">Internal</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <span class="status-badge <?= $badge['class'] ?>">
-                                    <span class="dot"></span>
-                                    <?= $badge['label'] ?>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="table-actions">
-                                <form method="get" action="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>">
-                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-brand" title="Edit">
-                                        <i data-lucide="pencil" class="mr-1"></i>Edit
-                                    </button>
-                                </form>
-                                <form method="get" action="<?= base_url("admin/jadwal/{$m['id']}/delete") ?>"
-                                    onsubmit="return confirm('Hapus jadwal ini?')">
-                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-danger" title="Hapus">
-                                        <i data-lucide="trash-2" class="mr-1"></i>Hapus
-                                    </button>
-                                </form>
-                                </div>
-                            </td>
+            <div class="overflow-x-auto w-full">
+                <table class="table table-zebra table-md w-full">
+                    <thead>
+                        <tr class="bg-base-200/50">
+                            <th>Tanggal & Waktu</th>
+                            <th>Judul Rapat</th>
+                            <th>Ruangan</th>
+                            <th>Peserta</th>
+                            <th>Jenis</th>
+                            <th>Publik</th>
+                            <th>Status</th>
+                            <th class="text-right">Aksi</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($meetings as $m):
+                            $badge = status_badge($m['status']);
+                        ?>
+                            <tr class="hover:bg-base-200/30 transition-colors">
+                                <td class="whitespace-nowrap">
+                                    <span class="badge badge-neutral h-auto py-1 px-2 text-xs font-mono font-bold whitespace-nowrap">
+                                        <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
+                                    </span>
+                                    <div class="text-xs text-base-content/60 mt-1">
+                                        <?= esc($m['waktu_mulai']) ?> -
+                                        <?= esc($m['waktu_selesai']) ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="font-bold text-base-content text-sm"><?= esc($m['judul']) ?></div>
+                                    <div class="text-xs text-base-content/65 mt-0.5 max-w-md truncate" title="<?= esc($m['keterangan'] ?? '') ?>">
+                                        <?= esc($m['keterangan'] ?? '') ?>
+                                    </div>
+                                </td>
+                                <td class="whitespace-nowrap text-base-content/85"><?= esc($m['ruangan']) ?></td>
+                                <td>
+                                    <span class="badge badge-ghost h-auto py-1 px-2 text-xs whitespace-nowrap">
+                                        <?= esc($m['target_peserta']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
+                                        <span class="badge badge-primary h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap">Reguler</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap">Insidental</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($m['is_publik'] ?? 0): ?>
+                                        <span class="badge badge-success h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Publik</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Internal</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php
+                                     $dotClass = ($m['status'] === 'berlangsung') ? 'bg-current animate-pulse' : 'bg-current';
+                                     ?>
+                                     <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2.5 text-xs font-semibold whitespace-nowrap">
+                                         <span class="w-1.5 h-1.5 rounded-full <?= $dotClass ?>"></span>
+                                         <?= $badge['label'] ?>
+                                     </span>
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
+                                            <i data-lucide="pencil" class="w-4 h-4"></i>Edit
+                                        </a>
+                                        <form method="get" action="<?= base_url("admin/jadwal/{$m['id']}/delete") ?>"
+                                            onsubmit="return confirm('Hapus jadwal ini?')" class="inline-flex m-0">
+                                            <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
     </div>
 

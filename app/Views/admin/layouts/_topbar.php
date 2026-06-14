@@ -37,8 +37,8 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 
         <!-- Status Koneksi WA -->
         <a class="topbar-wa-status-link" href="<?= base_url('admin/pengaturan#wa-notif-card') ?>" id="topbar-wa-status" title="Memeriksa status WhatsApp...">
-            <span class="status-badge" id="topbar-wa-badge">
-                <span class="dot" id="topbar-wa-dot"></span>
+            <span class="badge badge-neutral badge-soft gap-1.5 h-8 px-3" id="topbar-wa-badge">
+                <span class="h-1.5 w-1.5 rounded-full bg-neutral-content animate-pulse" id="topbar-wa-dot"></span>
                 <span id="topbar-wa-text">WhatsApp: Memeriksa...</span>
             </span>
         </a>
@@ -54,25 +54,23 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                         var dotEl = document.getElementById('topbar-wa-dot');
                         var textEl = document.getElementById('topbar-wa-text');
                         if (statusEl && badgeEl && dotEl && textEl) {
+                            badgeEl.style.backgroundColor = '';
+                            badgeEl.style.color = '';
+                            badgeEl.style.borderColor = '';
+                            dotEl.style.backgroundColor = '';
                             if (data.configured && data.connected) {
-                                dotEl.style.backgroundColor = '#10b981';
-                                badgeEl.style.backgroundColor = '#ecfdf3';
-                                badgeEl.style.color = '#027a48';
-                                badgeEl.style.borderColor = '#abefc6';
+                                badgeEl.className = 'badge badge-success badge-soft gap-1.5 h-8 px-3';
+                                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-success';
                                 textEl.textContent = 'WhatsApp: Siap';
                                 statusEl.setAttribute('title', 'WhatsApp Terhubung (Siap)');
                             } else if (data.configured && !data.connected) {
-                                dotEl.style.backgroundColor = '#ef4444';
-                                badgeEl.style.backgroundColor = '#fef3f2';
-                                badgeEl.style.color = '#b42318';
-                                badgeEl.style.borderColor = '#fecdca';
+                                badgeEl.className = 'badge badge-error badge-soft gap-1.5 h-8 px-3';
+                                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-error';
                                 textEl.textContent = 'WhatsApp: Error';
                                 statusEl.setAttribute('title', 'WhatsApp Terputus: ' + (data.error || 'Gagal terhubung'));
                             } else {
-                                dotEl.style.backgroundColor = '#9ca3af';
-                                badgeEl.style.backgroundColor = '#f9fafb';
-                                badgeEl.style.color = '#667085';
-                                badgeEl.style.borderColor = '#e4e7ec';
+                                badgeEl.className = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
+                                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-neutral-content';
                                 textEl.textContent = 'WhatsApp: Belum Aktif';
                                 statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
                             }

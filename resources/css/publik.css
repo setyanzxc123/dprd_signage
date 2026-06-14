@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@source "../../app/Views/publik/**/*.php";
+@source "../../app/Views/publik/*.php";
+@plugin "daisyui" {
+    themes: light --default, dark;
+    logs: false;
+}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   [v-cloak] {

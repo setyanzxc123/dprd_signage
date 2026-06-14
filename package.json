@@ -1,20 +1,22 @@
 {
   "scripts": {
     "build:vendor": "node scripts/copy-vendor-assets.mjs",
-    "build:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
-    "watch:publik": "tailwindcss -c tailwind.config.js -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch",
-    "build:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/assets/css/admin.css --minify",
-    "watch:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch",
-    "build:signage": "tailwindcss -c tailwind.signage.config.js -i ./resources/css/signage.css -o ./public/assets/css/signage.css --minify",
-    "watch:signage": "tailwindcss -c tailwind.signage.config.js -i ./resources/css/signage.css -o ./public/assets/css/signage.css --watch"
+    "build:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
+    "watch:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch",
+    "build:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --minify",
+    "watch:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch",
+    "build:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --minify",
+    "watch:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --watch"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^4.3.1"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/outfit": "^5.2.8",
+    "@tailwindcss/cli": "^4.3.1",
+    "daisyui": "^5.5.23",
     "flatpickr": "^4.6.13",
     "lucide": "^1.17.0",
     "qrcodejs": "^1.0.0",

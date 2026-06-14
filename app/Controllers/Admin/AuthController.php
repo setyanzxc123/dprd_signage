@@ -7,7 +7,7 @@ use App\Models\UserModel;
 
 class AuthController extends BaseController
 {
-    public function loginPage(): string
+    public function loginPage()
     {
         if (session()->get('auth_user')) {
             return redirect()->to(base_url('admin/dashboard'));
