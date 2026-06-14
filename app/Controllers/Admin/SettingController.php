@@ -23,11 +23,13 @@ class SettingController extends BaseController
             'wa_from_env'        => env('WA_API_KEY') ? '1' : '0',
             'wa_sender_name'     => 'Sekretariat DPRD',
             'wa_template_reminder' => WhatsappService::defaultReminderTemplate(),
+            'wa_template_default_aktif' => '1',
         ];
 
         $settings = array_merge($defaults, $settings);
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
         $settings['wa_from_env']        = (bool) $settings['wa_from_env'];
+        $settings['wa_template_default_aktif'] = (bool) $settings['wa_template_default_aktif'];
 
         return view('admin/pengaturan/index', [
             'pageTitle'      => 'Pengaturan Sistem',
@@ -61,6 +63,7 @@ class SettingController extends BaseController
 
         $settingModel->upsert('wa_sender_name', $senderName);
         $settingModel->upsert('wa_template_reminder', $waTemplate);
+        $settingModel->upsert('wa_template_default_aktif', $this->request->getPost('wa_template_default_aktif') ? '1' : '0');
 
         // Proses upload file media jika ada
         $file = $this->request->getFile('media_file');

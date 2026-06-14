@@ -286,8 +286,14 @@ class WhatsappService
     private static function buildTemplateMessage(array $data): string
     {
         $settings = new SettingModel();
-        $template = trim((string) $settings->getValue('wa_template_reminder', self::DEFAULT_REMINDER_TEMPLATE));
-        $template = $template !== '' ? $template : self::DEFAULT_REMINDER_TEMPLATE;
+        
+        $isDefault = (bool) $settings->getValue('wa_template_default_aktif', '1');
+        if ($isDefault) {
+            $template = self::DEFAULT_REMINDER_TEMPLATE;
+        } else {
+            $template = trim((string) $settings->getValue('wa_template_reminder', self::DEFAULT_REMINDER_TEMPLATE));
+            $template = $template !== '' ? $template : self::DEFAULT_REMINDER_TEMPLATE;
+        }
 
         $tanggalRaw = $data['tanggal'] ?? '';
         $timestamp = $tanggalRaw !== '' ? strtotime($tanggalRaw) : false;

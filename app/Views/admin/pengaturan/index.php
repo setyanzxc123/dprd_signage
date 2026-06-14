@@ -159,12 +159,14 @@
             <div class="stg-section">
                 <div class="flex items-center justify-between mb-2">
                     <div class="stg-section-label mb-0">Template Pesan</div>
-                    <button type="button" class="ta-btn ta-btn-xs ta-btn-outline-gray flex items-center py-1 px-2" style="font-size:.7rem;" onclick="resetWaTemplateToDefault()">
-                        <i data-lucide="rotate-ccw" class="mr-1" style="width:12px;height:12px;"></i>Atur Ulang
-                    </button>
+                    <div class="ta-check ta-switch mb-0">
+                        <input class="ta-check-input" type="checkbox" role="switch" id="wa_template_default_aktif"
+                            name="wa_template_default_aktif" value="1" <?= $settings['wa_template_default_aktif'] ? 'checked' : '' ?> />
+                        <label class="ta-check-label font-semibold" for="wa_template_default_aktif">Gunakan Template Default</label>
+                    </div>
                 </div>
                 <div class="stg-wa-template-row">
-                    <div class="stg-wa-template-left">
+                    <div class="stg-wa-template-left" id="wa-template-editor-wrapper" style="display: <?= $settings['wa_template_default_aktif'] ? 'none' : 'block' ?>;">
                         <!-- WA Formatting Toolbar -->
                         <div class="wa-toolbar" id="wa-toolbar">
                             <button type="button" class="wa-toolbar-btn" id="wa-btn-bold"
@@ -185,6 +187,10 @@
                             </button>
                             <span class="wa-toolbar-sep"></span>
                             <span class="wa-toolbar-hint">Format WhatsApp</span>
+                            
+                            <button type="button" class="ta-btn ta-btn-xs ta-btn-outline-gray flex items-center py-1 px-2 ml-auto" style="font-size:.7rem; height:24px; border:none;" onclick="resetWaTemplateToDefault()">
+                                <i data-lucide="rotate-ccw" class="mr-1" style="width:12px;height:12px;"></i>Atur Ulang
+                            </button>
                         </div>
 
                         <!-- Contenteditable Rich Editor -->
@@ -900,7 +906,6 @@
     // ══════════════════════════════════════════════════════════════
 
     function resetWaTemplateToDefault() {
-        if (!confirm('Kembalikan template pesan ke bawaan sistem?')) return;
         const editor = document.getElementById('wa_template_editor');
         const hidden = document.getElementById('wa_template_reminder');
         if (!editor || !hidden) return;
@@ -911,6 +916,9 @@
     }
 
     function renderWaTemplatePreview() {
+        const defaultToggle = document.getElementById('wa_template_default_aktif');
+        const isDefault = defaultToggle ? defaultToggle.checked : true;
+
         const hidden = document.getElementById('wa_template_reminder');
         const preview = document.getElementById('wa-template-preview');
         const warning = document.getElementById('wa-template-warning');
@@ -921,8 +929,10 @@
         const sample = { ...waTemplateSample, sender_name: senderInput?.value.trim() || 'Sekretariat DPRD' };
         const unknown = new Set();
 
+        const templateText = isDefault ? waDefaultTemplate : hidden.value;
+
         // Fill placeholders with sample data
-        let text = hidden.value.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
+        let text = templateText.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
             if (!allowed.has(key)) { unknown.add(match); return match; }
             return sample[key] ?? '';
         });
@@ -937,7 +947,7 @@
         preview.innerHTML = text;
 
         if (warning) {
-            if (unknown.size > 0) {
+            if (!isDefault && unknown.size > 0) {
                 warning.style.display = 'block';
                 warning.textContent = 'Variabel tidak dikenal: ' + Array.from(unknown).join(', ');
             } else {
@@ -990,6 +1000,14 @@
             });
         }
         renderWaTemplatePreview();
+
+        document.getElementById('wa_template_default_aktif')?.addEventListener('change', function() {
+            const wrapper = document.getElementById('wa-template-editor-wrapper');
+            if (wrapper) {
+                wrapper.style.display = this.checked ? 'none' : 'block';
+            }
+            renderWaTemplatePreview();
+        });
 
         const locationEl = document.getElementById('bmkg-resolved-location');
         if (locationEl) {
