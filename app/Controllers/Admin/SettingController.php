@@ -117,32 +117,7 @@ class SettingController extends BaseController
         return redirect()->to(base_url('admin/pengaturan'));
     }
 
-    /**
-     * POST admin/pengaturan/wa-test
-     * Kirim pesan WA test ke nomor yang diinput dari halaman pengaturan.
-     * Hanya merespons AJAX (X-Requested-With: XMLHttpRequest).
-     */
-    public function waTest()
-    {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to(base_url('admin/pengaturan'));
-        }
 
-        $noWa = trim($this->request->getPost('no_wa') ?? '');
-
-        if (empty($noWa) || ! preg_match('/^62\d{8,13}$/', $noWa)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'error'   => 'Nomor tidak valid. Gunakan format 628xxxxxxxxxx.',
-            ]);
-        }
-
-        $wa      = new \App\Libraries\WhatsappService();
-        $message = "✅ *Pesan Test DPRD Signage*\n\nIni adalah pesan uji coba dari sistem notifikasi DPRD.\nJika Anda menerima pesan ini, pengiriman WhatsApp berfungsi dengan baik.\n\n_Dikirim dari: Pengaturan Admin_";
-        $result  = $wa->send($noWa, $message);
-
-        return $this->response->setJSON($result);
-    }
 
     /**
      * GET admin/pengaturan/wa-status

@@ -73,7 +73,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
-    $routes->post('pengaturan/wa-test',      'Admin\SettingController::waTest');
     $routes->get( 'pengaturan/wa-status',    'Admin\SettingController::waStatus');
 });
 
