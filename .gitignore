@@ -135,3 +135,5 @@ _modules/*
 /public/uploads/
 
 dprd_signage.sql
+.agents
+.claude

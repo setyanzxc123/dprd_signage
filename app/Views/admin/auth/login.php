@@ -165,7 +165,7 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
                 </div>
 
                 <!-- Tombol Login -->
-                <button type="submit" class="btn btn-primary w-full" id="ta-login-button">
+                <button type="submit" class="btn btn-primary w-full" id="login-button">
                     <i data-lucide="log-in" class="w-4 h-4 mr-2"></i>Masuk
                 </button>
 
@@ -194,7 +194,7 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             const passwordInput = document.getElementById('password');
             const toggleButton = document.getElementById('btn-toggle-pwd');
             const loginForm = document.getElementById('login-form');
-            const loginButton = document.getElementById('ta-login-button');
+            const loginButton = document.getElementById('login-button');
             let passwordVisible = false;
 
             toggleButton?.addEventListener('click', function () {

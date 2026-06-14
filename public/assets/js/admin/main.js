@@ -77,9 +77,10 @@
         document.documentElement.dataset.adminAlertBound = '1';
 
         document.addEventListener('click', (event) => {
-            const closeButton = event.target.closest('.ta-alert-close');
+            const closeButton = event.target.closest('.alert-close-btn, .ta-alert-close');
             if (closeButton) {
-                closeButton.closest('.ta-alert')?.remove();
+                const alertBox = closeButton.closest('.alert, .ta-alert');
+                alertBox?.remove();
             }
         });
     }
