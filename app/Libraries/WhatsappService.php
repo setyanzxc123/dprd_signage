@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use App\Models\SettingModel;
+
 /**
  * WhatsappService
  *
@@ -12,13 +14,51 @@ namespace App\Libraries;
  */
 class WhatsappService
 {
+    private const DEFAULT_REMINDER_TEMPLATE = "*Undangan Rapat DPRD*\n\nYth. {nama_peserta},\n\nAnda diundang menghadiri rapat:\n*{judul_rapat}*\n\nTanggal: {tanggal}\nWaktu: {waktu_mulai} - {waktu_selesai} WITA\nLokasi: {ruangan}\nPeserta: {unit_rapat}\n\n{catatan}\n{link_berkas}\n\n_Pesan otomatis dari {sender_name}_";
+
+    private const TEMPLATE_PLACEHOLDERS = [
+        'nama_peserta' => 'Nama penerima',
+        'judul_rapat' => 'Judul rapat',
+        'tanggal' => 'Tanggal rapat',
+        'waktu_mulai' => 'Jam mulai',
+        'waktu_selesai' => 'Jam selesai',
+        'ruangan' => 'Ruang atau lokasi',
+        'unit_rapat' => 'Target peserta',
+        'catatan' => 'Keterangan rapat',
+        'link_jadwal' => 'Link portal jadwal',
+        'link_berkas' => 'Link materi rapat',
+        'sender_name' => 'Nama pengirim',
+    ];
+
     private string $apiUrl = 'https://api.fonnte.com/send';
-    private string $token  = '';
+    private string $token = '';
 
     public function __construct()
     {
         // Token dikelola di .env, bukan di tabel settings.
         $this->token = env('WA_API_KEY') ?: '';
+    }
+
+    public static function defaultReminderTemplate(): string
+    {
+        return self::DEFAULT_REMINDER_TEMPLATE;
+    }
+
+    public static function templatePlaceholders(): array
+    {
+        return self::TEMPLATE_PLACEHOLDERS;
+    }
+
+    public static function findUnknownPlaceholders(string $template): array
+    {
+        preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $template, $matches);
+
+        $used = array_unique($matches[1] ?? []);
+        $allowed = array_keys(self::TEMPLATE_PLACEHOLDERS);
+        $unknown = array_values(array_diff($used, $allowed));
+        sort($unknown);
+
+        return $unknown;
     }
 
     /**
@@ -32,9 +72,9 @@ class WhatsappService
     {
         if (empty($this->token)) {
             return [
-                'success'  => false,
+                'success' => false,
                 'response' => null,
-                'error'    => 'WA_API_KEY belum dikonfigurasi.',
+                'error' => 'Layanan WhatsApp belum dikonfigurasi.',
             ];
         }
 
@@ -43,42 +83,52 @@ class WhatsappService
 
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL            => $this->apiUrl,
+            CURLOPT_URL => $this->apiUrl,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => [
-                'target'      => $noWa,
-                'message'     => $message,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => [
+                'target' => $noWa,
+                'message' => $message,
                 // Nomor sudah format 628xxx — countryCode tidak diperlukan
                 'countryCode' => '62',
             ],
             CURLOPT_HTTPHEADER => [
                 'Authorization: ' . $this->token,
             ],
-            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_TIMEOUT => 15,
             CURLOPT_CONNECTTIMEOUT => 10,
         ]);
 
         $rawResponse = curl_exec($ch);
-        $curlError   = curl_error($ch);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         if ($curlError) {
             return [
-                'success'  => false,
+                'success' => false,
                 'response' => $rawResponse ?: null,
-                'error'    => 'cURL error: ' . $curlError,
+                'error' => 'Gagal menghubungi server WhatsApp.',
             ];
         }
 
         $decoded = json_decode($rawResponse, true);
 
+        $error = null;
+        if (($decoded['status'] ?? false) === false) {
+            $reason = strtolower($decoded['reason'] ?? '');
+            if (str_contains($reason, 'token')) {
+                $error = 'Autentikasi layanan gagal.';
+            } elseif (str_contains($reason, 'device') || str_contains($reason, 'disconnect')) {
+                $error = 'Perangkat WhatsApp pengirim tidak terhubung.';
+            } else {
+                $error = $decoded['reason'] ?? 'Gagal mengirim pesan.';
+            }
+        }
+
         return [
-            'success'  => ($decoded['status'] ?? false) === true,
+            'success' => ($decoded['status'] ?? false) === true,
             'response' => $rawResponse,
-            'error'    => ($decoded['status'] ?? true) === false
-                ? ($decoded['reason'] ?? 'Unknown error dari Fonnte')
-                : null,
+            'error' => $error,
         ];
     }
 
@@ -117,6 +167,7 @@ class WhatsappService
     public function sendPendingNotifications(): array
     {
         $db = \Config\Database::connect();
+        $settings = new SettingModel();
 
         $rows = $db->query("
             SELECT
@@ -152,16 +203,16 @@ class WhatsappService
             return ['total' => 0, 'sent' => 0, 'failed' => 0];
         }
 
-        $sent   = 0;
+        $sent = 0;
         $failed = 0;
 
         foreach ($rows as $row) {
-            $message    = self::buildMessage($row);
-            $result     = $this->send($row['no_wa'], $message);
+            $message = self::buildMessage($row);
+            $result = $this->send($row['no_wa'], $message);
 
             $updateData = [
                 'executed_at' => date('Y-m-d H:i:s'),
-                'message'     => $message,
+                'message' => $message,
                 'retry_count' => (int) $row['retry_count'] + 1,
             ];
 
@@ -169,14 +220,14 @@ class WhatsappService
                 $updateData['status'] = 'sent';
                 $sent++;
             } else {
-                $updateData['status']        = 'failed';
+                $updateData['status'] = 'failed';
                 $updateData['error_message'] = $result['error'] ?? 'Unknown error';
                 $failed++;
             }
 
             $db->table('notifikasi')
-               ->where('id', $row['notif_id'])
-               ->update($updateData);
+                ->where('id', $row['notif_id'])
+                ->update($updateData);
         }
 
         $total = count($rows);
@@ -193,13 +244,18 @@ class WhatsappService
      */
     public static function buildMessage(array $data): string
     {
-        $tanggal  = date('d F Y', strtotime($data['tanggal'] ?? ''));
-        $mulai    = substr($data['waktu_mulai']   ?? '', 0, 5);
-        $selesai  = substr($data['waktu_selesai'] ?? '', 0, 5);
-        $komisi   = trim((string) ($data['target_peserta'] ?? ''));
-        $komisi   = $komisi !== '' ? $komisi : '-';
-        $lokasi   = trim((string) ($data['lokasi_lainnya'] ?? ''));
-        $lokasi   = $lokasi !== '' ? $lokasi : ($data['nama_ruangan'] ?? '-');
+        return self::buildTemplateMessage($data);
+    }
+
+    private static function buildLegacyMessage(array $data): string
+    {
+        $tanggal = date('d F Y', strtotime($data['tanggal'] ?? ''));
+        $mulai = substr($data['waktu_mulai'] ?? '', 0, 5);
+        $selesai = substr($data['waktu_selesai'] ?? '', 0, 5);
+        $komisi = trim((string) ($data['target_peserta'] ?? ''));
+        $komisi = $komisi !== '' ? $komisi : '-';
+        $lokasi = trim((string) ($data['lokasi_lainnya'] ?? ''));
+        $lokasi = $lokasi !== '' ? $lokasi : ($data['nama_ruangan'] ?? '-');
 
         $lines = [];
         $lines[] = "📋 *UNDANGAN RAPAT DPRD*";
@@ -225,5 +281,52 @@ class WhatsappService
         $lines[] = "_Pesan ini dikirim otomatis oleh Sistem DPRD_";
 
         return implode("\n", $lines);
+    }
+
+    private static function buildTemplateMessage(array $data): string
+    {
+        $settings = new SettingModel();
+        $template = trim((string) $settings->getValue('wa_template_reminder', self::DEFAULT_REMINDER_TEMPLATE));
+        $template = $template !== '' ? $template : self::DEFAULT_REMINDER_TEMPLATE;
+
+        $tanggalRaw = $data['tanggal'] ?? '';
+        $timestamp = $tanggalRaw !== '' ? strtotime($tanggalRaw) : false;
+        $tanggal = $timestamp ? date('d F Y', $timestamp) : '-';
+        $mulai = substr($data['waktu_mulai'] ?? '', 0, 5) ?: '-';
+        $selesai = substr($data['waktu_selesai'] ?? '', 0, 5) ?: '-';
+        $unitRapat = trim((string) ($data['target_peserta'] ?? ''));
+        $unitRapat = $unitRapat !== '' ? $unitRapat : '-';
+        $lokasi = trim((string) ($data['lokasi_lainnya'] ?? ''));
+        $lokasi = $lokasi !== '' ? $lokasi : ($data['nama_ruangan'] ?? '-');
+        $catatan = trim((string) ($data['keterangan'] ?? ''));
+        $materiUrl = trim((string) ($data['materi_url'] ?? ''));
+
+        $values = [
+            'nama_peserta' => $data['nama_anggota'] ?? 'Bapak/Ibu',
+            'judul_rapat' => $data['judul'] ?? '-',
+            'tanggal' => $tanggal,
+            'waktu_mulai' => $mulai,
+            'waktu_selesai' => $selesai,
+            'ruangan' => $lokasi,
+            'unit_rapat' => $unitRapat,
+            'catatan' => $catatan,
+            'link_jadwal' => base_url('jadwal'),
+            'link_berkas' => $materiUrl !== '' ? 'Materi: ' . $materiUrl : '',
+            'sender_name' => $settings->getValue('wa_sender_name', 'Sekretariat DPRD') ?: 'Sekretariat DPRD',
+        ];
+
+        return trim(self::renderTemplate($template, $values));
+    }
+
+    private static function renderTemplate(string $template, array $values): string
+    {
+        $message = preg_replace_callback('/\{([a-zA-Z0-9_]+)\}/', static function (array $match) use ($values): string {
+            return (string) ($values[$match[1]] ?? $match[0]);
+        }, $template);
+
+        $message = preg_replace("/[ \t]+\n/", "\n", $message ?? '');
+        $message = preg_replace("/\n{3,}/", "\n\n", $message ?? '');
+
+        return $message ?? '';
     }
 }

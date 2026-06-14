@@ -77,8 +77,8 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             Notifikasi
         </a>
         <a href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
-            <i data-lucide="tv"></i>
-            Signage
+            <i data-lucide="settings"></i>
+            Sistem
         </a>
         <form class="mobile-nav-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
               onsubmit="return confirm('Yakin ingin keluar?')">
