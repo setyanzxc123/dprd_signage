@@ -145,20 +145,16 @@
         const textEl = document.getElementById('topbar-wa-text');
         if (!statusEl || !badgeEl || !dotEl || !textEl) return;
 
-        // Set loading state (pulse effect)
-        dotEl.classList.add('animate-pulse');
-        textEl.textContent = 'WhatsApp: Memeriksa...';
-        dotEl.style.backgroundColor = '#9ca3af';
-        badgeEl.style.backgroundColor = '#f9fafb';
-        badgeEl.style.color = '#667085';
-        badgeEl.style.borderColor = '#e4e7ec';
+        const cacheKey = 'dprd_wa_status_cache';
+        const cacheTimeKey = 'dprd_wa_status_cache_time';
+        const cacheDuration = 5 * 60 * 1000; // 5 menit dalam ms
 
-        try {
-            const resp = await fetch('/admin/pengaturan/wa-status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            const data = await resp.json();
+        const cachedData = localStorage.getItem(cacheKey);
+        const cachedTime = localStorage.getItem(cacheTimeKey);
+        const now = Date.now();
 
+        function applyStatusUi(data) {
             dotEl.classList.remove('animate-pulse');
-
             if (data.configured && data.connected) {
                 dotEl.style.backgroundColor = '#10b981'; // Hijau (emerald-500)
                 badgeEl.style.backgroundColor = '#ecfdf3'; // bg-emerald-50
@@ -181,6 +177,36 @@
                 textEl.textContent = 'WhatsApp: Belum Aktif';
                 statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
             }
+        }
+
+        // Jika cache valid dan belum kedaluwarsa
+        if (cachedData && cachedTime && (now - cachedTime < cacheDuration)) {
+            try {
+                const data = JSON.parse(cachedData);
+                applyStatusUi(data);
+                return;
+            } catch(e) {
+                // Abaikan jika error parsing dan fetch baru
+            }
+        }
+
+        // Set loading state (pulse effect)
+        dotEl.classList.add('animate-pulse');
+        textEl.textContent = 'WhatsApp: Memeriksa...';
+        dotEl.style.backgroundColor = '#9ca3af';
+        badgeEl.style.backgroundColor = '#f9fafb';
+        badgeEl.style.color = '#667085';
+        badgeEl.style.borderColor = '#e4e7ec';
+
+        try {
+            const resp = await fetch('/admin/pengaturan/wa-status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await resp.json();
+
+            // Simpan ke cache
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(cacheTimeKey, now.toString());
+
+            applyStatusUi(data);
         } catch(e) {
             dotEl.classList.remove('animate-pulse');
             dotEl.style.backgroundColor = '#f59e0b'; // Kuning (amber-500)

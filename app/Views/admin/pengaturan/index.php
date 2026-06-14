@@ -978,6 +978,8 @@
             // Prevent form submission from submitting div HTML
             editor.closest('form')?.addEventListener('submit', () => {
                 syncEditorToHidden();
+                localStorage.removeItem('dprd_wa_status_cache');
+                localStorage.removeItem('dprd_wa_status_cache_time');
             });
         }
         renderWaTemplatePreview();

@@ -42,6 +42,45 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 <span id="topbar-wa-text">WhatsApp: Memeriksa...</span>
             </span>
         </a>
+        <script>
+            (function() {
+                try {
+                    var cache = localStorage.getItem('dprd_wa_status_cache');
+                    var time = localStorage.getItem('dprd_wa_status_cache_time');
+                    if (cache && time && (Date.now() - parseInt(time) < 300000)) {
+                        var data = JSON.parse(cache);
+                        var statusEl = document.getElementById('topbar-wa-status');
+                        var badgeEl = document.getElementById('topbar-wa-badge');
+                        var dotEl = document.getElementById('topbar-wa-dot');
+                        var textEl = document.getElementById('topbar-wa-text');
+                        if (statusEl && badgeEl && dotEl && textEl) {
+                            if (data.configured && data.connected) {
+                                dotEl.style.backgroundColor = '#10b981';
+                                badgeEl.style.backgroundColor = '#ecfdf3';
+                                badgeEl.style.color = '#027a48';
+                                badgeEl.style.borderColor = '#abefc6';
+                                textEl.textContent = 'WhatsApp: Siap';
+                                statusEl.setAttribute('title', 'WhatsApp Terhubung (Siap)');
+                            } else if (data.configured && !data.connected) {
+                                dotEl.style.backgroundColor = '#ef4444';
+                                badgeEl.style.backgroundColor = '#fef3f2';
+                                badgeEl.style.color = '#b42318';
+                                badgeEl.style.borderColor = '#fecdca';
+                                textEl.textContent = 'WhatsApp: Error';
+                                statusEl.setAttribute('title', 'WhatsApp Terputus: ' + (data.error || 'Gagal terhubung'));
+                            } else {
+                                dotEl.style.backgroundColor = '#9ca3af';
+                                badgeEl.style.backgroundColor = '#f9fafb';
+                                badgeEl.style.color = '#667085';
+                                badgeEl.style.borderColor = '#e4e7ec';
+                                textEl.textContent = 'WhatsApp: Belum Aktif';
+                                statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
+                            }
+                        }
+                    }
+                } catch(e) {}
+            })();
+        </script>
 
         <a class="ta-topbar-button" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
             <i data-lucide="bell"></i>
