@@ -224,25 +224,6 @@
                 </div>
             </div>
 
-            <?php if (!empty($settings['wa_from_env'])): ?>
-            <div class="stg-divider"></div>
-
-            <!-- Sub-section: Uji Kirim -->
-            <div class="stg-section">
-                <div class="stg-section-label">Uji Kirim Pesan</div>
-                <div class="ta-input-group" style="max-width:400px;">
-                    <span class="ta-input-addon"><i data-lucide="send" class="text-emerald-600"></i></span>
-                    <input type="text" class="ta-input font-mono" id="wa_test_number"
-                        placeholder="628xxxxxxxxxx" maxlength="15" />
-                    <button class="ta-btn ta-btn-outline-success" type="button"
-                        onclick="kirimWaTest()" id="wa-test-btn">
-                        <i data-lucide="send" class="mr-1"></i>Kirim
-                    </button>
-                </div>
-                <div class="ta-help">Format: <code>628xxxxxxxxxx</code></div>
-                <div id="wa-test-result" class="mt-2" style="display:none;"></div>
-            </div>
-            <?php endif; ?>
         </div>
 
     </div>
@@ -1025,50 +1006,7 @@
         window.renderAdminIcons?.();
     });
 
-    // WA test send
-    async function kirimWaTest() {
-        const noWa = document.getElementById('wa_test_number')?.value.trim();
-        const result = document.getElementById('wa-test-result');
-        const btn = document.getElementById('wa-test-btn');
 
-        if (!noWa || !/^62\d{8,13}$/.test(noWa)) {
-            result.style.display = 'block';
-            result.innerHTML = '<div class="ta-alert ta-alert-warning py-2 px-3 mb-0"><i data-lucide="triangle-alert" class="mr-1"></i>Nomor tidak valid.</div>';
-            window.renderAdminIcons?.();
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="ta-spinner ta-spinner-sm mr-1"></span>Mengirim...';
-        result.style.display = 'none';
-
-        try {
-            const resp = await fetch('/admin/pengaturan/wa-test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? ''
-                },
-                body: new URLSearchParams({
-                    no_wa: noWa,
-                    <?= csrf_token() ?>: document.querySelector('input[name="<?= csrf_token() ?>"]')?.value ?? ''
-                })
-            });
-            const data = await resp.json();
-            result.style.display = 'block';
-            result.innerHTML = data.success
-                ? '<div class="ta-alert ta-alert-success py-2 px-3 mb-0"><i data-lucide="circle-check" class="mr-1"></i>Berhasil dikirim ke <strong>' + noWa + '</strong>.</div>'
-                : '<div class="ta-alert ta-alert-danger py-2 px-3 mb-0"><i data-lucide="circle-x" class="mr-1"></i>Gagal: ' + (data.error || 'Unknown') + '</div>';
-        } catch(e) {
-            result.style.display = 'block';
-            result.innerHTML = '<div class="ta-alert ta-alert-danger py-2 px-3 mb-0"><i data-lucide="circle-x" class="mr-1"></i>Error: ' + e.message + '</div>';
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="send" class="mr-1"></i>Kirim';
-            window.renderAdminIcons?.();
-        }
-    }
 
 
 </script>
