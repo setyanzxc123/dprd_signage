@@ -1,30 +1,6 @@
 <?= $this->extend('admin/layouts/main') ?>
 
-<?= $this->section('styles') ?>
-<style>
-    .participant-group-form .form-card {
-        padding: 18px;
-    }
 
-    .participant-group-form .form-section-title {
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-    }
-    .participant-group-form .compact-list {
-        max-height: 240px;
-        overflow-y: auto;
-    }
-
-    .participant-group-form .compact-target-list {
-        max-height: 282px;
-        overflow-y: auto;
-    }
-
-    .participant-group-form .member-row {
-        min-height: 42px;
-    }
-</style>
-<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
@@ -46,8 +22,8 @@
 
     <div class="grid grid-cols-12 gap-3">
         <div class="lg:col-span-4">
-            <div class="form-card">
-                <div class="form-section-title">Informasi Kelompok</div>
+            <div class="form-card p-[18px]">
+                <div class="form-section-title mb-3 pb-2">Informasi Kelompok</div>
 
                 <div class="mb-4">
                     <label class="label-text font-bold text-sm mb-1 block" for="nama">
@@ -76,8 +52,8 @@
                 </div>
             </div>
 
-            <div class="form-card mt-2">
-                <div class="form-section-title">Ringkasan</div>
+            <div class="form-card mt-2 p-[18px]">
+                <div class="form-section-title mb-3 pb-2">Ringkasan</div>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-neutral rounded-full font-bold" id="sidebar-selected-count"><?= count($selectedAnggotaIds) ?></span>
                     <small class="text-base-content/60 font-semibold">anggota terpilih</small>
@@ -86,8 +62,8 @@
         </div>
 
         <div class="lg:col-span-8">
-            <div class="form-card">
-                <div class="form-section-title flex items-center gap-2">
+            <div class="form-card p-[18px]">
+                <div class="form-section-title flex items-center gap-2 mb-3 pb-2">
                     Anggota Kelompok
                     <span class="badge badge-neutral" id="member-count-badge">
                         <?= count($selectedAnggotaIds) ?>
@@ -111,14 +87,14 @@
                                     <input type="text" class="input input-sm input-bordered w-full" id="source-search"
                                         placeholder="Cari nama, jabatan, atau komisi..." autocomplete="off" />
                                 </div>
-                                <div class="compact-list" id="source-list">
+                                <div class="max-h-[240px] overflow-y-auto" id="source-list">
                                     <?php foreach ($members as $member):
                                         $memberId = (int) $member['id'];
                                         $checked = in_array($memberId, $selectedAnggotaIds, true);
                                         $inputId = 'src-' . $memberId;
                                         $komisiLabel = $member['komisi'] ?: 'Tanpa komisi';
                                     ?>
-                                        <label class="flex items-center gap-2 px-3 py-1 border-b border-base-300 mb-0 anggota-source member-row hover:bg-base-200 cursor-pointer <?= $checked ? 'bg-primary/10 text-primary' : '' ?>"
+                                        <label class="flex items-center gap-2 px-3 py-1 border-b border-base-300 mb-0 anggota-source min-h-[42px] hover:bg-base-200 cursor-pointer <?= $checked ? 'bg-primary/10 text-primary' : '' ?>"
                                             for="<?= esc($inputId, 'attr') ?>"
                                             data-id="<?= $memberId ?>"
                                             data-name="<?= esc(strtolower($member['name']), 'attr') ?>"
@@ -132,7 +108,7 @@
                                                 <?= $checked ? 'checked' : '' ?> />
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-xs font-semibold truncate"><?= esc($member['name']) ?></div>
-                                                <div class="member-detail text-base-content/60 truncate" style="font-size:11px;">
+                                                <div class="member-detail text-[11px] text-base-content/60 truncate">
                                                     <?= esc($member['jabatan'] ?: '-') ?>
                                                     &middot; <?= esc($komisiLabel) ?>
                                                 </div>
@@ -149,7 +125,7 @@
                                     <span class="text-xs font-bold text-base-content/60 uppercase">Terpilih</span>
                                     <span class="badge badge-primary" id="target-count"><?= count($selectedAnggotaIds) ?></span>
                                 </div>
-                                <div class="compact-target-list" id="target-list">
+                                <div class="max-h-[282px] overflow-y-auto" id="target-list">
                                     <?php
                                     $hasSelected = false;
                                     foreach ($members as $member):
@@ -161,23 +137,19 @@
                                         $komisiLabel = $member['komisi'] ?: 'Tanpa komisi';
                                         $initial = mb_strtoupper(mb_substr($member['name'], 0, 1));
                                     ?>
-                                        <div class="flex items-center gap-2 px-3 py-1 border-b border-base-300 transfer-target-item member-row"
+                                        <div class="flex items-center gap-2 px-3 py-1 border-b border-base-300 transfer-target-item min-h-[42px]"
                                             id="target-<?= $memberId ?>" data-id="<?= $memberId ?>">
-                                            <span class="inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content"
-                                                style="width:28px;height:28px;font-size:12px;font-weight:700;">
+                                            <span class="inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content w-7 h-7 text-xs font-bold">
                                                 <?= esc($initial) ?>
                                             </span>
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-xs font-semibold truncate"><?= esc($member['name']) ?></div>
-                                                <div class="member-detail text-base-content/60 truncate" style="font-size:11px;">
+                                                <div class="member-detail text-[11px] text-base-content/60 truncate">
                                                     <?= esc($member['jabatan'] ?: '-') ?>
                                                     &middot; <?= esc($komisiLabel) ?>
                                                 </div>
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-ghost btn-circle text-error"
-                                                title="Hapus dari unit"
-                                                onclick="removeMember(<?= $memberId ?>)"
-                                                style="width:24px;height:24px;min-height:24px;">
+                                            <button type="button" class="btn btn-sm btn-ghost btn-circle text-error w-6 h-6 min-h-6"
                                                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                             </button>
                                         </div>
@@ -256,7 +228,7 @@
                 const div = document.createElement('div');
                 div.className = 'flex flex-col items-center justify-center text-base-content/50 py-4 gap-1';
                 div.id = 'target-empty';
-                div.innerHTML = '<i data-lucide="shuffle" style="width:20px;height:20px;opacity:0.4;"></i><small>Pilih anggota dari panel kiri</small>';
+                div.innerHTML = '<i data-lucide="shuffle" class="w-5 h-5 opacity-40"></i><small>Pilih anggota dari panel kiri</small>';
                 targetList.appendChild(div);
                 window.renderAdminIcons?.();
                 return;
@@ -272,16 +244,16 @@
                 const initial = name.trim().charAt(0).toUpperCase();
 
                 const el = document.createElement('div');
-                el.className = 'flex items-center gap-2 px-3 py-1 border-b transfer-target-item member-row';
+                el.className = 'flex items-center gap-2 px-3 py-1 border-b transfer-target-item min-h-[42px]';
                 el.id = 'target-' + id;
                 el.setAttribute('data-id', id);
                 el.innerHTML =
-                    '<span class="inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content" style="width:28px;height:28px;font-size:12px;font-weight:700;">' + initial + '</span>' +
+                    '<span class="inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content w-7 h-7 text-xs font-bold">' + initial + '</span>' +
                     '<div class="flex-1 min-w-0">' +
                         '<div class="text-xs font-semibold truncate">' + name + '</div>' +
-                        '<div class="text-base-content/60 truncate" style="font-size:11px;">' + detail + '</div>' +
+                        '<div class="text-[11px] text-base-content/60 truncate">' + detail + '</div>' +
                     '</div>' +
-                    '<button type="button" class="btn btn-sm btn-ghost btn-circle text-error" title="Hapus dari unit" style="width:24px;height:24px;min-height:24px;line-height:1;">' +
+                    '<button type="button" class="btn btn-sm btn-ghost btn-circle text-error w-6 h-6 min-h-6 leading-none" title="Hapus dari unit">' +
                         '<i data-lucide="x" class="w-3.5 h-3.5"></i>' +
                     '</button>';
 
