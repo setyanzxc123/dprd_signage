@@ -24,160 +24,80 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
     <title>Login - Panel Admin Signage DPRD Sulteng</title>
     <meta name="robots" content="noindex, nofollow" />
 
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
-
-    <style>
-        /* Login */
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--od-bg) 0%, color-mix(in srgb, var(--color-primary) 8%, var(--od-bg)) 100%);
-            padding: 20px;
-        }
-
-        .login-wrapper {
-            width: 100%;
-            max-width: 420px;
-        }
-
-        /* Logo di atas card */
-        .login-brand {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-
-        .login-brand .brand-logo {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 12px;
-        }
-
-        .login-brand h1 {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--od-fg);
-            margin: 0 0 4px;
-        }
-
-        .login-brand p {
-            font-size: .82rem;
-            color: var(--od-muted);
-            margin: 0;
-        }
-
-        /* Card form login */
-        .login-card {
-            background: var(--od-surface);
-            border: 1px solid var(--od-border);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: var(--od-shadow-lg);
-            text-align: left;
-        }
-
-        .login-card h2 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: var(--od-fg);
-        }
-
-        /* Footer bawah card */
-        .login-footer {
-            text-align: center;
-            margin-top: 24px;
-            font-size: .75rem;
-            color: var(--od-muted);
-        }
-
-        /* Logo gambar di halaman login */
-        .brand-logo-img {
-            width: clamp(60px, 12vw, 100px);
-            height: clamp(60px, 12vw, 100px);
-            object-fit: contain;
-            border-radius: clamp(10px, 2vw, 16px);
-            margin-bottom: 12px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-    </style>
 </head>
 
-<body>
-    <div class="login-wrapper">
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-base-200 to-base-200 p-5">
+
+    <div class="w-full max-w-[420px]">
 
         <!-- Brand -->
-        <div class="login-brand">
-            <!-- Logo: backend isi src dengan path dari DB/settings -->
-            <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" class="brand-logo-img" />
-            <h1>Sistem Notifikasi Rapat &amp; Signage DPRD Sulawesi Tengah</h1>
+        <div class="flex flex-col items-center text-center mb-7">
+            <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD Provinsi Sulawesi Tengah"
+                class="w-[clamp(60px,12vw,96px)] h-[clamp(60px,12vw,96px)] object-contain rounded-2xl border border-base-300 bg-white mb-3 block" />
+            <h1 class="text-lg font-black text-base-content leading-tight m-0">
+                Sistem Notifikasi Rapat &amp; Signage DPRD Sulawesi Tengah
+            </h1>
         </div>
 
         <!-- Card Login -->
-        <div class="card bg-base-100 shadow-xl border border-base-200/80 p-8 login-card">
-            <h2>Masuk ke Panel Admin</h2>
+        <div class="card bg-base-100 border border-base-200/80 shadow-xl">
+            <div class="card-body p-8">
+                <h2 class="text-base font-bold text-base-content mb-5">Masuk ke Panel Admin</h2>
 
-            <!-- Flash Error -->
-            <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-error text-xs py-2 px-3 mb-3 text-error-content flex gap-2">
-                    <i data-lucide="triangle-alert" class="w-4 h-4 shrink-0"></i>
-                    <span><?= session()->getFlashdata('error') ?></span>
-                </div>
-            <?php endif; ?>
+                <!-- Flash Error -->
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="alert alert-error text-xs py-2 px-3 mb-3 flex gap-2">
+                        <i data-lucide="triangle-alert" class="w-4 h-4 shrink-0"></i>
+                        <span><?= session()->getFlashdata('error') ?></span>
+                    </div>
+                <?php endif; ?>
 
-            <form action="<?= base_url('admin/login') ?>" method="POST" id="login-form">
-                <?= csrf_field() ?>
+                <form action="<?= base_url('admin/login') ?>" method="POST" id="login-form">
+                    <?= csrf_field() ?>
 
-                <!-- Username -->
-                <div class="mb-3">
-                    <label class="label-text font-bold text-sm mb-1 block" for="username">Username</label>
-                    <label class="input input-bordered flex items-center gap-2 w-full">
-                        <i data-lucide="user" class="w-4 h-4 opacity-70 shrink-0"></i>
-                        <input type="text" class="grow" id="username" name="username"
-                            placeholder="Masukkan username" autocomplete="username" required />
-                    </label>
-                </div>
+                    <!-- Username -->
+                    <div class="mb-3">
+                        <label class="label-text font-bold text-sm mb-1 block" for="username">Username</label>
+                        <label class="input input-bordered flex items-center gap-2 w-full">
+                            <i data-lucide="user" class="w-4 h-4 opacity-70 shrink-0"></i>
+                            <input type="text" class="grow" id="username" name="username"
+                                placeholder="Masukkan username" autocomplete="username" required />
+                        </label>
+                    </div>
 
-                <!-- Password -->
-                <div class="mb-4">
-                    <label class="label-text font-bold text-sm mb-1 block" for="password">Password</label>
-                    <label class="input input-bordered flex items-center gap-2 w-full">
-                        <i data-lucide="lock" class="w-4 h-4 opacity-70 shrink-0"></i>
-                        <input type="password" class="grow" id="password" name="password" placeholder="********"
-                            autocomplete="current-password" required />
-                        <button type="button" class="btn btn-ghost btn-xs btn-circle text-base-content/60" id="btn-toggle-pwd"
-                            aria-label="Toggle password visibility">
-                            <i data-lucide="eye" id="eye-icon" class="w-4 h-4"></i>
-                        </button>
-                    </label>
-                </div>
+                    <!-- Password -->
+                    <div class="mb-5">
+                        <label class="label-text font-bold text-sm mb-1 block" for="password">Password</label>
+                        <label class="input input-bordered flex items-center gap-2 w-full">
+                            <i data-lucide="lock" class="w-4 h-4 opacity-70 shrink-0"></i>
+                            <input type="password" class="grow" id="password" name="password" placeholder="********"
+                                autocomplete="current-password" required />
+                            <button type="button" class="btn btn-ghost btn-xs btn-circle text-base-content/60" id="btn-toggle-pwd"
+                                aria-label="Toggle password visibility">
+                                <i data-lucide="eye" id="eye-icon" class="w-4 h-4"></i>
+                            </button>
+                        </label>
+                    </div>
 
-                <!-- Tombol Login -->
-                <button type="submit" class="btn btn-primary w-full" id="login-button">
-                    <i data-lucide="log-in" class="w-4 h-4 mr-2"></i>Masuk
-                </button>
+                    <!-- Tombol Login -->
+                    <button type="submit" class="btn btn-primary w-full" id="login-button">
+                        <i data-lucide="log-in" class="w-4 h-4"></i>Masuk
+                    </button>
 
-            </form>
+                </form>
+            </div>
         </div>
 
         <!-- Footer -->
-        <div class="login-footer">
+        <p class="text-center mt-6 text-xs text-base-content/50">
             &copy; <?= date('Y') ?> DPRD Provinsi Sulawesi Tengah
-        </div>
+        </p>
 
-    </div><!-- /.login-wrapper -->
+    </div><!-- /.max-w -->
 
     <div id="login-vue-controller" hidden></div>
 
@@ -207,7 +127,12 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             loginForm?.addEventListener('submit', function () {
                 if (!loginButton) return;
                 loginButton.disabled = true;
-                loginButton.innerHTML = '<span class="loading loading-spinner loading-xs mr-2"></span>Memverifikasi...';
+                // Paksa warna primary tetap — browser/daisyUI v5 disabled state override warna ke putih
+                loginButton.style.backgroundColor = 'var(--color-primary)';
+                loginButton.style.color = 'var(--color-primary-content)';
+                loginButton.style.borderColor = 'var(--color-primary)';
+                loginButton.style.opacity = '0.8';
+                loginButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span>Memverifikasi...';
             });
 
             window.renderAdminIcons();

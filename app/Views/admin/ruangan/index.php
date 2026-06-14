@@ -1,17 +1,6 @@
 <?= $this->extend('admin/layouts/main') ?>
 
-<?= $this->section('styles') ?>
-<style>
-    .room-list .compact-alert {
-        font-size: 0.75rem;
-        line-height: 1.35;
-    }
 
-    .room-list .section-card-body {
-        padding-top: 14px;
-    }
-</style>
-<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
@@ -64,7 +53,7 @@
         </form>
     </div>
 
-    <div class="section-card-body">
+    <div class="section-card-body pt-3.5">
         <div class="alert alert-info py-2 px-3 mb-2 text-xs flex gap-2">
             <i data-lucide="info" class="w-4 h-4"></i>
             <span>Master ini hanya untuk ruangan tetap DPRD. Tempat lain diisi melalui <strong>Lokasi Lainnya</strong> di form jadwal.</span>

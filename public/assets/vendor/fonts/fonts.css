@@ -2,97 +2,97 @@
   font-family: "Inter";
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: url("./files/inter-latin-400-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 500;
-  font-display: swap;
+  font-display: block;
   src: url("./files/inter-latin-500-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 600;
-  font-display: swap;
+  font-display: block;
   src: url("./files/inter-latin-600-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 700;
-  font-display: swap;
+  font-display: block;
   src: url("./files/inter-latin-700-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 800;
-  font-display: swap;
+  font-display: block;
   src: url("./files/inter-latin-800-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 900;
-  font-display: swap;
+  font-display: block;
   src: url("./files/inter-latin-900-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Outfit";
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: url("./files/outfit-latin-400-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Outfit";
   font-style: normal;
   font-weight: 500;
-  font-display: swap;
+  font-display: block;
   src: url("./files/outfit-latin-500-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Outfit";
   font-style: normal;
   font-weight: 600;
-  font-display: swap;
+  font-display: block;
   src: url("./files/outfit-latin-600-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Outfit";
   font-style: normal;
   font-weight: 700;
-  font-display: swap;
+  font-display: block;
   src: url("./files/outfit-latin-700-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "Outfit";
   font-style: normal;
   font-weight: 800;
-  font-display: swap;
+  font-display: block;
   src: url("./files/outfit-latin-800-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "IBM Plex Mono";
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: url("./files/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "IBM Plex Mono";
   font-style: normal;
   font-weight: 500;
-  font-display: swap;
+  font-display: block;
   src: url("./files/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
 }
 @font-face {
   font-family: "IBM Plex Mono";
   font-style: normal;
   font-weight: 700;
-  font-display: swap;
+  font-display: block;
   src: url("./files/ibm-plex-mono-latin-700-normal.woff2") format("woff2");
 }

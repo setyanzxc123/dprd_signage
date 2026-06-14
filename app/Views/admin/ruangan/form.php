@@ -1,17 +1,6 @@
 <?= $this->extend('admin/layouts/main') ?>
 
-<?= $this->section('styles') ?>
-<style>
-    .room-form .form-card {
-        padding: 18px;
-    }
 
-    .room-form .form-section-title {
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-    }
-</style>
-<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
@@ -30,9 +19,9 @@
     <div class="grid grid-cols-12 gap-3">
 
         <div class="lg:col-span-7">
-            <div class="form-card">
+            <div class="form-card p-[18px]">
 
-                <div class="form-section-title">Informasi Ruangan</div>
+                <div class="form-section-title mb-3 pb-2">Informasi Ruangan</div>
 
                 <div class="alert alert-info py-2 px-3 mb-2 text-xs flex gap-2">
                     <i data-lucide="info" class="w-4 h-4"></i>
@@ -72,9 +61,9 @@
         </div>
 
         <div class="lg:col-span-5">
-            <div class="form-card">
+            <div class="form-card p-[18px]">
 
-                <div class="form-section-title">Status Ruangan</div>
+                <div class="form-section-title mb-3 pb-2">Status Ruangan</div>
 
                 <div>
                     <label class="label-text font-bold text-sm mb-1 block" for="tersedia">Ketersediaan</label>

@@ -1,25 +1,6 @@
 <?= $this->extend('admin/layouts/main') ?>
 
-<?= $this->section('styles') ?>
-<style>
-    .member-form .form-card {
-        padding: 18px;
-    }
 
-    .member-form .form-section-title {
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-    }
-
-    .member-form .kelompok-option {
-        min-height: 36px;
-    }
-
-    .member-form #kelompok-list {
-        max-height: 220px;
-    }
-</style>
-<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
@@ -46,9 +27,9 @@
 
         <!-- Kolom kiri: Data Utama -->
         <div class="lg:col-span-8">
-            <div class="form-card">
+            <div class="form-card p-[18px]">
 
-                <div class="form-section-title">Informasi Anggota</div>
+                <div class="form-section-title mb-3 pb-2">Informasi Anggota</div>
 
                 <div class="grid grid-cols-12 gap-3">
 
@@ -108,8 +89,8 @@
                 </div>
             </div>
 
-            <div class="form-card mt-2">
-                <div class="form-section-title">Kontak WhatsApp</div>
+            <div class="form-card mt-2 p-[18px]">
+                <div class="form-section-title mb-3 pb-2">Kontak WhatsApp</div>
 
                 <div class="grid grid-cols-12 gap-3 items-start">
                     <div class="md:col-span-6">
@@ -138,7 +119,7 @@
 
         <!-- Kolom kanan: Kelompok Peserta -->
         <div class="lg:col-span-4">
-            <div class="form-card">
+            <div class="form-card p-[18px]">
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <div class="form-section-title mb-0">Kelompok Peserta</div>
                     <?php if (! empty($manual_units)): ?>
@@ -168,13 +149,13 @@
                             <span class="text-xs font-bold text-base-content/60 uppercase">Daftar Kelompok</span>
                             <span class="badge badge-neutral badge-sm rounded-full" id="kelompok-visible-count"><?= count($manual_units) ?></span>
                         </div>
-                            <div class="flex flex-col" id="kelompok-list" style="overflow-y: auto;">
+                            <div class="flex flex-col max-h-[220px] overflow-y-auto" id="kelompok-list">
                                 <?php foreach ($manual_units as $unit):
                                     $unitId = (int) $unit['id'];
                                     $checked = in_array($unitId, $selected_unit_ids, true) ? 'checked' : '';
                                     $inputId = 'unit-manual-' . $unitId;
                                 ?>
-                                    <label class="flex items-center gap-2 px-3 py-1.5 border-b border-base-300 mb-0 kelompok-option hover:bg-base-200 cursor-pointer <?= $checked ? 'bg-primary/10 text-primary' : '' ?>"
+                                    <label class="flex items-center gap-2 px-3 py-1.5 border-b border-base-300 mb-0 kelompok-option min-h-9 hover:bg-base-200 cursor-pointer <?= $checked ? 'bg-primary/10 text-primary' : '' ?>"
                                         for="<?= esc($inputId, 'attr') ?>"
                                         data-name="<?= esc(strtolower($unit['nama']), 'attr') ?>">
                                         <input class="checkbox checkbox-primary checkbox-xs" type="checkbox"
