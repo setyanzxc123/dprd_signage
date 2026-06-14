@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\WhatsappService;
 use App\Models\SettingModel;
 
 class SettingController extends BaseController
@@ -19,14 +20,19 @@ class SettingController extends BaseController
             'running_text_aktif' => '0',
             'media_mode'         => 'video',
             'media_file'         => '',
+            'wa_from_env'        => env('WA_API_KEY') ? '1' : '0',
+            'wa_sender_name'     => 'Sekretariat DPRD',
+            'wa_template_reminder' => WhatsappService::defaultReminderTemplate(),
         ];
 
         $settings = array_merge($defaults, $settings);
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
+        $settings['wa_from_env']        = (bool) $settings['wa_from_env'];
 
         return view('admin/pengaturan/index', [
-            'pageTitle' => 'Pengaturan Signage',
-            'settings'  => $settings,
+            'pageTitle'      => 'Pengaturan Sistem',
+            'settings'       => $settings,
+            'waPlaceholders' => WhatsappService::templatePlaceholders(),
         ]);
     }
 
@@ -39,6 +45,22 @@ class SettingController extends BaseController
         $settingModel->upsert('running_text_aktif', $this->request->getPost('running_text_aktif') ? '1' : '0');
         $settingModel->upsert('media_mode',         $this->request->getPost('media_mode') ?? 'video');
         $settingModel->upsert('tema_signage',       $this->request->getPost('tema_signage') ?? 'dark');
+
+        $waTemplate = trim((string) ($this->request->getPost('wa_template_reminder') ?? ''));
+        $waTemplate = $waTemplate !== '' ? $waTemplate : WhatsappService::defaultReminderTemplate();
+        $unknownPlaceholders = WhatsappService::findUnknownPlaceholders($waTemplate);
+
+        if (!empty($unknownPlaceholders)) {
+            $labels = array_map(static fn ($key) => '{' . $key . '}', $unknownPlaceholders);
+            session()->setFlashdata('error', 'Template WA memuat placeholder tidak dikenal: ' . implode(', ', $labels));
+            return redirect()->to(base_url('admin/pengaturan'))->withInput();
+        }
+
+        $senderName = trim((string) ($this->request->getPost('wa_sender_name') ?? ''));
+        $senderName = $senderName !== '' ? $senderName : 'Sekretariat DPRD';
+
+        $settingModel->upsert('wa_sender_name', $senderName);
+        $settingModel->upsert('wa_template_reminder', $waTemplate);
 
         // Proses upload file media jika ada
         $file = $this->request->getFile('media_file');
@@ -113,7 +135,7 @@ class SettingController extends BaseController
         }
 
         $wa      = new \App\Libraries\WhatsappService();
-        $message = "✅ *Pesan Test DPRD Signage*\n\nIni adalah pesan uji coba dari sistem notifikasi DPRD.\nJika Anda menerima pesan ini, koneksi WhatsApp API berfungsi dengan baik.\n\n_Dikirim dari: Pengaturan Admin_";
+        $message = "✅ *Pesan Test DPRD Signage*\n\nIni adalah pesan uji coba dari sistem notifikasi DPRD.\nJika Anda menerima pesan ini, pengiriman WhatsApp berfungsi dengan baik.\n\n_Dikirim dari: Pengaturan Admin_";
         $result  = $wa->send($noWa, $message);
 
         return $this->response->setJSON($result);
@@ -156,17 +178,29 @@ class SettingController extends BaseController
             return $this->response->setJSON([
                 'configured' => true,
                 'connected'  => false,
-                'error'      => 'cURL error: ' . $curlErr,
+                'error'      => 'Gagal menghubungi server WhatsApp.',
             ]);
         }
 
         $decoded = json_decode($raw, true);
         $ok      = isset($decoded['status']) && $decoded['status'] === true;
 
+        $error = null;
+        if (!$ok) {
+            $reason = strtolower($decoded['reason'] ?? '');
+            if (str_contains($reason, 'token')) {
+                $error = 'Autentikasi layanan gagal.';
+            } elseif (str_contains($reason, 'device') || str_contains($reason, 'disconnect')) {
+                $error = 'Perangkat WhatsApp pengirim tidak terhubung.';
+            } else {
+                $error = $decoded['reason'] ?? 'Gagal menghubungkan ke layanan WhatsApp.';
+            }
+        }
+
         return $this->response->setJSON([
             'configured' => true,
             'connected'  => $ok,
-            'error'      => $ok ? null : ($decoded['reason'] ?? 'Token tidak valid atau ditolak Fonnte'),
+            'error'      => $error,
         ]);
     }
 }

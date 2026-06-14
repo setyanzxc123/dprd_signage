@@ -67,13 +67,14 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             </a>
         </li>
 
-        <li class="nav-section-label">Tampilan Publik</li>
+        <li class="nav-section-label">Sistem</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
-                <i data-lucide="tv" class="nav-icon"></i>
-                <span class="nav-text">Pengaturan Signage</span>
+                <i data-lucide="settings" class="nav-icon"></i>
+                <span class="nav-text">Pengaturan Sistem</span>
             </a>
         </li>
+        <li class="nav-section-label">Tampilan Publik</li>
         <li class="nav-item-custom">
             <a class="nav-link-custom" href="<?= base_url('signage') ?>" target="_blank" title="Buka di tab baru">
                 <i data-lucide="monitor" class="nav-icon"></i>

@@ -2,6 +2,7 @@
 
 namespace App\Database\Seeds;
 
+use App\Libraries\WhatsappService;
 use CodeIgniter\Database\Seeder;
 
 class InitialDataSeeder extends Seeder
@@ -15,6 +16,9 @@ class InitialDataSeeder extends Seeder
             ['key_name' => 'media_mode',         'value' => 'video'],
             ['key_name' => 'media_file',         'value' => ''],
             ['key_name' => 'logo_path',          'value' => './assets/images/logo_dprd.jpg'],
+            ['key_name' => 'wa_notif_aktif',     'value' => '1'],
+            ['key_name' => 'wa_sender_name',     'value' => 'Sekretariat DPRD'],
+            ['key_name' => 'wa_template_reminder', 'value' => WhatsappService::defaultReminderTemplate()],
         ]);
 
         $this->insertMissing('users', 'username', [[
