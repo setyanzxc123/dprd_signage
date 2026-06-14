@@ -361,30 +361,7 @@
         padding: 8px 12px;
         border-radius: var(--od-radius-pill);
     }
-    .ta-topbar-button {
-        position: relative;
-        width: 38px;
-        height: 38px;
-        border-radius: var(--od-radius-pill);
-        border: 1px solid var(--od-border);
-        background: var(--od-surface);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--od-muted);
-        transition: background var(--od-motion-fast) var(--od-ease), color var(--od-motion-fast) var(--od-ease);
-    }
-    .ta-topbar-button:hover { background: var(--od-border-soft); color: var(--od-fg); }
-    .ta-topbar-button .notif-dot {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        width: 8px;
-        height: 8px;
-        background: var(--od-danger);
-        border-radius: 50%;
-        border: 2px solid var(--od-surface);
-    }
+
     .topbar-wa-status-link {
         text-decoration: none;
         display: inline-flex;
@@ -905,127 +882,6 @@
         color: var(--od-accent);
     }
 
-    .ta-btn,
-    .ta-icon-action {
-        border: 1px solid transparent;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        border-radius: var(--radius-btn);
-        font-weight: 700;
-        text-decoration: none;
-        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .ta-btn {
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 0.88rem;
-    }
-    .ta-btn .lucide,
-    .ta-btn [data-lucide] {
-        width: 16px;
-        height: 16px;
-    }
-    .ta-btn-sm {
-        min-height: 34px;
-        padding: 7px 11px;
-        font-size: 0.78rem;
-    }
-    .ta-btn-primary {
-        background: var(--od-accent);
-        border-color: var(--od-accent);
-        color: #fff;
-    }
-    .ta-btn-primary:hover { background: var(--od-accent-hover); border-color: var(--od-accent-hover); }
-    .ta-btn-outline-brand {
-        background: var(--od-surface);
-        border-color: color-mix(in srgb, var(--od-accent) 30%, transparent);
-        color: var(--od-accent);
-    }
-    .ta-btn-outline-brand:hover,
-    .ta-btn-outline-brand.active {
-        background: color-mix(in srgb, var(--od-accent) 10%, transparent);
-        border-color: var(--od-accent);
-    }
-    .ta-btn-outline-gray {
-        background: var(--od-surface);
-        border-color: var(--od-border);
-        color: var(--od-fg2);
-    }
-    .ta-btn-outline-gray:hover,
-    .ta-btn-outline-gray.active {
-        background: var(--od-border-soft);
-        border-color: var(--od-border);
-    }
-    .ta-btn-outline-success {
-        background: var(--od-surface);
-        border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
-        color: var(--color-success);
-    }
-    .ta-btn-outline-success:hover,
-    .ta-btn-outline-success.active { background: color-mix(in srgb, var(--color-success) 10%, transparent); }
-    .ta-btn-outline-danger {
-        background: var(--od-surface);
-        border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
-        color: var(--color-error);
-    }
-    .ta-btn-outline-danger:hover,
-    .ta-btn-outline-danger.active { background: color-mix(in srgb, var(--color-error) 10%, transparent); }
-    .ta-btn-outline-warning {
-        background: var(--od-surface);
-        border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
-        color: var(--color-warning);
-    }
-    .ta-btn-outline-warning:hover,
-    .ta-btn-outline-warning.active { background: color-mix(in srgb, var(--color-warning) 10%, transparent); }
-    .ta-btn-header-sm { font-size: 0.76rem; }
-    .ta-icon-action {
-        width: 32px;
-        height: 32px;
-        border-color: var(--border-color);
-        background: var(--od-surface);
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: 0.85rem;
-    }
-    .ta-icon-action:hover { background: var(--od-border-soft); color: var(--text-primary); }
-    .ta-icon-action.ta-icon-action-red:hover {
-        background: color-mix(in srgb, var(--color-error) 10%, transparent);
-        color: var(--color-error);
-        border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
-    }
-    .ta-icon-action.ta-icon-action-blue:hover {
-        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-        color: var(--color-primary);
-        border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
-    }
-    .ta-icon-action.ta-icon-action-green:hover {
-        background: color-mix(in srgb, var(--color-success) 10%, transparent);
-        color: var(--color-success);
-        border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
-    }
-    .ta-alert-close {
-        margin-left: auto;
-        width: 28px;
-        height: 28px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: currentColor;
-        position: relative;
-        opacity: 0.65;
-    }
-    .ta-alert-close::before {
-        content: "x";
-        position: absolute;
-        inset: 0;
-        display: grid;
-        place-items: center;
-        font-weight: 800;
-    }
-    .ta-alert-close:hover { background: rgba(0, 0, 0, 0.06); opacity: 1; }
-
     .form-card-header {
         display: flex;
         align-items: center;
@@ -1052,110 +908,6 @@
         border-bottom: 1px solid var(--border-color);
         margin-bottom: 20px;
     }
-    .ta-label {
-        display: inline-block;
-        color: var(--od-fg2);
-        font-size: 0.84rem;
-        font-weight: 600;
-        margin-bottom: 6px;
-    }
-    .ta-input,
-    .ta-select {
-        display: block;
-        width: 100%;
-        min-height: 42px;
-        border: 1px solid var(--od-border);
-        border-radius: 10px;
-        background-color: var(--od-surface);
-        color: var(--od-fg);
-        padding: 9px 12px;
-        font-size: 0.9rem;
-        line-height: 1.4;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    textarea.ta-input { min-height: 96px; resize: vertical; }
-    .ta-input-sm,
-    .ta-select-sm {
-        min-height: 34px;
-        padding: 6px 10px;
-        font-size: 0.82rem;
-    }
-    .ta-input:focus,
-    .ta-select:focus {
-        border-color: var(--od-accent);
-        box-shadow: var(--od-focus);
-        outline: none;
-    }
-    .ta-help {
-        color: var(--text-muted);
-        font-size: 0.78rem;
-        margin-top: 4px;
-    }
-    .ta-input-group {
-        display: flex;
-        align-items: stretch;
-        width: 100%;
-    }
-    .ta-input-group > .ta-input,
-    .ta-input-group > .ta-select {
-        min-width: 0;
-        flex: 1 1 auto;
-    }
-    .ta-input-group > :not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
-    .ta-input-group > :not(:last-child) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-    .ta-input-addon {
-        min-width: 43px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid var(--od-border);
-        background: var(--od-border-soft);
-        color: var(--od-muted);
-        padding: 0 12px;
-        border-radius: 10px;
-        font-size: 0.88rem;
-    }
-    .ta-check {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 1.5rem;
-    }
-    .ta-check-input {
-        width: 16px;
-        height: 16px;
-        border: 1px solid var(--od-border);
-        border-radius: 4px;
-        background: var(--od-surface);
-        accent-color: var(--od-accent);
-        flex-shrink: 0;
-    }
-    .ta-switch .ta-check-input,
-    input[role="switch"].ta-check-input {
-        width: 42px;
-        height: 24px;
-        border-radius: 999px;
-    }
-    .ta-check-label { color: var(--od-fg2); }
-
-    .ta-alert {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        border: 1px solid transparent;
-        border-radius: var(--od-radius-md);
-        padding: 12px 14px;
-        font-size: 0.88rem;
-        font-weight: 600;
-    }
-    .ta-alert-success { background: color-mix(in srgb, var(--color-success) 12%, transparent); border-color: color-mix(in srgb, var(--color-success) 30%, transparent); color: var(--color-success); }
-    .ta-alert-danger { background: color-mix(in srgb, var(--color-error) 12%, transparent); border-color: color-mix(in srgb, var(--color-error) 30%, transparent); color: var(--color-error); }
-    .ta-alert-warning { background: color-mix(in srgb, var(--color-warning) 12%, transparent); border-color: color-mix(in srgb, var(--color-warning) 30%, transparent); color: var(--color-warning); }
-    .ta-alert-info { background: color-mix(in srgb, var(--color-info) 12%, transparent); border-color: color-mix(in srgb, var(--color-info) 30%, transparent); color: var(--color-info); }
-    .ta-alert-gray { background: var(--od-border-soft); border-color: var(--od-border); color: var(--od-fg2); }
-    .ta-alert-sm { font-size: 0.82rem; }
-    .ta-alert-dismissible { padding-right: 10px; }
-    .ta-alert-flash { box-shadow: var(--od-shadow); }
 
     .empty-state {
         color: var(--text-muted);
@@ -1174,39 +926,6 @@
     }
     .empty-state p { font-size: 0.9rem; margin: 0; }
     .empty-state small { font-size: 0.76rem; opacity: 0.75; }
-
-    .ta-pagination {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding-left: 0;
-        margin: 0;
-        list-style: none;
-    }
-    .ta-page-link {
-        min-width: 32px;
-        min-height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid var(--od-border);
-        border-radius: 8px;
-        background: var(--od-surface);
-        color: var(--od-fg2);
-        padding: 5px 10px;
-        font-size: 0.8rem;
-        font-weight: 700;
-    }
-    .ta-page-link:hover { background: var(--od-border-soft); color: var(--od-accent); }
-    .ta-page-item.active .ta-page-link {
-        background: var(--od-accent);
-        border-color: var(--od-accent);
-        color: #fff;
-    }
-    .ta-page-item.disabled .ta-page-link {
-        pointer-events: none;
-        opacity: 0.45;
-    }
 
     .notif-item {
         display: flex;
@@ -1367,19 +1086,7 @@
 }
 
 @layer utilities {
-    .ta-col-num { width: 50px; }
-    .ta-col-action { width: 170px; min-width: 170px; text-align: center; }
-    .ta-col-action-wide { width: 180px; min-width: 180px; text-align: center; }
-    .ta-spinner {
-        display: inline-block;
-        width: 1rem;
-        height: 1rem;
-        border: 0.16em solid currentColor;
-        border-right-color: transparent;
-        border-radius: 50%;
-        animation: ta-spinner-border 0.75s linear infinite;
-    }
-    .ta-spinner-sm { width: 0.85rem; height: 0.85rem; border-width: 0.14em; }
+
     .input-search { width: 220px; }
     .input-date { width: 170px; }
     .icon-tema-dark { color: #465fff; }
@@ -1388,10 +1095,6 @@
 @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(1.4); }
-}
-
-@keyframes ta-spinner-border {
-    to { transform: rotate(360deg); }
 }
 
 @media (max-width: 1180px) {

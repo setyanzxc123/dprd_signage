@@ -50,18 +50,18 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             <main id="content">
 
                 <?php if (session()->getFlashdata('success')): ?>
-                    <div class="ta-alert ta-alert-success ta-alert-dismissible ta-alert-flash mb-4" role="alert">
-                        <i data-lucide="circle-check" class="mr-2"></i>
-                        <?= session()->getFlashdata('success') ?>
-                        <button type="button" class="ta-alert-close" aria-label="Tutup notifikasi"></button>
+                    <div class="alert alert-success shadow-sm mb-4" role="alert">
+                        <i data-lucide="circle-check"></i>
+                        <span><?= session()->getFlashdata('success') ?></span>
+                        <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto" aria-label="Tutup notifikasi">✕</button>
                     </div>
                 <?php endif; ?>
 
                 <?php if (session()->getFlashdata('error')): ?>
-                    <div class="ta-alert ta-alert-danger ta-alert-dismissible ta-alert-flash mb-4" role="alert">
-                        <i data-lucide="triangle-alert" class="mr-2"></i>
-                        <?= session()->getFlashdata('error') ?>
-                        <button type="button" class="ta-alert-close" aria-label="Tutup notifikasi"></button>
+                    <div class="alert alert-error shadow-sm mb-4" role="alert">
+                        <i data-lucide="triangle-alert"></i>
+                        <span><?= session()->getFlashdata('error') ?></span>
+                        <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto" aria-label="Tutup notifikasi">✕</button>
                     </div>
                 <?php endif; ?>
 

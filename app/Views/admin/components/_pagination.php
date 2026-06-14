@@ -20,43 +20,33 @@ $pageUrl = static function (int $page) use ($paginationBase, $paginationQuery): 
             Halaman <?= $pagination['page'] ?> dari <?= $pagination['totalPages'] ?>
         </div>
         <nav aria-label="<?= esc($ariaLabel ?? 'Pagination') ?>">
-            <ul class="ta-pagination ta-pagination-sm mb-0">
-                <li class="ta-page-item <?= $pagination['page'] <= 1 ? 'disabled' : '' ?>">
-                    <a class="ta-page-link" href="<?= $pagination['page'] <= 1 ? '#' : esc($pageUrl($pagination['page'] - 1)) ?>">
-                        Sebelumnya
-                    </a>
-                </li>
+            <div class="join">
+                <a class="join-item btn btn-sm <?= $pagination['page'] <= 1 ? 'btn-disabled' : '' ?>" href="<?= $pagination['page'] <= 1 ? '#' : esc($pageUrl($pagination['page'] - 1)) ?>">
+                    Sebelumnya
+                </a>
                 <?php
                     $startPage = max(1, $pagination['page'] - 2);
                     $endPage   = min($pagination['totalPages'], $pagination['page'] + 2);
                 ?>
                 <?php if ($startPage > 1): ?>
-                    <li class="ta-page-item">
-                        <a class="ta-page-link" href="<?= esc($pageUrl(1)) ?>">1</a>
-                    </li>
+                    <a class="join-item btn btn-sm" href="<?= esc($pageUrl(1)) ?>">1</a>
                     <?php if ($startPage > 2): ?>
-                        <li class="ta-page-item disabled"><span class="ta-page-link">...</span></li>
+                        <span class="join-item btn btn-sm btn-disabled">...</span>
                     <?php endif; ?>
                 <?php endif; ?>
                 <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                    <li class="ta-page-item <?= $p === $pagination['page'] ? 'active' : '' ?>">
-                        <a class="ta-page-link" href="<?= esc($pageUrl($p)) ?>"><?= $p ?></a>
-                    </li>
+                    <a class="join-item btn btn-sm <?= $p === $pagination['page'] ? 'btn-active' : '' ?>" href="<?= esc($pageUrl($p)) ?>"><?= $p ?></a>
                 <?php endfor; ?>
                 <?php if ($endPage < $pagination['totalPages']): ?>
                     <?php if ($endPage < $pagination['totalPages'] - 1): ?>
-                        <li class="ta-page-item disabled"><span class="ta-page-link">...</span></li>
+                        <span class="join-item btn btn-sm btn-disabled">...</span>
                     <?php endif; ?>
-                    <li class="ta-page-item">
-                        <a class="ta-page-link" href="<?= esc($pageUrl($pagination['totalPages'])) ?>"><?= $pagination['totalPages'] ?></a>
-                    </li>
+                    <a class="join-item btn btn-sm" href="<?= esc($pageUrl($pagination['totalPages'])) ?>"><?= $pagination['totalPages'] ?></a>
                 <?php endif; ?>
-                <li class="ta-page-item <?= $pagination['page'] >= $pagination['totalPages'] ? 'disabled' : '' ?>">
-                    <a class="ta-page-link" href="<?= $pagination['page'] >= $pagination['totalPages'] ? '#' : esc($pageUrl($pagination['page'] + 1)) ?>">
-                        Berikutnya
-                    </a>
-                </li>
-            </ul>
+                <a class="join-item btn btn-sm <?= $pagination['page'] >= $pagination['totalPages'] ? 'btn-disabled' : '' ?>" href="<?= $pagination['page'] >= $pagination['totalPages'] ? '#' : esc($pageUrl($pagination['page'] + 1)) ?>">
+                    Berikutnya
+                </a>
+            </div>
         </nav>
     </div>
 <?php endif; ?>

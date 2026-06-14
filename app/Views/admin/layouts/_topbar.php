@@ -80,9 +80,9 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             })();
         </script>
 
-        <a class="ta-topbar-button" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
+        <a class="btn btn-ghost btn-circle relative" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
             <i data-lucide="bell"></i>
-            <span class="notif-dot hidden" id="topbar-notif-dot"></span>
+            <span class="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-error hidden" id="topbar-notif-dot"></span>
         </a>
 
         <div class="topbar-user">
@@ -96,7 +96,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <form class="topbar-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
               onsubmit="return confirm('Yakin ingin keluar?')">
             <?= csrf_field() ?>
-            <button class="ta-topbar-button topbar-logout" type="submit" title="Logout" aria-label="Logout">
+            <button class="btn btn-ghost btn-circle hover:text-error" type="submit" title="Logout" aria-label="Logout">
                 <i data-lucide="log-out"></i>
             </button>
         </form>

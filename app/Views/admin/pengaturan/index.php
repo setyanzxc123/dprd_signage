@@ -243,12 +243,12 @@
         <div class="stg-section">
             <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-12 lg:col-span-8">
-                    <label class="ta-label font-semibold" for="bmkg_adm4">Kode Wilayah (ADM4)</label>
-                    <input type="text" class="ta-input font-mono" id="bmkg_adm4" name="bmkg_adm4"
+                    <label class="label-text font-semibold mb-1 block" for="bmkg_adm4">Kode Wilayah (ADM4)</label>
+                    <input type="text" class="input input-bordered w-full font-mono" id="bmkg_adm4" name="bmkg_adm4"
                         value="<?= esc(env('BMKG_ADM4') ?: '72.71.01.1004') ?>"
                         placeholder="72.71.01.1004" pattern="\d{2}\.\d{2}\.\d{2}\.\d{4}"
                         <?= env('BMKG_ADM4') ? 'readonly' : '' ?> />
-                    <div class="ta-help">
+                    <div class="text-xs text-base-content/60 mt-1">
                         Format: <code>PP.KK.KC.LLLL</code><br/>
                         Lokasi: <strong id="bmkg-resolved-location">Memuat...</strong>
                     </div>
