@@ -189,7 +189,7 @@ class MeetingController extends BaseController
         return redirect()->to(base_url('admin/jadwal'));
     }
 
-    public function edit(int $id): string
+    public function edit(int $id)
     {
         $jadwalModel  = new JadwalModel();
         $jadwal       = $jadwalModel->find($id);

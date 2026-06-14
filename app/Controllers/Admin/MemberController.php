@@ -121,7 +121,7 @@ class MemberController extends BaseController
         return redirect()->to(base_url('admin/anggota'));
     }
 
-    public function edit(int $id): string
+    public function edit(int $id)
     {
         $model  = new AnggotaModel();
         $member = $model->find($id);

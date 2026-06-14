@@ -7,8 +7,8 @@
         <h1 class="page-title">Kelompok Peserta</h1>
         <p class="page-subtitle">Kelola kelompok internal DPRD untuk target rapat dan notifikasi WA</p>
     </div>
-    <a href="<?= base_url('admin/unit-rapat/create') ?>" class="ta-btn ta-btn-primary ta-btn-sm">
-        <i data-lucide="plus" class="mr-1"></i>Tambah Kelompok
+    <a href="<?= base_url('admin/unit-rapat/create') ?>" class="btn btn-primary btn-sm gap-1">
+        <i data-lucide="plus" class="w-4 h-4"></i>Tambah Kelompok
     </a>
 </div>
 
@@ -41,8 +41,8 @@
             </p>
         </div>
         <form method="get" class="ml-auto flex gap-2 items-center">
-            <label class="text-xs text-gray-500 mb-0" for="unit-per-page">Tampilkan</label>
-            <select class="ta-select ta-select-sm" id="unit-per-page" name="per_page" style="width:auto;" onchange="this.form.submit()">
+            <label class="text-xs text-base-content/60 mb-0" for="unit-per-page">Tampilkan</label>
+            <select class="select select-sm select-bordered" id="unit-per-page" name="per_page" style="width:auto;" onchange="this.form.submit()">
                 <?php foreach ([10, 25, 50, 100] as $size): ?>
                     <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
                 <?php endforeach; ?>
@@ -50,56 +50,63 @@
         </form>
     </div>
 
-    <div class="section-card-body">
+    <div class="section-card-body p-0">
         <?php if (empty($units)): ?>
-            <div class="empty-state">
-                <i data-lucide="workflow"></i>
-                <p>Belum ada kelompok peserta.</p>
-                <small>Klik "Tambah Kelompok" untuk membuat kelompok internal DPRD.</small>
+            <div class="empty-state p-8 text-center flex flex-col items-center justify-center">
+                <i data-lucide="workflow" class="w-12 h-12 text-base-content/40 mb-3"></i>
+                <p class="font-bold text-base-content">Belum ada kelompok peserta.</p>
+                <small class="text-base-content/60 mt-1">Klik "Tambah Kelompok" untuk membuat kelompok internal DPRD.</small>
             </div>
         <?php else: ?>
-            <table class="custom-table">
-                <thead>
-                    <tr>
-                        <th class="ta-col-num">No</th>
-                        <th>Nama Kelompok</th>
-                        <th>Status</th>
-                        <th class="ta-col-action">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($units as $i => $unit): ?>
-                        <tr>
-                            <td><?= $pagination['from'] + $i ?></td>
-                            <td>
-                                <div class="cell-title"><?= esc($unit['nama']) ?></div>
-                            </td>
-                            <td>
-                                <?php if ($unit['aktif']): ?>
-                                    <span class="status-badge badge-selesai"><span class="dot"></span>Aktif</span>
-                                <?php else: ?>
-                                    <span class="status-badge badge-menunggu"><span class="dot"></span>Nonaktif</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <div class="table-actions">
-                                <form method="get" action="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>">
-                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-brand" title="Edit">
-                                        <i data-lucide="pencil" class="mr-1"></i>Edit
-                                    </button>
-                                </form>
-                                <form method="get" action="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
-                                    onsubmit="return confirm('Nonaktifkan kelompok peserta ini? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman.')">
-                                    <button type="submit" class="ta-btn ta-btn-sm ta-btn-outline-danger" title="Nonaktifkan">
-                                        <i data-lucide="trash-2" class="mr-1"></i>Nonaktif
-                                    </button>
-                                </form>
-                                </div>
-                            </td>
+            <div class="overflow-x-auto w-full">
+                <table class="table table-zebra table-md w-full">
+                    <thead>
+                        <tr class="bg-base-200/50">
+                            <th>No</th>
+                            <th>Nama Kelompok</th>
+                            <th>Status</th>
+                            <th class="text-right">Aksi</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($units as $i => $unit): ?>
+                            <tr class="hover:bg-base-200/30 transition-colors">
+                                <td><?= $pagination['from'] + $i ?></td>
+                                <td>
+                                    <div class="font-bold text-base-content text-sm"><?= esc($unit['nama']) ?></div>
+                                </td>
+                                <td>
+                                    <?php if ($unit['aktif']): ?>
+                                        <span class="badge badge-success h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                            Aktif
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge badge-ghost h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap text-base-content/60 gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                            Nonaktif
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
+                                            <i data-lucide="pencil" class="w-4 h-4"></i>Edit
+                                        </a>
+                                        <form method="get" action="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
+                                            onsubmit="return confirm('Nonaktifkan kelompok peserta ini? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman.')"
+                                            class="inline-flex m-0">
+                                            <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Nonaktifkan">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>Nonaktif
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
     </div>
 

@@ -10,16 +10,6 @@
         margin-bottom: 12px;
         padding-bottom: 8px;
     }
-
-    .participant-group-form .ta-label {
-        margin-bottom: 4px;
-        font-size: 0.82rem;
-    }
-
-    .participant-group-form .ta-help {
-        font-size: 0.72rem;
-    }
-
     .participant-group-form .compact-list {
         max-height: 240px;
         overflow-y: auto;
@@ -59,66 +49,66 @@
             <div class="form-card">
                 <div class="form-section-title">Informasi Kelompok</div>
 
-                <div class="mb-2">
-                    <label class="ta-label font-semibold" for="nama">
-                        Nama Kelompok <span class="text-red-600">*</span>
+                <div class="mb-4">
+                    <label class="label-text font-bold text-sm mb-1 block" for="nama">
+                        Nama Kelompok <span class="text-error">*</span>
                     </label>
-                    <input type="text" class="ta-input" id="nama" name="nama"
+                    <input type="text" class="input input-bordered w-full" id="nama" name="nama"
                         value="<?= esc($unitNama) ?>"
                         placeholder="Contoh: Pimpinan DPRD, Komisi I, Badan Anggaran"
                         required />
-                    <div class="ta-help mt-1">
+                    <div class="label-text-alt text-base-content/60 mt-1.5">
                         Kelompok peserta adalah target internal DPRD untuk rapat dan notifikasi WA. Bisa berisi satu atau banyak anggota.
                     </div>
                 </div>
 
-                <div>
-                    <label class="ta-label font-semibold">Status</label>
-                    <div class="ta-check ta-switch mt-1">
-                        <input class="ta-check-input" type="checkbox" role="switch"
+                <div class="mb-4">
+                    <label class="label-text font-bold text-sm mb-1 block">Status</label>
+                    <div class="flex items-center gap-3 mt-1.5">
+                        <input class="toggle toggle-primary" type="checkbox" role="switch"
                             id="aktif" name="aktif" value="1"
                             <?= ($unit['aktif'] ?? 1) ? 'checked' : '' ?> />
-                        <label class="ta-check-label font-semibold" for="aktif" id="aktif-label">
+                        <label class="label-text font-semibold cursor-pointer" for="aktif" id="aktif-label">
                             <?= ($unit['aktif'] ?? 1) ? 'Aktif' : 'Nonaktif' ?>
                         </label>
                     </div>
-                    <div class="ta-help mt-1">Nonaktif tidak muncul di pilihan target jadwal baru.</div>
+                    <div class="label-text-alt text-base-content/60 mt-1.5">Nonaktif tidak muncul di pilihan target jadwal baru.</div>
                 </div>
             </div>
 
             <div class="form-card mt-2">
                 <div class="form-section-title">Ringkasan</div>
                 <div class="flex items-center gap-2">
-                    <span class="ta-badge bg-gray-100 rounded-full text-base" id="sidebar-selected-count"><?= count($selectedAnggotaIds) ?></span>
-                    <small class="text-gray-500">anggota terpilih</small>
+                    <span class="badge badge-neutral rounded-full font-bold" id="sidebar-selected-count"><?= count($selectedAnggotaIds) ?></span>
+                    <small class="text-base-content/60 font-semibold">anggota terpilih</small>
                 </div>
             </div>
         </div>
 
         <div class="lg:col-span-8">
             <div class="form-card">
-                <div class="form-section-title">
+                <div class="form-section-title flex items-center gap-2">
                     Anggota Kelompok
-                    <span class="ta-badge bg-gray-100 ml-2" id="member-count-badge" style="font-size:11px;">
+                    <span class="badge badge-neutral" id="member-count-badge">
                         <?= count($selectedAnggotaIds) ?>
                     </span>
                 </div>
 
                 <?php if (empty($members)): ?>
-                    <div class="ta-alert ta-alert-warning mb-0 py-2 px-3">
-                        <i data-lucide="triangle-alert" class="mr-1"></i>
-                        Belum ada anggota DPRD aktif. Tambahkan melalui menu <strong>Anggota DPRD</strong>.
+                    <div class="alert alert-warning mb-0 py-2 px-3 flex gap-2">
+                        <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+                        <span>Belum ada anggota DPRD aktif. Tambahkan melalui menu <strong>Anggota DPRD</strong>.</span>
                     </div>
                 <?php else: ?>
                     <div class="grid grid-cols-12 gap-3">
                         <div class="md:col-span-6">
-                            <div class="border rounded overflow-hidden">
-                                <div class="flex items-center justify-between px-3 py-1 border-b bg-gray-50">
-                                    <span class="text-xs font-bold text-gray-500 uppercase">Tersedia</span>
-                                    <span class="ta-badge bg-gray-100 rounded-full" id="source-count"><?= count($members) ?></span>
+                            <div class="border border-base-300 rounded overflow-hidden">
+                                <div class="flex items-center justify-between px-3 py-2 border-b border-base-300 bg-base-200">
+                                    <span class="text-xs font-bold text-base-content/60 uppercase">Tersedia</span>
+                                    <span class="badge badge-neutral" id="source-count"><?= count($members) ?></span>
                                 </div>
-                                <div class="p-2 border-b">
-                                    <input type="text" class="ta-input ta-input-sm" id="source-search"
+                                <div class="p-2 border-b border-base-300 bg-base-100">
+                                    <input type="text" class="input input-sm input-bordered w-full" id="source-search"
                                         placeholder="Cari nama, jabatan, atau komisi..." autocomplete="off" />
                                 </div>
                                 <div class="compact-list" id="source-list">
@@ -128,14 +118,13 @@
                                         $inputId = 'src-' . $memberId;
                                         $komisiLabel = $member['komisi'] ?: 'Tanpa komisi';
                                     ?>
-                                        <label class="flex items-center gap-2 px-3 py-1 border-b mb-0 anggota-source member-row"
+                                        <label class="flex items-center gap-2 px-3 py-1 border-b border-base-300 mb-0 anggota-source member-row hover:bg-base-200 cursor-pointer <?= $checked ? 'bg-primary/10 text-primary' : '' ?>"
                                             for="<?= esc($inputId, 'attr') ?>"
                                             data-id="<?= $memberId ?>"
                                             data-name="<?= esc(strtolower($member['name']), 'attr') ?>"
                                             data-komisi="<?= esc(strtolower($komisiLabel), 'attr') ?>"
-                                            data-jabatan="<?= esc(strtolower($member['jabatan'] ?? ''), 'attr') ?>"
-                                            style="cursor: pointer;">
-                                            <input class="ta-check-input source-checkbox"
+                                            data-jabatan="<?= esc(strtolower($member['jabatan'] ?? ''), 'attr') ?>">
+                                            <input class="checkbox checkbox-primary checkbox-xs source-checkbox"
                                                 type="checkbox"
                                                 id="<?= esc($inputId, 'attr') ?>"
                                                 name="anggota_unit_rapat[]"
@@ -143,7 +132,7 @@
                                                 <?= $checked ? 'checked' : '' ?> />
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-xs font-semibold truncate"><?= esc($member['name']) ?></div>
-                                                <div class="text-gray-500 truncate" style="font-size:11px;">
+                                                <div class="member-detail text-base-content/60 truncate" style="font-size:11px;">
                                                     <?= esc($member['jabatan'] ?: '-') ?>
                                                     &middot; <?= esc($komisiLabel) ?>
                                                 </div>
@@ -155,10 +144,10 @@
                         </div>
 
                         <div class="md:col-span-6">
-                            <div class="border rounded overflow-hidden">
-                                <div class="flex items-center justify-between px-3 py-1 border-b bg-gray-50">
-                                    <span class="text-xs font-bold text-gray-500 uppercase">Terpilih</span>
-                                    <span class="ta-badge bg-brand-500 rounded-full" id="target-count"><?= count($selectedAnggotaIds) ?></span>
+                            <div class="border border-base-300 rounded overflow-hidden">
+                                <div class="flex items-center justify-between px-3 py-2 border-b border-base-300 bg-base-200">
+                                    <span class="text-xs font-bold text-base-content/60 uppercase">Terpilih</span>
+                                    <span class="badge badge-primary" id="target-count"><?= count($selectedAnggotaIds) ?></span>
                                 </div>
                                 <div class="compact-target-list" id="target-list">
                                     <?php
@@ -172,30 +161,30 @@
                                         $komisiLabel = $member['komisi'] ?: 'Tanpa komisi';
                                         $initial = mb_strtoupper(mb_substr($member['name'], 0, 1));
                                     ?>
-                                        <div class="flex items-center gap-2 px-3 py-1 border-b transfer-target-item member-row"
+                                        <div class="flex items-center gap-2 px-3 py-1 border-b border-base-300 transfer-target-item member-row"
                                             id="target-<?= $memberId ?>" data-id="<?= $memberId ?>">
-                                            <span class="inline-flex items-center justify-center rounded shrink-0 bg-brand-500 text-white"
+                                            <span class="inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content"
                                                 style="width:28px;height:28px;font-size:12px;font-weight:700;">
                                                 <?= esc($initial) ?>
                                             </span>
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-xs font-semibold truncate"><?= esc($member['name']) ?></div>
-                                                <div class="text-gray-500 truncate" style="font-size:11px;">
+                                                <div class="member-detail text-base-content/60 truncate" style="font-size:11px;">
                                                     <?= esc($member['jabatan'] ?: '-') ?>
                                                     &middot; <?= esc($komisiLabel) ?>
                                                 </div>
                                             </div>
-                                            <button type="button" class="ta-btn ta-btn-sm text-gray-500 p-0 border-0"
+                                            <button type="button" class="btn btn-sm btn-ghost btn-circle text-error"
                                                 title="Hapus dari unit"
                                                 onclick="removeMember(<?= $memberId ?>)"
-                                                style="width:24px;height:24px;line-height:1;">
-                                                <i data-lucide="x" style="width:12px;height:12px;"></i>
+                                                style="width:24px;height:24px;min-height:24px;">
+                                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                             </button>
                                         </div>
                                     <?php endforeach; ?>
                                     <?php if (! $hasSelected): ?>
-                                        <div class="flex flex-col items-center justify-center text-gray-500 py-4 gap-1" id="target-empty">
-                                            <i data-lucide="shuffle" style="width:20px;height:20px;opacity:0.4;"></i>
+                                        <div class="flex flex-col items-center justify-center text-base-content/40 py-4 gap-1" id="target-empty">
+                                            <i data-lucide="shuffle" class="w-5 h-5 opacity-40"></i>
                                             <small>Pilih anggota dari panel kiri</small>
                                         </div>
                                     <?php endif; ?>
@@ -209,12 +198,12 @@
 
     </div>
 
-    <div class="flex gap-2 mt-3">
-        <a href="<?= base_url('admin/unit-rapat') ?>" class="ta-btn ta-btn-outline-gray">
-            <i data-lucide="arrow-left" class="mr-1"></i>Batal
+    <div class="flex gap-2 mt-4">
+        <a href="<?= base_url('admin/unit-rapat') ?>" class="btn btn-outline btn-sm">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
-        <button type="submit" class="ta-btn ta-btn-primary">
-            <i data-lucide="check" class="mr-1"></i>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i data-lucide="check" class="w-4 h-4"></i>
             <?= $unit ? 'Simpan Perubahan' : 'Simpan Kelompok' ?>
         </button>
     </div>
@@ -243,6 +232,14 @@
         const updateTargetPanel = function() {
             if (!targetList || !targetCount) return;
 
+            allCheckboxes.forEach(function(cb) {
+                const src = cb.closest('.anggota-source');
+                if (src) {
+                    src.classList.toggle('bg-primary/10', cb.checked);
+                    src.classList.toggle('text-primary', cb.checked);
+                }
+            });
+
             const checked = document.querySelectorAll('.source-checkbox:checked');
             const count = checked.length;
 
@@ -257,7 +254,7 @@
 
             if (count === 0) {
                 const div = document.createElement('div');
-                div.className = 'flex flex-col items-center justify-center text-gray-500 py-4 gap-1';
+                div.className = 'flex flex-col items-center justify-center text-base-content/50 py-4 gap-1';
                 div.id = 'target-empty';
                 div.innerHTML = '<i data-lucide="shuffle" style="width:20px;height:20px;opacity:0.4;"></i><small>Pilih anggota dari panel kiri</small>';
                 targetList.appendChild(div);
@@ -271,7 +268,7 @@
 
                 const id = src.getAttribute('data-id');
                 const name = src.querySelector('.font-semibold')?.textContent || '';
-                const detail = src.querySelector('.text-gray-500')?.textContent?.trim() || '';
+                const detail = src.querySelector('.member-detail')?.textContent?.trim() || '';
                 const initial = name.trim().charAt(0).toUpperCase();
 
                 const el = document.createElement('div');
@@ -279,13 +276,13 @@
                 el.id = 'target-' + id;
                 el.setAttribute('data-id', id);
                 el.innerHTML =
-                    '<span class="inline-flex items-center justify-center rounded shrink-0 bg-brand-500 text-white" style="width:28px;height:28px;font-size:12px;font-weight:700;">' + initial + '</span>' +
+                    '<span class="inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content" style="width:28px;height:28px;font-size:12px;font-weight:700;">' + initial + '</span>' +
                     '<div class="flex-1 min-w-0">' +
                         '<div class="text-xs font-semibold truncate">' + name + '</div>' +
-                        '<div class="text-gray-500 truncate" style="font-size:11px;">' + detail + '</div>' +
+                        '<div class="text-base-content/60 truncate" style="font-size:11px;">' + detail + '</div>' +
                     '</div>' +
-                    '<button type="button" class="ta-btn ta-btn-sm text-gray-500 p-0 border-0" title="Hapus dari unit" style="width:24px;height:24px;line-height:1;">' +
-                        '<i data-lucide="x" style="width:12px;height:12px;"></i>' +
+                    '<button type="button" class="btn btn-sm btn-ghost btn-circle text-error" title="Hapus dari unit" style="width:24px;height:24px;min-height:24px;line-height:1;">' +
+                        '<i data-lucide="x" class="w-3.5 h-3.5"></i>' +
                     '</button>';
 
                 el.querySelector('button').addEventListener('click', function() {

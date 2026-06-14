@@ -16,7 +16,7 @@ $pageUrl = static function (int $page) use ($paginationBase, $paginationQuery): 
 
 <?php if ($pagination['totalPages'] > 1): ?>
     <div class="section-card-footer flex justify-between items-center gap-3 flex-wrap">
-        <div class="text-xs text-gray-500">
+        <div class="text-xs text-base-content/60">
             Halaman <?= $pagination['page'] ?> dari <?= $pagination['totalPages'] ?>
         </div>
         <nav aria-label="<?= esc($ariaLabel ?? 'Pagination') ?>">

@@ -63,7 +63,7 @@ class UnitRapatController extends BaseController
         return redirect()->to(base_url('admin/unit-rapat'));
     }
 
-    public function edit(int $id): string
+    public function edit(int $id)
     {
         $model = new UnitRapatModel();
         $unit  = $model->find($id);

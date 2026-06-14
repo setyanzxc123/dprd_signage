@@ -9,35 +9,29 @@
     </p>
 </div>
 
-<div class="dashboard-stat-grid grid grid-cols-12 gap-3 mb-3">
-    <div class="xl:col-span-4 sm:col-span-4">
-        <div class="stat-card">
-            <div class="stat-icon blue"><i data-lucide="calendar-check"></i></div>
-            <div>
-                <div class="stat-value"><?= $stats['rapat_hari_ini'] ?></div>
-                <div class="stat-label">Rapat Hari Ini</div>
-            </div>
+<div class="stats stats-vertical sm:stats-horizontal shadow bg-base-100 border border-base-300 w-full mb-6">
+    <div class="stat">
+        <div class="stat-figure text-primary">
+            <i data-lucide="calendar-check" class="w-8 h-8"></i>
         </div>
+        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Rapat Hari Ini</div>
+        <div class="stat-value text-3xl font-extrabold text-primary"><?= $stats['rapat_hari_ini'] ?></div>
     </div>
 
-    <div class="xl:col-span-4 sm:col-span-4">
-        <div class="stat-card">
-            <div class="stat-icon green"><i data-lucide="circle-check"></i></div>
-            <div>
-                <div class="stat-value"><?= $stats['wa_terkirim'] ?></div>
-                <div class="stat-label">WA Terkirim</div>
-            </div>
+    <div class="stat">
+        <div class="stat-figure text-success">
+            <i data-lucide="circle-check" class="w-8 h-8"></i>
         </div>
+        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">WA Terkirim</div>
+        <div class="stat-value text-3xl font-extrabold text-success"><?= $stats['wa_terkirim'] ?></div>
     </div>
 
-    <div class="xl:col-span-4 sm:col-span-4">
-        <div class="stat-card">
-            <div class="stat-icon red"><i data-lucide="circle-x"></i></div>
-            <div>
-                <div class="stat-value"><?= $stats['wa_gagal'] ?></div>
-                <div class="stat-label">WA Gagal</div>
-            </div>
+    <div class="stat">
+        <div class="stat-figure text-error">
+            <i data-lucide="circle-x" class="w-8 h-8"></i>
         </div>
+        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">WA Gagal</div>
+        <div class="stat-value text-3xl font-extrabold text-error"><?= $stats['wa_gagal'] ?></div>
     </div>
 </div>
 
@@ -48,15 +42,15 @@
                 <h2 id="dashboard-calendar-title">Kalender Rapat <?= esc($monthLabel ?? '') ?></h2>
                 <p>Pilih tanggal untuk melihat agenda detail dan status operasionalnya.</p>
             </div>
-            <div class="dashboard-month-controls">
-                <a href="<?= esc($prevMonthUrl) ?>" class="ta-icon-action" title="Bulan sebelumnya">
-                    <i data-lucide="chevron-left"></i>
+            <div class="dashboard-month-controls flex items-center gap-1">
+                <a href="<?= esc($prevMonthUrl) ?>" class="btn btn-sm btn-ghost btn-circle" title="Bulan sebelumnya">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
                 </a>
-                <a href="<?= esc($todayMonthUrl) ?>" class="ta-btn ta-btn-sm ta-btn-outline-gray ta-btn-header-sm">
+                <a href="<?= esc($todayMonthUrl) ?>" class="btn btn-sm btn-outline btn-primary">
                     Bulan Ini
                 </a>
-                <a href="<?= esc($nextMonthUrl) ?>" class="ta-icon-action" title="Bulan berikutnya">
-                    <i data-lucide="chevron-right"></i>
+                <a href="<?= esc($nextMonthUrl) ?>" class="btn btn-sm btn-ghost btn-circle" title="Bulan berikutnya">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </a>
             </div>
         </header>
@@ -171,8 +165,9 @@
                                 <div class="agenda-content">
                                     <div class="agenda-title-row">
                                         <h3><?= esc($m['title']) ?></h3>
-                                        <span class="status-badge <?= $badge['class'] ?>">
-                                            <span class="dot"></span><?= $badge['label'] ?>
+                                        <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2 text-xs shrink-0 whitespace-nowrap font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-current <?= $m['status'] === 'berlangsung' ? 'animate-pulse' : '' ?>"></span>
+                                            <?= $badge['label'] ?>
                                         </span>
                                     </div>
                                 </div>

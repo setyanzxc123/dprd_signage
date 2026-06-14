@@ -9,8 +9,8 @@
     </div>
     <div class="flex gap-2">
         <a href="<?= base_url('signage') ?>" target="_blank"
-            class="ta-btn ta-btn-sm ta-btn-outline-gray">
-            <i data-lucide="monitor" class="mr-1"></i>Preview Signage
+            class="btn btn-sm btn-outline btn-primary">
+            <i data-lucide="monitor" class="w-4 h-4 mr-1"></i>Preview Signage
         </a>
     </div>
 </div>
@@ -81,20 +81,20 @@
                     </div>
                 </div>
 
-                <label class="ta-label font-semibold" for="media_file">Upload File</label>
-                <input type="file" class="ta-input" id="media_file" name="media_file"
+                <label class="label-text font-bold text-sm mb-1 block" for="media_file">Upload File</label>
+                <input type="file" class="file-input file-input-bordered file-input-sm w-full" id="media_file" name="media_file"
                     accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
-                <div class="ta-help">Maks. 50MB. File baru menggantikan file aktif.</div>
+                <div class="label-text-alt text-base-content/60 mt-1 block">Maks. 50MB. File baru menggantikan file aktif.</div>
 
                 <?php if (!empty($settings['media_file'])): ?>
-                    <div class="ta-alert ta-alert-gray ta-alert-sm py-2 px-3 mt-2">
-                        <i data-lucide="file-video" class="mr-1"></i>
-                        Aktif: <strong><?= esc(basename($settings['media_file'])) ?></strong>
+                    <div class="alert alert-sm bg-base-200 border-base-300 py-2 px-3 mt-2">
+                        <i data-lucide="file-video" class="w-4 h-4 mr-1"></i>
+                        <span>Aktif: <strong><?= esc(basename($settings['media_file'])) ?></strong></span>
                     </div>
                 <?php else: ?>
-                    <div class="ta-alert ta-alert-warning ta-alert-sm py-2 px-3 mt-2">
-                        <i data-lucide="triangle-alert" class="mr-1"></i>
-                        Belum ada file media.
+                    <div class="alert alert-sm alert-warning py-2 px-3 mt-2">
+                        <i data-lucide="triangle-alert" class="w-4 h-4 mr-1"></i>
+                        <span>Belum ada file media.</span>
                     </div>
                 <?php endif; ?>
             </div>
@@ -105,13 +105,13 @@
             <div class="stg-section">
                 <div class="flex items-center justify-between">
                     <div class="stg-section-label mb-0">Running Text</div>
-                    <div class="ta-check ta-switch mb-0">
-                        <input class="ta-check-input" type="checkbox" role="switch" id="running_text_aktif"
+                    <div class="flex items-center gap-2 mb-0">
+                        <input class="toggle toggle-primary toggle-sm" type="checkbox" role="switch" id="running_text_aktif"
                             name="running_text_aktif" value="1" <?= $settings['running_text_aktif'] ? 'checked' : '' ?> />
-                        <label class="ta-check-label font-semibold" for="running_text_aktif">Aktifkan</label>
+                        <label class="label-text font-semibold cursor-pointer" for="running_text_aktif">Aktifkan</label>
                     </div>
                 </div>
-                <textarea class="ta-input mt-2" id="running_text" name="running_text" rows="2"
+                <textarea class="textarea textarea-bordered w-full mt-2" id="running_text" name="running_text" rows="2"
                     placeholder="Contoh: Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah."><?= esc($settings['running_text']) ?></textarea>
 
                 <div class="stg-running-preview mt-2">
@@ -144,10 +144,12 @@
 
             <!-- Sub-section: Nama Pengirim -->
             <div class="stg-section">
-                <label class="ta-label font-semibold" for="wa_sender_name">Nama Pengirim</label>
-                <div class="ta-input-group">
-                    <span class="ta-input-addon"><i data-lucide="contact"></i></span>
-                    <input type="text" class="ta-input" id="wa_sender_name" name="wa_sender_name"
+                <label class="label-text font-bold text-sm mb-1 block" for="wa_sender_name">Nama Pengirim</label>
+                <div class="join w-full">
+                    <span class="join-item bg-base-200 border border-base-300 px-3 flex items-center text-base-content/60">
+                        <i data-lucide="contact" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" class="join-item input input-bordered w-full" id="wa_sender_name" name="wa_sender_name"
                         value="<?= esc($waSenderNameValue) ?>"
                         placeholder="Contoh: Sekretariat DPRD" maxlength="60" />
                 </div>
@@ -159,10 +161,10 @@
             <div class="stg-section">
                 <div class="flex items-center justify-between mb-2">
                     <div class="stg-section-label mb-0">Template Pesan</div>
-                    <div class="ta-check ta-switch mb-0">
-                        <input class="ta-check-input" type="checkbox" role="switch" id="wa_template_default_aktif"
+                    <div class="flex items-center gap-2 mb-0">
+                        <input class="toggle toggle-primary toggle-sm" type="checkbox" role="switch" id="wa_template_default_aktif"
                             name="wa_template_default_aktif" value="1" <?= $settings['wa_template_default_aktif'] ? 'checked' : '' ?> />
-                        <label class="ta-check-label font-semibold" for="wa_template_default_aktif">Gunakan Template Default</label>
+                        <label class="label-text font-semibold cursor-pointer" for="wa_template_default_aktif">Gunakan Template Default</label>
                     </div>
                 </div>
                 <div class="stg-wa-template-row">
@@ -188,8 +190,8 @@
                             <span class="wa-toolbar-sep"></span>
                             <span class="wa-toolbar-hint">Format WhatsApp</span>
                             
-                            <button type="button" class="ta-btn ta-btn-xs ta-btn-outline-gray flex items-center py-1 px-2 ml-auto" style="font-size:.7rem; height:24px; border:none;" onclick="resetWaTemplateToDefault()">
-                                <i data-lucide="rotate-ccw" class="mr-1" style="width:12px;height:12px;"></i>Atur Ulang
+                            <button type="button" class="btn btn-xs btn-outline flex items-center py-1 px-2 ml-auto" style="font-size:.7rem; height:24px; border:none;" onclick="resetWaTemplateToDefault()">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i>Atur Ulang
                             </button>
                         </div>
 
@@ -214,8 +216,8 @@
                                 </button>
                             <?php endforeach; ?>
                         </div>
-                        <div class="ta-help mt-1">Klik untuk menyisipkan variabel ke posisi kursor.</div>
-                        <div class="ta-alert ta-alert-warning py-2 px-3 mt-2 mb-0" id="wa-template-warning" style="display:none;"></div>
+                        <div class="label-text-alt text-base-content/60 mt-1 block">Klik untuk menyisipkan variabel ke posisi kursor.</div>
+                        <div class="alert alert-warning py-2 px-3 mt-2 mb-0" id="wa-template-warning" style="display:none;"></div>
                     </div>
                     <div class="stg-wa-template-right">
                         <div class="stg-wa-preview-label"><i data-lucide="eye" class="mr-1"></i>Preview</div>
@@ -258,8 +260,8 @@
 
     <!-- Save bar -->
     <div class="settings-save-bar">
-        <button type="submit" class="ta-btn ta-btn-primary">
-            <i data-lucide="save" class="mr-1"></i>Simpan Semua Pengaturan
+        <button type="submit" class="btn btn-primary btn-md shadow-md">
+            <i data-lucide="save" class="w-4 h-4 mr-1"></i>Simpan Semua Pengaturan
         </button>
     </div>
 
@@ -292,7 +294,7 @@
         gap: 12px;
         padding: 18px 22px;
         border-bottom: 1px solid var(--od-border);
-        background: linear-gradient(180deg, #fcfdff 0%, #fff 100%);
+        background: var(--od-border-soft);
     }
 
     .stg-card-icon {
@@ -306,8 +308,8 @@
     }
     .stg-card-icon .lucide,
     .stg-card-icon [data-lucide] { width: 18px; height: 18px; }
-    .stg-card-icon.blue  { background: #ecf3ff; color: #465fff; }
-    .stg-card-icon.green { background: #ecfdf3; color: #059669; }
+    .stg-card-icon.blue  { background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary); }
+    .stg-card-icon.green { background: color-mix(in srgb, var(--color-success) 12%, transparent); color: var(--color-success); }
 
     .stg-card-title {
         font-size: .95rem;
@@ -361,14 +363,14 @@
         color: var(--od-muted);
     }
     .stg-tema-card:hover {
-        border-color: #93b4fd;
+        border-color: color-mix(in srgb, var(--od-accent) 50%, var(--od-border));
         color: var(--od-fg2);
     }
     .stg-tema-card.selected {
         border-color: var(--od-accent);
-        background: linear-gradient(135deg, #eef4ff 0%, #fff 100%);
+        background: color-mix(in srgb, var(--od-accent) 10%, var(--od-surface));
         color: var(--od-accent);
-        box-shadow: 0 0 0 3px rgba(70, 95, 255, .08);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-accent) 15%, transparent);
     }
 
     .stg-tema-icon {
@@ -379,7 +381,7 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        background: #f3f4f6;
+        background: var(--od-border-soft);
         transition: background .18s ease;
     }
     .stg-tema-icon .lucide,
@@ -387,7 +389,7 @@
     .stg-tema-icon.dark  { color: #465fff; }
     .stg-tema-icon.light { color: #f79009; }
     .stg-tema-icon.media { color: var(--od-muted); }
-    .stg-tema-card.selected .stg-tema-icon { background: #dbeafe; }
+    .stg-tema-card.selected .stg-tema-icon { background: color-mix(in srgb, var(--color-primary) 20%, transparent); }
     .stg-tema-card.selected .stg-tema-icon.dark  { color: #465fff; }
     .stg-tema-card.selected .stg-tema-icon.light { color: #f79009; }
     .stg-tema-card.selected .stg-tema-icon.media { color: var(--od-accent); }
@@ -445,13 +447,13 @@
     }
     .stg-wa-conn {
         flex: 1;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
+        background: var(--od-border-soft);
+        border: 1px solid var(--od-border);
         border-radius: 10px;
         padding: 12px 14px;
     }
-    .stg-wa-conn .conn-ok { color: #15803d; font-size: .82rem; font-weight: 600; }
-    .stg-wa-conn .conn-err { color: #dc2626; font-size: .82rem; font-weight: 600; }
+    .stg-wa-conn .conn-ok { color: var(--color-success); font-size: .82rem; font-weight: 600; }
+    .stg-wa-conn .conn-err { color: var(--color-error); font-size: .82rem; font-weight: 600; }
 
     /* ─── WA Template row ─── */
     .stg-wa-template-row {
@@ -465,7 +467,7 @@
         align-items: center;
         gap: 3px;
         padding: 5px 8px;
-        background: #f9fafb;
+        background: var(--od-border-soft);
         border: 1px solid var(--od-border);
         border-bottom: none;
         border-radius: 8px 8px 0 0;
@@ -479,25 +481,25 @@
         border: 1px solid transparent;
         border-radius: 5px;
         background: transparent;
-        color: #374151;
+        color: var(--od-fg2);
         cursor: pointer;
         font-size: .82rem;
         transition: all .15s ease;
     }
     .wa-toolbar-btn:hover {
-        background: #e5e7eb;
-        border-color: #d1d5db;
-        color: #111827;
+        background: var(--od-border-soft);
+        border-color: var(--od-border);
+        color: var(--od-fg);
     }
     .wa-toolbar-btn.active {
-        background: #dbeafe;
-        border-color: #93c5fd;
-        color: #1d4ed8;
+        background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
     }
     .wa-toolbar-sep {
         width: 1px;
         height: 18px;
-        background: #d1d5db;
+        background: var(--od-border);
         margin: 0 4px;
     }
     .wa-toolbar-hint {
@@ -514,7 +516,7 @@
         padding: 10px 12px;
         border: 1px solid var(--od-border);
         border-radius: 0 0 8px 8px;
-        background: #fff;
+        background: var(--od-surface);
         font-size: .84rem;
         font-family: var(--od-font, 'Inter', sans-serif);
         line-height: 1.7;
@@ -526,7 +528,7 @@
     }
     .wa-rich-editor:focus {
         border-color: var(--od-accent);
-        box-shadow: 0 0 0 3px rgba(70,95,255,.08);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-accent) 15%, transparent);
     }
     .wa-rich-editor:empty::before {
         content: attr(data-placeholder);
@@ -537,9 +539,9 @@
     .wa-rich-editor .wa-var {
         display: inline-flex;
         align-items: center;
-        background: #e0f2fe;
-        color: #0369a1;
-        border: 1px solid #bae6fd;
+        background: color-mix(in srgb, var(--color-info) 15%, transparent);
+        color: var(--color-info);
+        border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
         border-radius: 5px;
         padding: 1px 7px;
         font-size: .76rem;
@@ -553,13 +555,13 @@
     }
     /* Monospace / code in editor */
     .wa-rich-editor code, .wa-rich-editor .wa-code {
-        background: #f3f4f6;
-        border: 1px solid #e5e7eb;
+        background: var(--od-border-soft);
+        border: 1px solid var(--od-border);
         border-radius: 4px;
         padding: 1px 5px;
         font-family: 'Courier New', Courier, monospace;
         font-size: .82em;
-        color: #374151;
+        color: var(--od-fg);
     }
 
     /* ─── WA Placeholder chips ─── */
@@ -569,10 +571,10 @@
         gap: 5px;
     }
     .stg-wa-chip {
-        border: 1px solid #bae6fd;
+        border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
         border-radius: 999px;
-        background: #e0f2fe;
-        color: #0369a1;
+        background: color-mix(in srgb, var(--color-info) 12%, transparent);
+        color: var(--color-info);
         cursor: pointer;
         font-family: var(--od-mono);
         font-size: .7rem;
@@ -582,9 +584,8 @@
         transition: all .16s ease;
     }
     .stg-wa-chip:hover {
-        border-color: #7dd3fc;
-        color: #075985;
-        background: #bae6fd;
+        border-color: var(--color-info);
+        background: color-mix(in srgb, var(--color-info) 20%, transparent);
     }
 
     /* ─── WA Preview ─── */
@@ -599,10 +600,10 @@
     .stg-wa-preview-label .lucide,
     .stg-wa-preview-label [data-lucide] { width: 14px; height: 14px; }
     .stg-wa-preview {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
+        background: var(--od-border-soft);
+        border: 1px solid var(--od-border);
         border-radius: 8px;
-        color: #111827;
+        color: var(--od-fg);
         font-family: var(--od-mono);
         font-size: .76rem;
         line-height: 1.5;
@@ -623,7 +624,7 @@
     .settings-save-bar {
         position: sticky;
         bottom: 0;
-        background: linear-gradient(180deg, rgba(249,250,251,0) 0%, rgba(249,250,251,1) 24%);
+        background: linear-gradient(180deg, transparent 0%, var(--od-bg) 24%);
         padding: 24px 0 4px;
         z-index: 10;
         margin-top: 4px;
@@ -920,7 +921,7 @@
 
         // Escape & render WA formatting for preview
         text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        text = text.replace(/```([^`]*)```/g, '<code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-family:monospace;">$1</code>');
+        text = text.replace(/```([^`]*)```/g, '<code style="background:var(--od-border-soft);color:var(--od-fg);padding:1px 5px;border-radius:3px;font-family:monospace;">$1</code>');
         text = text.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
         text = text.replace(/_([^_\n]+)_/g, '<em>$1</em>');
         text = text.replace(/~([^~\n]+)~/g, '<del>$1</del>');

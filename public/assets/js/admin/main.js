@@ -155,25 +155,24 @@
 
         function applyStatusUi(data) {
             dotEl.classList.remove('animate-pulse');
+            badgeEl.style.backgroundColor = '';
+            badgeEl.style.color = '';
+            badgeEl.style.borderColor = '';
+            dotEl.style.backgroundColor = '';
+            
             if (data.configured && data.connected) {
-                dotEl.style.backgroundColor = '#10b981'; // Hijau (emerald-500)
-                badgeEl.style.backgroundColor = '#ecfdf3'; // bg-emerald-50
-                badgeEl.style.color = '#027a48'; // text-emerald-700
-                badgeEl.style.borderColor = '#abefc6';
+                badgeEl.className = 'badge badge-success badge-soft gap-1.5 h-8 px-3';
+                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-success';
                 textEl.textContent = 'WhatsApp: Siap';
                 statusEl.setAttribute('title', 'WhatsApp Terhubung (Siap)');
             } else if (data.configured && !data.connected) {
-                dotEl.style.backgroundColor = '#ef4444'; // Merah (red-500)
-                badgeEl.style.backgroundColor = '#fef3f2'; // bg-red-50
-                badgeEl.style.color = '#b42318'; // text-red-700
-                badgeEl.style.borderColor = '#fecdca';
+                badgeEl.className = 'badge badge-error badge-soft gap-1.5 h-8 px-3';
+                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-error';
                 textEl.textContent = 'WhatsApp: Error';
                 statusEl.setAttribute('title', 'WhatsApp Terputus: ' + (data.error || 'Gagal terhubung'));
             } else {
-                dotEl.style.backgroundColor = '#9ca3af'; // Abu-abu (gray-400)
-                badgeEl.style.backgroundColor = '#f9fafb';
-                badgeEl.style.color = '#667085';
-                badgeEl.style.borderColor = '#e4e7ec';
+                badgeEl.className = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
+                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-neutral-content';
                 textEl.textContent = 'WhatsApp: Belum Aktif';
                 statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
             }
@@ -191,12 +190,13 @@
         }
 
         // Set loading state (pulse effect)
-        dotEl.classList.add('animate-pulse');
+        badgeEl.className = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
+        dotEl.className = 'h-1.5 w-1.5 rounded-full bg-neutral-content animate-pulse';
         textEl.textContent = 'WhatsApp: Memeriksa...';
-        dotEl.style.backgroundColor = '#9ca3af';
-        badgeEl.style.backgroundColor = '#f9fafb';
-        badgeEl.style.color = '#667085';
-        badgeEl.style.borderColor = '#e4e7ec';
+        badgeEl.style.backgroundColor = '';
+        badgeEl.style.color = '';
+        badgeEl.style.borderColor = '';
+        dotEl.style.backgroundColor = '';
 
         try {
             const resp = await fetch('/admin/pengaturan/wa-status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -209,10 +209,12 @@
             applyStatusUi(data);
         } catch(e) {
             dotEl.classList.remove('animate-pulse');
-            dotEl.style.backgroundColor = '#f59e0b'; // Kuning (amber-500)
-            badgeEl.style.backgroundColor = '#fffaeb';
-            badgeEl.style.color = '#b54708';
-            badgeEl.style.borderColor = '#fedf89';
+            badgeEl.className = 'badge badge-warning badge-soft gap-1.5 h-8 px-3';
+            dotEl.className = 'h-1.5 w-1.5 rounded-full bg-warning';
+            badgeEl.style.backgroundColor = '';
+            badgeEl.style.color = '';
+            badgeEl.style.borderColor = '';
+            dotEl.style.backgroundColor = '';
             textEl.textContent = 'WhatsApp: Gagal Pengecekan';
             statusEl.setAttribute('title', 'Gagal memeriksa status WhatsApp');
         }
@@ -251,20 +253,23 @@
                 renderAdminIcons();
                 checkTopbarWaStatus();
 
-                this.clockTimer = window.setInterval(this.updateClock, 1000);
-                window.addEventListener('keydown', this.handleKeydown);
+                this.clockTimer = window.setInterval(() => this.updateClock(), 1000);
+                this.boundHandleKeydown = this.handleKeydown.bind(this);
+                window.addEventListener('keydown', this.boundHandleKeydown);
             },
             beforeUnmount() {
                 if (this.clockTimer) {
                     window.clearInterval(this.clockTimer);
                 }
-                window.removeEventListener('keydown', this.handleKeydown);
+                if (this.boundHandleKeydown) {
+                    window.removeEventListener('keydown', this.boundHandleKeydown);
+                }
             },
             methods: {
                 bindEvents() {
-                    document.querySelector('.topbar-toggle')?.addEventListener('click', this.toggleMobileSidebar);
-                    document.getElementById('sidebarToggle')?.addEventListener('click', this.toggleSidebarCollapsed);
-                    document.getElementById('sidebar-overlay')?.addEventListener('click', this.closeMobileSidebar);
+                    document.querySelector('.topbar-toggle')?.addEventListener('click', () => this.toggleMobileSidebar());
+                    document.getElementById('sidebarToggle')?.addEventListener('click', () => this.toggleSidebarCollapsed());
+                    document.getElementById('sidebar-overlay')?.addEventListener('click', () => this.closeMobileSidebar());
                     bindAlertHandlers();
                 },
                 updateClock() {
