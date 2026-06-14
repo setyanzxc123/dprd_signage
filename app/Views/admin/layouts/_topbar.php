@@ -34,7 +34,14 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
     </nav>
 
     <div class="topbar-actions">
-        <div class="topbar-clock" id="topbar-clock">--:--:-- WITA</div>
+
+        <!-- Status Koneksi WA -->
+        <a class="topbar-wa-status-link" href="<?= base_url('admin/pengaturan#wa-notif-card') ?>" id="topbar-wa-status" title="Memeriksa status WhatsApp...">
+            <span class="status-badge" id="topbar-wa-badge">
+                <span class="dot" id="topbar-wa-dot"></span>
+                <span id="topbar-wa-text">WhatsApp: Memeriksa...</span>
+            </span>
+        </a>
 
         <a class="ta-topbar-button" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
             <i data-lucide="bell"></i>
