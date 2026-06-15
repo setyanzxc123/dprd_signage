@@ -39,11 +39,25 @@
     }
 
     /* ── Sidebar ────────────────────────────────────────────────────────── */
+    function setSidebarToggleLabel(collapsed) {
+        const btn = document.getElementById('sidebarToggle');
+        if (!btn) return;
+        btn.setAttribute('aria-expanded', String(!collapsed));
+        btn.setAttribute('aria-label', collapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar');
+        btn.setAttribute('title',       collapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar');
+    }
+
     function initSidebar() {
         const sidebar  = document.getElementById('sidebar');
         const overlay  = document.getElementById('sidebar-overlay');
         const topbarToggle  = document.querySelector('.topbar-toggle');
+        const sidebarToggle = document.getElementById('sidebarToggle');
  
+        // Restore collapsed state
+        const collapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        setSidebarToggleLabel(collapsed);
+
         // Mobile: topbar hamburger
         topbarToggle?.addEventListener('click', function () {
             sidebar?.classList.toggle('mobile-open');
@@ -56,6 +70,14 @@
             overlay.classList.remove('visible');
         });
  
+        // Desktop: collapse toggle (hide/show)
+        sidebarToggle?.addEventListener('click', function () {
+            const nowCollapsed = !document.body.classList.contains('sidebar-collapsed');
+            document.body.classList.toggle('sidebar-collapsed', nowCollapsed);
+            localStorage.setItem('dprd-sidebar-collapsed', nowCollapsed ? 'collapsed' : 'expanded');
+            setSidebarToggleLabel(nowCollapsed);
+        });
+
         // ESC → close mobile sidebar
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
