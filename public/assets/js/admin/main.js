@@ -26,6 +26,47 @@
         return current === link || current.startsWith(link + '/');
     }
 
+    const ADMIN_THEME_STORAGE_KEY = 'dprd-admin-theme';
+
+    function getCurrentTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    }
+
+    function syncThemeControls(theme) {
+        const isDark = theme === 'dark';
+        const label = isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap';
+        document.querySelectorAll('[data-theme-toggle-input]').forEach(function (input) {
+            input.checked = isDark;
+        });
+        document.querySelectorAll('[data-theme-toggle]').forEach(function (toggle) {
+            toggle.setAttribute('aria-label', label);
+            toggle.setAttribute('title', label);
+        });
+    }
+
+    function applyAdminTheme(theme, persist) {
+        const nextTheme = theme === 'dark' ? 'dark' : 'light';
+        document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+        document.documentElement.setAttribute('data-theme', nextTheme);
+        if (persist) {
+            localStorage.setItem(ADMIN_THEME_STORAGE_KEY, nextTheme);
+        }
+        syncThemeControls(nextTheme);
+    }
+
+    function initThemeControls() {
+        syncThemeControls(getCurrentTheme());
+
+        if (document.documentElement.dataset.adminThemeBound === '1') return;
+        document.documentElement.dataset.adminThemeBound = '1';
+
+        document.addEventListener('change', function (event) {
+            const input = event.target.closest('[data-theme-toggle-input]');
+            if (!input) return;
+            applyAdminTheme(input.checked ? 'dark' : 'light', true);
+        });
+    }
+
     function patchReadyCallbacksForTurbo() {
         if (document.documentElement.dataset.adminReadyPatchBound === '1') return;
         document.documentElement.dataset.adminReadyPatchBound = '1';
@@ -130,7 +171,9 @@
         document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach(function (link) {
             const path = link.getAttribute('data-path');
             const isDashboard = path === '/admin/dashboard' && current === '/admin';
-            link.classList.toggle('active', isDashboard || isActivePath(current, path));
+            const active = isDashboard || isActivePath(current, path);
+            link.classList.toggle('active', active);
+            link.classList.toggle('menu-active', active && link.classList.contains('nav-link-custom'));
         });
     }
 
@@ -207,6 +250,7 @@
     }
 
     function refreshAdminPage() {
+        initThemeControls();
         initSidebar();
         applyActiveNavigation();
         renderAdminIcons();

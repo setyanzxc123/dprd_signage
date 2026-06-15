@@ -11,13 +11,17 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
         (() => {
+            const stored = localStorage.getItem('dprd-admin-theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (prefersDark) {
+            const theme = stored === 'dark' || stored === 'light'
+                ? stored
+                : (prefersDark ? 'dark' : 'light');
+            if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
-                document.documentElement.setAttribute('data-theme', 'dark');
             } else {
-                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.classList.remove('dark');
             }
+            document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
     <title>Login - Panel Admin Signage DPRD Sulteng</title>
@@ -30,6 +34,13 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
 </head>
 
 <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-base-200 to-base-200 p-5">
+
+    <label class="btn btn-ghost btn-circle swap swap-rotate fixed right-5 top-5 z-10 border border-base-300 bg-base-100/85 shadow-sm backdrop-blur"
+           title="Gunakan tema gelap" aria-label="Gunakan tema gelap" data-theme-toggle>
+        <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
+        <i class="swap-on" data-lucide="moon"></i>
+        <i class="swap-off" data-lucide="sun"></i>
+    </label>
 
     <div class="w-full max-w-[420px]">
 
@@ -109,6 +120,34 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             let passwordVisible = false;
 
             if (window.lucide) window.lucide.createIcons();
+
+            function syncThemeControl() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const label = isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap';
+                document.querySelectorAll('[data-theme-toggle-input]').forEach(function (input) {
+                    input.checked = isDark;
+                });
+                document.querySelectorAll('[data-theme-toggle]').forEach(function (toggle) {
+                    toggle.setAttribute('aria-label', label);
+                    toggle.setAttribute('title', label);
+                });
+            }
+
+            function setTheme(theme) {
+                const nextTheme = theme === 'dark' ? 'dark' : 'light';
+                document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+                document.documentElement.setAttribute('data-theme', nextTheme);
+                localStorage.setItem('dprd-admin-theme', nextTheme);
+                syncThemeControl();
+            }
+
+            syncThemeControl();
+
+            document.addEventListener('change', function (event) {
+                const input = event.target.closest('[data-theme-toggle-input]');
+                if (!input) return;
+                setTheme(input.checked ? 'dark' : 'light');
+            });
 
             toggleButton?.addEventListener('click', function () {
                 passwordVisible = !passwordVisible;

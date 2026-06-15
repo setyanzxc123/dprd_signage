@@ -257,6 +257,8 @@
         padding: 0;
         margin: 0;
         flex: 1;
+        --menu-active-bg: var(--od-accent);
+        --menu-active-fg: var(--od-accent-on);
     }
 
     .nav-section-label {
@@ -289,7 +291,8 @@
                     color var(--od-motion-fast) var(--od-ease);
     }
     .nav-link-custom:hover { background: var(--od-border-soft); color: var(--od-fg); }
-    .nav-link-custom.active {
+    .nav-link-custom.active,
+    .nav-link-custom.menu-active {
         background: var(--od-accent);
         color: var(--od-accent-on);
         font-weight: 700;
@@ -300,7 +303,8 @@
         color: var(--od-muted);
         flex-shrink: 0;
     }
-    .nav-link-custom.active .nav-icon { color: var(--od-accent-on); }
+    .nav-link-custom.active .nav-icon,
+    .nav-link-custom.menu-active .nav-icon { color: var(--od-accent-on); }
 
     .nav-text {
         color: inherit;
