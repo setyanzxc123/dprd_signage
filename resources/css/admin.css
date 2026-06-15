@@ -1119,6 +1119,214 @@
     }
     #sidebar-overlay.visible { display: block; opacity: 1; }
 
+    /* ── DataTables ────────────────────────────────────────────────────────
+     *  Semua styling DT dikontrol murni via CSS — tidak ada class injection
+     *  dari JS untuk select & input. Hanya pagination button yang mendapat
+     *  class .btn dari JS (idempotent, hanya saat belum ada).
+     * ─────────────────────────────────────────────────────────────────── */
+
+    .admin-data-table {
+        width: 100% !important;
+    }
+
+    .dt-container {
+        color: var(--od-fg);
+        font-size: var(--od-text-sm);
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .dt-container .dt-layout-row {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .dt-container .dt-layout-row:first-child {
+        overflow: visible;
+    }
+
+    .dt-container .dt-layout-row.dt-layout-table {
+        display: block;
+        padding: 0;
+    }
+
+    .dt-container .dt-layout-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .dt-container .dt-layout-cell.dt-layout-full {
+        display: block;
+    }
+
+    .dt-container .dt-layout-cell.dt-layout-start {
+        justify-content: flex-start;
+        min-width: max-content;
+    }
+
+    .dt-container .dt-layout-cell.dt-layout-end {
+        justify-content: flex-end;
+        margin-left: auto;
+    }
+
+    /* Label teks di samping select & input */
+    .dt-container .dt-length,
+    .dt-container .dt-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--od-muted);
+        font-size: var(--od-text-xs);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    /* ── Select (page length) — styled natively, tanpa DaisyUI class injection ── */
+    .dt-container .dt-length select {
+        appearance: auto;
+        height: 32px;
+        min-height: 32px;
+        width: 86px;
+        min-width: 86px;
+        flex: 0 0 86px;
+        padding: 0 28px 0 10px;
+        background-color: var(--od-surface);
+        color: var(--od-fg);
+        border: 1px solid var(--od-border);
+        border-radius: var(--radius-field, 4px);
+        font-size: var(--od-text-xs);
+        font-family: inherit;
+        cursor: pointer;
+        outline-offset: 2px;
+    }
+    .dt-container .dt-length select:focus {
+        outline: 2px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+        border-color: var(--od-accent);
+    }
+
+    /* ── Search input — styled natively ── */
+    .dt-container .dt-search input {
+        height: 32px;
+        min-height: 32px;
+        width: min(240px, 58vw);
+        margin-left: 0;
+        padding: 0 10px;
+        background-color: var(--od-surface);
+        color: var(--od-fg);
+        border: 1px solid var(--od-border);
+        border-radius: var(--radius-field, 4px);
+        font-size: var(--od-text-xs);
+        font-family: inherit;
+        outline-offset: 2px;
+    }
+    .dt-container .dt-search input:focus {
+        outline: 2px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+        border-color: var(--od-accent);
+    }
+    .dt-container .dt-search input::placeholder {
+        color: var(--od-muted);
+    }
+
+    .dt-container .dt-info {
+        color: var(--od-muted);
+        font-size: var(--od-text-xs);
+        font-weight: 600;
+    }
+
+    /* ── Pagination buttons — class .btn/.btn-sm di-set JS (idempotent) ── */
+    .dt-container .dt-paging {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+    }
+
+    /* DT v2 pakai class .dt-paging-button pada elemen <button> */
+    .dt-container .dt-paging .dt-paging-button {
+        min-height: 32px;
+        height: 32px;
+        padding-inline: 0.75rem;
+        border: 1px solid var(--od-border);
+        border-radius: var(--radius-field, 4px);
+        background: var(--od-surface);
+        color: var(--od-fg2);
+        font-size: var(--od-text-xs);
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        line-height: 1;
+    }
+    .dt-container .dt-paging .dt-paging-button:hover:not(.current):not(.disabled):not([disabled]) {
+        background: var(--od-border-soft);
+        color: var(--od-fg);
+        border-color: var(--od-border);
+    }
+    .dt-container .dt-paging .dt-paging-button.current,
+    .dt-container .dt-paging .dt-paging-button.btn-active {
+        background: var(--od-accent) !important;
+        border-color: var(--od-accent) !important;
+        color: var(--od-accent-on) !important;
+    }
+    .dt-container .dt-paging .dt-paging-button.disabled,
+    .dt-container .dt-paging .dt-paging-button[disabled],
+    .dt-container .dt-paging .dt-paging-button.btn-disabled {
+        pointer-events: none;
+        opacity: 0.45;
+        cursor: default;
+    }
+
+    /* ── Table cell overrides ── */
+    table.dataTable.admin-data-table > thead > tr > th,
+    table.dataTable.admin-data-table > thead > tr > td {
+        border-bottom: 1px solid var(--od-border);
+        color: var(--od-fg2);
+        font-size: var(--od-text-xs);
+        font-weight: 800;
+    }
+
+    table.dataTable.admin-data-table > tbody > tr > th,
+    table.dataTable.admin-data-table > tbody > tr > td {
+        border-bottom: 1px solid var(--od-border-soft);
+        /* Suppress box-shadow dari DaisyUI table-zebra agar tidak clash
+         * dengan highlight kolom sort DataTables */
+        box-shadow: none !important;
+    }
+
+    table.dataTable.admin-data-table > tbody > tr:last-child > th,
+    table.dataTable.admin-data-table > tbody > tr:last-child > td {
+        border-bottom: 0;
+    }
+
+    /* ── Dark mode: DataTables CSS vars ──
+     * DT default CSS pakai :root.dark, tapi theme kita pakai data-theme=dark */
+    [data-theme="dark"] {
+        --dt-row-hover: 255, 255, 255;
+        --dt-row-stripe: 255, 255, 255;
+        --dt-column-ordering: 255, 255, 255;
+    }
+    [data-theme="dark"] table.dataTable.admin-data-table > thead > tr > th,
+    [data-theme="dark"] table.dataTable.admin-data-table > thead > tr > td {
+        border-bottom-color: var(--od-border);
+    }
+    [data-theme="dark"] .dt-container .dt-length select,
+    [data-theme="dark"] .dt-container .dt-search input {
+        background-color: var(--od-surface);
+        border-color: var(--od-border);
+        color: var(--od-fg);
+    }
+    [data-theme="dark"] .dt-container .dt-paging .dt-paging-button {
+        background: var(--od-surface);
+        border-color: var(--od-border);
+        color: var(--od-fg2);
+    }
 
 }
 

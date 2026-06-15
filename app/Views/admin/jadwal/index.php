@@ -17,27 +17,8 @@
         'tahun'    => date('Y'),
         'semester' => 'all',
         'jenis'    => 'all',
-            'status'   => 'all',
-            'q'        => '',
-            'per_page' => 10,
-        ];
-    $pagination = $pagination ?? [
-        'page'       => 1,
-        'perPage'    => 10,
-        'total'      => count($meetings),
-        'totalPages' => 1,
-        'from'       => count($meetings) ? 1 : 0,
-        'to'         => count($meetings),
+        'status'   => 'all',
     ];
-    $paginationBase = base_url('admin/jadwal');
-    $paginationQuery = array_filter([
-        'tahun'    => $filters['tahun'],
-        'semester' => $filters['semester'] !== 'all' ? $filters['semester'] : null,
-        'jenis'    => $filters['jenis'] !== 'all' ? $filters['jenis'] : null,
-        'status'   => $filters['status'] !== 'all' ? $filters['status'] : null,
-        'q'        => $filters['q'] !== '' ? $filters['q'] : null,
-        'per_page' => (int) $filters['per_page'] !== 10 ? $filters['per_page'] : null,
-    ], static fn($value) => $value !== null && $value !== '');
 ?>
 
 <div class="section-card">
@@ -45,16 +26,11 @@
         <div class="header-icon"><i data-lucide="calendar-days"></i></div>
         <div>
             <h6>Daftar Jadwal</h6>
-            <p class="header-sub">
-                <?= $pagination['total'] ?> jadwal ditemukan
-                <?php if ($pagination['total'] > 0): ?>
-                    &bull; Menampilkan <?= $pagination['from'] ?>-<?= $pagination['to'] ?>
-                <?php endif; ?>
-            </p>
+            <p class="header-sub"><?= count($meetings) ?> jadwal ditemukan</p>
         </div>
     </div>
 
-    <form method="get" class="p-3 border-b">
+    <form method="get" class="p-3 border-b border-base-200">
         <div class="grid grid-cols-12 gap-3 items-end">
             <div class="md:col-span-2 col-span-6">
                 <label class="label-text font-bold text-xs mb-1 block" for="filter-tahun">Tahun</label>
@@ -72,7 +48,6 @@
                     <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
                 </select>
             </div>
-
             <div class="md:col-span-2 col-span-6">
                 <label class="label-text font-bold text-xs mb-1 block" for="filter-jenis">Jenis</label>
                 <select class="select select-sm select-bordered w-full" id="filter-jenis" name="jenis" onchange="this.form.submit()">
@@ -81,7 +56,6 @@
                     <option value="insidental" <?= $filters['jenis'] === 'insidental' ? 'selected' : '' ?>>Insidental</option>
                 </select>
             </div>
-
             <div class="md:col-span-2 col-span-6">
                 <label class="label-text font-bold text-xs mb-1 block" for="filter-status">Status</label>
                 <select class="select select-sm select-bordered w-full" id="filter-status" name="status" onchange="this.form.submit()">
@@ -92,23 +66,7 @@
                     <option value="selesai" <?= $filters['status'] === 'selesai' ? 'selected' : '' ?>>Selesai</option>
                 </select>
             </div>
-            <div class="md:col-span-3">
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-q">Cari</label>
-                <input class="input input-sm input-bordered w-full" id="filter-q" name="q" value="<?= esc($filters['q']) ?>"
-                    placeholder="Agenda, ruangan, peserta">
-            </div>
-            <div class="md:col-span-1 col-span-6">
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-per-page">Tampil</label>
-                <select class="select select-sm select-bordered w-full" id="filter-per-page" name="per_page" onchange="this.form.submit()">
-                    <?php foreach ([10, 25, 50, 100] as $size): ?>
-                        <option value="<?= $size ?>" <?= (int) $filters['per_page'] === $size ? 'selected' : '' ?>><?= $size ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="md:col-span-1 flex gap-2">
-                <button class="btn btn-sm btn-outline btn-primary" type="submit" title="Terapkan filter">
-                    <i data-lucide="search" class="w-4 h-4"></i>
-                </button>
+            <div class="md:col-span-4 col-span-12 flex gap-2">
                 <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-sm btn-outline btn-ghost" title="Reset filter">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                 </a>
@@ -117,104 +75,86 @@
     </form>
 
     <div class="section-card-body p-0">
-        <?php if (empty($meetings)): ?>
-            <div class="empty-state p-8 text-center flex flex-col items-center justify-center">
-                <i data-lucide="calendar-x" class="w-12 h-12 text-base-content/40 mb-3"></i>
-                <p class="font-bold text-base-content">Tidak ada jadwal rapat sesuai filter.</p>
-                <small class="text-base-content/60 mt-1">Ubah filter atau klik "Tambah Jadwal".</small>
-            </div>
-        <?php else: ?>
-            <div class="overflow-x-auto w-full">
-                <table class="table table-zebra table-md w-full">
-                    <thead>
-                        <tr class="bg-base-200/50">
-                            <th>Tanggal & Waktu</th>
-                            <th>Judul Rapat</th>
-                            <th>Ruangan</th>
-                            <th>Peserta</th>
-                            <th>Jenis</th>
-                            <th>Publik</th>
-                            <th>Status</th>
-                            <th class="text-right">Aksi</th>
+        <div class="overflow-x-auto w-full">
+            <table class="table table-zebra table-md w-full admin-data-table" data-admin-datatable data-dt-order='[[0,"desc"]]'>
+                <thead>
+                    <tr class="bg-base-200/50">
+                        <th>Tanggal & Waktu</th>
+                        <th>Judul Rapat</th>
+                        <th>Ruangan</th>
+                        <th>Peserta</th>
+                        <th>Jenis</th>
+                        <th>Publik</th>
+                        <th>Status</th>
+                        <th class="text-right no-sort">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($meetings as $m):
+                        $badge = status_badge($m['status']);
+                        $dateOrder = $m['tanggal'] . ' ' . $m['waktu_mulai'];
+                    ?>
+                        <tr class="hover:bg-base-200/30 transition-colors">
+                            <td class="whitespace-nowrap" data-order="<?= esc($dateOrder, 'attr') ?>">
+                                <span class="badge badge-neutral h-auto py-1 px-2 text-xs font-mono font-bold whitespace-nowrap">
+                                    <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
+                                </span>
+                                <div class="text-xs text-base-content/60 mt-1">
+                                    <?= esc($m['waktu_mulai']) ?> - <?= esc($m['waktu_selesai']) ?>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="font-bold text-base-content text-sm"><?= esc($m['judul']) ?></div>
+                                <div class="text-xs text-base-content/65 mt-0.5 max-w-md truncate" title="<?= esc($m['keterangan'] ?? '') ?>">
+                                    <?= esc($m['keterangan'] ?? '') ?>
+                                </div>
+                            </td>
+                            <td class="whitespace-nowrap text-base-content/85"><?= esc($m['ruangan']) ?></td>
+                            <td>
+                                <span class="badge badge-ghost h-auto py-1 px-2 text-xs whitespace-nowrap">
+                                    <?= esc($m['target_peserta']) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
+                                    <span class="badge badge-primary h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap">Reguler</span>
+                                <?php else: ?>
+                                    <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap">Insidental</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($m['is_publik'] ?? 0): ?>
+                                    <span class="badge badge-success h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Publik</span>
+                                <?php else: ?>
+                                    <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Internal</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php $dotClass = ($m['status'] === 'berlangsung') ? 'bg-current animate-pulse' : 'bg-current'; ?>
+                                <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2.5 text-xs font-semibold whitespace-nowrap">
+                                    <span class="w-1.5 h-1.5 rounded-full <?= $dotClass ?>"></span>
+                                    <?= $badge['label'] ?>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
+                                        <i data-lucide="pencil" class="w-4 h-4"></i>Edit
+                                    </a>
+                                    <form method="get" action="<?= base_url("admin/jadwal/{$m['id']}/delete") ?>"
+                                        onsubmit="return confirm('Hapus jadwal ini?')" class="inline-flex m-0">
+                                        <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($meetings as $m):
-                            $badge = status_badge($m['status']);
-                        ?>
-                            <tr class="hover:bg-base-200/30 transition-colors">
-                                <td class="whitespace-nowrap">
-                                    <span class="badge badge-neutral h-auto py-1 px-2 text-xs font-mono font-bold whitespace-nowrap">
-                                        <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
-                                    </span>
-                                    <div class="text-xs text-base-content/60 mt-1">
-                                        <?= esc($m['waktu_mulai']) ?> -
-                                        <?= esc($m['waktu_selesai']) ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="font-bold text-base-content text-sm"><?= esc($m['judul']) ?></div>
-                                    <div class="text-xs text-base-content/65 mt-0.5 max-w-md truncate" title="<?= esc($m['keterangan'] ?? '') ?>">
-                                        <?= esc($m['keterangan'] ?? '') ?>
-                                    </div>
-                                </td>
-                                <td class="whitespace-nowrap text-base-content/85"><?= esc($m['ruangan']) ?></td>
-                                <td>
-                                    <span class="badge badge-ghost h-auto py-1 px-2 text-xs whitespace-nowrap">
-                                        <?= esc($m['target_peserta']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
-                                        <span class="badge badge-primary h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap">Reguler</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap">Insidental</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($m['is_publik'] ?? 0): ?>
-                                        <span class="badge badge-success h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Publik</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Internal</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php
-                                     $dotClass = ($m['status'] === 'berlangsung') ? 'bg-current animate-pulse' : 'bg-current';
-                                     ?>
-                                     <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2.5 text-xs font-semibold whitespace-nowrap">
-                                         <span class="w-1.5 h-1.5 rounded-full <?= $dotClass ?>"></span>
-                                         <?= $badge['label'] ?>
-                                     </span>
-                                </td>
-                                <td>
-                                    <div class="flex items-center justify-end gap-2">
-                                        <a href="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
-                                            <i data-lucide="pencil" class="w-4 h-4"></i>Edit
-                                        </a>
-                                        <form method="get" action="<?= base_url("admin/jadwal/{$m['id']}/delete") ?>"
-                                            onsubmit="return confirm('Hapus jadwal ini?')" class="inline-flex m-0">
-                                            <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    <?= view('admin/components/_pagination', [
-        'pagination'      => $pagination,
-        'paginationBase'  => $paginationBase,
-        'paginationQuery' => $paginationQuery,
-        'ariaLabel'       => 'Pagination jadwal',
-    ]) ?>
-
 </div>
 
 <?= $this->endSection() ?>

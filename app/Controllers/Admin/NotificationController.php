@@ -18,9 +18,6 @@ class NotificationController extends BaseController
     {
         $filterStatus = $this->request->getGet('status') ?? 'all';
         $notifModel   = new NotifikasiModel();
-        $page         = max(1, (int) ($this->request->getGet('page') ?? 1));
-        $perPage      = (int) ($this->request->getGet('per_page') ?? 10);
-        $perPage      = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
 
         $applyFilters = static function ($builder) use ($filterStatus) {
             if (in_array($filterStatus, ['sent', 'failed', 'pending'], true)) {
@@ -29,16 +26,6 @@ class NotificationController extends BaseController
 
             return $builder;
         };
-
-        $total = $applyFilters(
-            $notifModel->builder()
-                ->join('anggota', 'anggota.id = notifikasi.anggota_id', 'left')
-                ->join('jadwal',  'jadwal.id  = notifikasi.jadwal_id',  'left')
-        )->countAllResults();
-
-        $totalPages = max(1, (int) ceil($total / $perPage));
-        $page       = min($page, $totalPages);
-        $offset     = ($page - 1) * $perPage;
 
         $rows = $applyFilters(
             $notifModel->builder()
@@ -49,7 +36,6 @@ class NotificationController extends BaseController
                 ->join('jadwal',  'jadwal.id  = notifikasi.jadwal_id',  'left')
         )
             ->orderBy('notifikasi.created_at', 'DESC')
-            ->limit($perPage, $offset)
             ->get()
             ->getResultArray();
 
@@ -57,6 +43,7 @@ class NotificationController extends BaseController
         foreach ($rows as $r) {
             $notifications[] = [
                 'id'            => $r['id'],
+                'sort_at'       => $r['executed_at'] ?: ($r['created_at'] ?? ''),
                 'executed_at'   => $r['executed_at']
                     ? date('l, d M Y — H:i', strtotime($r['executed_at']))
                     : null,
@@ -80,18 +67,7 @@ class NotificationController extends BaseController
             'pageTitle'     => 'Log Notifikasi WA',
             'filter_status' => $filterStatus,
             'filters'       => $this->filters,
-            'table_filters' => [
-                'per_page' => $perPage,
-            ],
             'notifications' => $notifications,
-            'pagination'    => [
-                'page'       => $page,
-                'perPage'    => $perPage,
-                'total'      => $total,
-                'totalPages' => $totalPages,
-                'from'       => $total ? $offset + 1 : 0,
-                'to'         => min($offset + $perPage, $total),
-            ],
         ]);
     }
 
