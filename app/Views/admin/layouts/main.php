@@ -13,13 +13,17 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
         (() => {
+            const stored = localStorage.getItem('dprd-admin-theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (prefersDark) {
+            const theme = stored === 'dark' || stored === 'light'
+                ? stored
+                : (prefersDark ? 'dark' : 'light');
+            if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
-                document.documentElement.setAttribute('data-theme', 'dark');
             } else {
-                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.classList.remove('dark');
             }
+            document.documentElement.setAttribute('data-theme', theme);
             if (localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed') {
                 document.documentElement.classList.add('sidebar-collapsed');
             }

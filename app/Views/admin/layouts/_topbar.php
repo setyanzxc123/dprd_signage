@@ -80,6 +80,13 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             })();
         </script>
 
+        <label class="btn btn-ghost btn-circle swap swap-rotate admin-theme-toggle" title="Gunakan tema gelap"
+               aria-label="Gunakan tema gelap" data-theme-toggle>
+            <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
+            <i class="swap-on" data-lucide="moon"></i>
+            <i class="swap-off" data-lucide="sun"></i>
+        </label>
+
         <a class="btn btn-ghost btn-circle relative" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
             <i data-lucide="bell"></i>
             <span class="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-error hidden" id="topbar-notif-dot"></span>
