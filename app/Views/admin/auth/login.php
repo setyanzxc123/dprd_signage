@@ -1,7 +1,6 @@
 <?php
 $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
 $fontVersion     = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
-$vueVersion      = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
 $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
 ?>
 <!DOCTYPE html>
@@ -99,50 +98,35 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
 
     </div><!-- /.max-w -->
 
-    <div id="login-vue-controller" hidden></div>
 
-    <script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
     <script src="<?= base_url('assets/vendor/lucide/lucide.min.js?v=' . $lucideVersion) ?>"></script>
     <script>
-        window.renderAdminIcons = function () {
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-        };
-
-        function initLoginInteractions() {
+        document.addEventListener('DOMContentLoaded', function () {
             const passwordInput = document.getElementById('password');
-            const toggleButton = document.getElementById('btn-toggle-pwd');
-            const loginForm = document.getElementById('login-form');
-            const loginButton = document.getElementById('login-button');
+            const toggleButton  = document.getElementById('btn-toggle-pwd');
+            const loginForm     = document.getElementById('login-form');
+            const loginButton   = document.getElementById('login-button');
             let passwordVisible = false;
+
+            if (window.lucide) window.lucide.createIcons();
 
             toggleButton?.addEventListener('click', function () {
                 passwordVisible = !passwordVisible;
                 passwordInput.type = passwordVisible ? 'text' : 'password';
-                toggleButton.innerHTML = '<i data-lucide="' + (passwordVisible ? 'eye-off' : 'eye') + '" id="eye-icon"></i>';
-                window.renderAdminIcons();
+                toggleButton.innerHTML = '<i data-lucide="' + (passwordVisible ? 'eye-off' : 'eye') + '" class="w-4 h-4"></i>';
+                if (window.lucide) window.lucide.createIcons();
             });
 
             loginForm?.addEventListener('submit', function () {
                 if (!loginButton) return;
                 loginButton.disabled = true;
-                // Paksa warna primary tetap — browser/daisyUI v5 disabled state override warna ke putih
                 loginButton.style.backgroundColor = 'var(--color-primary)';
-                loginButton.style.color = 'var(--color-primary-content)';
-                loginButton.style.borderColor = 'var(--color-primary)';
-                loginButton.style.opacity = '0.8';
+                loginButton.style.color           = 'var(--color-primary-content)';
+                loginButton.style.borderColor     = 'var(--color-primary)';
+                loginButton.style.opacity         = '0.8';
                 loginButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span>Memverifikasi...';
             });
-
-            window.renderAdminIcons();
-        }
-
-        if (window.Vue && document.getElementById('login-vue-controller')) {
-            window.Vue.createApp({ mounted: initLoginInteractions }).mount('#login-vue-controller');
-        } else {
-            initLoginInteractions();
-        }
+        });
     </script>
 </body>
 

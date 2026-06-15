@@ -1,333 +1,200 @@
-/* Admin shell - Vue controller island for CodeIgniter-rendered pages. */
+/* Admin shell — Vanilla JS, tanpa Vue. */
 (function () {
-    function renderAdminIcons() {
-        if (window.lucide) {
-            window.lucide.createIcons();
-        }
-    }
 
+    /* ── Icon renderer ─────────────────────────────────────────────────── */
+    function renderAdminIcons() {
+        if (window.lucide) window.lucide.createIcons();
+    }
     window.renderAdminIcons = renderAdminIcons;
 
+    /* ── Format helpers ─────────────────────────────────────────────────── */
     function formatClock(date) {
         return new Intl.DateTimeFormat('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-            timeZone: 'Asia/Makassar'
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false, timeZone: 'Asia/Makassar'
         }).format(date) + ' WITA';
     }
 
     function formatPageDate(date) {
         return new Intl.DateTimeFormat('id-ID', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-            timeZone: 'Asia/Makassar'
+            weekday: 'long', day: 'numeric', month: 'long',
+            year: 'numeric', timeZone: 'Asia/Makassar'
         }).format(date);
     }
 
-    function isActivePath(currentPath, linkPath) {
-        return currentPath === linkPath || currentPath.startsWith(linkPath + '/');
+    function isActivePath(current, link) {
+        return current === link || current.startsWith(link + '/');
     }
 
+    /* ── Lucide icon observer (untuk elemen dinamis) ────────────────────── */
     function setupIconObserver() {
         if (!window.MutationObserver) return;
-
-        let renderQueued = false;
-        const queueRender = function () {
-            if (renderQueued) return;
-            renderQueued = true;
-            window.requestAnimationFrame(function () {
-                renderQueued = false;
-                renderAdminIcons();
-            });
-        };
-
+        let queued = false;
         const observer = new MutationObserver(function (mutations) {
-            const hasIconChanges = mutations.some(function (mutation) {
-                return Array.from(mutation.addedNodes).some(function (node) {
-                    return node.nodeType === 1 && (
-                        node.matches?.('[data-lucide]') ||
-                        node.querySelector?.('[data-lucide]')
+            const hasIcons = mutations.some(function (m) {
+                return Array.from(m.addedNodes).some(function (n) {
+                    return n.nodeType === 1 && (
+                        n.matches?.('[data-lucide]') || n.querySelector?.('[data-lucide]')
                     );
                 });
             });
-
-            if (hasIconChanges) queueRender();
+            if (!hasIcons || queued) return;
+            queued = true;
+            requestAnimationFrame(function () { queued = false; renderAdminIcons(); });
         });
-
         observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    function setSidebarToggleState(isCollapsed) {
-        const toggleButton = document.getElementById('sidebarToggle');
-        if (!toggleButton) return;
-
-        toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
-        toggleButton.setAttribute('aria-label', isCollapsed ? 'Buka sidebar' : 'Ciutkan sidebar');
-        toggleButton.setAttribute('title', isCollapsed ? 'Buka sidebar' : 'Ciutkan sidebar');
-    }
-
+    /* ── Alert close handler ────────────────────────────────────────────── */
     function bindAlertHandlers() {
-        if (document.documentElement.dataset.adminAlertBound === '1') {
-            return;
-        }
+        if (document.documentElement.dataset.adminAlertBound === '1') return;
         document.documentElement.dataset.adminAlertBound = '1';
-
-        document.addEventListener('click', (event) => {
-            const closeButton = event.target.closest('.alert-close-btn, .ta-alert-close');
-            if (closeButton) {
-                const alertBox = closeButton.closest('.alert, .ta-alert');
-                alertBox?.remove();
-            }
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.alert-close-btn, .ta-alert-close');
+            if (btn) btn.closest('.alert, .ta-alert')?.remove();
         });
     }
 
-    function bindFallbackShellHandlers() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        const topbarToggle = document.querySelector('.topbar-toggle');
+    /* ── Sidebar ────────────────────────────────────────────────────────── */
+    function setSidebarToggleLabel(collapsed) {
+        const btn = document.getElementById('sidebarToggle');
+        if (!btn) return;
+        btn.setAttribute('aria-expanded', String(!collapsed));
+        btn.setAttribute('aria-label', collapsed ? 'Buka sidebar' : 'Ciutkan sidebar');
+        btn.setAttribute('title',       collapsed ? 'Buka sidebar' : 'Ciutkan sidebar');
+    }
+
+    function initSidebar() {
+        const sidebar  = document.getElementById('sidebar');
+        const overlay  = document.getElementById('sidebar-overlay');
+        const topbarToggle  = document.querySelector('.topbar-toggle');
         const sidebarToggle = document.getElementById('sidebarToggle');
-        const savedCollapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
 
-        document.body.classList.toggle('sidebar-collapsed', savedCollapsed);
-        setSidebarToggleState(savedCollapsed);
+        // Restore collapsed state
+        const collapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        setSidebarToggleLabel(collapsed);
 
+        // Mobile: topbar hamburger
         topbarToggle?.addEventListener('click', function () {
             sidebar?.classList.toggle('mobile-open');
             overlay?.classList.toggle('visible');
         });
 
+        // Mobile: overlay click → close
         overlay?.addEventListener('click', function () {
             sidebar?.classList.remove('mobile-open');
             overlay.classList.remove('visible');
         });
 
+        // Desktop: collapse toggle
         sidebarToggle?.addEventListener('click', function () {
-            const isCollapsed = !document.body.classList.contains('sidebar-collapsed');
-            document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-            localStorage.setItem('dprd-sidebar-collapsed', isCollapsed ? 'collapsed' : 'expanded');
-            setSidebarToggleState(isCollapsed);
+            const nowCollapsed = !document.body.classList.contains('sidebar-collapsed');
+            document.body.classList.toggle('sidebar-collapsed', nowCollapsed);
+            localStorage.setItem('dprd-sidebar-collapsed', nowCollapsed ? 'collapsed' : 'expanded');
+            setSidebarToggleLabel(nowCollapsed);
+        });
+
+        // ESC → close mobile sidebar
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                sidebar?.classList.remove('mobile-open');
+                overlay?.classList.remove('visible');
+            }
         });
     }
 
-    function applyFallbackActiveNavigation() {
-        const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-        document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach((link) => {
+    /* ── Active navigation ──────────────────────────────────────────────── */
+    function applyActiveNavigation() {
+        const current = window.location.pathname.replace(/\/$/, '') || '/';
+        document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach(function (link) {
             const path = link.getAttribute('data-path');
-            const isDashboard = path === '/admin/dashboard' && currentPath === '/admin';
-            link.classList.toggle('active', isDashboard || isActivePath(currentPath, path));
+            const isDashboard = path === '/admin/dashboard' && current === '/admin';
+            link.classList.toggle('active', isDashboard || isActivePath(current, path));
         });
     }
 
-    function startFallbackClock() {
-        const update = function () {
+    /* ── Clock ──────────────────────────────────────────────────────────── */
+    function startClock() {
+        function tick() {
+            const now = new Date();
             const clock = document.getElementById('topbar-clock');
-            if (clock) {
-                clock.textContent = formatClock(new Date());
-            }
-
+            if (clock) clock.textContent = formatClock(now);
             const pageDate = document.getElementById('page-date');
-            if (pageDate) {
-                pageDate.textContent = formatPageDate(new Date());
-            }
-        };
-
-        update();
-        window.setInterval(update, 1000);
+            if (pageDate) pageDate.textContent = formatPageDate(now);
+        }
+        tick();
+        setInterval(tick, 1000);
     }
 
+    /* ── WA status (topbar) ─────────────────────────────────────────────── */
     async function checkTopbarWaStatus() {
         const statusEl = document.getElementById('topbar-wa-status');
-        const badgeEl = document.getElementById('topbar-wa-badge');
-        const dotEl = document.getElementById('topbar-wa-dot');
-        const textEl = document.getElementById('topbar-wa-text');
+        const badgeEl  = document.getElementById('topbar-wa-badge');
+        const dotEl    = document.getElementById('topbar-wa-dot');
+        const textEl   = document.getElementById('topbar-wa-text');
         if (!statusEl || !badgeEl || !dotEl || !textEl) return;
 
-        const cacheKey = 'dprd_wa_status_cache';
-        const cacheTimeKey = 'dprd_wa_status_cache_time';
-        const cacheDuration = 5 * 60 * 1000; // 5 menit dalam ms
+        const CACHE_KEY  = 'dprd_wa_status_cache';
+        const CACHE_TIME = 'dprd_wa_status_cache_time';
+        const TTL        = 5 * 60 * 1000; // 5 menit
+        const now        = Date.now();
 
-        const cachedData = localStorage.getItem(cacheKey);
-        const cachedTime = localStorage.getItem(cacheTimeKey);
-        const now = Date.now();
-
-        function applyStatusUi(data) {
-            dotEl.classList.remove('animate-pulse');
-            badgeEl.style.backgroundColor = '';
-            badgeEl.style.color = '';
-            badgeEl.style.borderColor = '';
-            dotEl.style.backgroundColor = '';
-            
+        function applyUi(data) {
+            ['style'].forEach(function (p) { badgeEl.removeAttribute(p); dotEl.removeAttribute(p); });
             if (data.configured && data.connected) {
                 badgeEl.className = 'badge badge-success badge-soft gap-1.5 h-8 px-3';
-                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-success';
+                dotEl.className   = 'h-1.5 w-1.5 rounded-full bg-success';
                 textEl.textContent = 'WhatsApp: Siap';
                 statusEl.setAttribute('title', 'WhatsApp Terhubung (Siap)');
             } else if (data.configured && !data.connected) {
                 badgeEl.className = 'badge badge-error badge-soft gap-1.5 h-8 px-3';
-                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-error';
+                dotEl.className   = 'h-1.5 w-1.5 rounded-full bg-error';
                 textEl.textContent = 'WhatsApp: Error';
                 statusEl.setAttribute('title', 'WhatsApp Terputus: ' + (data.error || 'Gagal terhubung'));
             } else {
                 badgeEl.className = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
-                dotEl.className = 'h-1.5 w-1.5 rounded-full bg-neutral-content';
+                dotEl.className   = 'h-1.5 w-1.5 rounded-full bg-neutral-content';
                 textEl.textContent = 'WhatsApp: Belum Aktif';
                 statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
             }
         }
 
-        // Jika cache valid dan belum kedaluwarsa
-        if (cachedData && cachedTime && (now - cachedTime < cacheDuration)) {
-            try {
-                const data = JSON.parse(cachedData);
-                applyStatusUi(data);
-                return;
-            } catch(e) {
-                // Abaikan jika error parsing dan fetch baru
-            }
+        // Pakai cache jika masih valid
+        const cached = localStorage.getItem(CACHE_KEY);
+        const cachedAt = parseInt(localStorage.getItem(CACHE_TIME) || '0', 10);
+        if (cached && (now - cachedAt < TTL)) {
+            try { applyUi(JSON.parse(cached)); return; } catch (_) {}
         }
 
-        // Set loading state (pulse effect)
-        badgeEl.className = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
-        dotEl.className = 'h-1.5 w-1.5 rounded-full bg-neutral-content animate-pulse';
+        // Loading state
+        badgeEl.className  = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
+        dotEl.className    = 'h-1.5 w-1.5 rounded-full bg-neutral-content animate-pulse';
         textEl.textContent = 'WhatsApp: Memeriksa...';
-        badgeEl.style.backgroundColor = '';
-        badgeEl.style.color = '';
-        badgeEl.style.borderColor = '';
-        dotEl.style.backgroundColor = '';
 
         try {
             const resp = await fetch('/admin/pengaturan/wa-status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const data = await resp.json();
-
-            // Simpan ke cache
-            localStorage.setItem(cacheKey, JSON.stringify(data));
-            localStorage.setItem(cacheTimeKey, now.toString());
-
-            applyStatusUi(data);
-        } catch(e) {
-            dotEl.classList.remove('animate-pulse');
-            badgeEl.className = 'badge badge-warning badge-soft gap-1.5 h-8 px-3';
-            dotEl.className = 'h-1.5 w-1.5 rounded-full bg-warning';
-            badgeEl.style.backgroundColor = '';
-            badgeEl.style.color = '';
-            badgeEl.style.borderColor = '';
-            dotEl.style.backgroundColor = '';
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            localStorage.setItem(CACHE_TIME, now.toString());
+            applyUi(data);
+        } catch (_) {
+            badgeEl.className  = 'badge badge-warning badge-soft gap-1.5 h-8 px-3';
+            dotEl.className    = 'h-1.5 w-1.5 rounded-full bg-warning';
             textEl.textContent = 'WhatsApp: Gagal Pengecekan';
             statusEl.setAttribute('title', 'Gagal memeriksa status WhatsApp');
         }
     }
 
-    function mountAdminController() {
-        const controllerRoot = document.getElementById('admin-vue-controller');
+    /* ── Bootstrap ──────────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function () {
+        bindAlertHandlers();
+        initSidebar();
+        applyActiveNavigation();
+        startClock();
+        setupIconObserver();
+        renderAdminIcons();
+        checkTopbarWaStatus();
+    });
 
-        if (!window.Vue || !controllerRoot) {
-            bindAlertHandlers();
-            bindFallbackShellHandlers();
-            applyFallbackActiveNavigation();
-            startFallbackClock();
-            renderAdminIcons();
-            checkTopbarWaStatus();
-            return;
-        }
-
-        window.Vue.createApp({
-            data() {
-                return {
-                    currentPath: window.location.pathname.replace(/\/$/, '') || '/',
-                    sidebarOpen: false,
-                    sidebarCollapsed: localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed',
-                    clockTimer: null
-                };
-            },
-            mounted() {
-                this.applySidebarState();
-                this.applyActiveNavigation();
-                this.updateClock();
-                this.updatePageDate();
-                this.bindEvents();
-                this.autoDismissFlashMessages();
-                setupIconObserver();
-                renderAdminIcons();
-                checkTopbarWaStatus();
-
-                this.clockTimer = window.setInterval(() => this.updateClock(), 1000);
-                this.boundHandleKeydown = this.handleKeydown.bind(this);
-                window.addEventListener('keydown', this.boundHandleKeydown);
-            },
-            beforeUnmount() {
-                if (this.clockTimer) {
-                    window.clearInterval(this.clockTimer);
-                }
-                if (this.boundHandleKeydown) {
-                    window.removeEventListener('keydown', this.boundHandleKeydown);
-                }
-            },
-            methods: {
-                bindEvents() {
-                    document.querySelector('.topbar-toggle')?.addEventListener('click', () => this.toggleMobileSidebar());
-                    document.getElementById('sidebarToggle')?.addEventListener('click', () => this.toggleSidebarCollapsed());
-                    document.getElementById('sidebar-overlay')?.addEventListener('click', () => this.closeMobileSidebar());
-                    bindAlertHandlers();
-                },
-                updateClock() {
-                    const clock = document.getElementById('topbar-clock');
-                    if (clock) {
-                        clock.textContent = formatClock(new Date());
-                    }
-                },
-                updatePageDate() {
-                    const pageDate = document.getElementById('page-date');
-                    if (pageDate) {
-                        pageDate.textContent = formatPageDate(new Date());
-                    }
-                },
-                applyActiveNavigation() {
-                    document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach((link) => {
-                        const path = link.getAttribute('data-path');
-                        const isDashboard = path === '/admin/dashboard' && this.currentPath === '/admin';
-                        link.classList.toggle('active', isDashboard || isActivePath(this.currentPath, path));
-                    });
-                },
-                applySidebarState() {
-                    document.body.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
-                    document.getElementById('sidebar')?.classList.toggle('mobile-open', this.sidebarOpen);
-                    document.getElementById('sidebar-overlay')?.classList.toggle('visible', this.sidebarOpen);
-                    setSidebarToggleState(this.sidebarCollapsed);
-                    localStorage.setItem('dprd-sidebar-collapsed', this.sidebarCollapsed ? 'collapsed' : 'expanded');
-                },
-                toggleMobileSidebar() {
-                    this.sidebarOpen = !this.sidebarOpen;
-                    this.applySidebarState();
-                },
-                closeMobileSidebar() {
-                    this.sidebarOpen = false;
-                    this.applySidebarState();
-                },
-                toggleSidebarCollapsed() {
-                    this.sidebarCollapsed = !this.sidebarCollapsed;
-                    this.applySidebarState();
-                },
-                autoDismissFlashMessages() {
-                    document.querySelectorAll('.ta-alert-flash').forEach(function (alert) {
-                        window.setTimeout(function () {
-                            alert.style.transition = 'opacity 0.5s ease';
-                            alert.style.opacity = '0';
-                            window.setTimeout(function () { alert.remove(); }, 500);
-                        }, 4000);
-                    });
-                },
-                handleKeydown(event) {
-                    if (event.key === 'Escape') {
-                        this.closeMobileSidebar();
-                    }
-                }
-            }
-        }).mount(controllerRoot);
-    }
-
-    document.addEventListener('DOMContentLoaded', mountAdminController);
 })();
