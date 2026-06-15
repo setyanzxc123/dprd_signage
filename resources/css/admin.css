@@ -147,6 +147,10 @@
         min-height: 100vh;
         display: grid;
         grid-template-columns: var(--od-sidebar-w) minmax(0, 1fr);
+        transition: grid-template-columns var(--od-motion-base) var(--od-ease);
+    }
+    body.sidebar-collapsed .od-shell {
+        grid-template-columns: 0px minmax(0, 1fr);
     }
 
     #sidebar {
@@ -162,6 +166,11 @@
         gap: 22px;
         overflow: visible;
         z-index: 100;
+        transition: transform var(--od-motion-base) var(--od-ease);
+    }
+    body.sidebar-collapsed #sidebar {
+        transform: translateX(-100%);
+        border-right-width: 0px;
     }
 
     .sidebar-menu-wrapper {
@@ -217,6 +226,39 @@
         font-weight: 600;
         margin-top: 1px;
     }
+
+    /* ── Sidebar Toggle Button ── */
+    .sidebar-toggle {
+        position: absolute;
+        right: -36px; /* 20px padding + 16px half of button width = 36px */
+        top: 4px; /* Centered relative to 40px logo */
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--od-border);
+        border-radius: 50%;
+        background: var(--od-surface);
+        color: var(--od-fg2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transition: background var(--od-motion-fast) var(--od-ease), 
+                    color var(--od-motion-fast) var(--od-ease), 
+                    transform var(--od-motion-base) var(--od-ease), 
+                    box-shadow var(--od-motion-fast) var(--od-ease);
+        cursor: pointer;
+        z-index: 110; /* Berada di atas header sidebar agar tidak tertutup */
+    }
+    body.sidebar-collapsed .sidebar-toggle {
+        transform: translateX(250px);
+    }
+    .sidebar-toggle:hover {
+        background: var(--od-border-soft);
+        color: var(--od-fg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .sidebar-toggle:focus-visible { outline: none; box-shadow: var(--od-focus); }
+    .sidebar-toggle svg { transition: transform var(--od-motion-base) var(--od-ease); }
+    body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 
     /* ── Sidebar Navigation Menu ── */
     .sidebar-nav {
@@ -1073,6 +1115,7 @@
         box-shadow: 4px 0 24px rgba(16, 24, 40, 0.18);
     }
     .topbar-toggle { display: flex; }
+    .sidebar-toggle { display: none !important; }
     .sidebar-top { grid-template-columns: 1fr; }
     #content { padding: 24px 20px 96px; }
     .mobile-nav { display: grid; }
