@@ -130,6 +130,11 @@ class SettingController extends BaseController
             return redirect()->to(base_url('admin/pengaturan'));
         }
 
+        // Lepaskan session lock sesegera mungkin agar request cURL tidak memblokir navigasi/request halaman lain
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         $token = env('WA_API_KEY') ?: '';
 
         if (empty($token)) {
