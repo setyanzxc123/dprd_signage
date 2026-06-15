@@ -44,9 +44,10 @@
 
     <div class="section-card-body p-0">
         <div class="overflow-x-auto w-full">
-            <table class="table table-zebra table-md w-full admin-data-table" data-admin-datatable data-dt-order='[[0,"desc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table" id="table-notifikasi" data-admin-datatable data-dt-order='[[1,"desc"]]'>
                 <thead>
                     <tr class="bg-base-200/50">
+                        <th class="dt-row-number no-sort">No</th>
                         <th>Waktu Eksekusi</th>
                         <th>Target</th>
                         <th>Jadwal Rapat</th>
@@ -65,6 +66,7 @@
                         };
                     ?>
                         <tr class="hover:bg-base-200/30 transition-colors">
+                            <td class="dt-row-number"></td>
                             <td class="whitespace-nowrap" data-order="<?= esc($n['sort_at'] ?? '', 'attr') ?>">
                                 <div class="font-bold text-base-content text-sm">
                                     <?= esc($n['executed_at'] ?? '-') ?>
