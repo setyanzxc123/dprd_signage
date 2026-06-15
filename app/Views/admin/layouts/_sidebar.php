@@ -6,7 +6,7 @@ $userInit  = strtoupper(substr($userName, 0, 1));
 $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 ?>
 
-<nav id="sidebar" class="border-r border-base-300 bg-base-100" aria-label="Navigasi utama">
+<nav id="sidebar" class="border-r border-base-300 bg-base-100" aria-label="Navigasi utama" data-turbo-permanent>
 
     <div class="sidebar-top">
         <div class="sidebar-brand">

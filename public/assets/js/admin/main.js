@@ -26,6 +26,40 @@
         return current === link || current.startsWith(link + '/');
     }
 
+    function patchReadyCallbacksForTurbo() {
+        if (document.documentElement.dataset.adminReadyPatchBound === '1') return;
+        document.documentElement.dataset.adminReadyPatchBound = '1';
+
+        const originalAddEventListener = document.addEventListener.bind(document);
+        document.addEventListener = function (type, listener, options) {
+            if (type === 'DOMContentLoaded' && document.readyState !== 'loading') {
+                window.setTimeout(function () {
+                    const event = new Event('DOMContentLoaded');
+                    if (typeof listener === 'function') {
+                        listener.call(document, event);
+                    } else if (listener && typeof listener.handleEvent === 'function') {
+                        listener.handleEvent(event);
+                    }
+                }, 0);
+                return;
+            }
+
+            return originalAddEventListener(type, listener, options);
+        };
+    }
+
+    function closeTransientShellUi() {
+        document.body.classList.remove('mobile-agenda-open');
+        document.getElementById('sidebar')?.classList.remove('mobile-open');
+        document.getElementById('sidebar-overlay')?.classList.remove('visible');
+    }
+
+    function disableTurboFormSubmissions() {
+        document.querySelectorAll('form:not([data-turbo])').forEach(function (form) {
+            form.setAttribute('data-turbo', 'false');
+        });
+    }
+
 
 
     /* ── Alert close handler ────────────────────────────────────────────── */
@@ -48,41 +82,44 @@
     }
 
     function initSidebar() {
-        const sidebar  = document.getElementById('sidebar');
-        const overlay  = document.getElementById('sidebar-overlay');
-        const topbarToggle  = document.querySelector('.topbar-toggle');
-        const sidebarToggle = document.getElementById('sidebarToggle');
- 
-        // Restore collapsed state
         const collapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
         document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
         setSidebarToggleLabel(collapsed);
 
-        // Mobile: topbar hamburger
-        topbarToggle?.addEventListener('click', function () {
-            sidebar?.classList.toggle('mobile-open');
-            overlay?.classList.toggle('visible');
+        if (document.documentElement.dataset.adminSidebarBound === '1') return;
+        document.documentElement.dataset.adminSidebarBound = '1';
+
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            if (e.target.closest('.topbar-toggle')) {
+                sidebar?.classList.toggle('mobile-open');
+                overlay?.classList.toggle('visible');
+                return;
+            }
+
+            if (e.target.closest('#sidebarToggle')) {
+                const nowCollapsed = !document.documentElement.classList.contains('sidebar-collapsed');
+                document.documentElement.classList.toggle('sidebar-collapsed', nowCollapsed);
+                localStorage.setItem('dprd-sidebar-collapsed', nowCollapsed ? 'collapsed' : 'expanded');
+                setSidebarToggleLabel(nowCollapsed);
+                return;
+            }
+
+            if (e.target.closest('#sidebar-overlay')) {
+                closeTransientShellUi();
+            }
         });
  
         // Mobile: overlay click → close
-        overlay?.addEventListener('click', function () {
-            sidebar?.classList.remove('mobile-open');
-            overlay.classList.remove('visible');
-        });
  
         // Desktop: collapse toggle (hide/show)
-        sidebarToggle?.addEventListener('click', function () {
-            const nowCollapsed = !document.documentElement.classList.contains('sidebar-collapsed');
-            document.documentElement.classList.toggle('sidebar-collapsed', nowCollapsed);
-            localStorage.setItem('dprd-sidebar-collapsed', nowCollapsed ? 'collapsed' : 'expanded');
-            setSidebarToggleLabel(nowCollapsed);
-        });
 
         // ESC → close mobile sidebar
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
-                sidebar?.classList.remove('mobile-open');
-                overlay?.classList.remove('visible');
+                closeTransientShellUi();
             }
         });
     }
@@ -169,13 +206,22 @@
         }
     }
 
+    function refreshAdminPage() {
+        initSidebar();
+        applyActiveNavigation();
+        renderAdminIcons();
+        disableTurboFormSubmissions();
+    }
+
     /* ── Bootstrap ──────────────────────────────────────────────────────── */
-    // Jalankan langsung karena script dipanggil di akhir body (elemen DOM sudah siap)
+    // Script dimuat dengan defer; DOM awal sudah siap saat bootstrap berjalan.
+    patchReadyCallbacksForTurbo();
     bindAlertHandlers();
-    initSidebar();
-    applyActiveNavigation();
+    refreshAdminPage();
     startClock();
-    renderAdminIcons();
     checkTopbarWaStatus();
+
+    document.addEventListener('turbo:load', refreshAdminPage);
+    document.addEventListener('turbo:before-cache', closeTransientShellUi);
 
 })();

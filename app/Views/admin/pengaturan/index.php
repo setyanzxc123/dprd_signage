@@ -651,6 +651,7 @@
 
 <?= $this->section('scripts') ?>
 <script>
+(() => {
     const waTemplatePlaceholders = <?= json_encode(array_keys($waPlaceholders ?? []), JSON_UNESCAPED_SLASHES) ?>;
     const waTemplateSample = <?= json_encode([
         'nama_peserta'  => 'Bapak/Ibu Anggota',
@@ -958,6 +959,13 @@
         document.getElementById('radio-' + mode).checked = true;
     }
 
+    window.waExecFormat = waExecFormat;
+    window.waExecMono = waExecMono;
+    window.insertWaToken = insertWaToken;
+    window.resetWaTemplateToDefault = resetWaTemplateToDefault;
+    window.selectTema = selectTema;
+    window.selectMode = selectMode;
+
     // DOMContentLoaded — bootstrap editor
     document.addEventListener('DOMContentLoaded', function() {
         const editor = document.getElementById('wa_template_editor');
@@ -1008,6 +1016,7 @@
         }
         window.renderAdminIcons?.();
     });
+})();
 
 
 

@@ -2,6 +2,7 @@
 $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
 $adminJsVersion = is_file(FCPATH . 'assets/js/admin/main.js') ? filemtime(FCPATH . 'assets/js/admin/main.js') : time();
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
+$turboVersion = is_file(FCPATH . 'assets/vendor/turbo/turbo.es2017-umd.js') ? filemtime(FCPATH . 'assets/vendor/turbo/turbo.es2017-umd.js') : time();
 $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
 ?>
 <!DOCTYPE html>
@@ -31,19 +32,28 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
     <meta name="description"
         content="Panel manajemen sistem informasi digital signage dan notifikasi WhatsApp DPRD Provinsi Sulawesi Tengah." />
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="turbo-cache-control" content="no-preview" />
 
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font"
         type="font/woff2" crossorigin />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font"
         type="font/woff2" crossorigin />
-    <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
-    <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet"
+        data-turbo-track="reload" />
+    <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet"
+        data-turbo-track="reload" />
+    <script src="<?= base_url('assets/vendor/turbo/turbo.es2017-umd.js?v=' . $turboVersion) ?>" defer
+        data-turbo-track="reload"></script>
+    <script src="<?= base_url('assets/vendor/lucide/lucide.min.js?v=' . $lucideVersion) ?>" defer
+        data-turbo-track="reload"></script>
+    <script src="<?= base_url('assets/js/admin/main.js?v=' . $adminJsVersion) ?>" defer
+        data-turbo-track="reload"></script>
     <?= $this->renderSection('styles') ?>
 </head>
 
 <body>
 
-    <div id="sidebar-overlay"></div>
+    <div id="sidebar-overlay" data-turbo-permanent></div>
 
     <div class="od-shell">
 
@@ -82,7 +92,7 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
     </div>
 
     <!-- Mobile bottom nav -->
-    <nav class="mobile-nav" aria-label="Navigasi mobile">
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Navigasi mobile" data-turbo-permanent>
         <a href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
             <i data-lucide="layout-dashboard"></i>
             Home
@@ -110,9 +120,6 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
     </nav>
 
     <div id="admin-vue-controller" hidden></div>
-
-    <script src="<?= base_url('assets/vendor/lucide/lucide.min.js?v=' . $lucideVersion) ?>"></script>
-    <script src="<?= base_url('assets/js/admin/main.js?v=' . $adminJsVersion) ?>"></script>
 
     <?= $this->renderSection('scripts') ?>
 
