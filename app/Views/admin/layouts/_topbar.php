@@ -87,11 +87,6 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             <i class="swap-off" data-lucide="sun"></i>
         </label>
 
-        <a class="btn btn-ghost btn-circle relative" href="<?= base_url('admin/notifikasi') ?>" title="Notifikasi WA">
-            <i data-lucide="bell"></i>
-            <span class="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-error hidden" id="topbar-notif-dot"></span>
-        </a>
-
         <div class="topbar-user">
             <div class="topbar-avatar"><?= esc($userInit) ?></div>
             <div class="topbar-user-info">

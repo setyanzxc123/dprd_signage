@@ -76,9 +76,10 @@
 
     <div class="section-card-body p-0">
         <div class="overflow-x-auto w-full">
-            <table class="table table-zebra table-md w-full admin-data-table" data-admin-datatable data-dt-order='[[0,"desc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table" id="table-jadwal" data-admin-datatable data-dt-order='[[1,"desc"]]'>
                 <thead>
                     <tr class="bg-base-200/50">
+                        <th class="dt-row-number no-sort">No</th>
                         <th>Tanggal & Waktu</th>
                         <th>Judul Rapat</th>
                         <th>Ruangan</th>
@@ -95,6 +96,7 @@
                         $dateOrder = $m['tanggal'] . ' ' . $m['waktu_mulai'];
                     ?>
                         <tr class="hover:bg-base-200/30 transition-colors">
+                            <td class="dt-row-number"></td>
                             <td class="whitespace-nowrap" data-order="<?= esc($dateOrder, 'attr') ?>">
                                 <span class="badge badge-neutral h-auto py-1 px-2 text-xs font-mono font-bold whitespace-nowrap">
                                     <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
