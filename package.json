@@ -15,6 +15,7 @@
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/outfit": "^5.2.8",
+    "@hotwired/turbo": "^8.0.23",
     "@tailwindcss/cli": "^4.3.1",
     "daisyui": "^5.5.23",
     "flatpickr": "^4.6.13",

@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 
 const files = [
   ['node_modules/vue/dist/vue.global.prod.js', 'public/assets/vendor/vue/vue.global.prod.js'],
+  ['node_modules/@hotwired/turbo/dist/turbo.es2017-umd.js', 'public/assets/vendor/turbo/turbo.es2017-umd.js'],
   ['node_modules/lucide/dist/umd/lucide.min.js', 'public/assets/vendor/lucide/lucide.min.js'],
   ['node_modules/flatpickr/dist/flatpickr.min.css', 'public/assets/vendor/flatpickr/flatpickr.min.css'],
   ['node_modules/flatpickr/dist/flatpickr.min.js', 'public/assets/vendor/flatpickr/flatpickr.min.js'],

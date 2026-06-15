@@ -33,7 +33,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <?php endif; ?>
     </nav>
 
-    <div class="topbar-actions">
+    <div id="topbar-actions" class="topbar-actions" data-turbo-permanent>
 
         <!-- Status Koneksi WA -->
         <a class="topbar-wa-status-link" href="<?= base_url('admin/pengaturan#wa-notif-card') ?>" id="topbar-wa-status" title="Memeriksa status WhatsApp...">
