@@ -147,23 +147,21 @@
         min-height: 100vh;
         display: grid;
         grid-template-columns: var(--od-sidebar-w) minmax(0, 1fr);
-        transition: grid-template-columns var(--od-motion-base) var(--od-ease);
     }
-    body.sidebar-collapsed .od-shell { grid-template-columns: 88px minmax(0, 1fr); }
 
     #sidebar {
         position: sticky;
         top: 0;
         height: 100vh;
+        width: var(--od-sidebar-w);
         padding: 24px 20px;
         background: var(--od-surface);
         border-right: 1px solid var(--od-border);
         display: flex;
         flex-direction: column;
         gap: 22px;
-        overflow: visible; /* Allows the absolute-positioned toggle button to hang outside without clipping */
+        overflow: visible;
         z-index: 100;
-        transition: padding var(--od-motion-base) var(--od-ease), transform var(--od-motion-base) var(--od-ease);
     }
 
     .sidebar-menu-wrapper {
@@ -180,12 +178,14 @@
     .sidebar-menu-wrapper::-webkit-scrollbar-track { background: transparent; }
     .sidebar-menu-wrapper::-webkit-scrollbar-thumb { background: #d0d5dd; border-radius: 2px; }
 
+    /* ── Sidebar Brand (Logo & Title) ── */
     .sidebar-top {
         display: flex;
         align-items: center;
         width: 100%;
         position: relative;
     }
+
     .sidebar-brand {
         min-height: 40px;
         display: flex;
@@ -201,6 +201,9 @@
         flex-shrink: 0;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
+    .brand-copy {
+        min-width: 0;
+    }
     .sidebar-brand .brand-title {
         color: var(--od-fg);
         font-size: 15px;
@@ -214,31 +217,8 @@
         font-weight: 600;
         margin-top: 1px;
     }
-    .sidebar-toggle {
-        position: absolute;
-        right: -36px; /* 20px padding + 16px half of button width = 36px */
-        top: 4px; /* Centered relative to 40px logo */
-        width: 32px;
-        height: 32px;
-        display: grid;
-        place-items: center;
-        border: 1px solid var(--od-border);
-        border-radius: 50%;
-        background: var(--od-surface);
-        color: var(--od-fg2);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        transition: background var(--od-motion-fast) var(--od-ease), color var(--od-motion-fast) var(--od-ease), transform var(--od-motion-base) var(--od-ease), box-shadow var(--od-motion-fast) var(--od-ease);
-        cursor: pointer;
-        z-index: 10;
-    }
-    .sidebar-toggle:hover {
-        background: var(--od-border-soft);
-        color: var(--od-fg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .sidebar-toggle:focus-visible { outline: none; box-shadow: var(--od-focus); }
-    .sidebar-toggle svg { transition: transform var(--od-motion-base) var(--od-ease); }
 
+    /* ── Sidebar Navigation Menu ── */
     .sidebar-nav {
         display: grid;
         gap: 4px;
@@ -247,6 +227,7 @@
         margin: 0;
         flex: 1;
     }
+
     .nav-section-label {
         margin: 18px 0 8px;
         color: var(--od-muted);
@@ -256,7 +237,9 @@
         letter-spacing: 0.04em;
         list-style: none;
     }
+
     .nav-item-custom { list-style: none; }
+
     .nav-link-custom {
         min-height: 40px;
         display: flex;
@@ -271,7 +254,8 @@
         background: transparent;
         width: 100%;
         text-align: left;
-        transition: background var(--od-motion-fast) var(--od-ease), color var(--od-motion-fast) var(--od-ease);
+        transition: background var(--od-motion-fast) var(--od-ease), 
+                    color var(--od-motion-fast) var(--od-ease);
     }
     .nav-link-custom:hover { background: var(--od-border-soft); color: var(--od-fg); }
     .nav-link-custom.active {
@@ -286,12 +270,18 @@
         flex-shrink: 0;
     }
     .nav-link-custom.active .nav-icon { color: var(--od-accent-on); }
-    .nav-link-custom .nav-badge {
+
+    .nav-text {
+        color: inherit;
+    }
+
+    .nav-badge {
         margin-left: auto;
         font-size: 11px;
         padding: 2px 7px;
         border-radius: var(--od-radius-pill);
     }
+
     .nav-arrow {
         margin-left: auto;
         font-size: 0.7rem;
@@ -319,6 +309,7 @@
         border: none;
         border-top: 1px solid var(--od-border-soft);
     }
+
     .sidebar-note {
         margin-top: auto;
         padding: 14px;
@@ -1050,66 +1041,7 @@
     }
     #sidebar-overlay.visible { display: block; opacity: 1; }
 
-    .brand-copy,
-    .nav-text,
-    .nav-section-label,
-    .sidebar-note {
-        transition: opacity var(--od-motion-fast) var(--od-ease), transform var(--od-motion-fast) var(--od-ease);
-    }
-    body.sidebar-collapsed #sidebar {
-        padding: 24px 12px;
-        align-items: center;
-    }
-    body.sidebar-collapsed .sidebar-menu-wrapper {
-        margin: 0 -12px;
-        padding: 0 12px;
-        width: 100%;
-    }
-    body.sidebar-collapsed .sidebar-top {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    body.sidebar-collapsed .sidebar-brand {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    body.sidebar-collapsed .brand-copy,
-    body.sidebar-collapsed .nav-text,
-    body.sidebar-collapsed .nav-section-label,
-    body.sidebar-collapsed .sidebar-note,
-    body.sidebar-collapsed .nav-badge {
-        width: 0;
-        height: 0;
-        opacity: 0;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        pointer-events: none;
-        transform: translateX(-4px);
-    }
-    body.sidebar-collapsed .sidebar-nav {
-        width: 100%;
-        justify-items: center;
-    }
-    body.sidebar-collapsed .nav-item-custom {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-    }
-    body.sidebar-collapsed .nav-link-custom {
-        width: 40px;
-        height: 40px;
-        justify-content: center;
-        padding: 0;
-        border-radius: 8px;
-    }
-    body.sidebar-collapsed .sidebar-toggle {
-        right: -28px; /* 12px padding + 16px half of button width = 28px */
-        top: 28px; /* Centered relative to 40px logo in collapsed sidebar */
-    }
-    body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+
 }
 
 @layer utilities {
@@ -1141,35 +1073,9 @@
         box-shadow: 4px 0 24px rgba(16, 24, 40, 0.18);
     }
     .topbar-toggle { display: flex; }
-    .sidebar-toggle { display: none !important; }
     .sidebar-top { grid-template-columns: 1fr; }
     #content { padding: 24px 20px 96px; }
     .mobile-nav { display: grid; }
-    body.sidebar-collapsed .od-shell { grid-template-columns: 1fr; }
-    body.sidebar-collapsed #sidebar {
-        padding: 24px 20px;
-        align-items: stretch;
-    }
-    body.sidebar-collapsed .sidebar-brand { grid-template-columns: 44px 1fr; justify-content: start; }
-    body.sidebar-collapsed .brand-copy,
-    body.sidebar-collapsed .nav-text,
-    body.sidebar-collapsed .nav-section-label,
-    body.sidebar-collapsed .sidebar-note {
-        width: auto;
-        height: auto;
-        opacity: 1;
-        overflow: visible;
-        pointer-events: auto;
-        transform: none;
-    }
-    body.sidebar-collapsed .sidebar-nav { width: auto; justify-items: start; }
-    body.sidebar-collapsed .nav-item-custom { width: auto; display: block; }
-    body.sidebar-collapsed .nav-link-custom {
-        width: 100%;
-        height: auto;
-        justify-content: start;
-        padding: 10px 12px;
-    }
     .dashboard-calendar-workspace {
         grid-template-columns: 1fr;
         gap: 16px;
