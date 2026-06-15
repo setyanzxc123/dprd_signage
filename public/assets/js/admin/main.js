@@ -26,24 +26,7 @@
         return current === link || current.startsWith(link + '/');
     }
 
-    /* ── Lucide icon observer (untuk elemen dinamis) ────────────────────── */
-    function setupIconObserver() {
-        if (!window.MutationObserver) return;
-        let queued = false;
-        const observer = new MutationObserver(function (mutations) {
-            const hasIcons = mutations.some(function (m) {
-                return Array.from(m.addedNodes).some(function (n) {
-                    return n.nodeType === 1 && (
-                        n.matches?.('[data-lucide]') || n.querySelector?.('[data-lucide]')
-                    );
-                });
-            });
-            if (!hasIcons || queued) return;
-            queued = true;
-            requestAnimationFrame(function () { queued = false; renderAdminIcons(); });
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
+
 
     /* ── Alert close handler ────────────────────────────────────────────── */
     function bindAlertHandlers() {
@@ -187,14 +170,12 @@
     }
 
     /* ── Bootstrap ──────────────────────────────────────────────────────── */
-    document.addEventListener('DOMContentLoaded', function () {
-        bindAlertHandlers();
-        initSidebar();
-        applyActiveNavigation();
-        startClock();
-        setupIconObserver();
-        renderAdminIcons();
-        checkTopbarWaStatus();
-    });
+    // Jalankan langsung karena script dipanggil di akhir body (elemen DOM sudah siap)
+    bindAlertHandlers();
+    initSidebar();
+    applyActiveNavigation();
+    startClock();
+    renderAdminIcons();
+    checkTopbarWaStatus();
 
 })();
