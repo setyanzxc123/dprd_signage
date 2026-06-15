@@ -20,13 +20,9 @@ class MeetingController extends BaseController
         $semester = $this->request->getGet('semester') ?? 'all';
         $jenis    = $this->request->getGet('jenis') ?? 'all';
         $status   = $this->request->getGet('status') ?? 'all';
-        $q        = trim((string) ($this->request->getGet('q') ?? ''));
-        $page     = max(1, (int) ($this->request->getGet('page') ?? 1));
-        $perPage  = (int) ($this->request->getGet('per_page') ?? 10);
-        $perPage  = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
 
         $db      = \Config\Database::connect();
-        $applyFilters = static function ($builder) use ($db, $tahun, $semester, $jenis, $status, $q) {
+        $applyFilters = static function ($builder) use ($tahun, $semester, $jenis, $status) {
             $builder->where('j.tanggal >=', "{$tahun}-01-01");
             $builder->where('j.tanggal <=', "{$tahun}-12-31");
 
@@ -46,39 +42,8 @@ class MeetingController extends BaseController
                 $builder->where('j.status', $status);
             }
 
-            if ($q !== '') {
-                $unitLike = $db->escape('%' . $db->escapeLikeString($q) . '%');
-                $builder
-                ->groupStart()
-                    ->like('j.judul', $q)
-                    ->orLike('j.keterangan', $q)
-                    ->orLike('r.name', $q)
-                    ->orLike('j.lokasi_lainnya', $q)
-                    ->orWhere(
-                        "EXISTS (
-                            SELECT 1
-                            FROM jadwal_unit_rapat jur
-                            JOIN unit_rapat ur ON ur.id = jur.unit_rapat_id
-                            WHERE jur.jadwal_id = j.id
-                              AND ur.nama LIKE {$unitLike} ESCAPE '!'
-                        )",
-                        null,
-                        false
-                    )
-                ->groupEnd();
-            }
-
             return $builder;
         };
-
-        $total = $applyFilters(
-            $db->table('jadwal j')
-                ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
-        )->countAllResults();
-
-        $totalPages = max(1, (int) ceil($total / $perPage));
-        $page       = min($page, $totalPages);
-        $offset     = ($page - 1) * $perPage;
 
         $jadwals = $applyFilters(
             $db->table('jadwal j')
@@ -89,7 +54,6 @@ class MeetingController extends BaseController
         )
             ->orderBy('j.tanggal', 'DESC')
             ->orderBy('j.waktu_mulai', 'ASC')
-            ->limit($perPage, $offset)
             ->get()
             ->getResultArray();
 
@@ -114,21 +78,11 @@ class MeetingController extends BaseController
         return view('admin/jadwal/index', [
             'pageTitle'   => 'Jadwal Rapat',
             'meetings'    => $meetings,
-            'pagination'  => [
-                'page'       => $page,
-                'perPage'    => $perPage,
-                'total'      => $total,
-                'totalPages' => $totalPages,
-                'from'       => $total ? $offset + 1 : 0,
-                'to'         => min($offset + $perPage, $total),
-            ],
             'filters'     => [
                 'tahun'    => $tahun,
                 'semester' => $semester,
                 'jenis'    => $jenis,
                 'status'   => $status,
-                'q'        => $q,
-                'per_page' => $perPage,
             ],
         ]);
     }

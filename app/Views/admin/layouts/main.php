@@ -4,6 +4,9 @@ $adminJsVersion = is_file(FCPATH . 'assets/js/admin/main.js') ? filemtime(FCPATH
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $turboVersion = is_file(FCPATH . 'assets/vendor/turbo/turbo.es2017-umd.js') ? filemtime(FCPATH . 'assets/vendor/turbo/turbo.es2017-umd.js') : time();
 $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
+$jqueryVersion = is_file(FCPATH . 'assets/vendor/jquery/jquery.min.js') ? filemtime(FCPATH . 'assets/vendor/jquery/jquery.min.js') : time();
+$dataTablesJsVersion = is_file(FCPATH . 'assets/vendor/datatables/dataTables.min.js') ? filemtime(FCPATH . 'assets/vendor/datatables/dataTables.min.js') : time();
+$dataTablesCssVersion = is_file(FCPATH . 'assets/vendor/datatables/dataTables.dataTables.min.css') ? filemtime(FCPATH . 'assets/vendor/datatables/dataTables.dataTables.min.css') : time();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -44,11 +47,17 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
         type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet"
         data-turbo-track="reload" />
+    <link href="<?= base_url('assets/vendor/datatables/dataTables.dataTables.min.css?v=' . $dataTablesCssVersion) ?>"
+        rel="stylesheet" data-turbo-track="reload" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet"
         data-turbo-track="reload" />
     <script src="<?= base_url('assets/vendor/turbo/turbo.es2017-umd.js?v=' . $turboVersion) ?>" defer
         data-turbo-track="reload"></script>
     <script src="<?= base_url('assets/vendor/lucide/lucide.min.js?v=' . $lucideVersion) ?>" defer
+        data-turbo-track="reload"></script>
+    <script src="<?= base_url('assets/vendor/jquery/jquery.min.js?v=' . $jqueryVersion) ?>" defer
+        data-turbo-track="reload"></script>
+    <script src="<?= base_url('assets/vendor/datatables/dataTables.min.js?v=' . $dataTablesJsVersion) ?>" defer
         data-turbo-track="reload"></script>
     <script src="<?= base_url('assets/js/admin/main.js?v=' . $adminJsVersion) ?>" defer
         data-turbo-track="reload"></script>

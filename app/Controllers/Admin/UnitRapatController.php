@@ -10,33 +10,14 @@ class UnitRapatController extends BaseController
 {
     public function index(): string
     {
-        $model   = new UnitRapatModel();
-        $page    = max(1, (int) ($this->request->getGet('page') ?? 1));
-        $perPage = (int) ($this->request->getGet('per_page') ?? 10);
-        $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
-
-        $total      = $model->countAllResults();
-        $totalPages = max(1, (int) ceil($total / $perPage));
-        $page       = min($page, $totalPages);
-        $offset     = ($page - 1) * $perPage;
-
-        $units = $model
+        $units = (new UnitRapatModel())
             ->orderBy('urutan', 'ASC')
             ->orderBy('nama', 'ASC')
-            ->findAll($perPage, $offset);
+            ->findAll();
 
         return view('admin/unit_rapat/index', [
             'pageTitle'  => 'Kelompok Peserta',
             'units'      => $units,
-            'filters'    => ['per_page' => $perPage],
-            'pagination' => [
-                'page'       => $page,
-                'perPage'    => $perPage,
-                'total'      => $total,
-                'totalPages' => $totalPages,
-                'from'       => $total ? $offset + 1 : 0,
-                'to'         => min($offset + $perPage, $total),
-            ],
         ]);
     }
 

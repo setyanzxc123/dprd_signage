@@ -67,27 +67,10 @@
         });
     }
 
-    function patchReadyCallbacksForTurbo() {
-        if (document.documentElement.dataset.adminReadyPatchBound === '1') return;
-        document.documentElement.dataset.adminReadyPatchBound = '1';
-
-        const originalAddEventListener = document.addEventListener.bind(document);
-        document.addEventListener = function (type, listener, options) {
-            if (type === 'DOMContentLoaded' && document.readyState !== 'loading') {
-                window.setTimeout(function () {
-                    const event = new Event('DOMContentLoaded');
-                    if (typeof listener === 'function') {
-                        listener.call(document, event);
-                    } else if (listener && typeof listener.handleEvent === 'function') {
-                        listener.handleEvent(event);
-                    }
-                }, 0);
-                return;
-            }
-
-            return originalAddEventListener(type, listener, options);
-        };
-    }
+    /* patchReadyCallbacksForTurbo dihapus — monkey-patch document.addEventListener
+     * sangat berbahaya dan menyebabkan konflik dengan jQuery/DataTables.
+     * Turbo sudah firing turbo:load setelah setiap navigasi, yang kita gunakan
+     * di bawah (lihat bagian Bootstrap). */
 
     function closeTransientShellUi() {
         document.body.classList.remove('mobile-agenda-open');
@@ -100,8 +83,6 @@
             form.setAttribute('data-turbo', 'false');
         });
     }
-
-
 
     /* ── Alert close handler ────────────────────────────────────────────── */
     function bindAlertHandlers() {
@@ -152,10 +133,6 @@
                 closeTransientShellUi();
             }
         });
- 
-        // Mobile: overlay click → close
- 
-        // Desktop: collapse toggle (hide/show)
 
         // ESC → close mobile sidebar
         document.addEventListener('keydown', function (e) {
@@ -249,23 +226,166 @@
         }
     }
 
+    /* ── DataTables ─────────────────────────────────────────────────────── */
+
+    function parseDataTableOrder(table) {
+        const raw = table.getAttribute('data-dt-order');
+        if (!raw) return [];
+        try {
+            return JSON.parse(raw);
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function styleDataTableControls(wrapper) {
+        if (!wrapper) return;
+
+        wrapper.querySelectorAll('.dt-paging .dt-paging-button').forEach(function (btn) {
+            if (!btn.classList.contains('btn')) {
+                btn.classList.add('btn', 'btn-sm');
+            }
+            btn.classList.toggle('btn-active', btn.classList.contains('current'));
+            btn.classList.toggle('btn-disabled', btn.disabled || btn.classList.contains('disabled'));
+        });
+    }
+
+    function updateDataTableRowNumbers(api) {
+        var info = api.page.info();
+        api.column('.dt-row-number', { page: 'current' }).nodes().each(function (cell, index) {
+            cell.textContent = info.start + index + 1;
+        });
+    }
+
+    function initAdminDataTables() {
+        if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.DataTable) return;
+
+        document.querySelectorAll('table[data-admin-datatable]').forEach(function (table) {
+            if (window.jQuery.fn.DataTable.isDataTable(table)) {
+                var existingApi = window.jQuery(table).DataTable();
+                updateDataTableRowNumbers(existingApi);
+                var wrapper = existingApi.table().container();
+                styleDataTableControls(wrapper);
+                renderAdminIcons();
+                return;
+            }
+
+            try {
+                var pageLength = parseInt(table.getAttribute('data-dt-page-length') || '10', 10);
+                if (!Number.isFinite(pageLength) || pageLength <= 0) pageLength = 10;
+
+                window.jQuery(table).DataTable({
+                    autoWidth: false,
+                    pageLength: pageLength,
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
+                    order: parseDataTableOrder(table),
+                    columnDefs: [
+                        { targets: '.no-sort', orderable: false, searchable: false },
+                    ],
+                    language: {
+                        emptyTable:     'Tidak ada data.',
+                        info:           'Menampilkan _START_\u2013_END_ dari _TOTAL_ data',
+                        infoEmpty:      'Menampilkan 0 data',
+                        infoFiltered:   '(difilter dari _MAX_ total data)',
+                        lengthMenu:     'Tampilkan _MENU_',
+                        loadingRecords: 'Memuat\u2026',
+                        processing:     'Memproses\u2026',
+                        search:         'Cari:',
+                        zeroRecords:    'Tidak ada data yang cocok.',
+                        paginate: {
+                            first:    'Awal',
+                            previous: 'Sebelumnya',
+                            next:     'Berikutnya',
+                            last:     'Akhir',
+                        },
+                        aria: {
+                            orderable:        'Urutkan kolom ini',
+                            orderableReverse: 'Balik urutan kolom ini',
+                        },
+                    },
+                    drawCallback: function () {
+                        var api = this.api();
+                        updateDataTableRowNumbers(api);
+                        var wrapper = api.table().container();
+                        styleDataTableControls(wrapper);
+                        renderAdminIcons();
+                    },
+                    initComplete: function () {
+                        var api = this.api();
+                        updateDataTableRowNumbers(api);
+                        var wrapper = api.table().container();
+                        styleDataTableControls(wrapper);
+                        renderAdminIcons();
+                    },
+                });
+
+            } catch (error) {
+                console.error('Gagal menginisialisasi DataTables admin:', error);
+                renderAdminIcons();
+            }
+        });
+    }
+
+    function destroyAdminDataTables() {
+        if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.DataTable) return;
+
+        document.querySelectorAll('table[data-admin-datatable]').forEach(function (table) {
+            if (window.jQuery.fn.DataTable.isDataTable(table)) {
+                try {
+                    /* destroy(false) = lepas DataTables dari tabel dan bersihkan
+                     * event handler-nya, tapi TIDAK menghapus node <table> dari DOM.
+                     * Ini penting untuk Turbo: snapshot cache akan menyimpan
+                     * <table> asli, dan saat restore turbo:load akan re-init DT. */
+                    window.jQuery(table).DataTable().destroy(false);
+                } catch (e) {
+                    /* abaikan error saat destroy */
+                }
+            }
+        });
+    }
+
     function refreshAdminPage() {
         initThemeControls();
         initSidebar();
         applyActiveNavigation();
         renderAdminIcons();
         disableTurboFormSubmissions();
+        initAdminDataTables();
+        renderAdminIcons(); /* re-render ikon setelah DT menambah elemen baru */
     }
 
     /* ── Bootstrap ──────────────────────────────────────────────────────── */
-    // Script dimuat dengan defer; DOM awal sudah siap saat bootstrap berjalan.
-    patchReadyCallbacksForTurbo();
+    /* Script dimuat dengan defer; DOM awal sudah siap saat bootstrap berjalan.
+     *
+     * Alur Hotwire Turbo:
+     *  - turbo:load         → halaman baru selesai di-render (navigasi penuh / restore)
+     *  - turbo:before-cache → sebelum halaman saat ini di-cache Turbo
+     *
+     * Kita destroy DataTables SEBELUM halaman di-cache sehingga Turbo menyimpan
+     * markup tabel yang bersih (tanpa wrapper DT). Saat halaman di-restore,
+     * turbo:load akan re-init DataTables kembali.
+     *
+     * CATATAN: turbo:render TIDAK digunakan karena ia firing baik saat fresh
+     * navigation MAUPUN saat restore cache (setelah turbo:load sudah firing),
+     * sehingga menyebabkan double-init yang bisa merusak DataTables.
+     * turbo:load sudah cukup — ia meng-cover semua skenario.
+     */
     bindAlertHandlers();
     refreshAdminPage();
     startClock();
     checkTopbarWaStatus();
 
-    document.addEventListener('turbo:load', refreshAdminPage);
-    document.addEventListener('turbo:before-cache', closeTransientShellUi);
+    document.addEventListener('turbo:load', function () {
+        refreshAdminPage();
+        checkTopbarWaStatus();
+    });
+
+    document.addEventListener('turbo:before-cache', function () {
+        /* destroy(false) = lepas DataTables dari tabel tapi TIDAK hapus <table> dari DOM.
+         * Turbo menyimpan snapshot dengan <table> yang bersih (tanpa wrapper DT).
+         * Saat halaman di-restore, turbo:load akan re-init DataTables kembali. */
+        destroyAdminDataTables();
+        closeTransientShellUi();
+    });
 
 })();
