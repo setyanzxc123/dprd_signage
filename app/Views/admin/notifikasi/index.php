@@ -12,7 +12,19 @@
         <div class="header-icon green"><i data-lucide="message-circle"></i></div>
         <div>
             <h6>Riwayat Pengiriman</h6>
-            <p class="header-sub"><?= count($notifications) ?> log ditemukan</p>
+            <?php
+                $scope = $notification_scope ?? [
+                    'window_days' => 60,
+                    'max_rows'    => 1000,
+                ];
+            ?>
+            <p class="header-sub">
+                <?= count($notifications) ?> log operasional ditampilkan
+                <span class="text-base-content/50">
+                    &bull; rapat sejak <?= esc($scope['window_days']) ?> hari terakhir + pending
+                    &bull; maks. <?= esc($scope['max_rows']) ?> baris
+                </span>
+            </p>
         </div>
 
         <div class="ml-auto flex gap-2 items-center flex-wrap">
