@@ -147,10 +147,6 @@
         min-height: 100vh;
         display: grid;
         grid-template-columns: var(--od-sidebar-w) minmax(0, 1fr);
-        transition: grid-template-columns var(--od-motion-base) var(--od-ease);
-    }
-    body.sidebar-collapsed .od-shell {
-        grid-template-columns: 0px minmax(0, 1fr);
     }
 
     #sidebar {
@@ -167,10 +163,6 @@
         overflow: visible;
         z-index: 100;
         transition: transform var(--od-motion-base) var(--od-ease);
-    }
-    body.sidebar-collapsed #sidebar {
-        transform: translateX(-100%);
-        border-right-width: 0px;
     }
 
     .sidebar-menu-wrapper {
@@ -248,9 +240,6 @@
         cursor: pointer;
         z-index: 110; /* Berada di atas header sidebar agar tidak tertutup */
     }
-    body.sidebar-collapsed .sidebar-toggle {
-        transform: translateX(250px);
-    }
     .sidebar-toggle:hover {
         background: var(--od-border-soft);
         color: var(--od-fg);
@@ -258,7 +247,7 @@
     }
     .sidebar-toggle:focus-visible { outline: none; box-shadow: var(--od-focus); }
     .sidebar-toggle svg { transition: transform var(--od-motion-base) var(--od-ease); }
-    body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+    .sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 
     /* ── Sidebar Navigation Menu ── */
     .sidebar-nav {
@@ -361,6 +350,49 @@
         color: var(--od-muted);
         font-size: var(--od-text-xs);
         line-height: 1.5;
+    }
+
+    /* ── Desktop Sidebar Layout & Collapse (Mimic TailAdmin 290px/90px) ── */
+    @media (min-width: 1181px) {
+        .od-shell {
+            grid-template-columns: 290px minmax(0, 1fr);
+        }
+        
+        #sidebar {
+            width: 290px;
+        }
+
+        /* Collapsed State */
+        .sidebar-collapsed .od-shell {
+            grid-template-columns: 90px minmax(0, 1fr);
+        }
+        
+        .sidebar-collapsed #sidebar {
+            width: 90px;
+        }
+
+        .sidebar-collapsed .sidebar-brand {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .sidebar-collapsed .brand-copy,
+        .sidebar-collapsed .nav-section-label,
+        .sidebar-collapsed .nav-text,
+        .sidebar-collapsed .nav-badge,
+        .sidebar-collapsed .sidebar-note {
+            display: none !important;
+        }
+
+        .sidebar-collapsed .nav-link-custom {
+            justify-content: center;
+            padding: 8px 0;
+            gap: 0;
+        }
+
+        .sidebar-collapsed .sidebar-toggle {
+            transform: none !important;
+        }
     }
 
     #main-wrapper {

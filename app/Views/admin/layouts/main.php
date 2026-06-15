@@ -1,8 +1,8 @@
 <?php
 $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
-$adminJsVersion  = is_file(FCPATH . 'assets/js/admin/main.js') ? filemtime(FCPATH . 'assets/js/admin/main.js') : time();
-$fontVersion     = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
-$lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
+$adminJsVersion = is_file(FCPATH . 'assets/js/admin/main.js') ? filemtime(FCPATH . 'assets/js/admin/main.js') : time();
+$fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
+$lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -19,6 +19,9 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             } else {
                 document.documentElement.setAttribute('data-theme', 'light');
             }
+            if (localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
         })();
     </script>
 
@@ -29,8 +32,10 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
         content="Panel manajemen sistem informasi digital signage dan notifikasi WhatsApp DPRD Provinsi Sulawesi Tengah." />
     <meta name="robots" content="noindex, nofollow" />
 
-    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font"
+        type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font"
+        type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
     <?= $this->renderSection('styles') ?>
@@ -54,7 +59,8 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
                     <div class="alert alert-success shadow-sm mb-4" role="alert">
                         <i data-lucide="circle-check"></i>
                         <span><?= session()->getFlashdata('success') ?></span>
-                        <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto" aria-label="Tutup notifikasi">✕</button>
+                        <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto"
+                            aria-label="Tutup notifikasi">✕</button>
                     </div>
                 <?php endif; ?>
 
@@ -62,7 +68,8 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
                     <div class="alert alert-error shadow-sm mb-4" role="alert">
                         <i data-lucide="triangle-alert"></i>
                         <span><?= session()->getFlashdata('error') ?></span>
-                        <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto" aria-label="Tutup notifikasi">✕</button>
+                        <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto"
+                            aria-label="Tutup notifikasi">✕</button>
                     </div>
                 <?php endif; ?>
 
@@ -93,7 +100,7 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             Sistem
         </a>
         <form class="mobile-nav-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
-              onsubmit="return confirm('Yakin ingin keluar?')">
+            onsubmit="return confirm('Yakin ingin keluar?')">
             <?= csrf_field() ?>
             <button type="submit">
                 <i data-lucide="log-out"></i>

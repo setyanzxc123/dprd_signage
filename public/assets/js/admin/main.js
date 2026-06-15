@@ -55,7 +55,7 @@
  
         // Restore collapsed state
         const collapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
-        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
         setSidebarToggleLabel(collapsed);
 
         // Mobile: topbar hamburger
@@ -72,8 +72,8 @@
  
         // Desktop: collapse toggle (hide/show)
         sidebarToggle?.addEventListener('click', function () {
-            const nowCollapsed = !document.body.classList.contains('sidebar-collapsed');
-            document.body.classList.toggle('sidebar-collapsed', nowCollapsed);
+            const nowCollapsed = !document.documentElement.classList.contains('sidebar-collapsed');
+            document.documentElement.classList.toggle('sidebar-collapsed', nowCollapsed);
             localStorage.setItem('dprd-sidebar-collapsed', nowCollapsed ? 'collapsed' : 'expanded');
             setSidebarToggleLabel(nowCollapsed);
         });
