@@ -16,9 +16,6 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 <div class="brand-sub">Panel Admin</div>
             </div>
         </div>
-        <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Ciutkan sidebar" aria-expanded="true" title="Ciutkan sidebar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg>
-        </button>
     </div>
 
     <div class="sidebar-menu-wrapper">
