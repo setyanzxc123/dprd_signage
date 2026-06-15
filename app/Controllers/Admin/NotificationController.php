@@ -7,6 +7,9 @@ use App\Models\NotifikasiModel;
 
 class NotificationController extends BaseController
 {
+    private const OPERATIONAL_WINDOW_DAYS = 60;
+    private const MAX_OPERATIONAL_ROWS = 1000;
+
     private array $filters = [
         'all'     => ['label' => 'Semua',    'class' => 'ta-btn-outline-gray'],
         'sent'    => ['label' => 'Terkirim', 'class' => 'ta-btn-outline-success'],
@@ -17,12 +20,19 @@ class NotificationController extends BaseController
     public function index(): string
     {
         $filterStatus = $this->request->getGet('status') ?? 'all';
+        $windowStart  = date('Y-m-d', strtotime('-' . self::OPERATIONAL_WINDOW_DAYS . ' days'));
         $notifModel   = new NotifikasiModel();
 
-        $applyFilters = static function ($builder) use ($filterStatus) {
+        $applyFilters = static function ($builder) use ($filterStatus, $windowStart) {
             if (in_array($filterStatus, ['sent', 'failed', 'pending'], true)) {
                 $builder->where('notifikasi.status', $filterStatus);
             }
+
+            $builder
+                ->groupStart()
+                    ->where('jadwal.tanggal >=', $windowStart)
+                    ->orWhere('notifikasi.status', 'pending')
+                ->groupEnd();
 
             return $builder;
         };
@@ -35,7 +45,8 @@ class NotificationController extends BaseController
                 ->join('anggota', 'anggota.id = notifikasi.anggota_id', 'left')
                 ->join('jadwal',  'jadwal.id  = notifikasi.jadwal_id',  'left')
         )
-            ->orderBy('notifikasi.created_at', 'DESC')
+            ->orderBy('COALESCE(notifikasi.executed_at, notifikasi.created_at)', 'DESC', false)
+            ->limit(self::MAX_OPERATIONAL_ROWS)
             ->get()
             ->getResultArray();
 
@@ -68,6 +79,11 @@ class NotificationController extends BaseController
             'filter_status' => $filterStatus,
             'filters'       => $this->filters,
             'notifications' => $notifications,
+            'notification_scope' => [
+                'window_days' => self::OPERATIONAL_WINDOW_DAYS,
+                'window_start' => $windowStart,
+                'max_rows'    => self::MAX_OPERATIONAL_ROWS,
+            ],
         ]);
     }
 
