@@ -1,6 +1,7 @@
 {
   "scripts": {
     "build:vendor": "node scripts/copy-vendor-assets.mjs",
+    "build:wa-editor": "node scripts/build-wa-editor.mjs",
     "build:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
     "watch:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch",
     "build:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --minify",
@@ -20,9 +21,17 @@
     "daisyui": "^5.5.23",
     "datatables.net": "^2.3.8",
     "datatables.net-dt": "^2.3.8",
+    "esbuild": "^0.25.12",
     "flatpickr": "^4.6.13",
     "jquery": "^3.7.1",
     "lucide": "^1.17.0",
+    "prosemirror-commands": "^1.7.1",
+    "prosemirror-history": "^1.5.0",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-model": "^1.25.9",
+    "prosemirror-schema-basic": "^1.2.4",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.41.9",
     "qrcodejs": "^1.0.0",
     "vue": "^3.5.38"
   }
