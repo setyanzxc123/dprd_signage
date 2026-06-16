@@ -37,52 +37,38 @@
     </div>
 
     <form method="get" class="p-3 border-b border-base-200">
-        <div class="grid grid-cols-12 gap-3 items-end">
-            <div class="md:col-span-2 col-span-6">
+        <div class="flex flex-wrap gap-3 items-end">
+            <div>
                 <label class="label-text font-bold text-xs mb-1 block" for="filter-tahun">Tahun</label>
-                <select class="select select-sm select-bordered w-full" id="filter-tahun" name="tahun" onchange="this.form.submit()">
+                <select class="select select-sm select-bordered" id="filter-tahun" name="tahun" onchange="this.form.submit()">
                     <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?>
                         <option value="<?= $y ?>" <?= (int) $filters['tahun'] === $y ? 'selected' : '' ?>><?= $y ?></option>
                     <?php endfor; ?>
                 </select>
             </div>
-            <div class="md:col-span-2 col-span-6">
+            <div>
                 <label class="label-text font-bold text-xs mb-1 block" for="filter-semester">Semester</label>
-                <select class="select select-sm select-bordered w-full" id="filter-semester" name="semester" onchange="this.form.submit()">
+                <select class="select select-sm select-bordered" id="filter-semester" name="semester" onchange="this.form.submit()">
                     <option value="all" <?= $filters['semester'] === 'all' ? 'selected' : '' ?>>Semua</option>
                     <option value="1" <?= $filters['semester'] === '1' ? 'selected' : '' ?>>Semester I</option>
                     <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
                 </select>
             </div>
-            <div class="md:col-span-2 col-span-6">
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-jenis">Jenis</label>
-                <select class="select select-sm select-bordered w-full" id="filter-jenis" name="jenis" onchange="this.form.submit()">
-                    <option value="all" <?= $filters['jenis'] === 'all' ? 'selected' : '' ?>>Semua</option>
-                    <option value="reguler" <?= $filters['jenis'] === 'reguler' ? 'selected' : '' ?>>Reguler</option>
-                    <option value="insidental" <?= $filters['jenis'] === 'insidental' ? 'selected' : '' ?>>Insidental</option>
-                </select>
-            </div>
-            <div class="md:col-span-2 col-span-6">
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-status">Status</label>
-                <select class="select select-sm select-bordered w-full" id="filter-status" name="status" onchange="this.form.submit()">
-                    <option value="all" <?= $filters['status'] === 'all' ? 'selected' : '' ?>>Semua</option>
-                    <option value="menunggu" <?= $filters['status'] === 'menunggu' ? 'selected' : '' ?>>Menunggu</option>
-                    <option value="persiapan" <?= $filters['status'] === 'persiapan' ? 'selected' : '' ?>>Persiapan</option>
-                    <option value="berlangsung" <?= $filters['status'] === 'berlangsung' ? 'selected' : '' ?>>Berlangsung</option>
-                    <option value="selesai" <?= $filters['status'] === 'selesai' ? 'selected' : '' ?>>Selesai</option>
-                </select>
-            </div>
-            <div class="md:col-span-4 col-span-12 flex gap-2">
-                <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-sm btn-outline btn-ghost" title="Reset filter">
+            <div class="flex items-end gap-2">
+                <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-sm btn-outline btn-ghost" title="Reset semua filter">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                 </a>
             </div>
+            <p class="text-xs text-base-content/40 self-end pb-1 ml-auto hidden md:block">
+                Filter Jenis &amp; Status tersedia langsung di tabel ↓
+            </p>
         </div>
     </form>
 
     <div class="section-card-body p-0">
         <div class="overflow-x-auto w-full">
-            <table class="table table-zebra table-md w-full admin-data-table" id="table-jadwal" data-admin-datatable data-dt-order='[[1,"desc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table" id="table-jadwal" data-admin-datatable data-dt-order='[[1,"desc"]]'
+                data-dt-col-filters='[{"col":5,"label":"Jenis","all":"Semua Jenis"},{"col":7,"label":"Status","all":"Semua Status"}]'>
                 <thead>
                     <tr class="bg-base-200/50">
                         <th class="dt-row-number no-sort">No</th>
