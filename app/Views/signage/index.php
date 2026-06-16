@@ -49,7 +49,8 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         </div>
                         <div class="weather-details-row">
                             <span class="weather-hum">Kelembapan {{ cuaca.kelembapan }} &nbsp;&nbsp;Angin {{ cuaca.kec_angin }}</span>
-                            <span class="weather-separator">-</span>
+                        </div>
+                        <div class="weather-details-row">
                             <span class="weather-src">Sumber: BMKG</span>
                         </div>
                     </div>

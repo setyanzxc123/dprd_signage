@@ -572,10 +572,11 @@ body {
 }
 
 .weather-src {
-    font-size: 0.7vw;
-    color: rgba(255, 255, 255, 0.45);
+    font-size: clamp(10px, 0.65vw, 13px);
+    color: rgba(255, 255, 255, 0.4);
     letter-spacing: 0.3px;
     font-style: italic;
+    display: block;
 }
 
 .weather-separator {
