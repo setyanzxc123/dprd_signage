@@ -667,11 +667,6 @@
         'sender_name'   => $waSenderNameValue ?? 'Sekretariat DPRD',
     ], JSON_UNESCAPED_SLASHES) ?>;
 
-    // Running text preview
-    document.getElementById('running_text')?.addEventListener('input', function () {
-        document.getElementById('preview-text').textContent = this.value || 'Teks berjalan akan tampil di sini...';
-    });
-
     const waDefaultTemplate = <?= json_encode(\App\Libraries\WhatsappService::defaultReminderTemplate(), JSON_UNESCAPED_SLASHES) ?>;
 
     // ══════════════════════════════════════════════════════════════
@@ -944,8 +939,6 @@
     // Editor event listeners
     // ══════════════════════════════════════════════════════════════
 
-    document.getElementById('wa_sender_name')?.addEventListener('input', renderWaTemplatePreview);
-
     // Tema & Mode selection
     function selectTema(tema) {
         document.querySelectorAll('[id^="tema-"]').forEach(el => el.classList.remove('selected'));
@@ -966,8 +959,23 @@
     window.selectTema = selectTema;
     window.selectMode = selectMode;
 
-    // DOMContentLoaded — bootstrap editor
-    document.addEventListener('DOMContentLoaded', function() {
+    function initSettingsPage() {
+        const form = document.querySelector('.settings-form');
+        if (!form) return;
+
+        if (form.dataset.settingsBootstrapped === '1') {
+            renderWaTemplatePreview();
+            window.renderAdminIcons?.();
+            return;
+        }
+        form.dataset.settingsBootstrapped = '1';
+
+        document.getElementById('running_text')?.addEventListener('input', function () {
+            document.getElementById('preview-text').textContent = this.value || 'Teks berjalan akan tampil di sini...';
+        });
+
+        document.getElementById('wa_sender_name')?.addEventListener('input', renderWaTemplatePreview);
+
         const editor = document.getElementById('wa_template_editor');
         const hidden = document.getElementById('wa_template_reminder');
 
@@ -1015,7 +1023,13 @@
             });
         }
         window.renderAdminIcons?.();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSettingsPage, { once: true });
+    } else {
+        initSettingsPage();
+    }
 })();
 
 
