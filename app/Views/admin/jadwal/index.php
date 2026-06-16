@@ -26,7 +26,13 @@
         <div class="header-icon"><i data-lucide="calendar-days"></i></div>
         <div>
             <h6>Daftar Jadwal</h6>
-            <p class="header-sub"><?= count($meetings) ?> jadwal ditemukan</p>
+            <?php $scope = $data_scope ?? ['label' => 'filter aktif']; ?>
+            <p class="header-sub">
+                <?= count($meetings) ?> jadwal ditemukan
+                <span class="text-base-content/50">
+                    &bull; <?= esc($scope['label']) ?>
+                </span>
+            </p>
         </div>
     </div>
 

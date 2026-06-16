@@ -37,6 +37,9 @@ class MemberController extends BaseController
         return view('admin/anggota/index', [
             'pageTitle' => 'Anggota DPRD',
             'members'   => $members,
+            'data_scope' => [
+                'label' => 'seluruh master anggota',
+            ],
         ]);
     }
 

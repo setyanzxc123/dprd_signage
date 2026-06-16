@@ -17,7 +17,13 @@
         <div class="header-icon"><i data-lucide="workflow"></i></div>
         <div>
             <h6>Daftar Kelompok Peserta</h6>
-            <p class="header-sub"><?= count($units) ?> kelompok terdaftar</p>
+            <?php $scope = $data_scope ?? ['label' => 'seluruh kelompok, termasuk nonaktif']; ?>
+            <p class="header-sub">
+                <?= count($units) ?> kelompok terdaftar
+                <span class="text-base-content/50">
+                    &bull; <?= esc($scope['label']) ?>
+                </span>
+            </p>
         </div>
     </div>
 
