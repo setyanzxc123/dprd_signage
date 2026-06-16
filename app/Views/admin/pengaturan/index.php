@@ -172,15 +172,15 @@
                         <!-- WA Formatting Toolbar -->
                         <div class="wa-toolbar" id="wa-toolbar">
                             <button type="button" class="wa-toolbar-btn" id="wa-btn-bold"
-                                onmousedown="event.preventDefault(); waExecFormat('bold')" title="Bold">
+                                onmousedown="event.preventDefault(); waExecFormat('strong')" title="Bold">
                                 <strong>B</strong>
                             </button>
                             <button type="button" class="wa-toolbar-btn" id="wa-btn-italic"
-                                onmousedown="event.preventDefault(); waExecFormat('italic')" title="Italic">
+                                onmousedown="event.preventDefault(); waExecFormat('em')" title="Italic">
                                 <em>I</em>
                             </button>
                             <button type="button" class="wa-toolbar-btn" id="wa-btn-strike"
-                                onmousedown="event.preventDefault(); waExecFormat('strikethrough')" title="Coret">
+                                onmousedown="event.preventDefault(); waExecFormat('strike')" title="Coret">
                                 <s>S</s>
                             </button>
                             <button type="button" class="wa-toolbar-btn" id="wa-btn-mono"
@@ -195,10 +195,8 @@
                             </button>
                         </div>
 
-                        <!-- Contenteditable Rich Editor -->
+                        <!-- ProseMirror Rich Editor -->
                         <div class="wa-rich-editor" id="wa_template_editor"
-                            contenteditable="true"
-                            spellcheck="false"
                             data-placeholder="Tulis template pesan WA..."></div>
 
                         <!-- Hidden input for form submission -->
@@ -508,32 +506,38 @@
         margin-left: 2px;
     }
 
-    /* ─── Contenteditable Rich Editor ─── */
+    /* ─── ProseMirror Rich Editor ─── */
     .wa-rich-editor {
-        min-height: 200px;
         max-height: 420px;
         overflow-y: auto;
-        padding: 10px 12px;
         border: 1px solid var(--od-border);
         border-radius: 0 0 8px 8px;
         background: var(--od-surface);
         font-size: .84rem;
         font-family: var(--od-font, 'Inter', sans-serif);
         line-height: 1.7;
-        outline: none;
-        white-space: pre-wrap;
-        word-break: break-word;
         color: var(--od-fg);
         cursor: text;
     }
-    .wa-rich-editor:focus {
+    .wa-rich-editor:focus-within {
         border-color: var(--od-accent);
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-accent) 15%, transparent);
     }
-    .wa-rich-editor:empty::before {
-        content: attr(data-placeholder);
+    .wa-rich-editor .ProseMirror {
+        min-height: 200px;
+        padding: 10px 12px;
+        outline: none;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .wa-rich-editor .ProseMirror p {
+        margin: 0;
+    }
+    .wa-editor-placeholder {
         color: var(--od-muted);
         pointer-events: none;
+        float: left;
+        height: 0;
     }
     /* Locked placeholder token inside editor */
     .wa-rich-editor .wa-var {
@@ -548,6 +552,7 @@
         font-weight: 700;
         font-family: var(--od-font, 'Inter', sans-serif);
         line-height: 1.5;
+        pointer-events: none;
         user-select: none;
         cursor: default;
         white-space: nowrap;
@@ -650,6 +655,8 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<?php $waEditorVersion = is_file(FCPATH . 'assets/js/admin/wa-template-editor.js') ? filemtime(FCPATH . 'assets/js/admin/wa-template-editor.js') : time(); ?>
+<script src="<?= base_url('assets/js/admin/wa-template-editor.js?v=' . $waEditorVersion) ?>" data-turbo-track="reload"></script>
 <script>
 (() => {
     const waTemplatePlaceholders = <?= json_encode(array_keys($waPlaceholders ?? []), JSON_UNESCAPED_SLASHES) ?>;
@@ -670,109 +677,19 @@
     const waDefaultTemplate = <?= json_encode(\App\Libraries\WhatsappService::defaultReminderTemplate(), JSON_UNESCAPED_SLASHES) ?>;
 
     // ══════════════════════════════════════════════════════════════
-    // WA Rich Editor — DOM ↔ WA-format conversion
+    // WA Rich Editor — ProseMirror bridge
     // ══════════════════════════════════════════════════════════════
 
     /**
-     * Convert WA plain-text (with *, _, ~, ``` symbols + {placeholders})
-     * into HTML suitable for the contenteditable editor.
-     */
-    function waTextToHtml(waText, placeholderLabels) {
-        if (!waText) return '';
-
-        // Process line by line so block-level formatting is correct
-        const lines = waText.split('\n');
-        const htmlLines = lines.map(line => {
-            // Step 1: Escape raw HTML chars first
-            let s = line
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-
-            // Step 2: Replace placeholders FIRST — before any formatting regex
-            // This prevents underscores inside {waktu_mulai} etc. from
-            // being mistakenly matched by the italic _text_ regex below.
-            s = s.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
-                const label = placeholderLabels[key] || key;
-                return `<span class="wa-var" contenteditable="false" data-token="${key}">${label}</span>`;
-            });
-
-            // Step 3: Apply WA formatting (safe — no raw {key} underscores left)
-            // Monospace  ```text``` → <code class="wa-code">text</code>
-            s = s.replace(/```([^`]*)```/g, '<code class="wa-code">$1</code>');
-            // Bold  *text* → <strong>text</strong>
-            s = s.replace(/\*([^*<>]+)\*/g, '<strong>$1</strong>');
-            // Italic  _text_ → <em>text</em>
-            s = s.replace(/_([^_<>]+)_/g, '<em>$1</em>');
-            // Strikethrough  ~text~ → <del>text</del>
-            s = s.replace(/~([^~<>]+)~/g, '<del>$1</del>');
-
-            return s;
-        });
-
-        return htmlLines.join('<br>');
-    }
-
-    /**
-     * Walk the editor DOM and convert it back to WA plain-text.
-     * Handles: <strong>/<b> → *x*, <em>/<i> → _x_, <del>/<s> → ~x~,
-     *          <code> → ```x```, .wa-var → {token}, <br>/<div> → \n
-     */
-    function domToWaText(node) {
-        let out = '';
-
-        for (const child of node.childNodes) {
-            if (child.nodeType === Node.TEXT_NODE) {
-                out += child.nodeValue;
-                continue;
-            }
-            if (child.nodeType !== Node.ELEMENT_NODE) continue;
-
-            const tag = child.tagName.toLowerCase();
-
-            // Locked placeholder token
-            if (child.classList?.contains('wa-var')) {
-                const key = child.dataset.token || '';
-                out += key ? `{${key}}` : '';
-                continue;
-            }
-
-            if (tag === 'br') { out += '\n'; continue; }
-
-            // Block-level wrappers (contenteditable inserts divs on Enter)
-            if (tag === 'div' || tag === 'p') {
-                const inner = domToWaText(child);
-                // Only add newline if there's already content (not first line)
-                out += (out && !out.endsWith('\n') ? '\n' : '') + inner;
-                if (!out.endsWith('\n')) out += '\n';
-                continue;
-            }
-
-            const inner = domToWaText(child);
-
-            if (tag === 'strong' || tag === 'b') { out += `*${inner}*`; continue; }
-            if (tag === 'em'     || tag === 'i') { out += `_${inner}_`; continue; }
-            if (tag === 'del'    || tag === 's' || tag === 'strike') { out += `~${inner}~`; continue; }
-            if (tag === 'code') { out += `\`\`\`${inner}\`\`\``; continue; }
-
-            // Any other tag — just recurse
-            out += inner;
-        }
-        return out;
-    }
-
-    /**
-     * Sync editor DOM → hidden textarea → trigger preview update.
+     * Sync ProseMirror doc to hidden textarea before preview or submit.
      */
     function syncEditorToHidden() {
-        const editor = document.getElementById('wa_template_editor');
         const hidden = document.getElementById('wa_template_reminder');
-        if (!editor || !hidden) return;
+        if (!hidden) return;
 
-        let waText = domToWaText(editor);
-        // Trim trailing newlines but keep single trailing \n
-        waText = waText.replace(/\n+$/, '');
-        hidden.value = waText;
+        if (window.WaTemplateEditor) {
+            hidden.value = window.WaTemplateEditor.sync();
+        }
         renderWaTemplatePreview();
     }
 
@@ -791,52 +708,25 @@
     // Toolbar actions
     // ══════════════════════════════════════════════════════════════
 
-    function waExecFormat(command) {
-        const editor = document.getElementById('wa_template_editor');
-        editor?.focus();
-        document.execCommand(command, false, null);
-        updateToolbarState();
-        syncEditorToHidden();
+    function waExecFormat(markName) {
+        window.WaTemplateEditor?.format(markName);
     }
 
     function waExecMono() {
-        const editor = document.getElementById('wa_template_editor');
-        if (!editor) return;
-        editor.focus();
-
-        const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0) return;
-        const range = sel.getRangeAt(0);
-        const selected = range.toString();
-
-        if (!selected) return;
-
-        // Wrap selection in <code class="wa-code">
-        const code = document.createElement('code');
-        code.className = 'wa-code';
-        code.textContent = selected;
-        range.deleteContents();
-        range.insertNode(code);
-
-        // Move cursor after inserted code
-        const newRange = document.createRange();
-        newRange.setStartAfter(code);
-        newRange.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-
-        syncEditorToHidden();
+        window.WaTemplateEditor?.format('code');
     }
 
-    function updateToolbarState() {
+    function updateToolbarState(active = null) {
+        const marks = active || window.WaTemplateEditor?.activeMarks?.() || {};
         const map = {
-            'wa-btn-bold':   'bold',
-            'wa-btn-italic': 'italic',
-            'wa-btn-strike': 'strikethrough',
+            'wa-btn-bold': 'strong',
+            'wa-btn-italic': 'em',
+            'wa-btn-strike': 'strike',
+            'wa-btn-mono': 'code',
         };
-        for (const [id, cmd] of Object.entries(map)) {
+        for (const [id, markName] of Object.entries(map)) {
             const btn = document.getElementById(id);
-            if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+            if (btn) btn.classList.toggle('active', !!marks[markName]);
         }
     }
 
@@ -845,38 +735,7 @@
     // ══════════════════════════════════════════════════════════════
 
     function insertWaToken(tokenKey, tokenLabel) {
-        const editor = document.getElementById('wa_template_editor');
-        if (!editor) return;
-
-        editor.focus();
-        const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0) return;
-
-        const range = sel.getRangeAt(0);
-        range.deleteContents();
-
-        // Create locked chip
-        const chip = document.createElement('span');
-        chip.className = 'wa-var';
-        chip.setAttribute('contenteditable', 'false');
-        chip.dataset.token = tokenKey;
-        chip.textContent = tokenLabel;
-
-        // Insert chip + trailing zero-width space so cursor can move past it
-        const zwsp = document.createTextNode('\u200B');
-        const frag = document.createDocumentFragment();
-        frag.appendChild(chip);
-        frag.appendChild(zwsp);
-        range.insertNode(frag);
-
-        // Place cursor after the zero-width space
-        const newRange = document.createRange();
-        newRange.setStartAfter(zwsp);
-        newRange.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-
-        syncEditorToHidden();
+        window.WaTemplateEditor?.insertToken(tokenKey, tokenLabel);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -884,12 +743,11 @@
     // ══════════════════════════════════════════════════════════════
 
     function resetWaTemplateToDefault() {
-        const editor = document.getElementById('wa_template_editor');
         const hidden = document.getElementById('wa_template_reminder');
-        if (!editor || !hidden) return;
+        if (!hidden) return;
 
         hidden.value = waDefaultTemplate;
-        editor.innerHTML = waTextToHtml(waDefaultTemplate, getPlaceholderLabels());
+        window.WaTemplateEditor?.setText(waDefaultTemplate);
         renderWaTemplatePreview();
     }
 
@@ -980,19 +838,14 @@
         const hidden = document.getElementById('wa_template_reminder');
 
         if (editor && hidden) {
-            // Render stored WA text into visual editor
-            editor.innerHTML = waTextToHtml(hidden.value, getPlaceholderLabels());
-
-            // Sync back on every edit
-            editor.addEventListener('input', () => {
-                syncEditorToHidden();
-                updateToolbarState();
+            window.WaTemplateEditor?.mount({
+                editor,
+                hidden,
+                labels: getPlaceholderLabels(),
+                onUpdate: () => renderWaTemplatePreview(),
+                onSelectionUpdate: updateToolbarState,
             });
-            editor.addEventListener('keyup', updateToolbarState);
-            editor.addEventListener('mouseup', updateToolbarState);
-            editor.addEventListener('selectionchange', updateToolbarState);
 
-            // Prevent form submission from submitting div HTML
             editor.closest('form')?.addEventListener('submit', () => {
                 syncEditorToHidden();
                 localStorage.removeItem('dprd_wa_status_cache');
