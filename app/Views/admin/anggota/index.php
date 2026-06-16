@@ -17,7 +17,13 @@
         <div class="header-icon"><i data-lucide="users"></i></div>
         <div>
             <h6>Daftar Anggota</h6>
-            <p class="header-sub"><?= count($members) ?> anggota terdaftar</p>
+            <?php $scope = $data_scope ?? ['label' => 'seluruh master anggota']; ?>
+            <p class="header-sub">
+                <?= count($members) ?> anggota terdaftar
+                <span class="text-base-content/50">
+                    &bull; <?= esc($scope['label']) ?>
+                </span>
+            </p>
         </div>
     </div>
 

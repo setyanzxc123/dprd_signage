@@ -17,7 +17,13 @@
         <div class="header-icon"><i data-lucide="door-open"></i></div>
         <div>
             <h6>Daftar Ruangan</h6>
-            <p class="header-sub"><?= count($rooms) ?> ruangan terdaftar</p>
+            <?php $scope = $data_scope ?? ['label' => 'seluruh master ruangan tetap']; ?>
+            <p class="header-sub">
+                <?= count($rooms) ?> ruangan terdaftar
+                <span class="text-base-content/50">
+                    &bull; <?= esc($scope['label']) ?>
+                </span>
+            </p>
         </div>
     </div>
 

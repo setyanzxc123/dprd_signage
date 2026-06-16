@@ -18,6 +18,9 @@ class UnitRapatController extends BaseController
         return view('admin/unit_rapat/index', [
             'pageTitle'  => 'Kelompok Peserta',
             'units'      => $units,
+            'data_scope' => [
+                'label' => 'seluruh kelompok, termasuk nonaktif',
+            ],
         ]);
     }
 

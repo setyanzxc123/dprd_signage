@@ -84,6 +84,9 @@ class MeetingController extends BaseController
                 'jenis'    => $jenis,
                 'status'   => $status,
             ],
+            'data_scope'  => [
+                'label' => $this->scheduleScopeLabel($tahun, $semester, $jenis, $status),
+            ],
         ]);
     }
 
@@ -367,6 +370,40 @@ class MeetingController extends BaseController
         }
 
         return 'insidental';
+    }
+
+    private function scheduleScopeLabel(int $tahun, string $semester, string $jenis, string $status): string
+    {
+        $parts = ["tahun {$tahun}"];
+
+        if ($semester === '1') {
+            $parts[] = 'semester I';
+        } elseif ($semester === '2') {
+            $parts[] = 'semester II';
+        }
+
+        if ($jenis !== 'all') {
+            $parts[] = 'jenis ' . $this->filterLabel($jenis);
+        }
+
+        if ($status !== 'all') {
+            $parts[] = 'status ' . $this->filterLabel($status);
+        }
+
+        return implode(', ', $parts);
+    }
+
+    private function filterLabel(string $value): string
+    {
+        return match ($value) {
+            'reguler'     => 'reguler',
+            'insidental'  => 'insidental',
+            'menunggu'    => 'menunggu',
+            'persiapan'   => 'persiapan',
+            'berlangsung' => 'berlangsung',
+            'selesai'     => 'selesai',
+            default       => $value,
+        };
     }
 
     private function targetAnggotaByUnitIds(array $unitIds): array

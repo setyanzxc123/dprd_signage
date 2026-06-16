@@ -16,6 +16,9 @@ class RoomController extends BaseController
         return view('admin/ruangan/index', [
             'pageTitle' => 'Ruangan Rapat',
             'rooms'     => $rooms,
+            'data_scope' => [
+                'label' => 'seluruh master ruangan tetap',
+            ],
         ]);
     }
 
