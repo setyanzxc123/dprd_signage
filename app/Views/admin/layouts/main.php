@@ -43,6 +43,7 @@ $flashError = session()->getFlashdata('error');
     <meta name="robots" content="noindex, nofollow" />
     <meta name="turbo-cache-control" content="no-preview" />
 
+    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font"
         type="font/woff2" crossorigin />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font"

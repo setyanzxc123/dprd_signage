@@ -14,6 +14,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
     <meta property="og:description" content="Pantau jadwal rapat DPRD Provinsi Sulawesi Tengah secara langsung." />
     <meta property="og:type" content="website" />
 
+    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script>
         (() => {
