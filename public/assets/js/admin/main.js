@@ -85,12 +85,38 @@
     }
 
     /* ── Alert close handler ────────────────────────────────────────────── */
+    function dismissAdminAlert(alert) {
+        if (!alert || alert.dataset.dismissed === '1') return;
+        alert.dataset.dismissed = '1';
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-6px)';
+        window.setTimeout(function () {
+            alert.remove();
+        }, 180);
+    }
+
+    function initAutoDismissAlerts() {
+        document.querySelectorAll('[data-admin-alert]').forEach(function (alert) {
+            if (alert.dataset.autoDismissBound === '1') return;
+            alert.dataset.autoDismissBound = '1';
+            alert.style.transition = 'opacity 180ms ease, transform 180ms ease';
+            alert.style.willChange = 'opacity, transform';
+
+            var delay = parseInt(alert.getAttribute('data-auto-dismiss-ms') || '4000', 10);
+            if (!Number.isFinite(delay) || delay <= 0) return;
+
+            window.setTimeout(function () {
+                dismissAdminAlert(alert);
+            }, delay);
+        });
+    }
+
     function bindAlertHandlers() {
         if (document.documentElement.dataset.adminAlertBound === '1') return;
         document.documentElement.dataset.adminAlertBound = '1';
         document.addEventListener('click', function (e) {
             const btn = e.target.closest('.alert-close-btn, .ta-alert-close');
-            if (btn) btn.closest('.alert, .ta-alert')?.remove();
+            if (btn) dismissAdminAlert(btn.closest('.alert, .ta-alert'));
         });
     }
 
@@ -435,6 +461,7 @@
         applyActiveNavigation();
         renderAdminIcons();
         disableTurboFormSubmissions();
+        initAutoDismissAlerts();
         initAdminDataTables();
         renderAdminIcons(); /* re-render ikon setelah DT menambah elemen baru */
     }
@@ -471,6 +498,9 @@
          * Saat halaman di-restore, turbo:load akan re-init DataTables kembali. */
         destroyAdminDataTables();
         closeTransientShellUi();
+        document.querySelectorAll('[data-admin-alert]').forEach(function (alert) {
+            alert.remove();
+        });
     });
 
 })();

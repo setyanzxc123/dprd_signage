@@ -7,6 +7,8 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
 $jqueryVersion = is_file(FCPATH . 'assets/vendor/jquery/jquery.min.js') ? filemtime(FCPATH . 'assets/vendor/jquery/jquery.min.js') : time();
 $dataTablesJsVersion = is_file(FCPATH . 'assets/vendor/datatables/dataTables.min.js') ? filemtime(FCPATH . 'assets/vendor/datatables/dataTables.min.js') : time();
 $dataTablesCssVersion = is_file(FCPATH . 'assets/vendor/datatables/dataTables.dataTables.min.css') ? filemtime(FCPATH . 'assets/vendor/datatables/dataTables.dataTables.min.css') : time();
+$flashSuccess = session()->getFlashdata('success');
+$flashError = session()->getFlashdata('error');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -78,19 +80,19 @@ $dataTablesCssVersion = is_file(FCPATH . 'assets/vendor/datatables/dataTables.da
 
             <main id="content">
 
-                <?php if (session()->getFlashdata('success')): ?>
-                    <div class="alert alert-success shadow-sm mb-4" role="alert">
+                <?php if ($flashSuccess): ?>
+                    <div class="alert alert-success admin-flash-alert shadow-sm mb-4" role="alert" data-admin-alert data-auto-dismiss-ms="3500">
                         <i data-lucide="circle-check"></i>
-                        <span><?= session()->getFlashdata('success') ?></span>
+                        <span><?= esc($flashSuccess) ?></span>
                         <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto"
                             aria-label="Tutup notifikasi">✕</button>
                     </div>
                 <?php endif; ?>
 
-                <?php if (session()->getFlashdata('error')): ?>
-                    <div class="alert alert-error shadow-sm mb-4" role="alert">
+                <?php if ($flashError): ?>
+                    <div class="alert alert-error admin-flash-alert shadow-sm mb-4" role="alert" data-admin-alert data-auto-dismiss-ms="5500">
                         <i data-lucide="triangle-alert"></i>
-                        <span><?= session()->getFlashdata('error') ?></span>
+                        <span><?= esc($flashError) ?></span>
                         <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto"
                             aria-label="Tutup notifikasi">✕</button>
                     </div>
