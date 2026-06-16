@@ -257,6 +257,90 @@
         });
     }
 
+    /* ── DataTables column filters (client-side) ────────────────────────── */
+    /*
+     * Membaca atribut data-dt-col-filters pada <table> (JSON array):
+     *   [{"col": <index>, "label": "Label", "all": "Semua ..."}]
+     * Lalu meng-inject dropdown DaisyUI ke area toolbar DataTables
+     * sehingga admin bisa filter Jenis / Status tanpa reload halaman.
+     */
+    function buildDtColumnFilters(table, api) {
+        var raw = table.getAttribute('data-dt-col-filters');
+        if (!raw) return;
+
+        var defs;
+        try { defs = JSON.parse(raw); } catch (_) { return; }
+        if (!Array.isArray(defs) || defs.length === 0) return;
+
+        /* Cari wrapper DT dan tempatkan di baris toolbar (dt-layout-start) */
+        var wrapper = api.table().container();
+        var toolbar  = wrapper.querySelector('.dt-layout-start');
+        if (!toolbar) return;
+
+        /* Jangan inject dua kali (misal saat DT sudah init) */
+        if (wrapper.querySelector('.dt-col-filter-bar')) return;
+
+        var bar = document.createElement('div');
+        bar.className = 'dt-col-filter-bar flex flex-wrap gap-2 items-center mt-2 mb-1';
+
+        defs.forEach(function (def) {
+            var colIdx  = def.col;
+            var allText = def.all  || 'Semua';
+            var label   = def.label || ('Kolom ' + colIdx);
+
+            /* Kumpulkan nilai unik dari kolom tsb */
+            var values = [];
+            api.column(colIdx).data().each(function (cell) {
+                /* Ambil teks bersih dari HTML (badge, span, dll) */
+                var tmp = document.createElement('div');
+                tmp.innerHTML = cell;
+                var text = (tmp.textContent || tmp.innerText || '').trim();
+                if (text && values.indexOf(text) === -1) values.push(text);
+            });
+            values.sort();
+
+            /* Bungkus label + select */
+            var wrap = document.createElement('div');
+            wrap.className = 'flex items-center gap-1.5';
+
+            var lbl = document.createElement('span');
+            lbl.className = 'text-xs font-bold text-base-content/50 whitespace-nowrap';
+            lbl.textContent = label + ':';
+
+            var sel = document.createElement('select');
+            sel.className = 'select select-sm select-bordered dt-col-filter-select';
+            sel.setAttribute('data-dt-filter-col', colIdx);
+            sel.setAttribute('aria-label', 'Filter ' + label);
+
+            /* Opsi "Semua" */
+            var optAll = document.createElement('option');
+            optAll.value = '';
+            optAll.textContent = allText;
+            sel.appendChild(optAll);
+
+            values.forEach(function (v) {
+                var opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                sel.appendChild(opt);
+            });
+
+            sel.addEventListener('change', function () {
+                /* DataTables search pada kolom — exact match (regex escape) */
+                var term = this.value
+                    ? '^' + this.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'
+                    : '';
+                api.column(colIdx).search(term, /* regex */ true, /* smart */ false).draw();
+            });
+
+            wrap.appendChild(lbl);
+            wrap.appendChild(sel);
+            bar.appendChild(wrap);
+        });
+
+        toolbar.appendChild(bar);
+    }
+
     function initAdminDataTables() {
         if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.DataTable) return;
 
@@ -315,6 +399,7 @@
                         updateDataTableRowNumbers(api);
                         var wrapper = api.table().container();
                         styleDataTableControls(wrapper);
+                        buildDtColumnFilters(table, api);
                         renderAdminIcons();
                     },
                 });
