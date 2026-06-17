@@ -18,7 +18,7 @@
 
     <div class="grid grid-cols-12 gap-3">
 
-        <div class="lg:col-span-7">
+        <div class="col-span-12 lg:col-span-7">
             <div class="form-card p-[18px]">
 
                 <div class="form-section-title mb-3 pb-2">Informasi Ruangan</div>
@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <div class="lg:col-span-5">
+        <div class="col-span-12 lg:col-span-5">
             <div class="form-card p-[18px]">
 
                 <div class="form-section-title mb-3 pb-2">Status Ruangan</div>
@@ -86,10 +86,10 @@
     </div>
 
     <div class="flex gap-2 mt-4">
-        <a href="<?= base_url('admin/ruangan') ?>" class="btn btn-outline btn-sm">
+        <a href="<?= base_url('admin/ruangan') ?>" class="btn btn-outline btn-md sm:btn-sm flex-1 sm:flex-none">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary btn-sm">
+        <button type="submit" class="btn btn-primary btn-md sm:btn-sm flex-1 sm:flex-none">
             <i data-lucide="check" class="w-4 h-4"></i>
             <?= $room ? 'Simpan Perubahan' : 'Tambah Ruangan' ?>
         </button>
