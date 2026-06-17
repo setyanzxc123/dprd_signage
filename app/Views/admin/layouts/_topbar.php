@@ -17,6 +17,13 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 
     <div class="topbar-mobile-title" aria-current="page"><?= esc($pageTitle) ?></div>
 
+    <div class="topbar-mobile-brand">
+        <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD" class="topbar-mobile-logo" />
+        <div class="topbar-mobile-copy">
+            <span class="topbar-mobile-name">DPRD Sulawesi Tengah</span>
+        </div>
+    </div>
+
     <nav class="topbar-breadcrumb" aria-label="breadcrumb">
         <?php if ($pageTitle === 'Dashboard' && empty($breadcrumbs)): ?>
             <strong class="current"><?= esc($pageTitle) ?></strong>

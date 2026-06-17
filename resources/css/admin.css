@@ -467,6 +467,9 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    .topbar-mobile-brand {
+        display: none;
+    }
     .topbar-breadcrumb {
         display: flex;
         align-items: center;
@@ -1446,7 +1449,33 @@
         padding: 10px 16px;
     }
     .topbar-breadcrumb { display: none; }
-    .topbar-mobile-title { display: block; }
+    .topbar-mobile-title { display: none; }
+    .topbar-mobile-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+    .topbar-mobile-logo {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+        border-radius: 6px;
+    }
+    .topbar-mobile-copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .topbar-mobile-name {
+        color: var(--od-fg);
+        font-size: 13.5px;
+        font-weight: 800;
+        line-height: 1.1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .topbar-actions {
         flex: 0 0 auto;
         gap: 8px;
