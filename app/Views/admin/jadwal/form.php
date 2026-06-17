@@ -548,7 +548,10 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
         </a>
         <button type="submit" class="btn btn-primary sm:btn-sm">
             <i data-lucide="calendar-check" class="w-4 h-4"></i>
-            <?= $meeting ? 'Simpan Perubahan' : 'Simpan & Jadwalkan Notifikasi' ?>
+            <span class="sm:hidden">Simpan</span>
+            <span class="hidden sm:inline">
+                <?= $meeting ? 'Simpan Perubahan' : 'Simpan & Jadwalkan Notifikasi' ?>
+            </span>
         </button>
     </div>
 </form>

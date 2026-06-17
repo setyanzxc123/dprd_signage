@@ -1571,16 +1571,25 @@
         display: block !important;
         width: 100% !important;
         background-color: var(--fallback-b1, oklch(var(--b1))) !important;
-        border: 1px solid var(--od-border-soft) !important;
+        border: 1px solid rgba(16, 24, 40, 0.12) !important;
         border-radius: var(--od-radius-lg, 12px) !important;
         padding: 16px !important;
         margin-bottom: 12px !important;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        transition: border-color var(--od-motion-fast) var(--od-ease), box-shadow var(--od-motion-fast) var(--od-ease) !important;
+    }
+    [data-theme="dark"] .responsive-card-table tbody tr {
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }
     .responsive-card-table tbody tr:hover {
         background-color: var(--fallback-b1, oklch(var(--b1))) !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-        border-color: var(--od-border) !important;
+        border-color: rgba(16, 24, 40, 0.24) !important;
+    }
+    [data-theme="dark"] .responsive-card-table tbody tr:hover {
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3) !important;
     }
     .responsive-card-table tbody td {
         display: flex !important;
