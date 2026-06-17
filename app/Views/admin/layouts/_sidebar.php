@@ -12,8 +12,8 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <div class="sidebar-brand">
             <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD" class="brand-logo-img" />
             <div class="brand-copy">
-                <div class="brand-title">DPRD Signage</div>
-                <div class="brand-sub">Panel Admin</div>
+                <div class="brand-title">DPRD Sulawesi Tengah</div>
+                <div class="brand-sub">Sistem Notifikasi Rapat & Signage</div>
             </div>
         </div>
         <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Sembunyikan sidebar" aria-expanded="true" title="Sembunyikan sidebar">
