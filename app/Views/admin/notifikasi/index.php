@@ -56,7 +56,7 @@
 
     <div class="section-card-body p-0">
         <div class="overflow-x-auto w-full">
-            <table class="table table-zebra table-md w-full admin-data-table" id="table-notifikasi" data-admin-datatable data-dt-order='[[1,"desc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-notifikasi" data-admin-datatable data-dt-order='[[1,"desc"]]'>
                 <thead>
                     <tr class="bg-base-200/50">
                         <th class="dt-row-number no-sort">No</th>
@@ -78,8 +78,8 @@
                         };
                     ?>
                         <tr class="hover:bg-base-200/30 transition-colors">
-                            <td class="dt-row-number"></td>
-                            <td class="whitespace-nowrap" data-order="<?= esc($n['sort_at'] ?? '', 'attr') ?>">
+                            <td class="dt-row-number" data-label="No"></td>
+                            <td class="whitespace-nowrap" data-order="<?= esc($n['sort_at'] ?? '', 'attr') ?>" data-label="Waktu Eksekusi">
                                 <div class="font-bold text-base-content text-sm">
                                     <?= esc($n['executed_at'] ?? '-') ?>
                                 </div>
@@ -88,14 +88,14 @@
                                     <?= esc($n['created_at']) ?>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Target">
                                 <div class="font-bold text-base-content text-sm"><?= esc($n['nama_anggota']) ?></div>
                                 <div class="text-xs text-base-content/60 mt-0.5 flex items-center gap-1 font-mono">
                                     <i data-lucide="phone" class="w-3.5 h-3.5 opacity-60"></i>
                                     <?= esc($n['no_wa']) ?>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Jadwal Rapat">
                                 <div class="font-bold text-base-content text-sm line-clamp-1 max-w-xs" title="<?= esc($n['judul_rapat']) ?>">
                                     <?= esc($n['judul_rapat']) ?>
                                 </div>
@@ -104,13 +104,13 @@
                                     <?= esc($n['tanggal_rapat']) ?> &bull; <?= esc($n['waktu_rapat']) ?>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="badge <?= $badgeClass ?> h-auto py-1 px-2 text-xs font-semibold whitespace-nowrap gap-1">
                                     <i data-lucide="<?= esc($badge['icon'], 'attr') ?>" class="w-3 h-3"></i>
                                     <?= $badge['label'] ?>
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Aksi">
                                 <div class="flex items-center justify-end gap-2">
                                     <?php if ($n['status'] === 'failed'): ?>
                                         <form method="POST" action="<?= base_url("admin/notifikasi/{$n['id']}/resend") ?>" class="inline-flex m-0">

@@ -20,8 +20,8 @@
 <form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form">
     <?= csrf_field() ?>
 
-    <div class="grid grid-cols-12 gap-3">
-        <div class="lg:col-span-4">
+    <div class="grid grid-cols-12 gap-3 participant-group-grid">
+        <div class="col-span-12 lg:col-span-4 participant-info-col">
             <div class="form-card p-[18px]">
                 <div class="form-section-title mb-3 pb-2">Informasi Kelompok</div>
 
@@ -52,7 +52,7 @@
                 </div>
             </div>
 
-            <div class="form-card mt-2 p-[18px]">
+            <div class="form-card mt-2 p-[18px] participant-summary-card">
                 <div class="form-section-title mb-3 pb-2">Ringkasan</div>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-neutral rounded-full font-bold" id="sidebar-selected-count"><?= count($selectedAnggotaIds) ?></span>
@@ -61,12 +61,12 @@
             </div>
         </div>
 
-        <div class="lg:col-span-8">
-            <div class="form-card p-[18px]">
-                <div class="form-section-title flex items-center gap-2 mb-3 pb-2">
-                    Anggota Kelompok
+        <div class="col-span-12 lg:col-span-8 participant-member-col">
+            <div class="form-card p-[18px] participant-member-card">
+                <div class="form-section-title participant-member-head flex items-center justify-between gap-2 mb-3 pb-2">
+                    <span>Anggota Kelompok</span>
                     <span class="badge badge-neutral" id="member-count-badge">
-                        <?= count($selectedAnggotaIds) ?>
+                        <?= count($selectedAnggotaIds) ?> dipilih
                     </span>
                 </div>
 
@@ -76,9 +76,9 @@
                         <span>Belum ada anggota DPRD aktif. Tambahkan melalui menu <strong>Anggota DPRD</strong>.</span>
                     </div>
                 <?php else: ?>
-                    <div class="grid grid-cols-12 gap-3">
-                        <div class="md:col-span-6">
-                            <div class="border border-base-300 rounded overflow-hidden">
+                    <div class="grid grid-cols-12 gap-3 participant-member-grid">
+                        <div class="col-span-12 md:col-span-6 participant-source-col">
+                            <div class="border border-base-300 rounded overflow-hidden participant-list-panel">
                                 <div class="flex items-center justify-between px-3 py-2 border-b border-base-300 bg-base-200">
                                     <span class="text-xs font-bold text-base-content/60 uppercase">Tersedia</span>
                                     <span class="badge badge-neutral" id="source-count"><?= count($members) ?></span>
@@ -87,7 +87,7 @@
                                     <input type="text" class="input input-sm input-bordered w-full" id="source-search"
                                         placeholder="Cari nama, jabatan, atau komisi..." autocomplete="off" />
                                 </div>
-                                <div class="max-h-[240px] overflow-y-auto" id="source-list">
+                                <div class="max-h-[240px] overflow-y-auto participant-source-list" id="source-list">
                                     <?php foreach ($members as $member):
                                         $memberId = (int) $member['id'];
                                         $checked = in_array($memberId, $selectedAnggotaIds, true);
@@ -100,7 +100,7 @@
                                             data-name="<?= esc(strtolower($member['name']), 'attr') ?>"
                                             data-komisi="<?= esc(strtolower($komisiLabel), 'attr') ?>"
                                             data-jabatan="<?= esc(strtolower($member['jabatan'] ?? ''), 'attr') ?>">
-                                            <input class="checkbox checkbox-primary checkbox-xs source-checkbox"
+                                            <input class="checkbox checkbox-primary checkbox-sm source-checkbox"
                                                 type="checkbox"
                                                 id="<?= esc($inputId, 'attr') ?>"
                                                 name="anggota_unit_rapat[]"
@@ -119,13 +119,13 @@
                             </div>
                         </div>
 
-                        <div class="md:col-span-6">
-                            <div class="border border-base-300 rounded overflow-hidden">
+                        <div class="col-span-12 md:col-span-6 participant-target-col">
+                            <div class="border border-base-300 rounded overflow-hidden participant-list-panel">
                                 <div class="flex items-center justify-between px-3 py-2 border-b border-base-300 bg-base-200">
                                     <span class="text-xs font-bold text-base-content/60 uppercase">Terpilih</span>
                                     <span class="badge badge-primary" id="target-count"><?= count($selectedAnggotaIds) ?></span>
                                 </div>
-                                <div class="max-h-[282px] overflow-y-auto" id="target-list">
+                                <div class="max-h-[282px] overflow-y-auto participant-target-list" id="target-list">
                                     <?php
                                     $hasSelected = false;
                                     foreach ($members as $member):
@@ -150,6 +150,7 @@
                                                 </div>
                                             </div>
                                             <button type="button" class="btn btn-sm btn-ghost btn-circle text-error w-6 h-6 min-h-6"
+                                                title="Hapus dari unit" data-remove-member="<?= $memberId ?>">
                                                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                             </button>
                                         </div>
@@ -170,7 +171,7 @@
 
     </div>
 
-    <div class="flex gap-2 mt-4">
+    <div class="flex gap-2 mt-4 participant-form-actions">
         <a href="<?= base_url('admin/unit-rapat') ?>" class="btn btn-outline btn-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
@@ -216,7 +217,7 @@
             const count = checked.length;
 
             targetCount.textContent = count;
-            if (memberCountBadge) memberCountBadge.textContent = count;
+            if (memberCountBadge) memberCountBadge.textContent = count + ' dipilih';
             if (sidebarSelectedCount) sidebarSelectedCount.textContent = count;
 
             targetList.querySelectorAll('.transfer-target-item').forEach(el => el.remove());
@@ -258,7 +259,7 @@
                     '</button>';
 
                 el.querySelector('button').addEventListener('click', function() {
-                    removeMember(parseInt(id));
+                    window.removeMember?.(parseInt(id, 10));
                 });
 
                 targetList.appendChild(el);
@@ -269,6 +270,12 @@
 
         allCheckboxes.forEach(function(cb) {
             cb.addEventListener('change', updateTargetPanel);
+        });
+
+        document.addEventListener('click', function(event) {
+            const removeButton = event.target.closest('[data-remove-member]');
+            if (!removeButton) return;
+            window.removeMember?.(parseInt(removeButton.getAttribute('data-remove-member'), 10));
         });
 
         window.removeMember = function(memberId) {

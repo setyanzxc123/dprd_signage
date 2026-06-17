@@ -28,13 +28,15 @@
     </div>
 
     <div class="section-card-body pt-3.5">
+
+    <div class="section-card-body pt-3.5">
         <div class="alert alert-info py-2 px-3 mb-2 text-xs flex gap-2">
             <i data-lucide="info" class="w-4 h-4"></i>
             <span>Master ini hanya untuk ruangan tetap DPRD. Tempat lain diisi melalui <strong>Lokasi Lainnya</strong> di form jadwal.</span>
         </div>
 
         <div class="overflow-x-auto w-full">
-            <table class="table table-zebra table-md w-full admin-data-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
                     <tr class="bg-base-200/50">
                         <th class="dt-row-number no-sort">No</th>
@@ -47,20 +49,20 @@
                 <tbody>
                     <?php foreach ($rooms as $r): ?>
                         <tr class="hover:bg-base-200/30 transition-colors">
-                            <td class="dt-row-number"></td>
-                            <td>
+                            <td class="dt-row-number" data-label="No"></td>
+                            <td data-label="Nama Ruangan">
                                 <div class="font-bold text-base-content text-sm"><?= esc($r['name']) ?></div>
                                 <div class="text-xs text-base-content/60 mt-0.5 max-w-sm truncate" title="<?= esc($r['keterangan'] ?? '') ?>">
                                     <?= esc($r['keterangan'] ?? '') ?>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Kapasitas">
                                 <span class="badge badge-ghost h-auto py-1 px-2 text-xs gap-1">
                                     <i data-lucide="users" class="w-3.5 h-3.5"></i>
                                     <?= esc($r['kapasitas']) ?> orang
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <?php if ($r['tersedia']): ?>
                                     <span class="badge badge-success h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -73,7 +75,7 @@
                                     </span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Aksi">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="<?= base_url("admin/ruangan/{$r['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit

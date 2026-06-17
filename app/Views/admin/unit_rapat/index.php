@@ -2,17 +2,17 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header flex items-center justify-between">
+<div class="page-header flex items-center justify-between unit-rapat-index-header">
     <div>
         <h1 class="page-title">Kelompok Peserta</h1>
         <p class="page-subtitle">Kelola kelompok internal DPRD untuk target rapat dan notifikasi WA</p>
     </div>
-    <a href="<?= base_url('admin/unit-rapat/create') ?>" class="btn btn-primary btn-sm gap-1">
+    <a href="<?= base_url('admin/unit-rapat/create') ?>" class="btn btn-primary btn-sm gap-1 unit-rapat-add-button">
         <i data-lucide="plus" class="w-4 h-4"></i>Tambah Kelompok
     </a>
 </div>
 
-<div class="section-card">
+<div class="section-card unit-rapat-card">
     <div class="section-card-header">
         <div class="header-icon"><i data-lucide="workflow"></i></div>
         <div>
@@ -28,8 +28,8 @@
     </div>
 
     <div class="section-card-body p-0">
-        <div class="overflow-x-auto w-full">
-            <table class="table table-zebra table-md w-full admin-data-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+        <div class="overflow-x-auto w-full unit-rapat-table-container">
+            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
                     <tr class="bg-base-200/50">
                         <th class="dt-row-number no-sort">No</th>
@@ -41,11 +41,11 @@
                 <tbody>
                     <?php foreach ($units as $unit): ?>
                         <tr class="hover:bg-base-200/30 transition-colors">
-                            <td class="dt-row-number"></td>
-                            <td>
+                            <td class="dt-row-number" data-label="No"></td>
+                            <td data-label="Nama Kelompok">
                                 <div class="font-bold text-base-content text-sm"><?= esc($unit['nama']) ?></div>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <?php if ($unit['aktif']): ?>
                                     <span class="badge badge-success h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -58,7 +58,7 @@
                                     </span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Aksi">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit

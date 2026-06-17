@@ -1041,6 +1041,12 @@
         border-bottom: 1px solid var(--border-color);
         margin-bottom: 20px;
     }
+    .participant-member-head {
+        background: var(--od-surface);
+    }
+    .participant-form-actions {
+        align-items: center;
+    }
 
     .empty-state {
         color: var(--text-muted);
@@ -1479,6 +1485,163 @@
     }
     .agenda-title-row h3 {
         white-space: normal;
+    }
+}
+
+@media (max-width: 640px) {
+    .unit-rapat-card {
+        overflow: hidden;
+    }
+    .unit-rapat-index-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .unit-rapat-index-header .unit-rapat-add-button {
+        width: 100%;
+        justify-content: center;
+    }
+    .unit-rapat-table-container {
+        overflow-x: visible !important;
+    }
+    
+    /* Responsive Card Table (Method A) */
+    .responsive-card-table {
+        display: block !important;
+        width: 100% !important;
+        border-collapse: collapse;
+        border: 0 !important;
+    }
+    .responsive-card-table thead {
+        display: none !important;
+    }
+    .responsive-card-table tbody {
+        display: block !important;
+        width: 100% !important;
+    }
+    .responsive-card-table tbody tr {
+        display: block !important;
+        width: 100% !important;
+        background-color: var(--fallback-b1, oklch(var(--b1))) !important;
+        border: 1px solid var(--od-border-soft) !important;
+        border-radius: var(--od-radius-lg, 12px) !important;
+        padding: 16px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    }
+    .responsive-card-table tbody tr:hover {
+        background-color: var(--fallback-b1, oklch(var(--b1))) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        border-color: var(--od-border) !important;
+    }
+    .responsive-card-table tbody td {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        padding: 10px 0 !important;
+        border-bottom: 1px solid var(--od-border-soft) !important;
+        background: transparent !important;
+    }
+    .responsive-card-table tbody td:last-child {
+        border-bottom: 0 !important;
+    }
+    .responsive-card-table tbody td.dt-row-number {
+        display: none !important;
+    }
+    .responsive-card-table tbody td[data-label="Nama Kelompok"],
+    .responsive-card-table tbody td[data-label="Nama Ruangan"],
+    .responsive-card-table tbody td[data-label="Nama Lengkap"],
+    .responsive-card-table tbody td[data-label="Judul Rapat"],
+    .responsive-card-table tbody td[data-label="Target"] {
+        display: block !important;
+        text-align: left !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        padding-top: 0 !important;
+        padding-bottom: 12px !important;
+    }
+    .responsive-card-table tbody td[data-label="Nama Kelompok"]::before,
+    .responsive-card-table tbody td[data-label="Nama Ruangan"]::before,
+    .responsive-card-table tbody td[data-label="Nama Lengkap"]::before,
+    .responsive-card-table tbody td[data-label="Judul Rapat"]::before,
+    .responsive-card-table tbody td[data-label="Target"]::before {
+        content: none !important;
+    }
+    .responsive-card-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--od-muted, var(--text-muted));
+        font-size: 0.825rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    .responsive-card-table tbody td[data-label="Aksi"] {
+        padding-bottom: 0 !important;
+    }
+    .responsive-card-table tbody td[data-label="Aksi"] .flex {
+        justify-content: flex-end !important;
+        width: auto !important;
+    }
+    .participant-group-form {
+        padding-bottom: 18px;
+    }
+    .participant-info-col,
+    .participant-member-col,
+    .participant-source-col,
+    .participant-target-col {
+        grid-column: span 12 / span 12;
+    }
+    .participant-summary-card {
+        display: none;
+    }
+    .participant-member-card {
+        padding: 0 !important;
+        overflow: visible;
+    }
+    .participant-member-head {
+        position: sticky;
+        top: 58px;
+        z-index: 40;
+        margin: 0 !important;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--od-border);
+    }
+    .participant-member-grid {
+        padding: 14px;
+    }
+    .participant-target-col {
+        display: none;
+    }
+    .participant-list-panel {
+        border-radius: 8px;
+    }
+    .participant-source-list {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    .anggota-source {
+        min-height: 54px;
+        padding-top: 9px;
+        padding-bottom: 9px;
+    }
+    .anggota-source .checkbox {
+        align-self: flex-start;
+        margin-top: 3px;
+    }
+    .participant-form-actions {
+        position: sticky;
+        bottom: calc(88px + env(safe-area-inset-bottom));
+        z-index: 60;
+        margin: 14px -4px 0;
+        padding: 10px 4px;
+        background: color-mix(in srgb, var(--od-bg) 92%, transparent);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid var(--od-border-soft);
+    }
+    .participant-form-actions .btn {
+        flex: 1;
+        min-height: 42px;
     }
 }
 

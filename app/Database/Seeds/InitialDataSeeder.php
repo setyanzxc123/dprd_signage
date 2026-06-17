@@ -29,7 +29,7 @@ class InitialDataSeeder extends Seeder
             'name'       => 'Administrator',
             'username'   => 'admin',
             'email'      => 'admin@gmail.com',
-            'password'   => password_hash('admin', PASSWORD_BCRYPT),
+            'password'   => password_hash('admin123$', PASSWORD_BCRYPT),
             'role'       => 'superadmin',
             'created_at' => date('Y-m-d H:i:s'),
         ]]);

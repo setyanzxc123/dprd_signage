@@ -29,7 +29,7 @@
 
     <div class="section-card-body p-0">
         <div class="overflow-x-auto w-full">
-            <table class="table table-zebra table-md w-full admin-data-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
                     <tr class="bg-base-200/50">
                         <th class="dt-row-number no-sort">No</th>
@@ -44,8 +44,8 @@
                 <tbody>
                     <?php foreach ($members as $m): ?>
                         <tr class="hover:bg-base-200/30 transition-colors">
-                            <td class="dt-row-number"></td>
-                            <td>
+                            <td class="dt-row-number" data-label="No"></td>
+                            <td data-label="Nama Lengkap">
                                 <div class="flex items-center gap-3">
                                     <div class="avatar placeholder">
                                         <div class="bg-primary text-primary-content rounded-full w-8 h-8 font-bold text-sm flex items-center justify-center">
@@ -58,14 +58,14 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-base-content/85"><?= esc($m['fraksi']) ?></td>
-                            <td>
+                            <td data-label="Fraksi" class="text-base-content/85"><?= esc($m['fraksi']) ?></td>
+                            <td data-label="Komisi">
                                 <span class="badge badge-ghost h-auto py-1 px-2 text-xs">
                                     <?= esc($m['komisi']) ?>
                                 </span>
                             </td>
-                            <td class="font-mono text-sm text-base-content/85"><?= esc($m['no_wa']) ?></td>
-                            <td>
+                            <td data-label="No WhatsApp" class="font-mono text-sm text-base-content/85"><?= esc($m['no_wa']) ?></td>
+                            <td data-label="Status">
                                 <?php if ($m['aktif']): ?>
                                     <span class="badge badge-success h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap gap-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -78,7 +78,7 @@
                                     </span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Aksi">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit
