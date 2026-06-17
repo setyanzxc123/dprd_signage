@@ -172,10 +172,10 @@
     </div>
 
     <div class="flex gap-2 mt-4 participant-form-actions">
-        <a href="<?= base_url('admin/unit-rapat') ?>" class="btn btn-outline btn-sm">
+        <a href="<?= base_url('admin/unit-rapat') ?>" class="btn btn-outline sm:btn-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary btn-sm">
+        <button type="submit" class="btn btn-primary sm:btn-sm">
             <i data-lucide="check" class="w-4 h-4"></i>
             <?= $unit ? 'Simpan Perubahan' : 'Simpan Kelompok' ?>
         </button>

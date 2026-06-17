@@ -263,7 +263,7 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
     <?= csrf_field() ?>
 
     <div class="grid grid-cols-12 gap-3">
-        <div class="lg:col-span-8">
+        <div class="col-span-12 lg:col-span-8">
             <div class="form-card">
                 <div class="form-card-header">
                     <span class="form-card-icon"><i data-lucide="calendar-days"></i></span>
@@ -350,7 +350,7 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
                                 </div>
                             </div>
 
-                            <div class="md:col-span-6">
+                            <div class="col-span-12 md:col-span-6">
                                 <label class="label-text font-bold text-sm mb-1 block" for="waktu_mulai">
                                     Waktu Mulai <span class="text-error">*</span>
                                 </label>
@@ -364,7 +364,7 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
                                 </div>
                             </div>
 
-                            <div class="md:col-span-6">
+                            <div class="col-span-12 md:col-span-6">
                                 <label class="label-text font-bold text-sm mb-1 block" for="waktu_selesai">
                                     Waktu Selesai <span class="text-error">*</span>
                                 </label>
@@ -420,7 +420,7 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
             </div>
         </div>
 
-        <div class="lg:col-span-4">
+        <div class="col-span-12 lg:col-span-4">
             <div class="side-stack">
                 <div class="form-card">
                     <div class="form-card-header">
@@ -542,11 +542,11 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
         </div>
     </div>
 
-    <div class="flex gap-2 mt-4">
-        <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-outline btn-sm">
+    <div class="form-actions-sticky">
+        <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-outline sm:btn-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary btn-sm">
+        <button type="submit" class="btn btn-primary sm:btn-sm">
             <i data-lucide="calendar-check" class="w-4 h-4"></i>
             <?= $meeting ? 'Simpan Perubahan' : 'Simpan & Jadwalkan Notifikasi' ?>
         </button>

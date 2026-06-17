@@ -1385,6 +1385,13 @@
         color: var(--od-fg2);
     }
 
+    .form-actions-sticky {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 24px;
+    }
+
 }
 
 @layer utilities {
@@ -1683,6 +1690,69 @@
     .participant-form-actions .btn {
         flex: 1;
         min-height: 42px;
+    }
+    .form-actions-sticky {
+        position: sticky;
+        bottom: calc(88px + env(safe-area-inset-bottom));
+        z-index: 60;
+        margin: 14px -4px 0;
+        padding: 10px 4px;
+        background: color-mix(in srgb, var(--od-bg) 92%, transparent);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid var(--od-border-soft);
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+    .form-actions-sticky .btn {
+        flex: 1;
+        min-height: 42px;
+    }
+
+    /* DataTables Mobile Control Layout */
+    .dt-container .dt-layout-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 10px 8px !important;
+    }
+    .dt-container .dt-layout-cell {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+    .dt-container .dt-layout-cell.dt-layout-start {
+        min-width: 0 !important;
+    }
+    .dt-container .dt-layout-cell.dt-layout-end {
+        margin-left: 0 !important;
+    }
+    .dt-container .dt-length,
+    .dt-container .dt-search {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    .dt-container .dt-search input {
+        width: 100% !important;
+        max-width: none !important;
+    }
+    .dt-col-filter-bar {
+        width: 100% !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        margin-top: 6px !important;
+    }
+    .dt-col-filter-bar > div {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    .dt-col-filter-bar .dt-col-filter-select {
+        flex: 1 !important;
+        max-width: 70% !important;
+    }
+    .mobile-hidden {
+        display: none !important;
     }
 }
 

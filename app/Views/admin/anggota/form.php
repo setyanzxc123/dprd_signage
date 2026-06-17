@@ -26,7 +26,7 @@
     <div class="grid grid-cols-12 gap-3">
 
         <!-- Kolom kiri: Data Utama -->
-        <div class="lg:col-span-8">
+        <div class="col-span-12 lg:col-span-8">
             <div class="form-card p-[18px]">
 
                 <div class="form-section-title mb-3 pb-2">Informasi Anggota</div>
@@ -42,13 +42,13 @@
                             required />
                     </div>
 
-                    <div class="md:col-span-6">
+                    <div class="col-span-12 md:col-span-6">
                         <label class="label-text font-bold text-sm mb-1 block" for="jabatan">Jabatan</label>
                         <input type="text" class="input input-bordered w-full" id="jabatan" name="jabatan"
                             value="<?= esc($member['jabatan'] ?? '') ?>" placeholder="Contoh: Ketua Komisi III" />
                     </div>
 
-                    <div class="md:col-span-6">
+                    <div class="col-span-12 md:col-span-6">
                         <label class="label-text font-bold text-sm mb-1 block" for="fraksi">
                             Fraksi <span class="text-error">*</span>
                         </label>
@@ -64,7 +64,7 @@
                         </select>
                     </div>
 
-                    <div class="md:col-span-6">
+                    <div class="col-span-12 md:col-span-6">
                         <label class="label-text font-bold text-sm mb-1 block" for="komisi">Komisi</label>
                         <select class="select select-bordered w-full" id="komisi" name="komisi">
                             <option value="">Tidak dalam komisi</option>
@@ -78,7 +78,7 @@
                         </select>
                     </div>
 
-                    <div class="md:col-span-6">
+                    <div class="col-span-12 md:col-span-6">
                         <label class="label-text font-bold text-sm mb-1 block" for="status">Status</label>
                         <select class="select select-bordered w-full" id="status" name="aktif">
                             <option value="1" <?= ($member['aktif'] ?? 1) ? 'selected' : '' ?>>Aktif</option>
@@ -93,7 +93,7 @@
                 <div class="form-section-title mb-3 pb-2">Kontak WhatsApp</div>
 
                 <div class="grid grid-cols-12 gap-3 items-start">
-                    <div class="md:col-span-6">
+                    <div class="col-span-12 md:col-span-6">
                         <label class="label-text font-bold text-sm mb-1 block" for="no_wa">
                             Nomor WhatsApp <span class="text-error">*</span>
                         </label>
@@ -106,7 +106,7 @@
                     </div>
 
                     <?php if ($member): ?>
-                        <div class="md:col-span-6">
+                        <div class="col-span-12 md:col-span-6">
                             <div class="alert alert-info py-2 px-3 text-xs mb-0 flex gap-2">
                                 <i data-lucide="info" class="w-4 h-4"></i>
                                 <span>Mengubah nomor WA akan mempengaruhi pengiriman notifikasi rapat.</span>
@@ -118,7 +118,7 @@
         </div>
 
         <!-- Kolom kanan: Kelompok Peserta -->
-        <div class="lg:col-span-4">
+        <div class="col-span-12 lg:col-span-4">
             <div class="form-card p-[18px]">
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <div class="form-section-title mb-0">Kelompok Peserta</div>
@@ -140,7 +140,7 @@
                         <span class="absolute left-0 top-1/2 -translate-y-1/2 pl-3 text-base-content/40">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" class="input input-sm input-bordered w-full pl-10"
+                        <input type="text" class="input input-sm input-bordered w-full pl-10 animate-none"
                             id="kelompok-search" placeholder="Cari kelompok peserta..." autocomplete="off" />
                     </div>
 
@@ -184,11 +184,11 @@
     </div>
 
     <!-- Tombol Aksi -->
-    <div class="flex gap-2 mt-4">
-        <a href="<?= base_url('admin/anggota') ?>" class="btn btn-outline btn-sm">
+    <div class="form-actions-sticky">
+        <a href="<?= base_url('admin/anggota') ?>" class="btn btn-outline sm:btn-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary btn-sm" <?= empty($manual_units) ? 'disabled' : '' ?>>
+        <button type="submit" class="btn btn-primary sm:btn-sm" <?= empty($manual_units) ? 'disabled' : '' ?>>
             <i data-lucide="check" class="w-4 h-4"></i>
             <?= $member ? 'Simpan Perubahan' : 'Tambah Anggota' ?>
         </button>

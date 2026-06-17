@@ -61,30 +61,7 @@
             </div>
             <p class="text-xs text-base-content/40 self-end pb-1 ml-auto hidden md:block">
 
-    <form method="get" class="p-3 border-b border-base-200">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div>
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-tahun">Tahun</label>
-                <select class="select select-sm select-bordered" id="filter-tahun" name="tahun" onchange="this.form.submit()">
-                    <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?>
-                        <option value="<?= $y ?>" <?= (int) $filters['tahun'] === $y ? 'selected' : '' ?>><?= $y ?></option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-            <div>
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-semester">Semester</label>
-                <select class="select select-sm select-bordered" id="filter-semester" name="semester" onchange="this.form.submit()">
-                    <option value="all" <?= $filters['semester'] === 'all' ? 'selected' : '' ?>>Semua</option>
-                    <option value="1" <?= $filters['semester'] === '1' ? 'selected' : '' ?>>Semester I</option>
-                    <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-sm btn-outline btn-ghost" title="Reset semua filter">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                </a>
-            </div>
-            <p class="text-xs text-base-content/40 self-end pb-1 ml-auto hidden md:block">
+
                 Filter Jenis &amp; Status tersedia langsung di tabel ↓
             </p>
         </div>
@@ -100,9 +77,9 @@
                         <th>Tanggal & Waktu</th>
                         <th>Judul Rapat</th>
                         <th>Ruangan</th>
-                        <th>Peserta</th>
-                        <th>Jenis</th>
-                        <th>Publik</th>
+                        <th class="mobile-hidden">Peserta</th>
+                        <th class="mobile-hidden">Jenis</th>
+                        <th class="mobile-hidden">Publik</th>
                         <th>Status</th>
                         <th class="text-right no-sort">Aksi</th>
                     </tr>
@@ -129,19 +106,19 @@
                                 </div>
                             </td>
                             <td class="whitespace-nowrap text-base-content/85" data-label="Ruangan"><?= esc($m['ruangan']) ?></td>
-                            <td data-label="Peserta">
+                            <td data-label="Peserta" class="mobile-hidden">
                                 <span class="badge badge-ghost h-auto py-1 px-2 text-xs whitespace-nowrap">
                                     <?= esc($m['target_peserta']) ?>
                                 </span>
                             </td>
-                            <td data-label="Jenis">
+                            <td data-label="Jenis" class="mobile-hidden">
                                 <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
                                     <span class="badge badge-primary h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap">Reguler</span>
                                 <?php else: ?>
                                     <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap">Insidental</span>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="Publik">
+                            <td data-label="Publik" class="mobile-hidden">
                                 <?php if ($m['is_publik'] ?? 0): ?>
                                     <span class="badge badge-success h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Publik</span>
                                 <?php else: ?>
