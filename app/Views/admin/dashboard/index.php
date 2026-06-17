@@ -116,12 +116,15 @@
 
             <button type="button" class="dashboard-mobile-agenda-trigger" data-mobile-agenda-open>
                 <i data-lucide="list-checks"></i>
-                <span>Lihat agenda terpilih</span>
+                <span data-mobile-agenda-label>Lihat agenda terpilih</span>
             </button>
         </div>
     </article>
 
-    <aside class="dashboard-panel dashboard-agenda-card" id="dashboard-agenda-sheet" aria-labelledby="dashboard-agenda-title">
+    <aside class="dashboard-panel dashboard-agenda-card"
+           id="dashboard-agenda-sheet"
+           role="region"
+           aria-labelledby="dashboard-agenda-title">
         <header class="dashboard-panel-head">
             <div class="dashboard-panel-title">
                 <h2 id="dashboard-agenda-title">Agenda Terpilih</h2>
@@ -209,16 +212,61 @@
         const mobileAgendaQuery = window.matchMedia('(max-width: 520px)');
         const openAgendaButtons = document.querySelectorAll('[data-mobile-agenda-open]');
         const closeAgendaButtons = document.querySelectorAll('[data-mobile-agenda-close]');
+        const agendaSheet = document.getElementById('dashboard-agenda-sheet');
+        const agendaLabel = document.querySelector('[data-mobile-agenda-label]');
+        let lastAgendaTrigger = null;
 
-        function openMobileAgenda() {
+        function setAgendaSheetMode(isOpen) {
+            if (!agendaSheet) return;
+
             if (mobileAgendaQuery.matches) {
+                agendaSheet.setAttribute('role', 'dialog');
+                agendaSheet.setAttribute('aria-modal', 'true');
+                agendaSheet.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+                return;
+            }
+
+            agendaSheet.setAttribute('role', 'region');
+            agendaSheet.removeAttribute('aria-modal');
+            agendaSheet.removeAttribute('aria-hidden');
+        }
+
+        function updateMobileAgendaLabel(date) {
+            if (!agendaLabel) return;
+
+            const activeSummary = document.querySelector(`[data-dashboard-summary="${date}"]`);
+            agendaLabel.textContent = activeSummary
+                ? activeSummary.textContent.trim()
+                : 'Lihat agenda terpilih';
+        }
+
+        function openMobileAgenda(trigger) {
+            if (mobileAgendaQuery.matches) {
+                lastAgendaTrigger = trigger || document.activeElement;
                 document.body.classList.add('mobile-agenda-open');
+                setAgendaSheetMode(true);
+
+                const closeButton = agendaSheet ? agendaSheet.querySelector('[data-mobile-agenda-close]') : null;
+                if (closeButton) {
+                    closeButton.focus({ preventScroll: true });
+                }
             }
         }
 
         function closeMobileAgenda() {
             document.body.classList.remove('mobile-agenda-open');
+            setAgendaSheetMode(false);
+
+            if (lastAgendaTrigger && typeof lastAgendaTrigger.focus === 'function') {
+                lastAgendaTrigger.focus({ preventScroll: true });
+            }
         }
+
+        const activeButton = document.querySelector('[data-dashboard-day][aria-selected="true"]');
+        if (activeButton) {
+            updateMobileAgendaLabel(activeButton.dataset.dashboardDay);
+        }
+        setAgendaSheetMode(false);
 
         buttons.forEach(button => {
             button.addEventListener('click', () => {
@@ -240,25 +288,35 @@
                     summary.hidden = summary.dataset.dashboardSummary !== date;
                 });
 
+                updateMobileAgendaLabel(date);
+
                 if (window.lucide) {
                     window.lucide.createIcons();
                 }
 
-                openMobileAgenda();
+                openMobileAgenda(button);
             });
         });
 
         openAgendaButtons.forEach(button => {
-            button.addEventListener('click', openMobileAgenda);
+            button.addEventListener('click', () => openMobileAgenda(button));
         });
 
         closeAgendaButtons.forEach(button => {
             button.addEventListener('click', closeMobileAgenda);
         });
 
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && document.body.classList.contains('mobile-agenda-open')) {
+                closeMobileAgenda();
+            }
+        });
+
         mobileAgendaQuery.addEventListener('change', event => {
             if (!event.matches) {
                 closeMobileAgenda();
+            } else {
+                setAgendaSheetMode(document.body.classList.contains('mobile-agenda-open'));
             }
         });
     }

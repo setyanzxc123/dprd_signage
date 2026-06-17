@@ -1399,8 +1399,24 @@
 @media (max-width: 520px) {
     #content { padding-inline: 16px; }
     body.mobile-agenda-open { overflow: hidden; }
+    body.mobile-agenda-open .mobile-nav { display: none; }
     .topbar-user-info,
     .topbar-clock { display: none; }
+    .topbar-actions { gap: 8px; }
+    .topbar-wa-status-link .badge {
+        width: 34px !important;
+        min-width: 34px;
+        justify-content: center;
+        padding-inline: 0 !important;
+    }
+    #topbar-wa-text {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
     .page-header.flex {
         align-items: flex-start;
         flex-direction: column;
@@ -1412,13 +1428,17 @@
     .dashboard-agenda-panels { padding: 14px; }
     .dashboard-weekday-grid,
     .dashboard-calendar-grid { gap: 5px; }
-    .dashboard-weekday-grid span { font-size: 0.62rem; padding-inline: 4px; }
+    .dashboard-weekday-grid span {
+        font-size: 0.62rem;
+        padding-inline: 2px;
+        text-align: center;
+    }
     .dashboard-calendar-legend {
         display: none;
     }
     .dashboard-mobile-agenda-trigger {
         width: 100%;
-        min-height: 42px;
+        min-height: 44px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1432,6 +1452,12 @@
         font-weight: 800;
         box-shadow: 0 8px 18px color-mix(in srgb, var(--od-accent) 8%, transparent);
     }
+    .dashboard-mobile-agenda-trigger span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .dashboard-mobile-agenda-trigger .lucide,
     .dashboard-mobile-agenda-trigger [data-lucide] {
         width: 17px;
@@ -1439,14 +1465,37 @@
     }
     .dashboard-calendar-day {
         min-height: 72px;
-        padding: 7px;
+        padding: 7px 6px;
         border-radius: 9px;
+        gap: 6px;
     }
     .calendar-day-num { width: 24px; height: 24px; font-size: 0.72rem; }
-    .calendar-event-dot { display: none; }
-    .calendar-day-events { min-height: 7px; }
-    .dashboard-calendar-day.has-events .calendar-day-events { display: block; }
-    .calendar-day-count { font-size: 0.66rem; }
+    .calendar-day-events {
+        min-height: 7px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin-top: auto;
+    }
+    .calendar-event-dot {
+        width: 7px;
+        height: 7px;
+        display: inline-grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        overflow: visible;
+    }
+    .calendar-event-dot::before {
+        width: 7px;
+        height: 7px;
+    }
+    .calendar-event-dot span { display: none; }
+    .calendar-event-dot.empty { display: none; }
+    .calendar-day-count {
+        min-width: 20px;
+        height: 20px;
+        font-size: 0.66rem;
+    }
     .dashboard-agenda-item {
         grid-template-columns: 1fr;
     }
@@ -1462,7 +1511,7 @@
     .dashboard-agenda-overlay {
         position: fixed;
         inset: 0;
-        z-index: 80;
+        z-index: 240;
         border: 0;
         background: rgba(15, 23, 42, 0.42);
         padding: 0;
@@ -1474,9 +1523,9 @@
         position: fixed;
         left: 10px;
         right: 10px;
-        bottom: 10px;
-        z-index: 90;
-        max-height: min(74vh, 560px);
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        z-index: 250;
+        max-height: min(78dvh, 560px);
         display: flex;
         flex-direction: column;
         border-radius: 20px;
@@ -1513,7 +1562,27 @@
     }
     .dashboard-agenda-card .dashboard-agenda-panels {
         overflow-y: auto;
+        overscroll-behavior: contain;
     }
     .selected-date-card { grid-template-columns: 1fr; }
     .selected-date-number { width: 54px; height: 54px; }
+}
+
+@media (max-width: 380px) {
+    .dashboard-calendar-wrap {
+        overflow-x: auto;
+        padding-inline: 12px;
+    }
+    .dashboard-weekday-grid,
+    .dashboard-calendar-grid {
+        min-width: 308px;
+    }
+    .dashboard-calendar-day {
+        min-height: 68px;
+    }
+    .calendar-day-count {
+        min-width: 18px;
+        height: 18px;
+        font-size: 0.62rem;
+    }
 }
