@@ -26,26 +26,15 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
         display: block;
     }
     
-    .choice-option input {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-    }
-    
     .choice-option-body {
-        display: flex;
+        display: grid;
         align-items: center;
         gap: 8px;
-        min-height: 54px;
-        padding: 9px;
+        grid-template-columns: auto minmax(0, 1fr);
+        min-height: 38px;
+        padding: 8px 10px;
         border: 1px solid var(--od-border);
-        border-radius: var(--od-radius-md);
+        border-radius: 6px;
         background: var(--od-surface);
         cursor: pointer;
         transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
@@ -57,42 +46,73 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
         background: var(--od-border-soft);
     }
     
-    .choice-option input:checked + .choice-option-body {
+    .choice-option-body:has(input:checked) {
         border-color: var(--od-accent);
         background: var(--od-surface-warm);
-        box-shadow: 0 0 0 1px var(--od-accent);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--od-accent) 12%, transparent);
     }
     
-    .choice-option input:focus-visible + .choice-option-body {
+    .choice-option-body:has(input:focus-visible) {
         box-shadow: var(--od-focus);
     }
-    
-    .choice-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 28px;
-        background: var(--od-border-soft);
-        color: var(--od-muted);
-    }
-    
+
     .choice-title {
         display: block;
         color: var(--od-fg);
-        font-size: var(--od-text-sm);
+        font-size: .82rem;
         font-weight: 700;
+        line-height: 1.15;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .choice-copy {
+        min-width: 0;
+    }
+
+    .choice-desc {
+        color: var(--od-muted);
+        display: block;
+        font-size: .72rem;
+        line-height: 1.25;
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .choice-option-body.has-desc {
+        align-items: start;
+        gap: 10px;
+        min-height: 72px;
+        padding: 13px 12px;
+    }
+
+    .choice-option-body.has-desc .radio {
+        margin-top: 2px;
+    }
+
+    .choice-option-body.has-desc .choice-title {
+        font-size: .9rem;
         line-height: 1.2;
     }
-    
-    .choice-desc {
-        display: block;
-        margin-top: 3px;
-        color: var(--od-muted);
-        font-size: var(--od-text-xs);
-        line-height: 1.35;
+
+    .choice-option-body.has-desc .choice-desc {
+        color: var(--od-fg2);
+        font-size: .8rem;
+        line-height: 1.4;
+        margin-top: 4px;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+    }
+
+    .settings-subgroup + .settings-subgroup {
+        border-top: 1px solid var(--od-border-soft);
+        margin-top: 14px;
+        padding-top: 14px;
     }
     
     .visibility-row {
@@ -294,26 +314,20 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
 
                                 <div class="option-group two-col">
                                     <label class="choice-option" for="lokasi-ruangan">
-                                        <input type="radio" name="lokasi_mode" id="lokasi-ruangan" value="ruangan"
-                                            <?= $lokasiMode === 'ruangan' ? 'checked' : '' ?> />
                                         <span class="choice-option-body">
-                                            <span class="choice-icon"><i data-lucide="building-2"></i></span>
-                                            <span>
-                                                <span class="choice-title">Ruangan DPRD</span>
-                                                <span class="choice-desc">Pilih dari master ruangan</span>
-                                            </span>
+                                            <input type="radio" name="lokasi_mode" id="lokasi-ruangan" value="ruangan"
+                                                class="radio radio-primary radio-sm"
+                                                <?= $lokasiMode === 'ruangan' ? 'checked' : '' ?> />
+                                            <span class="choice-title">Ruangan DPRD</span>
                                         </span>
                                     </label>
 
                                     <label class="choice-option" for="lokasi-lainnya">
-                                        <input type="radio" name="lokasi_mode" id="lokasi-lainnya" value="lainnya"
-                                            <?= $lokasiMode === 'lainnya' ? 'checked' : '' ?> />
                                         <span class="choice-option-body">
-                                            <span class="choice-icon"><i data-lucide="map-pin"></i></span>
-                                            <span>
-                                                <span class="choice-title">Lokasi Lainnya</span>
-                                                <span class="choice-desc">Isi nama/tempat rapat</span>
-                                            </span>
+                                            <input type="radio" name="lokasi_mode" id="lokasi-lainnya" value="lainnya"
+                                                class="radio radio-primary radio-sm"
+                                                <?= $lokasiMode === 'lainnya' ? 'checked' : '' ?> />
+                                            <span class="choice-title">Lokasi Lainnya</span>
                                         </span>
                                     </label>
                                 </div>
@@ -433,43 +447,47 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
                             <div class="form-section-title">Klasifikasi</div>
                             <?php $jenis = $meeting['jenis'] ?? 'insidental'; ?>
 
-                            <label class="label-text font-bold text-sm mb-1 block">Jenis Rapat</label>
+                            <div class="settings-subgroup">
+                                <label class="label-text font-bold text-sm mb-1 block">Jenis Rapat</label>
 
-                            <div class="option-group two-col">
-                                <label class="choice-option" for="jenis-reguler">
-                                    <input type="radio" name="jenis" id="jenis-reguler" value="reguler"
-                                        <?= $jenis === 'reguler' ? 'checked' : '' ?> />
-                                    <span class="choice-option-body">
-                                        <span class="choice-icon"><i data-lucide="calendar-range"></i></span>
-                                        <span>
-                                            <span class="choice-title">Reguler</span>
-                                            <span class="choice-desc">Agenda terencana</span>
+                                <div class="option-group two-col">
+                                    <label class="choice-option" for="jenis-reguler">
+                                        <span class="choice-option-body has-desc">
+                                            <input type="radio" name="jenis" id="jenis-reguler" value="reguler"
+                                                class="radio radio-primary radio-sm"
+                                                <?= $jenis === 'reguler' ? 'checked' : '' ?> />
+                                            <span class="choice-copy">
+                                                <span class="choice-title">Reguler</span>
+                                                <span class="choice-desc">Agenda terencana</span>
+                                            </span>
                                         </span>
-                                    </span>
-                                </label>
+                                    </label>
 
-                                <label class="choice-option" for="jenis-insidental">
-                                    <input type="radio" name="jenis" id="jenis-insidental" value="insidental"
-                                        <?= $jenis === 'insidental' ? 'checked' : '' ?> />
-                                    <span class="choice-option-body">
-                                        <span class="choice-icon"><i data-lucide="zap"></i></span>
-                                        <span>
-                                            <span class="choice-title">Insidental</span>
-                                            <span class="choice-desc">Agenda mendadak</span>
+                                    <label class="choice-option" for="jenis-insidental">
+                                        <span class="choice-option-body has-desc">
+                                            <input type="radio" name="jenis" id="jenis-insidental" value="insidental"
+                                                class="radio radio-primary radio-sm"
+                                                <?= $jenis === 'insidental' ? 'checked' : '' ?> />
+                                            <span class="choice-copy">
+                                                <span class="choice-title">Insidental</span>
+                                                <span class="choice-desc">Agenda mendadak</span>
+                                            </span>
                                         </span>
-                                    </span>
-                                </label>
+                                    </label>
+                                </div>
                             </div>
 
-                            <div class="visibility-row mt-3">
-                                <label class="visibility-title" for="is_publik">Visibilitas Publik</label>
-                                <div class="visibility-control">
-                                    <input class="toggle toggle-primary" type="checkbox" role="switch"
-                                        id="is_publik" name="is_publik" value="1"
-                                        <?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'checked' : '' ?> />
-                                    <label class="visibility-label ml-2 cursor-pointer" for="is_publik">
-                                        <span id="publik-label"><?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'Publik' : 'Internal' ?></span>
-                                    </label>
+                            <div class="settings-subgroup">
+                                <div class="visibility-row">
+                                    <label class="visibility-title" for="is_publik">Publikasi</label>
+                                    <div class="visibility-control">
+                                        <input class="toggle toggle-primary" type="checkbox" role="switch"
+                                            id="is_publik" name="is_publik" value="1"
+                                            <?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'checked' : '' ?> />
+                                        <label class="visibility-label ml-2 cursor-pointer" for="is_publik">
+                                            <span id="publik-label"><?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'Publik' : 'Internal' ?></span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

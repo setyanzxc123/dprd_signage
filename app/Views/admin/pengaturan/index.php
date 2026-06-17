@@ -2,23 +2,17 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header settings-header flex items-center justify-between">
+<div class="page-header settings-header">
     <div>
         <h1 class="page-title">Pengaturan Sistem</h1>
         <p class="page-subtitle">Kelola tampilan layar TV dan notifikasi WhatsApp.</p>
-    </div>
-    <div class="flex gap-2">
-        <a href="<?= base_url('signage') ?>" target="_blank"
-            class="btn btn-sm btn-outline btn-primary">
-            <i data-lucide="monitor" class="w-4 h-4 mr-1"></i>Preview Signage
-        </a>
     </div>
 </div>
 
 <form action="<?= base_url('admin/pengaturan/save') ?>" method="POST" enctype="multipart/form-data" class="settings-form">
     <?= csrf_field() ?>
 
-    <div class="settings-grid-2col">
+    <div class="settings-stack">
 
         <!-- ═══════════════════════════════════════════ -->
         <!-- CARD 1: Pengaturan Signage                  -->
@@ -34,90 +28,80 @@
                 </div>
             </div>
 
-            <!-- Sub-section: Tema -->
-            <div class="stg-section">
-                <div class="stg-section-label">Tema Layar</div>
-                <div class="stg-tema-grid">
-                    <div class="stg-tema-card <?= $settings['tema_signage'] === 'dark' ? 'selected' : '' ?>"
-                        id="tema-dark" onclick="selectTema('dark')">
-                        <input type="radio" name="tema_signage" value="dark" id="radio-tema-dark"
-                            <?= $settings['tema_signage'] === 'dark' ? 'checked' : '' ?> class="hidden" />
-                        <div class="stg-tema-icon dark"><i data-lucide="moon-star"></i></div>
-                        <span class="stg-tema-name">Dark</span>
-                        <span class="stg-tema-desc">Gelap</span>
+            <div class="stg-signage-body">
+                <div class="stg-signage-choice-row">
+                    <div class="stg-section">
+                        <div class="stg-section-label">Tema Layar</div>
+                        <div class="stg-choice-grid">
+                            <label class="stg-choice-option">
+                                <input type="radio" name="tema_signage" value="dark" class="radio radio-primary radio-sm"
+                                    <?= $settings['tema_signage'] === 'dark' ? 'checked' : '' ?> />
+                                <span class="stg-choice-title">Dark</span>
+                            </label>
+                            <label class="stg-choice-option">
+                                <input type="radio" name="tema_signage" value="light" class="radio radio-primary radio-sm"
+                                    <?= $settings['tema_signage'] === 'light' ? 'checked' : '' ?> />
+                                <span class="stg-choice-title">Light</span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="stg-tema-card <?= $settings['tema_signage'] === 'light' ? 'selected' : '' ?>"
-                        id="tema-light" onclick="selectTema('light')">
-                        <input type="radio" name="tema_signage" value="light" id="radio-tema-light"
-                            <?= $settings['tema_signage'] === 'light' ? 'checked' : '' ?> class="hidden" />
-                        <div class="stg-tema-icon light"><i data-lucide="sun"></i></div>
-                        <span class="stg-tema-name">Light</span>
-                        <span class="stg-tema-desc">Terang</span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="stg-divider"></div>
-
-            <!-- Sub-section: Media -->
-            <div class="stg-section">
-                <div class="stg-section-label">Media</div>
-                <div class="stg-tema-grid mb-3">
-                    <div class="stg-tema-card <?= $settings['media_mode'] === 'video' ? 'selected' : '' ?>"
-                        id="mode-video" onclick="selectMode('video')">
-                        <input type="radio" name="media_mode" value="video" id="radio-video"
-                            <?= $settings['media_mode'] === 'video' ? 'checked' : '' ?> class="hidden" />
-                        <div class="stg-tema-icon media"><i data-lucide="circle-play"></i></div>
-                        <span class="stg-tema-name">Video</span>
-                        <span class="stg-tema-desc">MP4, WebM</span>
-                    </div>
-                    <div class="stg-tema-card <?= $settings['media_mode'] === 'image' ? 'selected' : '' ?>"
-                        id="mode-image" onclick="selectMode('image')">
-                        <input type="radio" name="media_mode" value="image" id="radio-image"
-                            <?= $settings['media_mode'] === 'image' ? 'checked' : '' ?> class="hidden" />
-                        <div class="stg-tema-icon media"><i data-lucide="image"></i></div>
-                        <span class="stg-tema-name">Gambar</span>
-                        <span class="stg-tema-desc">JPG, PNG, WebP</span>
+                    <div class="stg-section">
+                        <div class="stg-section-label">Media Tampilan</div>
+                        <div class="stg-choice-grid">
+                            <label class="stg-choice-option">
+                                <input type="radio" name="media_mode" value="video" class="radio radio-primary radio-sm"
+                                    <?= $settings['media_mode'] === 'video' ? 'checked' : '' ?> />
+                                <span class="stg-choice-title">Video</span>
+                            </label>
+                            <label class="stg-choice-option">
+                                <input type="radio" name="media_mode" value="image" class="radio radio-primary radio-sm"
+                                    <?= $settings['media_mode'] === 'image' ? 'checked' : '' ?> />
+                                <span class="stg-choice-title">Gambar</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <label class="label-text font-bold text-sm mb-1 block" for="media_file">Upload File</label>
-                <input type="file" class="file-input file-input-bordered file-input-sm w-full" id="media_file" name="media_file"
-                    accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
-                <div class="label-text-alt text-base-content/60 mt-1 block">Maks. 50MB. File baru menggantikan file aktif.</div>
+                <div class="stg-section stg-media-section">
+                    <div class="stg-media-grid">
+                        <div class="stg-media-upload stg-media-panel">
+                            <label class="label-text font-bold text-sm mb-1 block" for="media_file">Upload File</label>
+                            <input type="file" class="file-input file-input-bordered file-input-sm w-full" id="media_file" name="media_file"
+                                accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
+                        </div>
 
-                <?php if (!empty($settings['media_file'])): ?>
-                    <div class="alert alert-sm bg-base-200 border-base-300 py-2 px-3 mt-2">
-                        <i data-lucide="file-video" class="w-4 h-4 mr-1"></i>
-                        <span>Aktif: <strong><?= esc(basename($settings['media_file'])) ?></strong></span>
-                    </div>
-                <?php else: ?>
-                    <div class="alert alert-sm alert-warning py-2 px-3 mt-2">
-                        <i data-lucide="triangle-alert" class="w-4 h-4 mr-1"></i>
-                        <span>Belum ada file media.</span>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <div class="stg-divider"></div>
-
-            <!-- Sub-section: Running Text -->
-            <div class="stg-section">
-                <div class="flex items-center justify-between">
-                    <div class="stg-section-label mb-0">Running Text</div>
-                    <div class="flex items-center gap-2 mb-0">
-                        <input class="toggle toggle-primary toggle-sm" type="checkbox" role="switch" id="running_text_aktif"
-                            name="running_text_aktif" value="1" <?= $settings['running_text_aktif'] ? 'checked' : '' ?> />
-                        <label class="label-text font-semibold cursor-pointer" for="running_text_aktif">Aktifkan</label>
+                        <div class="stg-media-status stg-media-panel">
+                            <?php if (!empty($settings['media_file'])): ?>
+                                <div class="stg-media-file-card" role="status" title="<?= esc(basename($settings['media_file'])) ?>">
+                                    <?= esc(basename($settings['media_file'])) ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="stg-media-file-card is-empty" role="status">
+                                    Belum ada file
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
-                <textarea class="textarea textarea-bordered w-full mt-2" id="running_text" name="running_text" rows="2"
-                    placeholder="Contoh: Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah."><?= esc($settings['running_text']) ?></textarea>
 
-                <div class="stg-running-preview mt-2">
-                    <div class="stg-running-label"><i data-lucide="eye" class="mr-1"></i>Pratinjau</div>
-                    <div class="stg-running-track" id="preview-track">
-                        <span id="preview-text"><?= esc($settings['running_text']) ?: 'Teks berjalan akan tampil di sini...' ?></span>
+                <div class="stg-section stg-running-section">
+                    <div class="stg-running-head">
+                        <div class="stg-section-label mb-0">Running Text</div>
+                        <div class="flex items-center gap-2 mb-0">
+                            <input class="toggle toggle-primary toggle-sm" type="checkbox" role="switch" id="running_text_aktif"
+                                name="running_text_aktif" value="1" <?= $settings['running_text_aktif'] ? 'checked' : '' ?> />
+                            <label class="label-text font-semibold cursor-pointer" for="running_text_aktif">Aktifkan</label>
+                        </div>
+                    </div>
+                    <textarea class="textarea textarea-bordered w-full mt-2" id="running_text" name="running_text" rows="3"
+                        placeholder="Contoh: Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah."><?= esc($settings['running_text']) ?></textarea>
+
+                    <div class="stg-running-preview mt-2">
+                        <div class="stg-running-label"><i data-lucide="eye" class="mr-1"></i>Pratinjau</div>
+                        <div class="stg-running-track" id="preview-track">
+                            <span id="preview-text"><?= esc($settings['running_text']) ?: 'Teks berjalan akan tampil di sini...' ?></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -167,7 +151,7 @@
                         <label class="label-text font-semibold cursor-pointer" for="wa_template_default_aktif">Gunakan Template Default</label>
                     </div>
                 </div>
-                <div class="stg-wa-template-row">
+                <div class="stg-wa-template-row <?= $settings['wa_template_default_aktif'] ? 'default-active' : '' ?>" id="wa-template-row">
                     <div class="stg-wa-template-left" id="wa-template-editor-wrapper" style="display: <?= $settings['wa_template_default_aktif'] ? 'none' : 'block' ?>;">
                         <!-- WA Formatting Toolbar -->
                         <div class="wa-toolbar" id="wa-toolbar">
@@ -272,12 +256,119 @@
     /* ─── Header ─── */
     .settings-header { margin-bottom: 20px; }
 
-    /* ─── 2-Column Grid ─── */
-    .settings-grid-2col {
-        display: grid;
-        grid-template-columns: 2fr 3fr;
+    /* ─── Stacked Layout ─── */
+    .settings-stack {
+        display: flex;
+        flex-direction: column;
         gap: 20px;
+    }
+
+    /* ─── Signage Grid (1 Row, 2 Columns) ─── */
+    .stg-signage-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stg-signage-choice-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-bottom: 1px solid var(--od-border-soft);
+    }
+
+    .stg-signage-choice-row > .stg-section + .stg-section {
+        border-left: 1px solid var(--od-border-soft);
+    }
+
+    .stg-choice-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .stg-choice-option {
+        align-items: center;
+        border: 1px solid var(--od-border);
+        border-radius: 6px;
+        cursor: pointer;
+        display: grid;
+        gap: 8px;
+        grid-template-columns: auto minmax(0, 1fr);
+        min-height: 38px;
+        padding: 8px 10px;
+        transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .stg-choice-option:hover,
+    .stg-choice-option:focus-within {
+        background: var(--od-border-soft);
+        border-color: color-mix(in srgb, var(--od-accent) 42%, var(--od-border));
+    }
+
+    .stg-choice-option:has(input:checked) {
+        background: color-mix(in srgb, var(--color-primary) 9%, var(--od-surface));
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 12%, transparent);
+    }
+
+    .stg-choice-title {
+        color: var(--od-fg);
+        font-size: .82rem;
+        font-weight: 700;
+        line-height: 1.15;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .stg-media-section,
+    .stg-running-section {
+        border-bottom: 1px solid var(--od-border-soft);
+    }
+
+    .stg-media-grid {
         align-items: start;
+        display: grid;
+        gap: 14px;
+        grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr);
+    }
+
+    .stg-media-panel {
+        min-width: 0;
+    }
+
+    .stg-media-status {
+        align-self: end;
+    }
+
+    .stg-media-file-card {
+        align-items: center;
+        background: var(--od-border-soft);
+        border: 1px solid var(--od-border);
+        border-radius: 8px;
+        color: var(--od-fg);
+        display: flex;
+        font-size: .84rem;
+        font-weight: 700;
+        height: 32px;
+        margin: 0;
+        min-width: 0;
+        overflow: hidden;
+        padding: 0 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+    }
+
+    .stg-media-file-card.is-empty {
+        color: var(--od-muted);
+        font-weight: 600;
+    }
+
+    .stg-running-head {
+        align-items: center;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
     }
 
     /* ─── Card shell ─── */
@@ -343,66 +434,6 @@
     }
 
     /* ─── Tema / Media cards ─── */
-    .stg-tema-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-
-    .stg-tema-card {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border: 2px solid var(--od-border);
-        border-radius: 12px;
-        padding: 12px 14px;
-        cursor: pointer;
-        transition: all .18s ease;
-        color: var(--od-muted);
-    }
-    .stg-tema-card:hover {
-        border-color: color-mix(in srgb, var(--od-accent) 50%, var(--od-border));
-        color: var(--od-fg2);
-    }
-    .stg-tema-card.selected {
-        border-color: var(--od-accent);
-        background: color-mix(in srgb, var(--od-accent) 10%, var(--od-surface));
-        color: var(--od-accent);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-accent) 15%, transparent);
-    }
-
-    .stg-tema-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        background: var(--od-border-soft);
-        transition: background .18s ease;
-    }
-    .stg-tema-icon .lucide,
-    .stg-tema-icon [data-lucide] { width: 18px; height: 18px; }
-    .stg-tema-icon.dark  { color: #465fff; }
-    .stg-tema-icon.light { color: #f79009; }
-    .stg-tema-icon.media { color: var(--od-muted); }
-    .stg-tema-card.selected .stg-tema-icon { background: color-mix(in srgb, var(--color-primary) 20%, transparent); }
-    .stg-tema-card.selected .stg-tema-icon.dark  { color: #465fff; }
-    .stg-tema-card.selected .stg-tema-icon.light { color: #f79009; }
-    .stg-tema-card.selected .stg-tema-icon.media { color: var(--od-accent); }
-
-    .stg-tema-name {
-        font-size: .86rem;
-        font-weight: 700;
-        line-height: 1;
-    }
-    .stg-tema-desc {
-        font-size: .72rem;
-        color: var(--od-muted);
-        margin-left: auto;
-    }
-
     /* ─── Running text preview ─── */
     .stg-running-preview {
         background: linear-gradient(135deg, #0f1f3d 0%, #1a2942 100%);
@@ -456,8 +487,16 @@
     /* ─── WA Template row ─── */
     .stg-wa-template-row {
         display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(300px, .85fr);
+        gap: 20px;
+        align-items: start;
+    }
+    .stg-wa-template-row.default-active {
         grid-template-columns: 1fr;
-        gap: 14px;
+    }
+    .stg-wa-template-left,
+    .stg-wa-template-right {
+        min-width: 0;
     }
     /* ─── WA Toolbar ─── */
     .wa-toolbar {
@@ -613,7 +652,9 @@
         font-size: .76rem;
         line-height: 1.5;
         margin: 0;
+        max-height: 420px;
         min-height: 200px;
+        overflow: auto;
         padding: 12px;
         white-space: pre-wrap;
     }
@@ -637,14 +678,28 @@
 
     /* ─── Responsive ─── */
     @media (max-width: 1024px) {
-        .settings-grid-2col {
+        .stg-wa-template-row {
             grid-template-columns: 1fr;
+        }
+
+        .stg-signage-choice-row,
+        .stg-media-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stg-signage-choice-row > .stg-section + .stg-section {
+            border-left: 0;
+            border-top: 1px solid var(--od-border-soft);
         }
     }
     @media (max-width: 600px) {
-        .stg-tema-grid,
-        .stg-wa-template-row {
+        .stg-choice-grid {
             grid-template-columns: 1fr;
+        }
+        .stg-running-head,
+        .settings-header {
+            align-items: flex-start;
+            flex-direction: column;
         }
         .stg-card-header {
             flex-wrap: wrap;
@@ -797,25 +852,13 @@
     // Editor event listeners
     // ══════════════════════════════════════════════════════════════
 
-    // Tema & Mode selection
-    function selectTema(tema) {
-        document.querySelectorAll('[id^="tema-"]').forEach(el => el.classList.remove('selected'));
-        document.getElementById('tema-' + tema).classList.add('selected');
-        document.getElementById('radio-tema-' + tema).checked = true;
-    }
 
-    function selectMode(mode) {
-        document.querySelectorAll('.stg-tema-card:not([id^="tema-"])').forEach(el => el.classList.remove('selected'));
-        document.getElementById('mode-' + mode).classList.add('selected');
-        document.getElementById('radio-' + mode).checked = true;
-    }
 
     window.waExecFormat = waExecFormat;
     window.waExecMono = waExecMono;
     window.insertWaToken = insertWaToken;
     window.resetWaTemplateToDefault = resetWaTemplateToDefault;
-    window.selectTema = selectTema;
-    window.selectMode = selectMode;
+
 
     function initSettingsPage() {
         const form = document.querySelector('.settings-form');
@@ -876,8 +919,12 @@
 
         document.getElementById('wa_template_default_aktif')?.addEventListener('change', function() {
             const wrapper = document.getElementById('wa-template-editor-wrapper');
+            const row = document.getElementById('wa-template-row');
             if (wrapper) {
                 wrapper.style.display = this.checked ? 'none' : 'block';
+            }
+            if (row) {
+                row.classList.toggle('default-active', this.checked);
             }
             renderWaTemplatePreview();
         });
