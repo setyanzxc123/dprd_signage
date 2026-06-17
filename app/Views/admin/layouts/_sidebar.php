@@ -89,6 +89,17 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 </a>
             </li>
 
+            <li class="nav-mobile-logout-divider" aria-hidden="true"></li>
+            <li class="nav-item-custom nav-mobile-logout-item">
+                <form id="sidebar-mobile-logout-form" class="sidebar-mobile-logout-form" method="post" action="<?= base_url('admin/logout') ?>" onsubmit="return confirm('Yakin ingin keluar?')">
+                    <?= csrf_field() ?>
+                </form>
+                <button type="submit" form="sidebar-mobile-logout-form" class="nav-link-custom sidebar-mobile-logout">
+                    <i data-lucide="log-out" class="nav-icon"></i>
+                    <span class="nav-text">Keluar</span>
+                </button>
+            </li>
+
         </ul>
 
     </div>

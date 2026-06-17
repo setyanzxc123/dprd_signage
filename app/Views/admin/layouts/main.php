@@ -111,28 +111,21 @@ $flashError = session()->getFlashdata('error');
     <nav id="mobile-nav" class="mobile-nav" aria-label="Navigasi mobile" data-turbo-permanent>
         <a href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
             <i data-lucide="layout-dashboard"></i>
-            Home
+            <span class="mobile-nav-label">Dashboard</span>
         </a>
         <a href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
             <i data-lucide="calendar-days"></i>
-            Jadwal
+            <span class="mobile-nav-label">Jadwal</span>
         </a>
         <a href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
             <i data-lucide="message-circle"></i>
-            Notifikasi
+            <span class="mobile-nav-label">Notifikasi</span>
         </a>
-        <a href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
-            <i data-lucide="settings"></i>
-            Sistem
-        </a>
-        <form class="mobile-nav-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
-            onsubmit="return confirm('Yakin ingin keluar?')">
-            <?= csrf_field() ?>
-            <button type="submit">
-                <i data-lucide="log-out"></i>
-                Keluar
-            </button>
-        </form>
+        <button type="button" class="mobile-menu-toggle" aria-label="Buka menu lainnya" aria-controls="sidebar"
+            aria-expanded="false" data-mobile-menu-toggle>
+            <i data-lucide="menu"></i>
+            <span class="mobile-nav-label">Menu</span>
+        </button>
     </nav>
 
     <div id="admin-vue-controller" hidden></div>

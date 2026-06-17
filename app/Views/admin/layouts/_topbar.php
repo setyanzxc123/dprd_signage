@@ -15,6 +15,8 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <i data-lucide="menu"></i>
     </button>
 
+    <div class="topbar-mobile-title" aria-current="page"><?= esc($pageTitle) ?></div>
+
     <nav class="topbar-breadcrumb" aria-label="breadcrumb">
         <?php if ($pageTitle === 'Dashboard' && empty($breadcrumbs)): ?>
             <strong class="current"><?= esc($pageTitle) ?></strong>
