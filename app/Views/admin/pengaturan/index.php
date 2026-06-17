@@ -838,19 +838,39 @@
         const hidden = document.getElementById('wa_template_reminder');
 
         if (editor && hidden) {
-            window.WaTemplateEditor?.mount({
-                editor,
-                hidden,
-                labels: getPlaceholderLabels(),
-                onUpdate: () => renderWaTemplatePreview(),
-                onSelectionUpdate: updateToolbarState,
-            });
+            const mountEditor = () => {
+                if (!window.WaTemplateEditor) return;
+                window.WaTemplateEditor.mount({
+                    editor,
+                    hidden,
+                    labels: getPlaceholderLabels(),
+                    onUpdate: () => renderWaTemplatePreview(),
+                    onSelectionUpdate: updateToolbarState,
+                });
 
-            editor.closest('form')?.addEventListener('submit', () => {
-                syncEditorToHidden();
-                localStorage.removeItem('dprd_wa_status_cache');
-                localStorage.removeItem('dprd_wa_status_cache_time');
-            });
+                editor.closest('form')?.addEventListener('submit', () => {
+                    syncEditorToHidden();
+                    localStorage.removeItem('dprd_wa_status_cache');
+                    localStorage.removeItem('dprd_wa_status_cache_time');
+                });
+            };
+
+            if (window.WaTemplateEditor) {
+                mountEditor();
+            } else {
+                const scriptEl = document.querySelector('script[src*="wa-template-editor.js"]');
+                if (scriptEl) {
+                    scriptEl.addEventListener('load', mountEditor);
+                } else {
+                    const interval = setInterval(() => {
+                        if (window.WaTemplateEditor) {
+                            clearInterval(interval);
+                            mountEditor();
+                        }
+                    }, 50);
+                    setTimeout(() => clearInterval(interval), 5000);
+                }
+            }
         }
         renderWaTemplatePreview();
 
