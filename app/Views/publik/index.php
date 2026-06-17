@@ -40,8 +40,8 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             <a class="flex min-w-0 items-center gap-3 sm:gap-4" href="<?= base_url('jadwal') ?>" aria-label="Agenda rapat DPRD">
                 <img class="h-12 w-12 shrink-0 rounded-xl border border-base-300 bg-white object-contain sm:h-16 sm:w-16 sm:rounded-2xl" src="<?= esc($logoUrl) ?>" alt="Logo DPRD" />
                 <span class="min-w-0">
-                    <span class="block truncate text-base font-black leading-tight text-base-content sm:text-xl">Agenda Rapat DPRD</span>
-                    <span class="hidden truncate text-xs font-bold text-base-content/65 sm:text-sm sm:block mt-0.5">Provinsi Sulawesi Tengah</span>
+                    <span class="block truncate text-sm font-black leading-tight text-base-content min-[380px]:text-base sm:text-xl">Agenda Rapat DPRD</span>
+                    <span class="mt-0.5 block truncate text-[10px] font-bold leading-tight text-base-content/65 min-[380px]:text-xs sm:text-sm">Provinsi Sulawesi Tengah</span>
                 </span>
             </a>
 
@@ -188,7 +188,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
         </section>
 
         <section class="mt-4">
-            <div v-if="!loading" class="mb-3 grid grid-cols-4 gap-1.5 sm:gap-2">
+            <div v-if="!initialLoading" class="mb-3 grid grid-cols-4 gap-1.5 sm:gap-2">
                 <div class="rounded-xl border border-base-300 bg-base-100 p-2 sm:p-3">
                     <p class="truncate text-[9px] font-extrabold uppercase tracking-[.04em] text-base-content/50 sm:text-[10px] sm:tracking-[.06em]">Total</p>
                     <strong class="mt-1 block text-base leading-none text-base-content sm:text-lg">{{ daySummary.total }}</strong>
@@ -208,11 +208,12 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             </div>
 
             <div class="mb-2.5 flex flex-col gap-1 px-1 text-xs font-bold text-base-content/60 sm:flex-row sm:items-center sm:justify-between">
-                <span v-if="loading">Memuat agenda...</span>
+                <span v-if="initialLoading">Memuat agenda...</span>
                 <span v-else>{{ agendaListCountLabel }}</span>
+                <span v-if="refreshing && !initialLoading" class="text-base-content/45">Memperbarui...</span>
             </div>
 
-            <div v-if="loading" class="grid gap-3">
+            <div v-if="initialLoading" class="grid gap-3">
                 <div class="skeleton h-28 w-full rounded-xl border border-base-300" v-for="n in 3" :key="'sk-' + n"></div>
             </div>
 
@@ -312,7 +313,8 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             const today = new Date();
             const activeDate = ref(new Date(today));
             const jadwal = ref([]);
-            const loading = ref(true);
+            const initialLoading = ref(true);
+            const refreshing = ref(false);
             const loadError = ref(false);
             const lastRefresh = ref('');
             const query = ref('');
@@ -404,7 +406,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             });
 
             const syncStatusLabel = computed(() => {
-                if (loading.value && !lastRefresh.value) {
+                if (initialLoading.value && !lastRefresh.value) {
                     return 'Memuat';
                 }
                 if (loadError.value) {
@@ -414,7 +416,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             });
 
             const syncStatusMobileLabel = computed(() => {
-                if (loading.value && !lastRefresh.value) {
+                if (initialLoading.value && !lastRefresh.value) {
                     return 'Muat';
                 }
                 if (loadError.value) {
@@ -424,8 +426,11 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             });
 
             const syncStatusTitle = computed(() => {
-                if (loading.value && !lastRefresh.value) {
+                if (initialLoading.value && !lastRefresh.value) {
                     return 'Memuat agenda publik.';
+                }
+                if (refreshing.value) {
+                    return 'Sedang memperbarui agenda. Data lama tetap ditampilkan.';
                 }
                 if (loadError.value) {
                     return 'Gagal memperbarui agenda. Data terakhir tetap ditampilkan.';
@@ -434,7 +439,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             });
 
             const syncStatusBadgeClass = computed(() => {
-                if (loading.value && !lastRefresh.value) {
+                if (initialLoading.value && !lastRefresh.value) {
                     return 'badge badge-sm badge-neutral gap-1 px-2 font-bold';
                 }
                 if (loadError.value) {
@@ -445,7 +450,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
 
             const syncStatusDotClass = computed(() => {
                 const base = 'h-1.5 w-1.5 rounded-full';
-                if (loading.value && !lastRefresh.value) {
+                if (initialLoading.value && !lastRefresh.value) {
                     return `${base} animate-pulse bg-neutral-content`;
                 }
                 if (loadError.value) {
@@ -741,21 +746,46 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
             }
 
+            let requestSequence = 0;
+            let jadwalSignature = '';
+
             function loadData() {
-                loading.value = true;
-                fetch(`${API_URL}?month=${monthKey.value}`)
+                const requestId = ++requestSequence;
+                const requestedMonth = monthKey.value;
+                refreshing.value = true;
+
+                fetch(`${API_URL}?month=${requestedMonth}`)
                     .then((response) => response.json())
                     .then((payload) => {
-                        jadwal.value = payload.data || [];
+                        if (requestId !== requestSequence) {
+                            return;
+                        }
+
+                        const nextData = payload.data || [];
+                        const nextSignature = JSON.stringify(nextData);
+                        if (nextSignature !== jadwalSignature) {
+                            jadwal.value = nextData;
+                            jadwalSignature = nextSignature;
+                        }
+
                         lastRefresh.value = currentTime();
                         loadError.value = false;
                     })
                     .catch((error) => {
+                        if (requestId !== requestSequence) {
+                            return;
+                        }
+
                         loadError.value = true;
                         console.error('[Publik] Gagal ambil data:', error);
                     })
                     .finally(() => {
-                        loading.value = false;
+                        if (requestId !== requestSequence) {
+                            return;
+                        }
+
+                        initialLoading.value = false;
+                        refreshing.value = false;
                     });
             }
 
@@ -780,7 +810,8 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             onUnmounted(() => clearInterval(timer));
 
             return {
-                loading,
+                initialLoading,
+                refreshing,
                 loadError,
                 lastRefresh,
                 query,
