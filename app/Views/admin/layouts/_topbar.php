@@ -21,6 +21,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD" class="topbar-mobile-logo" />
         <div class="topbar-mobile-copy">
             <span class="topbar-mobile-name">DPRD Sulawesi Tengah</span>
+            <span class="topbar-mobile-sub">Notifikasi & Signage</span>
         </div>
     </div>
 
