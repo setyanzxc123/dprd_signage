@@ -357,10 +357,10 @@
     }
 
     .nav-mobile-logout-item {
-        display: none;
+        display: none !important;
     }
     .nav-mobile-logout-divider {
-        display: none;
+        display: none !important;
         margin: 8px 0 4px;
         border-top: 1px solid var(--od-border-soft);
     }
@@ -1429,8 +1429,8 @@
         padding-bottom: calc(24px + env(safe-area-inset-bottom));
         overscroll-behavior: contain;
     }
-    .nav-mobile-logout-divider { display: block; }
-    .nav-mobile-logout-item { display: list-item; }
+    .nav-mobile-logout-divider { display: block !important; }
+    .nav-mobile-logout-item { display: list-item !important; }
     #content { padding: 24px 20px 96px; }
     .mobile-nav { display: grid; }
     body.mobile-sidebar-open {
