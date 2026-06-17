@@ -74,8 +74,7 @@
 
     function closeTransientShellUi() {
         document.body.classList.remove('mobile-agenda-open');
-        document.getElementById('sidebar')?.classList.remove('mobile-open');
-        document.getElementById('sidebar-overlay')?.classList.remove('visible');
+        setMobileSidebarOpen(false);
     }
 
     function disableTurboFormSubmissions() {
@@ -129,21 +128,64 @@
         btn.setAttribute('title',       collapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar');
     }
 
+    function isMobilePrimaryPath(current, path) {
+        if (path === '/admin/dashboard') {
+            return current === '/admin' || isActivePath(current, path);
+        }
+
+        return isActivePath(current, path);
+    }
+
+    function isCurrentMobileMenuSection() {
+        const current = window.location.pathname.replace(/\/$/, '') || '/';
+        if (!current.startsWith('/admin')) return false;
+
+        return ![
+            '/admin/dashboard',
+            '/admin/jadwal',
+            '/admin/notifikasi',
+        ].some(function (path) {
+            return isMobilePrimaryPath(current, path);
+        });
+    }
+
+    function syncMobileMenuButton(sidebarOpen) {
+        const shouldActivate = Boolean(sidebarOpen) || isCurrentMobileMenuSection();
+        document.querySelectorAll('[data-mobile-menu-toggle]').forEach(function (button) {
+            button.classList.toggle('active', shouldActivate);
+            button.setAttribute('aria-expanded', String(Boolean(sidebarOpen)));
+            button.setAttribute('aria-label', sidebarOpen ? 'Tutup menu lainnya' : 'Buka menu lainnya');
+            button.setAttribute('title', sidebarOpen ? 'Tutup menu lainnya' : 'Buka menu lainnya');
+        });
+    }
+
+    function setMobileSidebarOpen(open) {
+        const isOpen = Boolean(open);
+        document.body.classList.toggle('mobile-sidebar-open', isOpen);
+        document.getElementById('sidebar')?.classList.toggle('mobile-open', isOpen);
+        document.getElementById('sidebar-overlay')?.classList.toggle('visible', isOpen);
+        document.querySelectorAll('.topbar-toggle').forEach(function (button) {
+            button.setAttribute('aria-expanded', String(isOpen));
+            button.setAttribute('aria-label', isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi');
+            button.setAttribute('title', isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi');
+        });
+        syncMobileMenuButton(isOpen);
+    }
+
     function initSidebar() {
         const collapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
         document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
         setSidebarToggleLabel(collapsed);
+        syncMobileMenuButton(document.getElementById('sidebar')?.classList.contains('mobile-open'));
 
         if (document.documentElement.dataset.adminSidebarBound === '1') return;
         document.documentElement.dataset.adminSidebarBound = '1';
 
         document.addEventListener('click', function (e) {
             const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
 
-            if (e.target.closest('.topbar-toggle')) {
-                sidebar?.classList.toggle('mobile-open');
-                overlay?.classList.toggle('visible');
+            if (e.target.closest('.topbar-toggle, [data-mobile-menu-toggle]')) {
+                setMobileSidebarOpen(!sidebar?.classList.contains('mobile-open'));
                 return;
             }
 
@@ -157,6 +199,10 @@
 
             if (e.target.closest('#sidebar-overlay')) {
                 closeTransientShellUi();
+            }
+
+            if (e.target.closest('#sidebar a') && window.matchMedia('(max-width: 1180px)').matches) {
+                setMobileSidebarOpen(false);
             }
         });
 
@@ -173,11 +219,11 @@
         const current = window.location.pathname.replace(/\/$/, '') || '/';
         document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach(function (link) {
             const path = link.getAttribute('data-path');
-            const isDashboard = path === '/admin/dashboard' && current === '/admin';
-            const active = isDashboard || isActivePath(current, path);
+            const active = isMobilePrimaryPath(current, path);
             link.classList.toggle('active', active);
             link.classList.toggle('menu-active', active && link.classList.contains('nav-link-custom'));
         });
+        syncMobileMenuButton(document.getElementById('sidebar')?.classList.contains('mobile-open'));
     }
 
     /* ── Clock ──────────────────────────────────────────────────────────── */
