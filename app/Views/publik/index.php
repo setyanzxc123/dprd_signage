@@ -36,18 +36,18 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
 
 <div id="app" v-cloak>
     <header class="sticky top-0 z-50 border-b border-base-300 bg-base-100/95 backdrop-blur-xl">
-        <div class="mx-auto flex min-h-[88px] w-[min(960px,calc(100%-28px))] items-center justify-between gap-3 px-1 py-3">
-            <a class="flex min-w-0 items-center gap-4" href="<?= base_url('jadwal') ?>" aria-label="Agenda rapat DPRD">
-                <img class="h-16 w-16 shrink-0 rounded-2xl border border-base-300 bg-white object-contain" src="<?= esc($logoUrl) ?>" alt="Logo DPRD" />
+        <div class="mx-auto flex min-h-[72px] w-[min(960px,calc(100%-20px))] items-center justify-between gap-2 px-1 py-2 sm:min-h-[88px] sm:w-[min(960px,calc(100%-28px))] sm:gap-3 sm:py-3">
+            <a class="flex min-w-0 items-center gap-3 sm:gap-4" href="<?= base_url('jadwal') ?>" aria-label="Agenda rapat DPRD">
+                <img class="h-12 w-12 shrink-0 rounded-xl border border-base-300 bg-white object-contain sm:h-16 sm:w-16 sm:rounded-2xl" src="<?= esc($logoUrl) ?>" alt="Logo DPRD" />
                 <span class="min-w-0">
-                    <span class="block truncate text-lg font-black leading-tight text-base-content sm:text-xl">Agenda Rapat DPRD</span>
+                    <span class="block truncate text-base font-black leading-tight text-base-content sm:text-xl">Agenda Rapat DPRD</span>
                     <span class="hidden truncate text-xs font-bold text-base-content/65 sm:text-sm sm:block mt-0.5">Provinsi Sulawesi Tengah</span>
                 </span>
             </a>
 
-            <div class="flex items-center gap-2.5">
+            <div class="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
                 <button
-                    class="btn btn-ghost btn-circle text-base-content/80 hover:text-primary"
+                    class="btn btn-ghost btn-circle btn-sm text-base-content/80 hover:text-primary sm:btn-md"
                     type="button"
                     @click="toggleTheme"
                     :aria-label="isDark ? 'Gunakan mode terang' : 'Gunakan mode gelap'"
@@ -57,26 +57,27 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 </button>
                 <div :class="syncStatusBadgeClass" :title="syncStatusTitle">
                     <span :class="syncStatusDotClass"></span>
-                    {{ syncStatusLabel }}
+                    <span class="hidden sm:inline">{{ syncStatusLabel }}</span>
+                    <span class="sm:hidden">{{ syncStatusMobileLabel }}</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="mx-auto w-[min(960px,calc(100%-28px))] py-4">
+    <main class="mx-auto w-[min(960px,calc(100%-20px))] py-3 sm:w-[min(960px,calc(100%-28px))] sm:py-4">
         <section class="card border border-base-300 bg-base-100 shadow-sm rounded-xl">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-base-200 p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-base-200 p-3 sm:p-4">
                 <div class="min-w-0">
                     <p class="text-[10px] font-extrabold uppercase tracking-[.08em] text-primary">Tanggal aktif</p>
-                    <h1 class="mt-1 text-xl font-black leading-tight text-base-content sm:text-2xl">{{ selectedDateFull }}</h1>
+                    <h1 class="mt-1 text-lg font-black leading-tight text-base-content sm:text-2xl">{{ selectedDateFull }}</h1>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="join">
+                <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                    <div class="join flex-1 sm:flex-none">
                         <button class="btn btn-sm btn-outline join-item" type="button" @click="prevDay" aria-label="Hari sebelumnya">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                         </button>
-                        <button class="btn btn-sm btn-outline join-item font-extrabold" type="button" @click="goToday">Hari ini</button>
+                        <button class="btn btn-sm btn-outline join-item flex-1 font-extrabold sm:flex-none" type="button" @click="goToday">Hari ini</button>
                         <button class="btn btn-sm btn-outline join-item" type="button" @click="nextDay" aria-label="Hari berikutnya">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
@@ -88,7 +89,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 </div>
             </div>
 
-            <div class="grid grid-cols-7 gap-2 border-b border-base-200 p-3">
+            <div class="grid grid-cols-7 gap-1 border-b border-base-200 p-2 sm:gap-2 sm:p-3">
                 <button
                     v-for="day in dateStrip"
                     :key="day.key"
@@ -98,22 +99,23 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                     :aria-pressed="day.key === selectedDateKey"
                 >
                     <span class="text-[10px] font-extrabold uppercase tracking-[.04em] opacity-75">{{ day.day }}</span>
-                    <span class="mt-1 text-xl font-black leading-none">{{ day.date.getDate() }}</span>
+                    <span class="mt-1 text-lg font-black leading-none sm:text-xl">{{ day.date.getDate() }}</span>
+                    <span v-if="day.count" :class="dateStripCountBadgeClass(day)">{{ day.count }}</span>
                     <span :class="dateStripMetaClass(day)">
                         {{ day.count ? `${day.count} agenda` : 'Kosong' }}
                     </span>
                 </button>
             </div>
 
-            <div v-if="showCalendar" class="border-b border-base-200 p-4">
+            <div v-if="showCalendar" class="border-b border-base-200 p-3 sm:p-4">
                 <div class="mb-3 flex flex-col gap-3 p-1 sm:flex-row sm:items-center sm:justify-between">
                     <div class="min-w-0">
                         <h2 class="text-sm font-bold text-base-content">{{ monthTitle }}</h2>
-                        <p class="mt-0.5 text-xs font-semibold text-base-content/55">Pilih bulan dan tahun untuk membuka arsip agenda.</p>
+                        <p class="mt-0.5 hidden text-xs font-semibold text-base-content/55 sm:block">Pilih bulan dan tahun untuk membuka arsip agenda.</p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="grid grid-cols-[minmax(0,1fr)_88px] items-center gap-2 sm:flex sm:flex-wrap">
                         <select
-                            class="select select-sm select-bordered w-36"
+                            class="select select-sm select-bordered w-full sm:w-36"
                             :value="activeMonthIndex"
                             aria-label="Pilih bulan arsip"
                             @change="setCalendarMonth($event.target.value)"
@@ -121,7 +123,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                             <option v-for="(month, index) in monthNames" :key="month" :value="index">{{ month }}</option>
                         </select>
                         <input
-                            class="input input-sm input-bordered w-24"
+                            class="input input-sm input-bordered w-full sm:w-24"
                             type="number"
                             min="2000"
                             :max="archiveMaxYear"
@@ -129,7 +131,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                             aria-label="Pilih tahun arsip"
                             @change="setCalendarYear($event.target.value)"
                         />
-                        <div class="join">
+                        <div class="join col-span-2 justify-self-end sm:col-span-1">
                             <button class="btn btn-sm btn-outline join-item" type="button" @click="prevMonth" aria-label="Bulan sebelumnya">
                                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                             </button>
@@ -155,46 +157,53 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 </div>
             </div>
 
-            <div class="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_190px_150px]">
+            <div class="grid gap-3 p-3 sm:p-4 md:grid-cols-[minmax(0,1fr)_190px_150px]">
                 <input class="input input-bordered w-full" v-model.trim="query" type="search" placeholder="Cari agenda..." autocomplete="off" />
+                <button class="btn btn-outline font-extrabold md:hidden" type="button" @click="showFilters = !showFilters">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                    {{ showFilters ? 'Tutup filter' : 'Filter' }}
+                    <span v-if="hasActiveFilters" class="badge badge-sm badge-primary">{{ activeFilterLabels.length }}</span>
+                </button>
 
-                <select class="select select-bordered w-full" v-model="unitFilter">
-                    <option value="all">Semua unit</option>
-                    <option v-for="unit in unitOptions" :key="unit" :value="unit">{{ unit }}</option>
-                </select>
+                <div :class="filterPanelClass">
+                    <select class="select select-bordered w-full" v-model="unitFilter">
+                        <option value="all">Semua unit</option>
+                        <option v-for="unit in unitOptions" :key="unit" :value="unit">{{ unit }}</option>
+                    </select>
 
-                <select class="select select-bordered w-full" v-model="statusFilter">
-                    <option value="all">Semua status</option>
-                    <option value="berlangsung">Berlangsung</option>
-                    <option value="persiapan">Persiapan</option>
-                    <option value="menunggu">Menunggu</option>
-                    <option value="selesai">Selesai</option>
-                </select>
+                    <select class="select select-bordered w-full" v-model="statusFilter">
+                        <option value="all">Semua status</option>
+                        <option value="berlangsung">Berlangsung</option>
+                        <option value="persiapan">Persiapan</option>
+                        <option value="menunggu">Menunggu</option>
+                        <option value="selesai">Selesai</option>
+                    </select>
+                </div>
             </div>
 
-            <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-2 border-t border-base-200 px-4 pb-4 text-xs font-bold">
+            <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-2 border-t border-base-200 px-3 pb-3 text-xs font-bold sm:px-4 sm:pb-4">
                 <span v-for="filter in activeFilterLabels" :key="filter" class="badge badge-outline badge-sm">{{ filter }}</span>
                 <button class="btn btn-xs btn-ghost text-primary" type="button" @click="resetFilters">Reset filter</button>
             </div>
         </section>
 
         <section class="mt-4">
-            <div v-if="!loading" class="mb-3 grid gap-2 sm:grid-cols-4">
-                <div class="rounded-xl border border-base-300 bg-base-100 p-3">
-                    <p class="text-[10px] font-extrabold uppercase tracking-[.06em] text-base-content/50">Total</p>
-                    <strong class="mt-1 block text-lg leading-none text-base-content">{{ daySummary.total }}</strong>
+            <div v-if="!loading" class="mb-3 grid grid-cols-4 gap-1.5 sm:gap-2">
+                <div class="rounded-xl border border-base-300 bg-base-100 p-2 sm:p-3">
+                    <p class="truncate text-[9px] font-extrabold uppercase tracking-[.04em] text-base-content/50 sm:text-[10px] sm:tracking-[.06em]">Total</p>
+                    <strong class="mt-1 block text-base leading-none text-base-content sm:text-lg">{{ daySummary.total }}</strong>
                 </div>
-                <div class="rounded-xl border border-base-300 bg-base-100 p-3">
-                    <p class="text-[10px] font-extrabold uppercase tracking-[.06em] text-base-content/50">Berlangsung</p>
-                    <strong class="mt-1 block text-lg leading-none text-success">{{ daySummary.berlangsung }}</strong>
+                <div class="rounded-xl border border-base-300 bg-base-100 p-2 sm:p-3">
+                    <p class="truncate text-[9px] font-extrabold uppercase tracking-[.04em] text-base-content/50 sm:text-[10px] sm:tracking-[.06em]"><span class="sm:hidden">Live</span><span class="hidden sm:inline">Berlangsung</span></p>
+                    <strong class="mt-1 block text-base leading-none text-success sm:text-lg">{{ daySummary.berlangsung }}</strong>
                 </div>
-                <div class="rounded-xl border border-base-300 bg-base-100 p-3">
-                    <p class="text-[10px] font-extrabold uppercase tracking-[.06em] text-base-content/50">Mendatang</p>
-                    <strong class="mt-1 block text-lg leading-none text-warning">{{ daySummary.mendatang }}</strong>
+                <div class="rounded-xl border border-base-300 bg-base-100 p-2 sm:p-3">
+                    <p class="truncate text-[9px] font-extrabold uppercase tracking-[.04em] text-base-content/50 sm:text-[10px] sm:tracking-[.06em]">Mendatang</p>
+                    <strong class="mt-1 block text-base leading-none text-warning sm:text-lg">{{ daySummary.mendatang }}</strong>
                 </div>
-                <div class="rounded-xl border border-base-300 bg-base-100 p-3">
-                    <p class="text-[10px] font-extrabold uppercase tracking-[.06em] text-base-content/50">Selesai</p>
-                    <strong class="mt-1 block text-lg leading-none text-info">{{ daySummary.selesai }}</strong>
+                <div class="rounded-xl border border-base-300 bg-base-100 p-2 sm:p-3">
+                    <p class="truncate text-[9px] font-extrabold uppercase tracking-[.04em] text-base-content/50 sm:text-[10px] sm:tracking-[.06em]">Selesai</p>
+                    <strong class="mt-1 block text-base leading-none text-info sm:text-lg">{{ daySummary.selesai }}</strong>
                 </div>
             </div>
 
@@ -246,7 +255,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                                 <p v-if="item.keterangan" class="mt-2 line-clamp-2 text-sm leading-5 text-base-content/65">{{ item.keterangan }}</p>
                             </div>
 
-                            <div class="flex sm:flex-col gap-2 sm:min-w-[112px]">
+                            <div class="grid gap-2 sm:flex sm:min-w-[112px] sm:flex-col">
                                 <a
                                     v-if="canWatchStream(item)"
                                     :class="streamButtonClass(item)"
@@ -277,6 +286,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" class="mr-1"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     Berkas
                                 </a>
+                                <p v-if="item.has_stream && !canWatchStream(item)" class="text-xs font-semibold leading-4 text-base-content/55 sm:hidden">Live aktif saat rapat berlangsung.</p>
                             </div>
                         </div>
                     </div>
@@ -286,7 +296,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
     </main>
 
     <footer class="border-t border-base-300 py-6 text-xs text-base-content/50 bg-base-100/40">
-        <div class="mx-auto flex w-[min(960px,calc(100%-28px))] flex-col gap-1.5 px-1 sm:flex-row sm:justify-between">
+        <div class="mx-auto flex w-[min(960px,calc(100%-20px))] flex-col gap-1.5 px-1 sm:w-[min(960px,calc(100%-28px))] sm:flex-row sm:justify-between">
             <span>DPRD Provinsi Sulawesi Tengah &copy; <?= date('Y') ?></span>
             <span>Auto-refresh 60 detik</span>
         </div>
@@ -309,6 +319,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
             const unitFilter = ref('all');
             const statusFilter = ref('all');
             const showCalendar = ref(false);
+            const showFilters = ref(false);
             const isDark = ref(document.documentElement.classList.contains('dark'));
             const API_URL = '<?= esc($apiUrl) ?>';
 
@@ -402,6 +413,16 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 return lastRefresh.value ? `Diperbarui ${lastRefresh.value}` : 'Diperbarui';
             });
 
+            const syncStatusMobileLabel = computed(() => {
+                if (loading.value && !lastRefresh.value) {
+                    return 'Muat';
+                }
+                if (loadError.value) {
+                    return 'Gagal';
+                }
+                return lastRefresh.value || 'Siap';
+            });
+
             const syncStatusTitle = computed(() => {
                 if (loading.value && !lastRefresh.value) {
                     return 'Memuat agenda publik.';
@@ -431,6 +452,12 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                     return `${base} bg-error-content`;
                 }
                 return `${base} animate-pulse bg-success-content`;
+            });
+
+            const filterPanelClass = computed(() => {
+                return (showFilters.value || hasActiveFilters.value)
+                    ? 'grid gap-3 md:contents'
+                    : 'hidden md:contents';
             });
 
             const unitOptions = computed(() => {
@@ -595,7 +622,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
 
             function dateStripMetaClass(day) {
                 const active = day.key === selectedDateKey.value;
-                const base = 'mt-1 text-[10px] font-extrabold leading-none';
+                const base = 'mt-1 hidden text-[10px] font-extrabold leading-none sm:block';
                 if (active) {
                     return `${base} text-primary-content/85`;
                 }
@@ -603,6 +630,13 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 return day.count
                     ? `${base} text-primary`
                     : `${base} text-base-content/45`;
+            }
+
+            function dateStripCountBadgeClass(day) {
+                const active = day.key === selectedDateKey.value;
+                return active
+                    ? 'badge badge-xs badge-accent absolute right-1 top-1 font-extrabold sm:hidden'
+                    : 'badge badge-xs badge-neutral absolute right-1 top-1 font-extrabold sm:hidden';
             }
 
             function toggleTheme() {
@@ -753,6 +787,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 unitFilter,
                 statusFilter,
                 showCalendar,
+                showFilters,
                 isDark,
                 weekdays,
                 dateStrip,
@@ -771,9 +806,11 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 agendaListCountLabel,
                 emptyStateText,
                 syncStatusLabel,
+                syncStatusMobileLabel,
                 syncStatusTitle,
                 syncStatusBadgeClass,
                 syncStatusDotClass,
+                filterPanelClass,
                 unitOptions,
                 calendarDays,
                 calendarLeadingBlanks,
@@ -788,6 +825,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
                 selectDay,
                 statusLabel,
                 statusPillClass,
+                dateStripCountBadgeClass,
                 agendaCardClass,
                 canWatchStream,
                 streamButtonLabel,
