@@ -91,17 +91,19 @@
                     ?>
                         <tr class="hover:bg-base-200/30 transition-colors">
                             <td class="dt-row-number" data-label="No"></td>
-                            <td class="whitespace-nowrap" data-order="<?= esc($dateOrder, 'attr') ?>" data-label="Tanggal & Waktu">
-                                <span class="badge badge-neutral h-auto py-1 px-2 text-xs font-mono font-bold whitespace-nowrap">
-                                    <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
-                                </span>
-                                <div class="text-xs text-base-content/60 mt-1">
-                                    <?= esc($m['waktu_mulai']) ?> - <?= esc($m['waktu_selesai']) ?>
+                            <td class="whitespace-nowrap text-right sm:text-left" data-order="<?= esc($dateOrder, 'attr') ?>" data-label="Tanggal & Waktu">
+                                <div class="flex flex-col items-end sm:items-start gap-0.5">
+                                    <span class="font-bold text-sm text-base-content">
+                                        <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
+                                    </span>
+                                    <span class="text-xs text-base-content/60 font-medium">
+                                        <?= esc($m['waktu_mulai']) ?> - <?= esc($m['waktu_selesai']) ?>
+                                    </span>
                                 </div>
                             </td>
                             <td data-label="Judul Rapat">
                                 <div class="font-bold text-base-content text-sm"><?= esc($m['judul']) ?></div>
-                                <div class="text-xs text-base-content/65 mt-0.5 max-w-md truncate" title="<?= esc($m['keterangan'] ?? '') ?>">
+                                <div class="text-xs text-base-content/60 mt-1 max-w-md truncate hidden sm:block" title="<?= esc($m['keterangan'] ?? '') ?>">
                                     <?= esc($m['keterangan'] ?? '') ?>
                                 </div>
                             </td>
