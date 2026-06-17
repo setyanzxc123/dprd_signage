@@ -1444,33 +1444,45 @@
 
 @media (max-width: 820px) {
     #topbar {
-        min-height: 58px;
+        min-height: 72px;
         flex-wrap: nowrap;
-        padding: 10px 16px;
+        padding: 12px 16px;
     }
     .topbar-breadcrumb { display: none; }
     .topbar-mobile-title { display: none; }
     .topbar-mobile-brand {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
         min-width: 0;
     }
     .topbar-mobile-logo {
-        width: 30px;
-        height: 30px;
+        width: 48px;
+        height: 48px;
         object-fit: contain;
-        border-radius: 6px;
+        border-radius: 12px;
+        border: 1px solid var(--od-border-soft);
+        background: #fff;
     }
     .topbar-mobile-copy {
         display: flex;
         flex-direction: column;
         min-width: 0;
+        gap: 2px;
     }
     .topbar-mobile-name {
         color: var(--od-fg);
-        font-size: 13.5px;
-        font-weight: 800;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .topbar-mobile-sub {
+        color: var(--od-muted);
+        font-size: 10px;
+        font-weight: 700;
         line-height: 1.1;
         overflow: hidden;
         text-overflow: ellipsis;
