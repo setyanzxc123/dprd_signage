@@ -34,15 +34,15 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 
             <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Master Data</li>
             <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
-                    <i data-lucide="workflow" class="nav-icon"></i>
-                    <span class="nav-text">Kelompok Peserta</span>
-                </a>
-            </li>
-            <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
                     <i data-lucide="users" class="nav-icon"></i>
                     <span class="nav-text">Anggota DPRD</span>
+                </a>
+            </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
+                    <i data-lucide="workflow" class="nav-icon"></i>
+                    <span class="nav-text">Kelompok Peserta</span>
                 </a>
             </li>
             <li class="nav-item-custom">
