@@ -8,6 +8,9 @@ use App\Models\SettingModel;
 
 class SettingController extends BaseController
 {
+    private const MEDIA_MAX_BYTES = 50 * 1024 * 1024;
+    private const MEDIA_UPLOAD_DIR = 'uploads/media/';
+
     public function index(): string
     {
         $settingModel = new SettingModel();
@@ -42,11 +45,10 @@ class SettingController extends BaseController
     {
         $settingModel = new SettingModel();
 
-        // Simpan pengaturan teks dan tema
-        $settingModel->upsert('running_text',       $this->request->getPost('running_text') ?? '');
-        $settingModel->upsert('running_text_aktif', $this->request->getPost('running_text_aktif') ? '1' : '0');
-        $settingModel->upsert('media_mode',         $this->request->getPost('media_mode') ?? 'video');
-        $settingModel->upsert('tema_signage',       $this->request->getPost('tema_signage') ?? 'dark');
+        $requestSizeError = $this->validateRequestSize();
+        if ($requestSizeError !== null) {
+            return $this->failSave($requestSizeError);
+        }
 
         $waTemplate = trim((string) ($this->request->getPost('wa_template_reminder') ?? ''));
         $waTemplate = $waTemplate !== '' ? $waTemplate : WhatsappService::defaultReminderTemplate();
@@ -54,50 +56,192 @@ class SettingController extends BaseController
 
         if (!empty($unknownPlaceholders)) {
             $labels = array_map(static fn ($key) => '{' . $key . '}', $unknownPlaceholders);
-            session()->setFlashdata('error', 'Template WA memuat placeholder tidak dikenal: ' . implode(', ', $labels));
-            return redirect()->to(base_url('admin/pengaturan'))->withInput();
+            $message = 'Template WA memuat placeholder tidak dikenal: ' . implode(', ', $labels);
+
+            return $this->failSave($message, true);
         }
 
         $senderName = trim((string) ($this->request->getPost('wa_sender_name') ?? ''));
         $senderName = $senderName !== '' ? $senderName : 'Sekretariat DPRD';
 
-        $settingModel->upsert('wa_sender_name', $senderName);
-        $settingModel->upsert('wa_template_reminder', $waTemplate);
-        $settingModel->upsert('wa_template_default_aktif', $this->request->getPost('wa_template_default_aktif') ? '1' : '0');
-
-        // Proses upload file media jika ada
-        $file = $this->request->getFile('media_file');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $allowedTypes = ['video/mp4', 'video/webm', 'image/jpeg', 'image/png', 'image/webp'];
-            $maxSize      = 50 * 1024 * 1024; // 50MB
-
-            if (!in_array($file->getMimeType(), $allowedTypes)) {
-                session()->setFlashdata('error', 'Format file tidak didukung. Gunakan MP4, WebM, JPG, PNG, atau WebP.');
-                return redirect()->to(base_url('admin/pengaturan'));
-            }
-
-            if ($file->getSize() > $maxSize) {
-                session()->setFlashdata('error', 'Ukuran file melebihi batas 50MB.');
-                return redirect()->to(base_url('admin/pengaturan'));
-            }
-
-            // Hapus file lama
-            $fileAktif = $settingModel->getValue('media_file');
-            if ($fileAktif) {
-                $pathLama = FCPATH . 'uploads/media/' . $fileAktif;
-                if (file_exists($pathLama)) {
-                    unlink($pathLama);
-                }
-            }
-
-            // Simpan file baru
-            $namaFile = $file->getRandomName();
-            $file->move(FCPATH . 'uploads/media/', $namaFile);
-            $settingModel->upsert('media_file', $namaFile);
+        $mediaUpload = $this->validateMediaUpload();
+        if ($mediaUpload['error'] !== null) {
+            return $this->failSave($mediaUpload['error']);
         }
 
+        $newMediaFile = '';
+        $oldMediaFile = '';
+
+        try {
+            if ($mediaUpload['file'] !== null) {
+                $uploadDir = FCPATH . self::MEDIA_UPLOAD_DIR;
+                if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
+                    return $this->failSave('Folder upload media tidak dapat dibuat.');
+                }
+
+                if (!is_writable($uploadDir)) {
+                    return $this->failSave('Folder upload media tidak dapat ditulis.');
+                }
+
+                $oldMediaFile = (string) $settingModel->getValue('media_file', '');
+                $newMediaFile = $mediaUpload['file']->getRandomName();
+                $mediaUpload['file']->move($uploadDir, $newMediaFile);
+            }
+
+            $db = db_connect();
+            $db->transStart();
+
+            $settingModel->upsert('running_text',       $this->request->getPost('running_text') ?? '');
+            $settingModel->upsert('running_text_aktif', $this->request->getPost('running_text_aktif') ? '1' : '0');
+            $settingModel->upsert('media_mode',         $this->request->getPost('media_mode') ?? 'video');
+            $settingModel->upsert('tema_signage',       $this->request->getPost('tema_signage') ?? 'dark');
+            $settingModel->upsert('wa_sender_name', $senderName);
+            $settingModel->upsert('wa_template_reminder', $waTemplate);
+            $settingModel->upsert('wa_template_default_aktif', $this->request->getPost('wa_template_default_aktif') ? '1' : '0');
+
+            if ($newMediaFile !== '') {
+                $settingModel->upsert('media_file', $newMediaFile);
+            }
+
+            $db->transComplete();
+            if (!$db->transStatus()) {
+                throw new \RuntimeException('Transaksi database gagal.');
+            }
+        } catch (\Throwable $e) {
+            $this->deleteMediaFile($newMediaFile);
+            log_message('error', 'Gagal menyimpan pengaturan media: {message}', ['message' => $e->getMessage()]);
+
+            return $this->failSave('Gagal menyimpan pengaturan. Pastikan folder upload dapat ditulis dan coba lagi.');
+        }
+
+        $this->deleteMediaFile($oldMediaFile);
+
         session()->setFlashdata('success', 'Pengaturan berhasil disimpan.');
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'redirect' => base_url('admin/pengaturan'),
+            ]);
+        }
+
         return redirect()->to(base_url('admin/pengaturan'));
+    }
+
+    private function failSave(string $message, bool $withInput = false)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->ajaxError($message);
+        }
+
+        session()->setFlashdata('error', $message);
+        $redirect = redirect()->to(base_url('admin/pengaturan'));
+
+        return $withInput ? $redirect->withInput() : $redirect;
+    }
+
+    private function validateMediaUpload(): array
+    {
+        $file = $this->request->getFile('media_file');
+
+        if (!$file) {
+            return ['file' => null, 'error' => null];
+        }
+
+        $error = $file->getError();
+
+        if ($error === UPLOAD_ERR_NO_FILE) {
+            return ['file' => null, 'error' => null];
+        }
+
+        if ($error !== UPLOAD_ERR_OK || !$file->isValid()) {
+            return ['file' => null, 'error' => $this->uploadErrorMessage($error)];
+        }
+
+        if ($file->hasMoved()) {
+            return ['file' => null, 'error' => 'File media sudah diproses sebelumnya. Silakan pilih file lagi.'];
+        }
+
+        $allowedTypes = ['video/mp4', 'video/webm', 'image/jpeg', 'image/png', 'image/webp'];
+        if (!in_array($file->getMimeType(), $allowedTypes, true)) {
+            return ['file' => null, 'error' => 'Format file tidak didukung. Gunakan MP4, WebM, JPG, PNG, atau WebP.'];
+        }
+
+        if ($file->getSize() > self::MEDIA_MAX_BYTES) {
+            return ['file' => null, 'error' => 'Ukuran file melebihi batas 50MB.'];
+        }
+
+        return ['file' => $file, 'error' => null];
+    }
+
+    private function validateRequestSize(): ?string
+    {
+        $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
+        if ($contentLength <= 0) {
+            return null;
+        }
+
+        $postMaxBytes = $this->iniSizeToBytes((string) ini_get('post_max_size'));
+        if ($postMaxBytes > 0 && $contentLength > $postMaxBytes) {
+            return 'Ukuran upload melebihi batas server (' . $this->formatBytes($postMaxBytes) . ').';
+        }
+
+        return null;
+    }
+
+    private function uploadErrorMessage(int $error): string
+    {
+        return match ($error) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas upload server.',
+            UPLOAD_ERR_PARTIAL => 'Upload file tidak lengkap. Periksa koneksi lalu coba lagi.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Folder sementara upload tidak tersedia di server.',
+            UPLOAD_ERR_CANT_WRITE => 'Server gagal menulis file upload.',
+            UPLOAD_ERR_EXTENSION => 'Upload dihentikan oleh ekstensi PHP.',
+            default => 'File media gagal diupload.',
+        };
+    }
+
+    private function iniSizeToBytes(string $value): int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return 0;
+        }
+
+        $unit = strtolower($value[strlen($value) - 1]);
+        $bytes = (float) $value;
+
+        return match ($unit) {
+            'g' => (int) ($bytes * 1024 * 1024 * 1024),
+            'm' => (int) ($bytes * 1024 * 1024),
+            'k' => (int) ($bytes * 1024),
+            default => (int) $bytes,
+        };
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        if ($bytes >= 1024 * 1024) {
+            return round($bytes / 1024 / 1024, 1) . 'MB';
+        }
+
+        if ($bytes >= 1024) {
+            return round($bytes / 1024, 1) . 'KB';
+        }
+
+        return $bytes . 'B';
+    }
+
+    private function ajaxError(string $message, int $statusCode = 422)
+    {
+        return $this->response->setStatusCode($statusCode)->setJSON([
+            'status'  => 'error',
+            'message' => $message,
+            'csrf'    => [
+                'name' => csrf_token(),
+                'hash' => csrf_hash(),
+            ],
+        ]);
     }
 
     public function deleteMedia()
@@ -115,6 +259,18 @@ class SettingController extends BaseController
 
         session()->setFlashdata('success', 'File media berhasil dihapus.');
         return redirect()->to(base_url('admin/pengaturan'));
+    }
+
+    private function deleteMediaFile(string $fileName): void
+    {
+        if ($fileName === '') {
+            return;
+        }
+
+        $path = FCPATH . self::MEDIA_UPLOAD_DIR . basename($fileName);
+        if (is_file($path) && !@unlink($path)) {
+            log_message('warning', 'Gagal menghapus file media lama: {path}', ['path' => $path]);
+        }
     }
 
 

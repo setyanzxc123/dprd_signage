@@ -242,8 +242,19 @@
 
     <!-- Save bar -->
     <div class="settings-save-bar">
-        <button type="submit" class="btn btn-primary btn-md shadow-md">
-            <i data-lucide="save" class="w-4 h-4 mr-1"></i>Simpan Semua Pengaturan
+        <div class="settings-upload-progress" id="settings-upload-progress" hidden aria-live="polite">
+            <div class="settings-upload-row">
+                <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+                <span id="settings-upload-status">Menyiapkan upload...</span>
+                <strong id="settings-upload-percent">0%</strong>
+            </div>
+            <progress class="progress progress-primary w-full" id="settings-upload-bar" value="0" max="100"></progress>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-md shadow-md" id="settings-submit-button">
+            <span class="loading loading-spinner loading-sm" id="settings-submit-spinner" hidden aria-hidden="true"></span>
+            <i data-lucide="save" class="w-4 h-4 mr-1" id="settings-submit-icon"></i>
+            <span id="settings-submit-label">Simpan Semua Pengaturan</span>
         </button>
     </div>
 
@@ -675,6 +686,31 @@
         z-index: 10;
         margin-top: 4px;
     }
+    .settings-upload-progress {
+        background: var(--od-card);
+        border: 1px solid var(--od-border);
+        border-radius: 8px;
+        box-shadow: var(--od-shadow-sm);
+        margin-bottom: 10px;
+        max-width: 560px;
+        padding: 12px;
+    }
+    .settings-upload-row {
+        align-items: center;
+        color: var(--od-fg2);
+        display: grid;
+        font-size: .82rem;
+        font-weight: 700;
+        gap: 10px;
+        grid-template-columns: auto 1fr auto;
+        margin-bottom: 8px;
+    }
+    .settings-upload-progress.is-error {
+        border-color: var(--color-error);
+    }
+    .settings-upload-progress.is-error .settings-upload-row {
+        color: var(--color-error);
+    }
 
     /* ─── Responsive ─── */
     @media (max-width: 1024px) {
@@ -916,6 +952,7 @@
             }
         }
         renderWaTemplatePreview();
+        setupSettingsSubmitProgress(form);
 
         document.getElementById('wa_template_default_aktif')?.addEventListener('change', function() {
             const wrapper = document.getElementById('wa-template-editor-wrapper');
@@ -943,6 +980,133 @@
             });
         }
         window.renderAdminIcons?.();
+    }
+
+    function setupSettingsSubmitProgress(form) {
+        const panel = document.getElementById('settings-upload-progress');
+        const bar = document.getElementById('settings-upload-bar');
+        const status = document.getElementById('settings-upload-status');
+        const percent = document.getElementById('settings-upload-percent');
+        const submitButton = document.getElementById('settings-submit-button');
+        const submitSpinner = document.getElementById('settings-submit-spinner');
+        const submitIcon = document.getElementById('settings-submit-icon');
+        const submitLabel = document.getElementById('settings-submit-label');
+
+        if (!panel || !bar || !status || !percent || !submitButton || !window.FormData || !window.XMLHttpRequest) {
+            return;
+        }
+
+        const setProgress = (value, message) => {
+            const safeValue = Math.max(0, Math.min(100, Math.round(value)));
+            bar.value = safeValue;
+            percent.textContent = safeValue + '%';
+            status.textContent = message;
+        };
+
+        const setBusy = (busy) => {
+            form.dataset.settingsSubmitting = busy ? '1' : '0';
+            form.setAttribute('aria-busy', busy ? 'true' : 'false');
+            submitButton.disabled = busy;
+            if (submitSpinner) submitSpinner.hidden = !busy;
+            if (submitIcon) submitIcon.hidden = busy;
+            if (submitLabel) submitLabel.textContent = busy ? 'Menyimpan...' : 'Simpan Semua Pengaturan';
+        };
+
+        const showError = (message) => {
+            const currentValue = Number(bar.value) || 0;
+            panel.hidden = false;
+            panel.classList.add('is-error');
+            setProgress(currentValue, message || 'Gagal menyimpan pengaturan.');
+            setBusy(false);
+        };
+
+        const refreshCsrf = (csrf) => {
+            if (!csrf?.name || !csrf?.hash) return;
+
+            const csrfInput = Array.from(form.elements).find((element) => element.name === csrf.name);
+            if (csrfInput) {
+                csrfInput.value = csrf.hash;
+            }
+        };
+
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.settingsSubmitting === '1') {
+                event.preventDefault();
+                return;
+            }
+
+            event.preventDefault();
+
+            syncEditorToHidden();
+            localStorage.removeItem('dprd_wa_status_cache');
+            localStorage.removeItem('dprd_wa_status_cache_time');
+
+            const mediaInput = document.getElementById('media_file');
+            const hasMediaFile = !!(mediaInput && mediaInput.files && mediaInput.files.length > 0);
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData(form);
+
+            panel.hidden = false;
+            panel.classList.remove('is-error');
+            bar.classList.remove('progress-error');
+            bar.classList.add('progress-primary');
+            setBusy(true);
+            setProgress(hasMediaFile ? 1 : 100, hasMediaFile ? 'Mengunggah file media...' : 'Menyimpan pengaturan...');
+
+            xhr.open('POST', form.action, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Accept', 'application/json');
+
+            xhr.upload.addEventListener('progress', (progressEvent) => {
+                if (!hasMediaFile) return;
+
+                if (progressEvent.lengthComputable) {
+                    const value = (progressEvent.loaded / progressEvent.total) * 100;
+                    if (value >= 100) {
+                        setProgress(100, 'Upload selesai, memproses file...');
+                    } else {
+                        setProgress(value, 'Mengunggah file media...');
+                    }
+                } else {
+                    status.textContent = 'Mengunggah file media...';
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                let payload = null;
+
+                try {
+                    payload = JSON.parse(xhr.responseText);
+                } catch (error) {
+                    payload = null;
+                }
+
+                refreshCsrf(payload?.csrf);
+
+                if (xhr.status >= 200 && xhr.status < 300 && payload?.status === 'success') {
+                    setProgress(100, 'Selesai, memuat ulang halaman...');
+                    window.location.assign(payload.redirect || '<?= base_url('admin/pengaturan') ?>');
+                    return;
+                }
+
+                bar.classList.remove('progress-primary');
+                bar.classList.add('progress-error');
+                const fallbackMessage = xhr.status === 413
+                    ? 'Ukuran upload melebihi batas server.'
+                    : (xhr.status === 403
+                        ? 'Sesi keamanan kedaluwarsa. Muat ulang halaman lalu coba lagi.'
+                        : 'Gagal menyimpan pengaturan. Periksa file dan coba lagi.');
+                showError(payload?.message || fallbackMessage);
+            });
+
+            xhr.addEventListener('error', () => {
+                bar.classList.remove('progress-primary');
+                bar.classList.add('progress-error');
+                showError('Koneksi terputus saat mengunggah file.');
+            });
+
+            xhr.send(formData);
+        });
     }
 
     if (document.readyState === 'loading') {
