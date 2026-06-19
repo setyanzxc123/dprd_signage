@@ -8,9 +8,6 @@ const files = [
   ['node_modules/jquery/dist/jquery.min.js', 'public/assets/vendor/jquery/jquery.min.js'],
   ['node_modules/datatables.net/js/dataTables.min.js', 'public/assets/vendor/datatables/dataTables.min.js'],
   ['node_modules/datatables.net-dt/css/dataTables.dataTables.min.css', 'public/assets/vendor/datatables/dataTables.dataTables.min.css'],
-  ['node_modules/flatpickr/dist/flatpickr.min.css', 'public/assets/vendor/flatpickr/flatpickr.min.css'],
-  ['node_modules/flatpickr/dist/flatpickr.min.js', 'public/assets/vendor/flatpickr/flatpickr.min.js'],
-  ['node_modules/flatpickr/dist/l10n/id.js', 'public/assets/vendor/flatpickr/l10n/id.js'],
   ['node_modules/qrcodejs/qrcode.min.js', 'public/assets/vendor/qrcodejs/qrcode.min.js'],
 ];
 
