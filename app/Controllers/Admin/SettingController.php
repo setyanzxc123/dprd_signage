@@ -297,6 +297,8 @@ class SettingController extends BaseController
             return $this->response->setJSON([
                 'configured' => false,
                 'connected'  => false,
+                'error_scope' => 'config',
+                'error'       => 'Token API WhatsApp belum disetel.',
             ]);
         }
 
@@ -304,6 +306,8 @@ class SettingController extends BaseController
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL            => 'https://api.fonnte.com/device',
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => [],
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => ['Authorization: ' . $token],
             CURLOPT_TIMEOUT        => 8,
@@ -317,7 +321,8 @@ class SettingController extends BaseController
             return $this->response->setJSON([
                 'configured' => true,
                 'connected'  => false,
-                'error'      => 'Gagal menghubungi server WhatsApp.',
+                'error_scope' => 'api',
+                'error'       => 'Gagal menghubungi server WhatsApp.',
             ]);
         }
 
@@ -325,21 +330,26 @@ class SettingController extends BaseController
         $ok      = isset($decoded['status']) && $decoded['status'] === true;
 
         $error = null;
+        $errorScope = null;
         if (!$ok) {
             $reason = strtolower($decoded['reason'] ?? '');
             if (str_contains($reason, 'token')) {
                 $error = 'Autentikasi layanan gagal.';
+                $errorScope = 'api_token';
             } elseif (str_contains($reason, 'device') || str_contains($reason, 'disconnect')) {
                 $error = 'Perangkat WhatsApp pengirim tidak terhubung.';
+                $errorScope = 'api_device';
             } else {
                 $error = $decoded['reason'] ?? 'Gagal menghubungkan ke layanan WhatsApp.';
+                $errorScope = 'api';
             }
         }
 
         return $this->response->setJSON([
-            'configured' => true,
-            'connected'  => $ok,
-            'error'      => $error,
+            'configured'  => true,
+            'connected'   => $ok,
+            'error_scope' => $errorScope,
+            'error'       => $error,
         ]);
     }
 }

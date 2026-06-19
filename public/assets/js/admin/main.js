@@ -252,24 +252,41 @@
         const TTL        = 5 * 60 * 1000; // 5 menit
         const now        = Date.now();
 
+        function getWaStatusTitle(data) {
+            if (data.configured && data.connected) {
+                return 'API Fonnte terhubung dan device WhatsApp siap.';
+            }
+            if (!data.configured) {
+                return 'Konfigurasi API Fonnte bermasalah: token WhatsApp belum disetel.';
+            }
+
+            const detail = data.error || 'Gagal terhubung';
+            if (data.error_scope === 'api_token') {
+                return 'Masalah API Fonnte: token WhatsApp ditolak. Detail: ' + detail;
+            }
+            if (data.error_scope === 'api_device') {
+                return 'Masalah API Fonnte: device WhatsApp pengirim tidak terhubung. Detail: ' + detail;
+            }
+            return 'Masalah koneksi API Fonnte. Detail: ' + detail;
+        }
+
         function applyUi(data) {
             ['style'].forEach(function (p) { badgeEl.removeAttribute(p); dotEl.removeAttribute(p); });
             if (data.configured && data.connected) {
                 badgeEl.className = 'badge badge-success badge-soft gap-1.5 h-8 px-3';
                 dotEl.className   = 'h-1.5 w-1.5 rounded-full bg-success';
                 textEl.textContent = 'WhatsApp: Siap';
-                statusEl.setAttribute('title', 'WhatsApp Terhubung (Siap)');
             } else if (data.configured && !data.connected) {
                 badgeEl.className = 'badge badge-error badge-soft gap-1.5 h-8 px-3';
                 dotEl.className   = 'h-1.5 w-1.5 rounded-full bg-error';
                 textEl.textContent = 'WhatsApp: Error';
-                statusEl.setAttribute('title', 'WhatsApp Terputus: ' + (data.error || 'Gagal terhubung'));
             } else {
                 badgeEl.className = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
                 dotEl.className   = 'h-1.5 w-1.5 rounded-full bg-neutral-content';
                 textEl.textContent = 'WhatsApp: Belum Aktif';
-                statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
             }
+            statusEl.setAttribute('title', getWaStatusTitle(data));
+            statusEl.setAttribute('aria-label', getWaStatusTitle(data));
         }
 
         // Pakai cache jika masih valid
@@ -283,6 +300,8 @@
         badgeEl.className  = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
         dotEl.className    = 'h-1.5 w-1.5 rounded-full bg-neutral-content animate-pulse';
         textEl.textContent = 'WhatsApp: Memeriksa...';
+        statusEl.setAttribute('title', 'Memeriksa koneksi API Fonnte.');
+        statusEl.setAttribute('aria-label', 'Memeriksa koneksi API Fonnte.');
 
         try {
             const resp = await fetch('/admin/pengaturan/wa-status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -294,7 +313,8 @@
             badgeEl.className  = 'badge badge-warning badge-soft gap-1.5 h-8 px-3';
             dotEl.className    = 'h-1.5 w-1.5 rounded-full bg-warning';
             textEl.textContent = 'WhatsApp: Gagal Pengecekan';
-            statusEl.setAttribute('title', 'Gagal memeriksa status WhatsApp');
+            statusEl.setAttribute('title', 'Gagal mengecek endpoint status API Fonnte.');
+            statusEl.setAttribute('aria-label', 'Gagal mengecek endpoint status API Fonnte.');
         }
     }
 
