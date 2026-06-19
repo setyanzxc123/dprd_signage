@@ -191,12 +191,13 @@ class BulkMeetingDataSeeder extends Seeder
         );
 
         $templates = $this->scheduleTemplates();
-        $startOffset = -10;
-        $days = 32;
+        $startDate = new \DateTimeImmutable('first day of -2 months');
+        $endDate = new \DateTimeImmutable('last day of +2 months');
+        $days = $startDate->diff($endDate)->days + 1;
         $created = date('Y-m-d H:i:s');
 
         for ($dayIndex = 0; $dayIndex < $days; $dayIndex++) {
-            $date = date('Y-m-d', strtotime(($startOffset + $dayIndex) . ' days'));
+            $date = $startDate->modify('+' . $dayIndex . ' days')->format('Y-m-d');
             $dailyCount = $dayIndex % 5 === 0 ? 3 : ($dayIndex % 2 === 0 ? 2 : 1);
 
             for ($slot = 0; $slot < $dailyCount; $slot++) {
