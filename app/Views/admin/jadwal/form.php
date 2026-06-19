@@ -1,26 +1,11 @@
-<?php
-$flatpickrCssVersion = is_file(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.css') ? filemtime(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.css') : time();
-$flatpickrJsVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.js') ? filemtime(FCPATH . 'assets/vendor/flatpickr/flatpickr.min.js') : time();
-$flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? filemtime(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') : time();
-?>
 <?= $this->extend('admin/layouts/main') ?>
 
 <?= $this->section('styles') ?>
-<link rel="stylesheet" href="<?= base_url('assets/vendor/flatpickr/flatpickr.min.css?v=' . $flatpickrCssVersion) ?>">
 <style>
     .schedule-form {
         --form-gap: 18px;
     }
 
-    .flatpickr-input[readonly] {
-        background-color: var(--color-base-100) !important;
-    }
-
-    .flatpickr-input[readonly]:focus {
-        border-color: var(--od-accent);
-        box-shadow: var(--od-focus);
-    }
-    
     .choice-option {
         position: relative;
         display: block;
@@ -370,11 +355,10 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
                                 </label>
                                 <div class="join w-full">
                                     <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="calendar-clock" class="w-4 h-4"></i></span>
-                                    <input type="text" class="input input-bordered join-item flex-1 w-full" id="waktu_mulai" name="waktu_mulai"
-                                        placeholder="Pilih tanggal dan waktu"
+                                    <input type="datetime-local" class="input input-bordered join-item flex-1 w-full" id="waktu_mulai" name="waktu_mulai"
                                         value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_mulai'])
                                             ? $meeting['tanggal'] . 'T' . $meeting['waktu_mulai']
-                                            : '') ?>" required />
+                                            : '') ?>" step="60" required />
                                 </div>
                             </div>
 
@@ -384,11 +368,10 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
                                 </label>
                                 <div class="join w-full">
                                     <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="calendar-check" class="w-4 h-4"></i></span>
-                                    <input type="text" class="input input-bordered join-item flex-1 w-full" id="waktu_selesai" name="waktu_selesai"
-                                        placeholder="Pilih tanggal dan waktu"
+                                    <input type="datetime-local" class="input input-bordered join-item flex-1 w-full" id="waktu_selesai" name="waktu_selesai"
                                         value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_selesai'])
                                             ? $meeting['tanggal'] . 'T' . $meeting['waktu_selesai']
-                                            : '') ?>" required />
+                                            : '') ?>" step="60" required />
                                 </div>
                             </div>
 
@@ -577,28 +560,8 @@ $flatpickrIdVersion  = is_file(FCPATH . 'assets/vendor/flatpickr/l10n/id.js') ? 
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script src="<?= base_url('assets/vendor/flatpickr/flatpickr.min.js?v=' . $flatpickrJsVersion) ?>"></script>
-<script src="<?= base_url('assets/vendor/flatpickr/l10n/id.js?v=' . $flatpickrIdVersion) ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        flatpickr("#waktu_mulai", {
-            enableTime: true,
-            dateFormat: "Y-m-d\\TH:i",
-            altInput: true,
-            altFormat: "d-m-Y H:i",
-            time_24hr: true,
-            locale: "id"
-        });
-
-        flatpickr("#waktu_selesai", {
-            enableTime: true,
-            dateFormat: "Y-m-d\\TH:i",
-            altInput: true,
-            altFormat: "d-m-Y H:i",
-            time_24hr: true,
-            locale: "id"
-        });
-
         const toggle = document.getElementById('is_publik');
         const label = document.getElementById('publik-label');
         if (toggle && label) {

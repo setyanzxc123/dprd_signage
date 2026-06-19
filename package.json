@@ -22,7 +22,6 @@
     "datatables.net": "^2.3.8",
     "datatables.net-dt": "^2.3.8",
     "esbuild": "^0.25.12",
-    "flatpickr": "^4.6.13",
     "jquery": "^3.7.1",
     "lucide": "^1.17.0",
     "prosemirror-commands": "^1.7.1",
