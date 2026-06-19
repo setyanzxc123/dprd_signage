@@ -45,13 +45,13 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 
     <div id="topbar-actions" class="topbar-actions" data-turbo-permanent>
 
-        <!-- Status Koneksi WA -->
-        <a class="topbar-wa-status-link" href="<?= base_url('admin/pengaturan#wa-notif-card') ?>" id="topbar-wa-status" title="Memeriksa status WhatsApp...">
+        <!-- Status Koneksi API Fonnte -->
+        <span class="topbar-wa-status-link" id="topbar-wa-status" title="Memeriksa koneksi API Fonnte." aria-label="Memeriksa koneksi API Fonnte.">
             <span class="badge badge-neutral badge-soft gap-1.5 h-8 px-3" id="topbar-wa-badge">
                 <span class="h-1.5 w-1.5 rounded-full bg-neutral-content animate-pulse" id="topbar-wa-dot"></span>
                 <span id="topbar-wa-text">WhatsApp: Memeriksa...</span>
             </span>
-        </a>
+        </span>
         <script>
             (function() {
                 try {
@@ -64,6 +64,23 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                         var dotEl = document.getElementById('topbar-wa-dot');
                         var textEl = document.getElementById('topbar-wa-text');
                         if (statusEl && badgeEl && dotEl && textEl) {
+                            var getWaStatusTitle = function(data) {
+                                if (data.configured && data.connected) {
+                                    return 'API Fonnte terhubung dan device WhatsApp siap.';
+                                }
+                                if (!data.configured) {
+                                    return 'Konfigurasi API Fonnte bermasalah: token WhatsApp belum disetel.';
+                                }
+
+                                var detail = data.error || 'Gagal terhubung';
+                                if (data.error_scope === 'api_token') {
+                                    return 'Masalah API Fonnte: token WhatsApp ditolak. Detail: ' + detail;
+                                }
+                                if (data.error_scope === 'api_device') {
+                                    return 'Masalah API Fonnte: device WhatsApp pengirim tidak terhubung. Detail: ' + detail;
+                                }
+                                return 'Masalah koneksi API Fonnte. Detail: ' + detail;
+                            };
                             badgeEl.style.backgroundColor = '';
                             badgeEl.style.color = '';
                             badgeEl.style.borderColor = '';
@@ -72,18 +89,19 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                                 badgeEl.className = 'badge badge-success badge-soft gap-1.5 h-8 px-3';
                                 dotEl.className = 'h-1.5 w-1.5 rounded-full bg-success';
                                 textEl.textContent = 'WhatsApp: Siap';
-                                statusEl.setAttribute('title', 'WhatsApp Terhubung (Siap)');
+                                statusEl.setAttribute('title', getWaStatusTitle(data));
                             } else if (data.configured && !data.connected) {
                                 badgeEl.className = 'badge badge-error badge-soft gap-1.5 h-8 px-3';
                                 dotEl.className = 'h-1.5 w-1.5 rounded-full bg-error';
                                 textEl.textContent = 'WhatsApp: Error';
-                                statusEl.setAttribute('title', 'WhatsApp Terputus: ' + (data.error || 'Gagal terhubung'));
+                                statusEl.setAttribute('title', getWaStatusTitle(data));
                             } else {
                                 badgeEl.className = 'badge badge-neutral badge-soft gap-1.5 h-8 px-3';
                                 dotEl.className = 'h-1.5 w-1.5 rounded-full bg-neutral-content';
                                 textEl.textContent = 'WhatsApp: Belum Aktif';
-                                statusEl.setAttribute('title', 'WhatsApp Belum Dikonfigurasi');
+                                statusEl.setAttribute('title', getWaStatusTitle(data));
                             }
+                            statusEl.setAttribute('aria-label', statusEl.getAttribute('title'));
                         }
                     }
                 } catch(e) {}
