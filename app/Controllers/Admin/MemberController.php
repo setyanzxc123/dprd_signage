@@ -4,7 +4,6 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\AnggotaModel;
-use App\Models\UnitRapatModel;
 
 class MemberController extends BaseController
 {
@@ -50,8 +49,6 @@ class MemberController extends BaseController
             'member'             => null,
             'fraksi_list'        => $this->fraksiList,
             'komisi_list'        => $this->komisiOptions(),
-            'manual_units'       => $this->manualUnitsOptions(),
-            'selected_unit_ids'  => [],
             'action_url'         => base_url('admin/anggota/store'),
         ]);
     }
@@ -65,18 +62,14 @@ class MemberController extends BaseController
             return $this->failForm($input['error']);
         }
 
-        $anggotaId = $model->insert([
+        $model->insert([
             'name'    => $input['name'],
             'jabatan' => $input['jabatan'],
             'fraksi'  => $input['fraksi'],
             'komisi'  => $input['komisi'],
             'no_wa'   => $input['no_wa'],
             'aktif'   => $input['aktif'],
-        ], true);
-
-        if ($anggotaId) {
-            $this->syncMemberUnits((int) $anggotaId, $input['unit_ids']);
-        }
+        ]);
 
         return $this->formSuccessResponse('Anggota berhasil ditambahkan.', base_url('admin/anggota'));
     }
@@ -96,8 +89,6 @@ class MemberController extends BaseController
             'member'             => $member,
             'fraksi_list'        => $this->fraksiList,
             'komisi_list'        => $this->komisiOptions($member['komisi'] ?? ''),
-            'manual_units'       => $this->manualUnitsOptions(),
-            'selected_unit_ids'  => $this->selectedUnitIds($id),
             'action_url'         => base_url("admin/anggota/{$id}/update"),
         ]);
     }
@@ -124,8 +115,6 @@ class MemberController extends BaseController
             'no_wa'   => $input['no_wa'],
             'aktif'   => $input['aktif'],
         ]);
-
-        $this->syncMemberUnits($id, $input['unit_ids']);
 
         return $this->formSuccessResponse('Data anggota berhasil diperbarui.', base_url('admin/anggota'));
     }
@@ -162,41 +151,6 @@ class MemberController extends BaseController
         return $options;
     }
 
-    private function manualUnitsOptions(): array
-    {
-        return (new UnitRapatModel())
-            ->where('aktif', 1)
-            ->orderBy('urutan', 'ASC')
-            ->orderBy('nama', 'ASC')
-            ->findAll();
-    }
-
-    private function selectedUnitIds(int $anggotaId): array
-    {
-        $db = \Config\Database::connect();
-        if (!$db->tableExists('anggota_unit_rapat')) {
-            return [];
-        }
-
-        $rows = $db->table('anggota_unit_rapat')
-            ->select('unit_rapat_id')
-            ->where('anggota_id', $anggotaId)
-            ->get()
-            ->getResultArray();
-
-        return array_map('intval', array_column($rows, 'unit_rapat_id'));
-    }
-
-    private function postedUnitIds(): array
-    {
-        $ids = $this->request->getPost('manual_units') ?? [];
-        $ids = is_array($ids) ? $ids : [$ids];
-        $ids = array_map('intval', $ids);
-        $ids = array_filter($ids, static fn (int $id): bool => $id > 0);
-
-        return array_values(array_unique($ids));
-    }
-
     private function validatedInput(): array
     {
         $name = trim((string) $this->request->getPost('name'));
@@ -218,11 +172,6 @@ class MemberController extends BaseController
             return ['error' => 'Nomor WhatsApp wajib valid. Gunakan format 8123456789.'];
         }
 
-        $unitIds = $this->postedUnitIds();
-        if (! empty($unitIds) && ! empty($this->invalidActiveUnitIds($unitIds))) {
-            return ['error' => 'Kelompok peserta yang dipilih tidak valid atau sudah nonaktif.'];
-        }
-
         return [
             'name'     => $name,
             'jabatan'  => trim((string) $this->request->getPost('jabatan')),
@@ -230,7 +179,6 @@ class MemberController extends BaseController
             'komisi'   => trim((string) $this->request->getPost('komisi')),
             'no_wa'    => $phone,
             'aktif'    => $this->request->getPost('aktif') === '0' ? 0 : 1,
-            'unit_ids' => $unitIds,
         ];
     }
 
@@ -250,20 +198,6 @@ class MemberController extends BaseController
 
         return $digits;
     }
-
-    private function invalidActiveUnitIds(array $unitIds): array
-    {
-        $rows = (new UnitRapatModel())
-            ->select('id')
-            ->where('aktif', 1)
-            ->whereIn('id', $unitIds)
-            ->findAll();
-
-        $validIds = array_map('intval', array_column($rows, 'id'));
-
-        return array_values(array_diff($unitIds, $validIds));
-    }
-
     private function memberHasRelations(int $anggotaId): bool
     {
         $db = \Config\Database::connect();
@@ -284,8 +218,6 @@ class MemberController extends BaseController
             'member'            => $this->postedMember($id),
             'fraksi_list'       => $this->fraksiList,
             'komisi_list'       => $this->komisiOptions(trim((string) $this->request->getPost('komisi'))),
-            'manual_units'      => $this->manualUnitsOptions(),
-            'selected_unit_ids' => $this->postedUnitIds(),
             'action_url'        => $id === null
                 ? base_url('admin/anggota/store')
                 : base_url("admin/anggota/{$id}/update"),
@@ -303,32 +235,5 @@ class MemberController extends BaseController
             'no_wa'   => trim((string) $this->request->getPost('no_wa')),
             'aktif'   => $this->request->getPost('aktif') === '0' ? 0 : 1,
         ];
-    }
-
-    private function syncMemberUnits(int $anggotaId, array $manualUnitIds): void
-    {
-        $db = \Config\Database::connect();
-        if (!$db->tableExists('anggota_unit_rapat')) {
-            return;
-        }
-
-        $db->table('anggota_unit_rapat')
-            ->where('anggota_id', $anggotaId)
-            ->delete();
-
-        $now = date('Y-m-d H:i:s');
-        $rows = [];
-
-        foreach ($manualUnitIds as $unitId) {
-            $rows[] = [
-                'anggota_id'    => $anggotaId,
-                'unit_rapat_id' => $unitId,
-                'created_at'    => $now,
-            ];
-        }
-
-        if (!empty($rows)) {
-            $db->table('anggota_unit_rapat')->insertBatch($rows);
-        }
     }
 }
