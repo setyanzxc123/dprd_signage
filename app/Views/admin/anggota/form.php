@@ -20,8 +20,15 @@
     </p>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form">
+<form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form" data-turbo="true">
     <?= csrf_field() ?>
+
+    <?php if (! empty($form_error)): ?>
+        <div class="alert alert-error shadow-sm mb-3" role="alert">
+            <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+            <span><?= esc($form_error) ?></span>
+        </div>
+    <?php endif; ?>
 
     <div class="grid grid-cols-12 gap-3">
 
@@ -100,7 +107,8 @@
                         <div class="join w-full">
                             <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold font-mono">+62</span>
                             <input type="text" class="input input-bordered join-item flex-1 w-full" id="no_wa" name="no_wa"
-                                value="<?= esc($member['no_wa'] ?? '') ?>" placeholder="8123456789" required />
+                                value="<?= esc($member['no_wa'] ?? '') ?>" placeholder="8123456789"
+                                inputmode="numeric" pattern="8[0-9]{7,12}" title="Gunakan format 8123456789 tanpa 0 di depan." required />
                         </div>
                         <div class="label-text-alt text-base-content/60 mt-1">Format tanpa 0 di depan. Contoh: 8123456789</div>
                     </div>
@@ -130,12 +138,12 @@
                 </div>
 
                 <?php if (empty($manual_units)): ?>
-                    <div class="alert alert-warning py-2 px-3 text-xs mb-0 flex gap-2">
-                        <i data-lucide="triangle-alert" class="w-4 h-4"></i>
-                        <span>Belum ada kelompok peserta aktif. <a href="<?= base_url('admin/unit-rapat/create') ?>" class="link link-primary font-semibold">Buat kelompok peserta</a> sebelum menambahkan anggota.</span>
+                    <div class="alert alert-info py-2 px-3 text-xs mb-0 flex gap-2">
+                        <i data-lucide="info" class="w-4 h-4"></i>
+                        <span>Belum ada kelompok peserta aktif. Anggota tetap bisa disimpan, lalu masukkan anggota ini saat membuat <a href="<?= base_url('admin/unit-rapat/create') ?>" class="link link-primary font-semibold">kelompok peserta</a>.</span>
                     </div>
                 <?php else: ?>
-                    <div class="label-text-alt text-base-content/60 mb-2">Pilih minimal satu kelompok peserta.</div>
+                    <div class="label-text-alt text-base-content/60 mb-2">Opsional. Pilih jika anggota ini sudah masuk kelompok peserta aktif.</div>
                     <div class="relative mb-2">
                         <span class="absolute left-0 top-1/2 -translate-y-1/2 pl-3 text-base-content/40">
                             <i data-lucide="search" class="w-4 h-4"></i>
@@ -174,9 +182,6 @@
                                 </div>
                             </div>
                     </div>
-                    <div class="text-error text-xs mt-2 hidden" id="kelompok-peserta-error">
-                        Pilih minimal satu kelompok peserta.
-                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -188,7 +193,7 @@
         <a href="<?= base_url('admin/anggota') ?>" class="btn btn-outline sm:btn-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary sm:btn-sm" <?= empty($manual_units) ? 'disabled' : '' ?>>
+        <button type="submit" class="btn btn-primary sm:btn-sm">
             <i data-lucide="check" class="w-4 h-4"></i>
             <?= $member ? 'Simpan Perubahan' : 'Tambah Anggota' ?>
         </button>
@@ -200,21 +205,17 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
+    const initAnggotaForm = function() {
         const form = document.getElementById('anggota-form');
+        if (!form || form.dataset.formBootstrapped === '1') return;
+        form.dataset.formBootstrapped = '1';
         const checkboxes = document.querySelectorAll('[data-kelompok-peserta="1"]');
-        const error = document.getElementById('kelompok-peserta-error');
         const searchInput = document.getElementById('kelompok-search');
         const options = document.querySelectorAll('.kelompok-option');
         const selectedCount = document.getElementById('kelompok-selected-count');
         const visibleCount = document.getElementById('kelompok-visible-count');
         const emptyState = document.getElementById('kelompok-empty');
-
-        const hasSelectedGroup = function() {
-            return Array.from(checkboxes).some(function(input) {
-                return input.checked;
-            });
-        };
 
         const syncSelectedCount = function() {
             const count = Array.from(checkboxes).filter(function(input) {
@@ -231,19 +232,8 @@
                 }
             });
         };
-
-        const syncGroupValidity = function() {
-            const valid = hasSelectedGroup();
-            if (error) error.classList.toggle('hidden', valid);
-            checkboxes.forEach(function(input) {
-                input.classList.toggle('checkbox-error', !valid);
-            });
-            syncSelectedCount();
-            return valid;
-        };
-
         checkboxes.forEach(function(input) {
-            input.addEventListener('change', syncGroupValidity);
+            input.addEventListener('change', syncSelectedCount);
         });
 
         searchInput?.addEventListener('input', function() {
@@ -260,14 +250,14 @@
             if (emptyState) emptyState.classList.toggle('hidden', shown > 0);
         });
 
-        form?.addEventListener('submit', function(event) {
-            if (checkboxes.length > 0 && !syncGroupValidity()) {
-                event.preventDefault();
-                checkboxes[0].focus();
-            }
-        });
-
         syncSelectedCount();
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAnggotaForm, { once: true });
+    } else {
+        initAnggotaForm();
+    }
+    })();
 </script>
 <?= $this->endSection() ?>

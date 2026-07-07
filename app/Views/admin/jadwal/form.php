@@ -264,8 +264,15 @@
     </p>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" class="schedule-form">
+<form action="<?= esc($action_url) ?>" method="POST" class="schedule-form" data-turbo="true">
     <?= csrf_field() ?>
+
+    <?php if (! empty($form_error)): ?>
+        <div class="alert alert-error shadow-sm mb-3" role="alert">
+            <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+            <span><?= esc($form_error) ?></span>
+        </div>
+    <?php endif; ?>
 
     <div class="grid grid-cols-12 gap-3">
         <div class="col-span-12 lg:col-span-8">
@@ -372,6 +379,12 @@
                                         value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_selesai'])
                                             ? $meeting['tanggal'] . 'T' . $meeting['waktu_selesai']
                                             : '') ?>" step="60" required />
+                                </div>
+                            </div>
+
+                            <div class="col-span-12">
+                                <div class="text-error text-xs hidden" id="waktu-rapat-error">
+                                    Waktu selesai harus setelah waktu mulai pada tanggal yang sama.
                                 </div>
                             </div>
 
@@ -505,22 +518,32 @@
                                  foreach ($unit_rapat_list as $unit):
                                      $unitId = (int) $unit['id'];
                                      $unitName = $unit['nama'];
-                                     $checked = in_array($unitId, $targetUnitIds, true) ? 'checked' : '';
+                                     $activeMemberCount = (int) ($unit['active_member_count'] ?? 0);
+                                     $isUnavailable = $activeMemberCount <= 0;
+                                     $checked = (!$isUnavailable && in_array($unitId, $targetUnitIds, true)) ? 'checked' : '';
                                      $selectedClass = $checked ? ' is-selected bg-primary/10 text-primary font-semibold' : ' hover:bg-base-200';
+                                     $disabledClass = $isUnavailable ? ' is-disabled opacity-60' : '';
                                      $targetId = 'unit-rapat-' . $unitId;
                                  ?>
-                                     <label class="target-option flex items-center gap-2 px-3 py-1.5 border-b border-base-300 mb-0 cursor-pointer<?= $selectedClass ?>" for="<?= esc($targetId, 'attr') ?>"
-                                         data-name="<?= esc(strtolower($unitName), 'attr') ?>">
+                                     <label class="target-option flex items-center gap-2 px-3 py-1.5 border-b border-base-300 mb-0 cursor-pointer<?= $selectedClass ?><?= $disabledClass ?>" for="<?= esc($targetId, 'attr') ?>"
+                                         data-name="<?= esc(strtolower($unitName), 'attr') ?>"
+                                         data-member-count="<?= $activeMemberCount ?>">
                                          <input class="checkbox checkbox-primary checkbox-xs" type="checkbox" name="target_unit_rapat[]"
                                              value="<?= $unitId ?>" data-name="<?= esc($unitName, 'attr') ?>"
-                                             id="<?= esc($targetId, 'attr') ?>" <?= $checked ?> />
-                                         <span><?= esc($unitName) ?></span>
+                                             id="<?= esc($targetId, 'attr') ?>" <?= $checked ?> <?= $isUnavailable ? 'disabled' : '' ?> />
+                                         <span class="flex-1 min-w-0 truncate"><?= esc($unitName) ?></span>
+                                         <?php if ($isUnavailable): ?>
+                                             <span class="badge badge-warning badge-xs">0 anggota</span>
+                                         <?php endif; ?>
                                      </label>
                                  <?php endforeach; ?>
                                      <div class="text-base-content/50 text-center py-3 hidden" id="target-empty">
                                          <small>Kelompok peserta tidak ditemukan.</small>
                                      </div>
                                  </div>
+                             </div>
+                             <div class="text-error text-xs mt-2 hidden" id="target-peserta-error">
+                                 Pilih minimal satu kelompok peserta yang memiliki anggota aktif.
                              </div>
 
                              <div class="mt-3">
@@ -561,7 +584,11 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
+    const initScheduleForm = function() {
+        const form = document.querySelector('.schedule-form');
+        if (!form || form.dataset.formBootstrapped === '1') return;
+        form.dataset.formBootstrapped = '1';
         const toggle = document.getElementById('is_publik');
         const label = document.getElementById('publik-label');
         if (toggle && label) {
@@ -602,12 +629,44 @@
         });
         syncLocationMode();
 
+        const waktuMulaiInput = document.getElementById('waktu_mulai');
+        const waktuSelesaiInput = document.getElementById('waktu_selesai');
+        const waktuError = document.getElementById('waktu-rapat-error');
+
+        const syncTimeValidity = function() {
+            if (!waktuMulaiInput || !waktuSelesaiInput) return true;
+
+            const start = waktuMulaiInput.value ? new Date(waktuMulaiInput.value) : null;
+            const end = waktuSelesaiInput.value ? new Date(waktuSelesaiInput.value) : null;
+            if (!start || !end) {
+                waktuMulaiInput.classList.remove('input-error');
+                waktuSelesaiInput.classList.remove('input-error');
+                waktuSelesaiInput.setCustomValidity('');
+                if (waktuError) waktuError.classList.add('hidden');
+                return true;
+            }
+
+            const valid = !!(start && end && end > start && waktuMulaiInput.value.slice(0, 10) === waktuSelesaiInput.value.slice(0, 10));
+
+            waktuMulaiInput.classList.toggle('input-error', !valid && !!waktuMulaiInput.value);
+            waktuSelesaiInput.classList.toggle('input-error', !valid && !!waktuSelesaiInput.value);
+            if (waktuError) waktuError.classList.toggle('hidden', valid || !waktuMulaiInput.value || !waktuSelesaiInput.value);
+
+            waktuSelesaiInput.setCustomValidity(valid ? '' : 'Waktu selesai harus setelah waktu mulai pada tanggal yang sama.');
+
+            return valid;
+        };
+
+        waktuMulaiInput?.addEventListener('change', syncTimeValidity);
+        waktuSelesaiInput?.addEventListener('change', syncTimeValidity);
+
         const targetInputs = Array.from(document.querySelectorAll('.target-option input[type="checkbox"]'));
         const targetOptions = Array.from(document.querySelectorAll('.target-option'));
         const targetSearch = document.getElementById('target-search');
         const targetSelectedCount = document.getElementById('target-selected-count');
         const targetVisibleCount = document.getElementById('target-visible-count');
         const targetEmpty = document.getElementById('target-empty');
+        const targetError = document.getElementById('target-peserta-error');
 
         const syncTargetVisual = function(input) {
             const option = input.closest('.target-option');
@@ -621,18 +680,32 @@
 
         const syncTargetCount = function() {
             const count = targetInputs.filter(function(input) {
-                return input.checked;
+                return input.checked && !input.disabled;
             }).length;
 
             if (targetSelectedCount) {
                 targetSelectedCount.textContent = count + ' dipilih';
             }
+
+            return count;
+        };
+
+        const syncTargetValidity = function() {
+            const count = syncTargetCount();
+            const valid = count > 0;
+
+            if (targetError) targetError.classList.toggle('hidden', valid);
+            targetInputs.forEach(function(input) {
+                if (!input.disabled) input.classList.toggle('checkbox-error', !valid);
+            });
+
+            return valid;
         };
 
         targetInputs.forEach(function(input) {
             input.addEventListener('change', function() {
                 syncTargetVisual(this);
-                syncTargetCount();
+                syncTargetValidity();
             });
 
             syncTargetVisual(input);
@@ -656,7 +729,29 @@
             }
         });
 
+        form?.addEventListener('submit', function(event) {
+            const timeValid = syncTimeValidity();
+            const targetValid = syncTargetValidity();
+
+            if (!timeValid || !targetValid) {
+                event.preventDefault();
+                if (!timeValid) {
+                    waktuSelesaiInput?.focus();
+                } else {
+                    targetInputs.find(function(input) { return !input.disabled; })?.focus();
+                }
+            }
+        });
+
+        syncTimeValidity();
         syncTargetCount();
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initScheduleForm, { once: true });
+    } else {
+        initScheduleForm();
+    }
+    })();
 </script>
 <?= $this->endSection() ?>

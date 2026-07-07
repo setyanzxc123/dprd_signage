@@ -42,4 +42,19 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
     }
+
+    protected function formSuccessResponse(string $message, string $redirectUrl)
+    {
+        session()->setFlashdata('success', $message);
+        return redirect()->to($redirectUrl, 303);
+    }
+
+    protected function formViewErrorResponse(string $view, array $data, string $message, int $statusCode = 422)
+    {
+        $data['form_error'] = $message;
+
+        return $this->response
+            ->setStatusCode($statusCode)
+            ->setBody(view($view, $data));
+    }
 }
