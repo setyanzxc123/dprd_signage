@@ -4,12 +4,6 @@
 
 <?= $this->section('content') ?>
 
-<?php
-    $manual_units = $manual_units ?? [];
-    $selected_unit_ids = array_map('intval', $selected_unit_ids ?? []);
-    $visible_unit_ids = array_map('intval', array_column($manual_units, 'id'));
-    $selected_group_count = count(array_intersect($selected_unit_ids, $visible_unit_ids));
-?>
 
 <div class="page-header">
     <h1 class="page-title">
@@ -33,7 +27,7 @@
     <div class="grid grid-cols-12 gap-3">
 
         <!-- Kolom kiri: Data Utama -->
-        <div class="col-span-12 lg:col-span-8">
+        <div class="col-span-12">
             <div class="form-card p-[18px]">
 
                 <div class="form-section-title mb-3 pb-2">Informasi Anggota</div>
@@ -124,68 +118,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Kolom kanan: Kelompok Peserta -->
-        <div class="col-span-12 lg:col-span-4">
-            <div class="form-card p-[18px]">
-                <div class="flex items-center justify-between gap-2 mb-2">
-                    <div class="form-section-title mb-0">Kelompok Peserta</div>
-                    <?php if (! empty($manual_units)): ?>
-                        <span class="badge badge-primary badge-sm" id="kelompok-selected-count">
-                            <?= $selected_group_count ?> dipilih
-                        </span>
-                    <?php endif; ?>
-                </div>
-
-                <?php if (empty($manual_units)): ?>
-                    <div class="alert alert-info py-2 px-3 text-xs mb-0 flex gap-2">
-                        <i data-lucide="info" class="w-4 h-4"></i>
-                        <span>Belum ada kelompok peserta aktif. Anggota tetap bisa disimpan, lalu masukkan anggota ini saat membuat <a href="<?= base_url('admin/unit-rapat/create') ?>" class="link link-primary font-semibold">kelompok peserta</a>.</span>
-                    </div>
-                <?php else: ?>
-                    <div class="label-text-alt text-base-content/60 mb-2">Opsional. Pilih jika anggota ini sudah masuk kelompok peserta aktif.</div>
-                    <div class="relative mb-2">
-                        <span class="absolute left-0 top-1/2 -translate-y-1/2 pl-3 text-base-content/40">
-                            <i data-lucide="search" class="w-4 h-4"></i>
-                        </span>
-                        <input type="text" class="input input-sm input-bordered w-full pl-10 animate-none"
-                            id="kelompok-search" placeholder="Cari kelompok peserta..." autocomplete="off" />
-                    </div>
-
-                    <div class="border border-base-300 rounded overflow-hidden">
-                        <div class="flex items-center justify-between px-3 py-1.5 border-b border-base-300 bg-base-200">
-                            <span class="text-xs font-bold text-base-content/60 uppercase">Daftar Kelompok</span>
-                            <span class="badge badge-neutral badge-sm rounded-full" id="kelompok-visible-count"><?= count($manual_units) ?></span>
-                        </div>
-                            <div class="flex flex-col max-h-[220px] overflow-y-auto" id="kelompok-list">
-                                <?php foreach ($manual_units as $unit):
-                                    $unitId = (int) $unit['id'];
-                                    $checked = in_array($unitId, $selected_unit_ids, true) ? 'checked' : '';
-                                    $inputId = 'unit-manual-' . $unitId;
-                                ?>
-                                    <label class="flex items-center gap-2 px-3 py-1.5 border-b border-base-300 mb-0 kelompok-option min-h-9 hover:bg-base-200 cursor-pointer <?= $checked ? 'bg-primary/10 text-primary' : '' ?>"
-                                        for="<?= esc($inputId, 'attr') ?>"
-                                        data-name="<?= esc(strtolower($unit['nama']), 'attr') ?>">
-                                        <input class="checkbox checkbox-primary checkbox-xs" type="checkbox"
-                                            id="<?= esc($inputId, 'attr') ?>"
-                                            name="manual_units[]"
-                                            value="<?= $unitId ?>"
-                                            data-kelompok-peserta="1"
-                                            <?= $checked ?> />
-                                        <span class="text-xs font-semibold truncate">
-                                            <?= esc($unit['nama']) ?>
-                                        </span>
-                                    </label>
-                                <?php endforeach; ?>
-                                <div class="text-base-content/50 text-center py-2 hidden" id="kelompok-empty">
-                                    <small>Kelompok tidak ditemukan.</small>
-                                </div>
-                            </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
     </div>
 
     <!-- Tombol Aksi -->
@@ -201,63 +133,4 @@
 
 </form>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<script>
-    (function() {
-    const initAnggotaForm = function() {
-        const form = document.getElementById('anggota-form');
-        if (!form || form.dataset.formBootstrapped === '1') return;
-        form.dataset.formBootstrapped = '1';
-        const checkboxes = document.querySelectorAll('[data-kelompok-peserta="1"]');
-        const searchInput = document.getElementById('kelompok-search');
-        const options = document.querySelectorAll('.kelompok-option');
-        const selectedCount = document.getElementById('kelompok-selected-count');
-        const visibleCount = document.getElementById('kelompok-visible-count');
-        const emptyState = document.getElementById('kelompok-empty');
-
-        const syncSelectedCount = function() {
-            const count = Array.from(checkboxes).filter(function(input) {
-                return input.checked;
-            }).length;
-
-            if (selectedCount) selectedCount.textContent = count + ' dipilih';
-
-            checkboxes.forEach(function(input) {
-                const option = input.closest('.kelompok-option');
-                if (option) {
-                    option.classList.toggle('bg-primary/10', input.checked);
-                    option.classList.toggle('text-primary', input.checked);
-                }
-            });
-        };
-        checkboxes.forEach(function(input) {
-            input.addEventListener('change', syncSelectedCount);
-        });
-
-        searchInput?.addEventListener('input', function() {
-            const q = (this.value || '').trim().toLowerCase();
-            let shown = 0;
-
-            options.forEach(function(option) {
-                const match = (option.getAttribute('data-name') || '').includes(q);
-                option.style.display = match ? '' : 'none';
-                if (match) shown++;
-            });
-
-            if (visibleCount) visibleCount.textContent = shown;
-            if (emptyState) emptyState.classList.toggle('hidden', shown > 0);
-        });
-
-        syncSelectedCount();
-    };
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAnggotaForm, { once: true });
-    } else {
-        initAnggotaForm();
-    }
-    })();
-</script>
 <?= $this->endSection() ?>
