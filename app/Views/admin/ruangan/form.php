@@ -13,8 +13,15 @@
     </p>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" class="room-form">
+<form action="<?= esc($action_url) ?>" method="POST" class="room-form" data-turbo="true">
     <?= csrf_field() ?>
+
+    <?php if (! empty($form_error)): ?>
+        <div class="alert alert-error shadow-sm mb-3" role="alert">
+            <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+            <span><?= esc($form_error) ?></span>
+        </div>
+    <?php endif; ?>
 
     <div class="grid grid-cols-12 gap-3">
 

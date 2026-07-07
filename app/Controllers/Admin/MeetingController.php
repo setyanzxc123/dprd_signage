@@ -103,47 +103,22 @@ class MeetingController extends BaseController
 
     public function store()
     {
-        // Pisah tanggal dan waktu dari datetime-local input (format: "2026-04-27T08:00")
-        $waktuMulaiRaw   = $this->request->getPost('waktu_mulai');
-        $waktuSelesaiRaw = $this->request->getPost('waktu_selesai');
-
-        [$tanggal,     $waktuMulai]   = explode('T', $waktuMulaiRaw);
-        [,             $waktuSelesai] = explode('T', $waktuSelesaiRaw);
-
-        $blastBefore  = (int) $this->request->getPost('blast_before');
-        $unitIds      = $this->postedUnitIds();
-        $locationData = $this->postedLocationData();
-
-        // Hitung waktu pengiriman notifikasi
-        $reminderTime = date('Y-m-d H:i:s',
-            strtotime("{$tanggal} {$waktuMulai}") - ($blastBefore * 60)
-        );
+        $input = $this->validatedScheduleInput();
+        if (isset($input['error'])) {
+            return $this->failForm($input['error']);
+        }
 
         $jadwalModel = new JadwalModel();
-        $jadwalId    = $jadwalModel->insert([
-            'judul'         => $this->request->getPost('judul'),
-            'keterangan'    => $this->request->getPost('keterangan'),
-            'tanggal'       => $tanggal,
-            'waktu_mulai'   => $waktuMulai,
-            'waktu_selesai' => $waktuSelesai,
-            'ruangan_id'    => $locationData['ruangan_id'],
-            'lokasi_lainnya' => $locationData['lokasi_lainnya'],
-            'blast_before'  => $blastBefore,
-            'reminder_time' => $reminderTime,
-            'materi_url'    => $this->request->getPost('materi_url'),
-            'stream_url'    => $this->request->getPost('stream_url') ?: null,
-            'is_publik'     => $this->request->getPost('is_publik') ? 1 : 0,
-            'jenis'         => $this->postedJenis(),
+        $jadwalId    = $jadwalModel->insert(array_merge($input['payload'], [
             'status'        => 'menunggu',
-        ], true); // true = return insert ID
+        ]), true); // true = return insert ID
 
-        $this->syncJadwalUnits((int) $jadwalId, $unitIds);
+        $this->syncJadwalUnits((int) $jadwalId, $input['unit_ids']);
 
         // Buat entri notifikasi pending untuk anggota yang relevan
-        $this->_syncNotifikasi((int) $jadwalId, $unitIds, false);
+        $this->_syncNotifikasi((int) $jadwalId, $input['unit_ids'], false);
 
-        session()->setFlashdata('success', 'Jadwal berhasil disimpan dan notifikasi dijadwalkan.');
-        return redirect()->to(base_url('admin/jadwal'));
+        return $this->formSuccessResponse('Jadwal berhasil disimpan dan notifikasi dijadwalkan.', base_url('admin/jadwal'));
     }
 
     public function edit(int $id)
@@ -170,43 +145,25 @@ class MeetingController extends BaseController
 
     public function update(int $id)
     {
-        $waktuMulaiRaw   = $this->request->getPost('waktu_mulai');
-        $waktuSelesaiRaw = $this->request->getPost('waktu_selesai');
-
-        [$tanggal,     $waktuMulai]   = explode('T', $waktuMulaiRaw);
-        [,             $waktuSelesai] = explode('T', $waktuSelesaiRaw);
-
-        $blastBefore  = (int) $this->request->getPost('blast_before');
-        $unitIds      = $this->postedUnitIds();
-        $locationData = $this->postedLocationData();
-        $reminderTime = date('Y-m-d H:i:s',
-            strtotime("{$tanggal} {$waktuMulai}") - ($blastBefore * 60)
-        );
-
         $jadwalModel = new JadwalModel();
-        $jadwalModel->update($id, [
-            'judul'         => $this->request->getPost('judul'),
-            'keterangan'    => $this->request->getPost('keterangan'),
-            'tanggal'       => $tanggal,
-            'waktu_mulai'   => $waktuMulai,
-            'waktu_selesai' => $waktuSelesai,
-            'ruangan_id'    => $locationData['ruangan_id'],
-            'lokasi_lainnya' => $locationData['lokasi_lainnya'],
-            'blast_before'  => $blastBefore,
-            'reminder_time' => $reminderTime,
-            'materi_url'    => $this->request->getPost('materi_url'),
-            'stream_url'    => $this->request->getPost('stream_url') ?: null,
-            'is_publik'     => $this->request->getPost('is_publik') ? 1 : 0,
-            'jenis'         => $this->postedJenis(),
-        ]);
+        if (! $jadwalModel->find($id)) {
+            session()->setFlashdata('error', 'Jadwal tidak ditemukan.');
+            return redirect()->to(base_url('admin/jadwal'));
+        }
 
-        $this->syncJadwalUnits($id, $unitIds);
+        $input = $this->validatedScheduleInput($id);
+        if (isset($input['error'])) {
+            return $this->failForm($input['error'], $id);
+        }
+
+        $jadwalModel->update($id, $input['payload']);
+
+        $this->syncJadwalUnits($id, $input['unit_ids']);
 
         // Sinkronisasi dan reset status notifikasi agar dikirim ulang dengan detail terbaru
-        $this->_syncNotifikasi($id, $unitIds, true);
+        $this->_syncNotifikasi($id, $input['unit_ids'], true);
 
-        session()->setFlashdata('success', 'Jadwal berhasil diperbarui dan notifikasi dijadwalkan ulang.');
-        return redirect()->to(base_url('admin/jadwal'));
+        return $this->formSuccessResponse('Jadwal berhasil diperbarui dan notifikasi dijadwalkan ulang.', base_url('admin/jadwal'));
     }
 
     public function delete(int $id)
@@ -295,7 +252,7 @@ class MeetingController extends BaseController
             $units = array_merge($units, $inactiveUnits);
         }
 
-        return $units;
+        return $this->withActiveMemberCounts($units);
     }
 
     private function roomOptions(int $selectedId = 0): array
@@ -332,25 +289,310 @@ class MeetingController extends BaseController
         return $this->normalizeJenis($this->request->getPost('jenis'));
     }
 
-    private function postedLocationData(): array
+    private function validatedScheduleInput(?int $jadwalId = null): array
+    {
+        $judul = trim((string) $this->request->getPost('judul'));
+        if ($judul === '') {
+            return ['error' => 'Judul rapat wajib diisi.'];
+        }
+
+        [$tanggal, $waktuMulai, $waktuSelesai, $startTs] = $this->validatedTimes();
+        if ($tanggal === null) {
+            return ['error' => 'Waktu rapat wajib valid dan lengkap.'];
+        }
+
+        $unitIds = $this->postedUnitIds();
+        if (empty($unitIds)) {
+            return ['error' => 'Pilih minimal satu kelompok peserta rapat.'];
+        }
+
+        if (! empty($this->invalidSelectableUnitIds($unitIds, $jadwalId))) {
+            return ['error' => 'Kelompok peserta yang dipilih tidak valid atau sudah nonaktif.'];
+        }
+
+        if (! empty($this->unitIdsWithoutActiveMembers($unitIds))) {
+            return ['error' => 'Kelompok peserta yang dipilih wajib memiliki minimal satu anggota aktif.'];
+        }
+
+        $blastBeforeRaw = $this->request->getPost('blast_before');
+        if ($blastBeforeRaw === null || ! ctype_digit((string) $blastBeforeRaw)) {
+            return ['error' => 'Jadwal blast WA tidak valid.'];
+        }
+
+        $blastBefore = (int) $blastBeforeRaw;
+        if (! in_array($blastBefore, [1440, 120, 60, 30, 0], true)) {
+            return ['error' => 'Jadwal blast WA tidak valid.'];
+        }
+
+        $locationData = $this->validatedLocationData($jadwalId);
+        if (isset($locationData['error'])) {
+            return ['error' => $locationData['error']];
+        }
+
+        if ($locationData['ruangan_id'] !== null && $this->hasRoomConflict($locationData['ruangan_id'], $tanggal, $waktuMulai, $waktuSelesai, $jadwalId)) {
+            return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
+        }
+
+        $materiUrl = $this->validatedOptionalUrl((string) $this->request->getPost('materi_url'), 'Link materi rapat tidak valid.');
+        if (isset($materiUrl['error'])) {
+            return ['error' => $materiUrl['error']];
+        }
+
+        $streamUrl = $this->validatedOptionalUrl((string) $this->request->getPost('stream_url'), 'Link live streaming tidak valid.');
+        if (isset($streamUrl['error'])) {
+            return ['error' => $streamUrl['error']];
+        }
+
+        return [
+            'payload' => [
+                'judul'          => $judul,
+                'keterangan'     => trim((string) $this->request->getPost('keterangan')),
+                'tanggal'        => $tanggal,
+                'waktu_mulai'    => $waktuMulai,
+                'waktu_selesai'  => $waktuSelesai,
+                'ruangan_id'     => $locationData['ruangan_id'],
+                'lokasi_lainnya' => $locationData['lokasi_lainnya'],
+                'blast_before'   => $blastBefore,
+                'reminder_time'  => date('Y-m-d H:i:s', $startTs - ($blastBefore * 60)),
+                'materi_url'     => $materiUrl['url'],
+                'stream_url'     => $streamUrl['url'],
+                'is_publik'      => $this->request->getPost('is_publik') ? 1 : 0,
+                'jenis'          => $this->postedJenis(),
+            ],
+            'unit_ids' => $unitIds,
+        ];
+    }
+
+    private function validatedTimes(): array
+    {
+        $waktuMulaiRaw   = trim((string) $this->request->getPost('waktu_mulai'));
+        $waktuSelesaiRaw = trim((string) $this->request->getPost('waktu_selesai'));
+
+        $startTs = $waktuMulaiRaw !== '' ? strtotime($waktuMulaiRaw) : false;
+        $endTs   = $waktuSelesaiRaw !== '' ? strtotime($waktuSelesaiRaw) : false;
+
+        if ($startTs === false || $endTs === false) {
+            return [null, null, null, null];
+        }
+
+        if (date('Y-m-d', $startTs) !== date('Y-m-d', $endTs)) {
+            return [null, null, null, null];
+        }
+
+        if ($endTs <= $startTs) {
+            return [null, null, null, null];
+        }
+
+        return [
+            date('Y-m-d', $startTs),
+            date('H:i:s', $startTs),
+            date('H:i:s', $endTs),
+            $startTs,
+        ];
+    }
+
+    private function validatedLocationData(?int $jadwalId = null): array
     {
         $mode = $this->request->getPost('lokasi_mode') === 'lainnya' ? 'lainnya' : 'ruangan';
 
         if ($mode === 'lainnya') {
             $lokasi = trim((string) $this->request->getPost('lokasi_lainnya'));
+            if ($lokasi === '') {
+                return ['error' => 'Lokasi lainnya wajib diisi.'];
+            }
+
+            if (mb_strlen($lokasi) > 255) {
+                return ['error' => 'Lokasi lainnya maksimal 255 karakter.'];
+            }
 
             return [
                 'ruangan_id'     => null,
-                'lokasi_lainnya' => $lokasi !== '' ? $lokasi : null,
+                'lokasi_lainnya' => $lokasi,
             ];
         }
 
         $ruanganId = (int) $this->request->getPost('ruangan_id');
+        if ($ruanganId <= 0) {
+            return ['error' => 'Ruangan rapat wajib dipilih.'];
+        }
+
+        $room = (new RuanganModel())->find($ruanganId);
+        if (! $room) {
+            return ['error' => 'Ruangan rapat yang dipilih tidak ditemukan.'];
+        }
+
+        $currentRoomId = 0;
+        if ($jadwalId !== null) {
+            $current = (new JadwalModel())->find($jadwalId);
+            $currentRoomId = (int) ($current['ruangan_id'] ?? 0);
+        }
+
+        if ((int) ($room['tersedia'] ?? 0) !== 1 && $ruanganId !== $currentRoomId) {
+            return ['error' => 'Ruangan rapat yang dipilih sedang tidak tersedia.'];
+        }
 
         return [
-            'ruangan_id'     => $ruanganId > 0 ? $ruanganId : null,
+            'ruangan_id'     => $ruanganId,
             'lokasi_lainnya' => null,
         ];
+    }
+
+    private function validatedOptionalUrl(string $url, string $message): array
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return ['url' => null];
+        }
+
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            return ['error' => $message];
+        }
+
+        return ['url' => $url];
+    }
+
+    private function invalidSelectableUnitIds(array $unitIds, ?int $jadwalId): array
+    {
+        $rows = (new UnitRapatModel())
+            ->select('id')
+            ->where('aktif', 1)
+            ->whereIn('id', $unitIds)
+            ->findAll();
+
+        $validIds = array_map('intval', array_column($rows, 'id'));
+
+        if ($jadwalId !== null) {
+            $validIds = array_values(array_unique(array_merge($validIds, $this->jadwalUnitIds($jadwalId))));
+        }
+
+        return array_values(array_diff($unitIds, $validIds));
+    }
+
+    private function unitIdsWithoutActiveMembers(array $unitIds): array
+    {
+        $unitIds = array_values(array_unique(array_filter(array_map('intval', $unitIds))));
+        if (empty($unitIds)) {
+            return [];
+        }
+
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('anggota_unit_rapat')) {
+            return $unitIds;
+        }
+
+        $rows = $db->table('anggota_unit_rapat aur')
+            ->select('aur.unit_rapat_id')
+            ->join('anggota a', 'a.id = aur.anggota_id')
+            ->where('a.aktif', 1)
+            ->whereIn('aur.unit_rapat_id', $unitIds)
+            ->groupBy('aur.unit_rapat_id')
+            ->get()
+            ->getResultArray();
+
+        $unitIdsWithMembers = array_map('intval', array_column($rows, 'unit_rapat_id'));
+
+        return array_values(array_diff($unitIds, $unitIdsWithMembers));
+    }
+
+    private function withActiveMemberCounts(array $units): array
+    {
+        $unitIds = array_values(array_filter(array_map('intval', array_column($units, 'id'))));
+        if (empty($unitIds)) {
+            return $units;
+        }
+
+        $counts = array_fill_keys($unitIds, 0);
+        $db = \Config\Database::connect();
+
+        if ($db->tableExists('anggota_unit_rapat')) {
+            $rows = $db->table('anggota_unit_rapat aur')
+                ->select('aur.unit_rapat_id, COUNT(DISTINCT aur.anggota_id) AS active_member_count')
+                ->join('anggota a', 'a.id = aur.anggota_id')
+                ->where('a.aktif', 1)
+                ->whereIn('aur.unit_rapat_id', $unitIds)
+                ->groupBy('aur.unit_rapat_id')
+                ->get()
+                ->getResultArray();
+
+            foreach ($rows as $row) {
+                $counts[(int) $row['unit_rapat_id']] = (int) $row['active_member_count'];
+            }
+        }
+
+        foreach ($units as &$unit) {
+            $unit['active_member_count'] = $counts[(int) $unit['id']] ?? 0;
+        }
+        unset($unit);
+
+        return $units;
+    }
+
+    private function hasRoomConflict(int $ruanganId, string $tanggal, string $waktuMulai, string $waktuSelesai, ?int $ignoreJadwalId): bool
+    {
+        $builder = \Config\Database::connect()
+            ->table('jadwal')
+            ->select('id')
+            ->where('tanggal', $tanggal)
+            ->where('ruangan_id', $ruanganId)
+            ->where('waktu_mulai <', $waktuSelesai)
+            ->where('waktu_selesai >', $waktuMulai);
+
+        if ($ignoreJadwalId !== null) {
+            $builder->where('id !=', $ignoreJadwalId);
+        }
+
+        return $builder->get(1)->getRowArray() !== null;
+    }
+
+    private function failForm(string $message, ?int $id = null)
+    {
+        $meeting = $this->postedMeeting($id);
+
+        return $this->formViewErrorResponse('admin/jadwal/form', [
+            'pageTitle'        => $id === null ? 'Tambah Jadwal Rapat' : 'Edit Jadwal Rapat',
+            'meeting'          => $meeting,
+            'rooms'            => $this->roomOptions((int) ($meeting['ruangan_id'] ?? 0)),
+            'unit_rapat_list'  => $this->unitRapatOptions($meeting['target_unit_ids'] ?? []),
+            'action_url'       => $id === null
+                ? base_url('admin/jadwal/store')
+                : base_url("admin/jadwal/{$id}/update"),
+        ], $message);
+    }
+
+    private function postedMeeting(?int $id = null): array
+    {
+        $waktuMulaiRaw = trim((string) $this->request->getPost('waktu_mulai'));
+        $waktuSelesaiRaw = trim((string) $this->request->getPost('waktu_selesai'));
+        [$tanggal, $waktuMulai] = $this->splitDateTimeLocal($waktuMulaiRaw);
+        [, $waktuSelesai] = $this->splitDateTimeLocal($waktuSelesaiRaw);
+
+        return [
+            'id'              => $id,
+            'judul'           => trim((string) $this->request->getPost('judul')),
+            'keterangan'      => trim((string) $this->request->getPost('keterangan')),
+            'tanggal'         => $tanggal,
+            'waktu_mulai'     => $waktuMulai,
+            'waktu_selesai'   => $waktuSelesai,
+            'ruangan_id'      => (int) $this->request->getPost('ruangan_id'),
+            'lokasi_lainnya'  => trim((string) $this->request->getPost('lokasi_lainnya')),
+            'blast_before'    => (int) $this->request->getPost('blast_before'),
+            'materi_url'      => trim((string) $this->request->getPost('materi_url')),
+            'stream_url'      => trim((string) $this->request->getPost('stream_url')),
+            'is_publik'       => $this->request->getPost('is_publik') ? 1 : 0,
+            'jenis'           => $this->postedJenis(),
+            'target_unit_ids' => $this->postedUnitIds(),
+        ];
+    }
+
+    private function splitDateTimeLocal(string $value): array
+    {
+        if ($value === '' || ! str_contains($value, 'T')) {
+            return ['', ''];
+        }
+
+        [$date, $time] = explode('T', $value, 2);
+
+        return [$date, $time];
     }
 
     private function displayLocation(array $row): string

@@ -38,13 +38,18 @@ class UnitRapatController extends BaseController
     public function store()
     {
         $model   = new UnitRapatModel();
-        $payload = $this->payload();
+        $input = $this->validatedInput();
+
+        if (isset($input['error'])) {
+            return $this->failForm($input['error']);
+        }
+
+        $payload = $input['payload'];
         $unitId  = (int) $model->insert($payload, true);
 
-        $this->syncUnitMembers($unitId);
+        $this->syncUnitMembers($unitId, $input['anggota_ids']);
 
-        session()->setFlashdata('success', 'Kelompok peserta berhasil ditambahkan.');
-        return redirect()->to(base_url('admin/unit-rapat'));
+        return $this->formSuccessResponse('Kelompok peserta berhasil ditambahkan.', base_url('admin/unit-rapat'));
     }
 
     public function edit(int $id)
@@ -69,18 +74,33 @@ class UnitRapatController extends BaseController
     public function update(int $id)
     {
         $model   = new UnitRapatModel();
-        $payload = $this->payload();
+        if (! $model->find($id)) {
+            session()->setFlashdata('error', 'Unit rapat tidak ditemukan.');
+            return redirect()->to(base_url('admin/unit-rapat'));
+        }
+
+        $input = $this->validatedInput($id);
+
+        if (isset($input['error'])) {
+            return $this->failForm($input['error'], $id);
+        }
+
+        $payload = $input['payload'];
 
         $model->update($id, $payload);
-        $this->syncUnitMembers($id);
+        $this->syncUnitMembers($id, $input['anggota_ids']);
 
-        session()->setFlashdata('success', 'Kelompok peserta berhasil diperbarui.');
-        return redirect()->to(base_url('admin/unit-rapat'));
+        return $this->formSuccessResponse('Kelompok peserta berhasil diperbarui.', base_url('admin/unit-rapat'));
     }
 
     public function delete(int $id)
     {
         $model = new UnitRapatModel();
+        if (! $model->find($id)) {
+            session()->setFlashdata('error', 'Unit rapat tidak ditemukan.');
+            return redirect()->to(base_url('admin/unit-rapat'));
+        }
+
         $model->update($id, ['aktif' => 0]);
 
         session()->setFlashdata('success', 'Kelompok peserta berhasil dinonaktifkan.');
@@ -130,7 +150,85 @@ class UnitRapatController extends BaseController
         return array_values(array_unique($ids));
     }
 
-    private function syncUnitMembers(int $unitId): void
+    private function validatedInput(?int $unitId = null): array
+    {
+        $payload = $this->payload();
+
+        if ($payload['nama'] === '') {
+            return ['error' => 'Nama kelompok peserta wajib diisi.'];
+        }
+
+        if (mb_strlen($payload['nama']) > 150) {
+            return ['error' => 'Nama kelompok peserta maksimal 150 karakter.'];
+        }
+
+        if ($this->unitNameExists($payload['nama'], $unitId)) {
+            return ['error' => 'Nama kelompok peserta sudah digunakan.'];
+        }
+
+        $anggotaIds = $this->postedAnggotaIds();
+        if ((int) $payload['aktif'] === 1 && empty($anggotaIds)) {
+            return ['error' => 'Kelompok peserta aktif wajib memiliki minimal satu anggota.'];
+        }
+
+        if (! empty($anggotaIds) && ! empty($this->invalidActiveAnggotaIds($anggotaIds))) {
+            return ['error' => 'Anggota yang dipilih tidak valid atau sudah nonaktif.'];
+        }
+
+        return [
+            'payload'     => $payload,
+            'anggota_ids' => $anggotaIds,
+        ];
+    }
+
+    private function unitNameExists(string $nama, ?int $ignoreId): bool
+    {
+        $model = new UnitRapatModel();
+        $model->where('nama', $nama);
+
+        if ($ignoreId !== null) {
+            $model->where('id !=', $ignoreId);
+        }
+
+        return $model->first() !== null;
+    }
+
+    private function invalidActiveAnggotaIds(array $anggotaIds): array
+    {
+        $rows = (new AnggotaModel())
+            ->select('id')
+            ->where('aktif', 1)
+            ->whereIn('id', $anggotaIds)
+            ->findAll();
+
+        $validIds = array_map('intval', array_column($rows, 'id'));
+
+        return array_values(array_diff($anggotaIds, $validIds));
+    }
+
+    private function failForm(string $message, ?int $id = null)
+    {
+        return $this->formViewErrorResponse('admin/unit_rapat/form', [
+            'pageTitle'          => $id === null ? 'Tambah Kelompok Peserta' : 'Edit Kelompok Peserta',
+            'unit'               => $this->postedUnit($id),
+            'members'            => $this->memberOptions(),
+            'selectedAnggotaIds' => $this->postedAnggotaIds(),
+            'action_url'         => $id === null
+                ? base_url('admin/unit-rapat/store')
+                : base_url("admin/unit-rapat/{$id}/update"),
+        ], $message);
+    }
+
+    private function postedUnit(?int $id = null): array
+    {
+        return [
+            'id'    => $id,
+            'nama'  => trim((string) $this->request->getPost('nama')),
+            'aktif' => $this->request->getPost('aktif') ? 1 : 0,
+        ];
+    }
+
+    private function syncUnitMembers(int $unitId, array $anggotaIds): void
     {
         $db = $this->db();
         if (! $db->tableExists('anggota_unit_rapat')) {
@@ -141,7 +239,6 @@ class UnitRapatController extends BaseController
             ->where('unit_rapat_id', $unitId)
             ->delete();
 
-        $anggotaIds = $this->postedAnggotaIds();
         if (empty($anggotaIds)) {
             return;
         }

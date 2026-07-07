@@ -17,8 +17,15 @@
     </p>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form">
+<form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form" data-turbo="true">
     <?= csrf_field() ?>
+
+    <?php if (! empty($form_error)): ?>
+        <div class="alert alert-error shadow-sm mb-3" role="alert">
+            <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+            <span><?= esc($form_error) ?></span>
+        </div>
+    <?php endif; ?>
 
     <div class="grid grid-cols-12 gap-3 participant-group-grid">
         <div class="col-span-12 lg:col-span-4 participant-info-col">
@@ -74,6 +81,9 @@
                     <div class="alert alert-warning mb-0 py-2 px-3 flex gap-2">
                         <i data-lucide="triangle-alert" class="w-4 h-4"></i>
                         <span>Belum ada anggota DPRD aktif. Tambahkan melalui menu <strong>Anggota DPRD</strong>.</span>
+                    </div>
+                    <div class="text-error text-xs mt-2 hidden" id="anggota-kelompok-error">
+                        Kelompok peserta aktif wajib memiliki minimal satu anggota.
                     </div>
                 <?php else: ?>
                     <div class="grid grid-cols-12 gap-3 participant-member-grid">
@@ -165,6 +175,9 @@
                             </div>
                         </div>
                     </div>
+                    <div class="text-error text-xs mt-2 hidden" id="anggota-kelompok-error">
+                        Kelompok peserta aktif wajib memiliki minimal satu anggota.
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -186,9 +199,14 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
+    const initUnitForm = function() {
+        const form = document.getElementById('unit-form');
+        if (!form || form.dataset.formBootstrapped === '1') return;
+        form.dataset.formBootstrapped = '1';
         const aktifToggle = document.getElementById('aktif');
         const aktifLabel = document.getElementById('aktif-label');
+        const anggotaError = document.getElementById('anggota-kelompok-error');
         const sourceSearch = document.getElementById('source-search');
         const targetList = document.getElementById('target-list');
         const targetCount = document.getElementById('target-count');
@@ -198,8 +216,22 @@
         const allSourceItems = document.querySelectorAll('.anggota-source');
         const allCheckboxes = document.querySelectorAll('.source-checkbox');
 
+        const selectedMemberCount = function() {
+            return document.querySelectorAll('.source-checkbox:checked').length;
+        };
+
+        const syncMemberValidity = function() {
+            const invalid = !!(aktifToggle?.checked && selectedMemberCount() === 0);
+            if (anggotaError) anggotaError.classList.toggle('hidden', !invalid);
+            allCheckboxes.forEach(function(cb) {
+                cb.classList.toggle('checkbox-error', invalid);
+            });
+            return !invalid;
+        };
+
         aktifToggle?.addEventListener('change', function() {
             if (aktifLabel) aktifLabel.textContent = this.checked ? 'Aktif' : 'Nonaktif';
+            syncMemberValidity();
         });
 
         const updateTargetPanel = function() {
@@ -232,6 +264,7 @@
                 div.innerHTML = '<i data-lucide="shuffle" class="w-5 h-5 opacity-40"></i><small>Pilih anggota dari panel kiri</small>';
                 targetList.appendChild(div);
                 window.renderAdminIcons?.();
+                syncMemberValidity();
                 return;
             }
 
@@ -266,10 +299,18 @@
             });
 
             window.renderAdminIcons?.();
+            syncMemberValidity();
         };
 
         allCheckboxes.forEach(function(cb) {
             cb.addEventListener('change', updateTargetPanel);
+        });
+
+        form?.addEventListener('submit', function(event) {
+            if (!syncMemberValidity()) {
+                event.preventDefault();
+                allCheckboxes[0]?.focus();
+            }
         });
 
         document.addEventListener('click', function(event) {
@@ -299,6 +340,15 @@
             });
             if (sourceCount) sourceCount.textContent = n;
         });
-    });
+
+        syncMemberValidity();
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initUnitForm, { once: true });
+    } else {
+        initUnitForm();
+    }
+    })();
 </script>
 <?= $this->endSection() ?>
