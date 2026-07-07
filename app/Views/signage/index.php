@@ -70,8 +70,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
         </div>
 
         <div id="panel-media">
-            <video v-if="media.mode === 'video' && media.url" :src="media.url" autoplay loop muted playsinline></video>
-            <img v-else-if="media.mode === 'image' && media.url" :src="media.url" alt="Media Signage DPRD" />
+            <video class="media-bg" v-if="media.mode === 'video' && media.url" :src="media.url" autoplay loop muted playsinline aria-hidden="true"></video>
+            <img class="media-bg" v-else-if="media.mode === 'image' && media.url" :src="media.url" alt="" aria-hidden="true" />
+            <video class="media-main" v-if="media.mode === 'video' && media.url" :src="media.url" autoplay loop muted playsinline></video>
+            <img class="media-main" v-else-if="media.mode === 'image' && media.url" :src="media.url" alt="Media Signage DPRD" />
 
             <!-- Panel QR - satu slot, slide bergantian jika keduanya ada -->
             <div class="qr-panel" v-if="qrBerkas || qrLive">
