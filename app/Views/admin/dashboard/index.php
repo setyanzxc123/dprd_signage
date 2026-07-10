@@ -193,7 +193,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
+<script {csp-script-nonce}>
 (() => {
     const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const dayNames   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];

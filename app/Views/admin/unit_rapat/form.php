@@ -198,7 +198,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
+<script {csp-script-nonce}>
     (function() {
     const initUnitForm = function() {
         const form = document.getElementById('unit-form');

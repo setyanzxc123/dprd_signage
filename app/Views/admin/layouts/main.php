@@ -16,7 +16,7 @@ $flashError = session()->getFlashdata('error');
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script>
+    <script {csp-script-nonce}>
         (() => {
             const stored = localStorage.getItem('dprd-admin-theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -42,6 +42,8 @@ $flashError = session()->getFlashdata('error');
         content="Panel manajemen sistem informasi digital signage dan notifikasi WhatsApp DPRD Provinsi Sulawesi Tengah." />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="turbo-cache-control" content="no-preview" />
+    <!-- A full reload keeps response-specific CSP nonces in sync for page sections. -->
+    <meta name="turbo-visit-control" content="reload" />
 
     <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font"

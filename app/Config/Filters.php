@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,  // ← Auth filter admin
+        'appsecurity'   => \App\Filters\SecurityHeadersFilter::class,
     ];
 
     /**
@@ -79,7 +80,8 @@ class Filters extends BaseFilters
         ],
         'after' => [
             // 'honeypot',
-            // 'secureheaders',
+            'secureheaders',
+            'appsecurity',
         ],
     ];
 

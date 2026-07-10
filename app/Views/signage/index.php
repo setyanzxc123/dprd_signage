@@ -154,7 +154,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
     </div>
 
-    <script>
+    <script {csp-script-nonce}>
         const { createApp, ref, watch, nextTick, onMounted, onUnmounted } = Vue;
 
         createApp({

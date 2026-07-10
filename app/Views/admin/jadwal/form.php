@@ -1,7 +1,7 @@
 <?= $this->extend('admin/layouts/main') ?>
 
 <?= $this->section('styles') ?>
-<style>
+<style {csp-style-nonce}>
     .schedule-form {
         --form-gap: 18px;
     }
@@ -583,7 +583,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
+<script {csp-script-nonce}>
     (function() {
     const initScheduleForm = function() {
         const form = document.querySelector('.schedule-form');
