@@ -16,7 +16,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
 
     <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
-    <script>
+    <script {csp-script-nonce}>
         (() => {
             const stored = localStorage.getItem('public_schedule_theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -305,7 +305,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
 
 </div>
 
-<script>
+<script {csp-script-nonce}>
     const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
     createApp({

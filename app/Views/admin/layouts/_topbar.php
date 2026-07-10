@@ -52,7 +52,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 <span id="topbar-wa-text">WhatsApp: Memeriksa...</span>
             </span>
         </span>
-        <script>
+        <script {csp-script-nonce}>
             (function() {
                 try {
                     var cache = localStorage.getItem('dprd_wa_status_cache');

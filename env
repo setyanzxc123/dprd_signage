@@ -25,6 +25,12 @@
 # app_baseURL = ''
 # app.forceGlobalSecureRequests = false
 # app.CSPEnabled = false
+# securityHeaders.hstsEnabled = true
+# securityHeaders.hstsMaxAge = 31536000
+# securityHeaders.hstsIncludeSubDomains = false
+# securityHeaders.hstsPreload = false
+# Set true only when X-Forwarded-Proto is supplied by a trusted reverse proxy.
+# securityHeaders.trustForwardedProto = false
 
 #--------------------------------------------------------------------
 # DATABASE

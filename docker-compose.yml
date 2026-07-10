@@ -20,6 +20,12 @@ services:
       database.default.DBDriver: MySQLi
       # App URL
       app.baseURL: ${APP_BASE_URL}
+      app.CSPEnabled: ${APP_CSP_ENABLED:-true}
+      securityHeaders.hstsEnabled: ${SECURITY_HSTS_ENABLED:-true}
+      securityHeaders.hstsMaxAge: ${SECURITY_HSTS_MAX_AGE:-31536000}
+      securityHeaders.hstsIncludeSubDomains: ${SECURITY_HSTS_INCLUDE_SUBDOMAINS:-false}
+      securityHeaders.hstsPreload: ${SECURITY_HSTS_PRELOAD:-false}
+      securityHeaders.trustForwardedProto: ${SECURITY_TRUST_FORWARDED_PROTO:-false}
       # BMKG
       BMKG_ADM4: ${BMKG_ADM4:-72.71.01.1004}
       # WhatsApp Notification

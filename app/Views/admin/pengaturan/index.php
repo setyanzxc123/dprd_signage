@@ -263,7 +263,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
-<style>
+<style {csp-style-nonce}>
     /* ─── Header ─── */
     .settings-header { margin-bottom: 20px; }
 
@@ -748,7 +748,7 @@
 <?= $this->section('scripts') ?>
 <?php $waEditorVersion = is_file(FCPATH . 'assets/js/admin/wa-template-editor.js') ? filemtime(FCPATH . 'assets/js/admin/wa-template-editor.js') : time(); ?>
 <script src="<?= base_url('assets/js/admin/wa-template-editor.js?v=' . $waEditorVersion) ?>" data-turbo-track="reload"></script>
-<script>
+<script {csp-script-nonce}>
 (() => {
     const waTemplatePlaceholders = <?= json_encode(array_keys($waPlaceholders ?? []), JSON_UNESCAPED_SLASHES) ?>;
     const waTemplateSample = <?= json_encode([

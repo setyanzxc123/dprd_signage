@@ -9,7 +9,7 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script>
+    <script {csp-script-nonce}>
         (() => {
             const stored = localStorage.getItem('dprd-admin-theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -112,7 +112,7 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
 
 
     <script src="<?= base_url('assets/vendor/lucide/lucide.min.js?v=' . $lucideVersion) ?>"></script>
-    <script>
+    <script {csp-script-nonce}>
         document.addEventListener('DOMContentLoaded', function () {
             const passwordInput = document.getElementById('password');
             const toggleButton  = document.getElementById('btn-toggle-pwd');

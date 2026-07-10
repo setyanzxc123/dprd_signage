@@ -59,7 +59,9 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $scriptSrc = 'self';
+    // The bundled Vue global build compiles in-page templates at runtime and
+    // therefore requires Function(). Inline application scripts still use nonces.
+    public $scriptSrc = ['self', 'unsafe-eval'];
 
     /**
      * Specifies valid sources for JavaScript <script> elements.
@@ -74,7 +76,8 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public array|string $scriptSrcAttr = 'self';
+    // Compatibility for legacy inline event attributes. Inline script blocks use nonces.
+    public array|string $scriptSrcAttr = 'unsafe-inline';
 
     /**
      * Lists allowed stylesheets' URLs.
@@ -96,14 +99,15 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public array|string $styleSrcAttr = 'self';
+    public array|string $styleSrcAttr = 'unsafe-inline';
 
     /**
      * Defines the origins from which images can be loaded.
      *
      * @var list<string>|string
      */
-    public $imageSrc = 'self';
+    // BMKG weather responses reference icons hosted on their application CDN.
+    public $imageSrc = ['self', 'data:', 'blob:', 'https://api-apps.bmkg.go.id'];
 
     /**
      * Restricts the URLs that can appear in a page's `<base>` element.
@@ -112,7 +116,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string|null
      */
-    public $baseURI;
+    public $baseURI = 'self';
 
     /**
      * Lists the URLs for workers and embedded frame contents
@@ -134,7 +138,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $fontSrc;
+    public $fontSrc = ['self', 'data:'];
 
     /**
      * Lists valid endpoints for submission from `<form>` tags.
@@ -151,7 +155,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string|null
      */
-    public $frameAncestors;
+    public $frameAncestors = 'self';
 
     /**
      * The frame-src directive restricts the URLs which may
@@ -166,14 +170,14 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string|null
      */
-    public $mediaSrc;
+    public $mediaSrc = ['self', 'blob:'];
 
     /**
      * Allows control over Flash and other plugins.
      *
      * @var list<string>|string
      */
-    public $objectSrc = 'self';
+    public $objectSrc = 'none';
 
     /**
      * @var list<string>|string|null
