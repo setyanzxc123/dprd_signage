@@ -3,7 +3,6 @@
 namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
-use App\Libraries\WhatsappService;
 class SignageController extends BaseController
 {
     /**
@@ -12,10 +11,6 @@ class SignageController extends BaseController
      */
     public function jadwal()
     {
-        // ── Pseudo Cron: trigger cek notifikasi WA ───────────────────────
-        // Layar signage sudah polling endpoint ini setiap 1 menit.
-        // Manfaatkan request yang ada sebagai scheduler notifikasi.
-        $this->_triggerWaNotifications();
         // ────────────────────────────────────────────────────────────────
 
         // Otomatis perbarui status semua rapat berdasarkan waktu saat ini
@@ -106,17 +101,6 @@ class SignageController extends BaseController
         }
 
         return $row['nama_ruangan'] ?? '-';
-    }
-
-    /**
-     * Pseudo Cron — trigger pengiriman notifikasi WA pending.
-     * Dipanggil setiap kali layar signage polling jadwal (interval 1 menit).
-     */
-    private function _triggerWaNotifications(): void
-    {
-        // Panggil langsung ke WhatsappService — tidak melalui BaseCommand
-        // agar tidak terjadi ArgumentCountError saat dipanggil via HTTP
-        (new WhatsappService())->sendPendingNotifications();
     }
 
     private function targetNamesByJadwalIds(array $jadwalIds): array

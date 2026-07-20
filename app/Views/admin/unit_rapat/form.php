@@ -41,7 +41,7 @@
                         placeholder="Contoh: Pimpinan DPRD, Komisi I, Badan Anggaran"
                         required />
                     <div class="label-text-alt text-base-content/60 mt-1.5">
-                        Kelompok peserta adalah target internal DPRD untuk rapat dan notifikasi WA. Bisa berisi satu atau banyak anggota.
+                        Kelompok peserta adalah target internal DPRD untuk rapat. Bisa berisi satu atau banyak anggota.
                     </div>
                 </div>
 

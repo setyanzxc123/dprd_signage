@@ -64,16 +64,10 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
 
 
-    // Notifikasi WA
-    $routes->get( 'notifikasi',                  'Admin\NotificationController::index');
-    $routes->post('notifikasi/(:num)/resend',    'Admin\NotificationController::resend/$1');
-    $routes->post('notifikasi/(:num)/cancel',    'Admin\NotificationController::cancel/$1');
-
     // Pengaturan Signage
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
-    $routes->get( 'pengaturan/wa-status',    'Admin\SettingController::waStatus');
 });
 
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────
@@ -84,8 +78,3 @@ $routes->group('api/v1/publik', function ($routes) {
 // ── API Signage (backward compatible) ────────────────────────────────
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
 $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
-
-// ── Cron HTTP trigger — dilindungi CRON_SECRET_TOKEN di .env ─────────
-// Gunakan untuk: cron-job.org, cPanel, atau VPS tanpa akses Spark CLI
-// Contoh: GET /cron/wa-notif?token=your_secret_token
-$routes->get('cron/wa-notif', 'CronController::sendWaNotifications');

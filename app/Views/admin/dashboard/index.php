@@ -18,21 +18,6 @@
         <div class="stat-value text-3xl font-extrabold text-primary"><?= $stats['rapat_hari_ini'] ?></div>
     </div>
 
-    <div class="stat">
-        <div class="stat-figure text-success">
-            <i data-lucide="circle-check" class="w-8 h-8"></i>
-        </div>
-        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">WA Terkirim</div>
-        <div class="stat-value text-3xl font-extrabold text-success"><?= $stats['wa_terkirim'] ?></div>
-    </div>
-
-    <div class="stat">
-        <div class="stat-figure text-error">
-            <i data-lucide="circle-x" class="w-8 h-8"></i>
-        </div>
-        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">WA Gagal</div>
-        <div class="stat-value text-3xl font-extrabold text-error"><?= $stats['wa_gagal'] ?></div>
-    </div>
 </div>
 
 <section class="dashboard-calendar-workspace">

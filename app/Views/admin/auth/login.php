@@ -50,7 +50,7 @@ $lucideVersion   = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? file
             <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD Provinsi Sulawesi Tengah"
                 class="w-[clamp(60px,12vw,96px)] h-[clamp(60px,12vw,96px)] object-contain rounded-2xl border border-base-300 bg-white mb-3 block" />
             <h1 class="text-lg font-black text-base-content leading-tight m-0">
-                Sistem Notifikasi Rapat &amp; Signage DPRD Sulawesi Tengah
+                Sistem Jadwal Rapat &amp; Signage DPRD Sulawesi Tengah
             </h1>
         </div>
 

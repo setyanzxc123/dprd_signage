@@ -3,9 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Models\AnggotaModel;
 use App\Models\JadwalModel;
-use App\Models\NotifikasiModel;
 use App\Models\RuanganModel;
 use App\Models\UnitRapatModel;
 
@@ -115,10 +113,7 @@ class MeetingController extends BaseController
 
         $this->syncJadwalUnits((int) $jadwalId, $input['unit_ids']);
 
-        // Buat entri notifikasi pending untuk anggota yang relevan
-        $this->_syncNotifikasi((int) $jadwalId, $input['unit_ids'], false);
-
-        return $this->formSuccessResponse('Jadwal berhasil disimpan dan notifikasi dijadwalkan.', base_url('admin/jadwal'));
+        return $this->formSuccessResponse('Jadwal berhasil disimpan.', base_url('admin/jadwal'));
     }
 
     public function edit(int $id)
@@ -160,10 +155,7 @@ class MeetingController extends BaseController
 
         $this->syncJadwalUnits($id, $input['unit_ids']);
 
-        // Sinkronisasi dan reset status notifikasi agar dikirim ulang dengan detail terbaru
-        $this->_syncNotifikasi($id, $input['unit_ids'], true);
-
-        return $this->formSuccessResponse('Jadwal berhasil diperbarui dan notifikasi dijadwalkan ulang.', base_url('admin/jadwal'));
+        return $this->formSuccessResponse('Jadwal berhasil diperbarui.', base_url('admin/jadwal'));
     }
 
     public function delete(int $id)
@@ -173,61 +165,6 @@ class MeetingController extends BaseController
 
         session()->setFlashdata('success', 'Jadwal berhasil dihapus.');
         return redirect()->to(base_url('admin/jadwal'));
-    }
-
-    // ── Helper: sinkronisasi dan buat/reset entri notifikasi ──────────
-    private function _syncNotifikasi(int $jadwalId, array $unitIds, bool $isUpdate = false): void
-    {
-        $targets = $this->targetAnggotaByUnitIds($unitIds);
-
-        $notifModel = new NotifikasiModel();
-
-        if ($isUpdate) {
-            $targetAnggotaIds = array_column($targets, 'id');
-
-            // Hapus notifikasi pending untuk anggota yang sudah tidak menjadi target lagi
-            if (!empty($targetAnggotaIds)) {
-                $notifModel->where('jadwal_id', $jadwalId)
-                           ->where('status', 'pending')
-                           ->whereNotIn('anggota_id', $targetAnggotaIds)
-                           ->delete();
-            } else {
-                $notifModel->where('jadwal_id', $jadwalId)
-                           ->where('status', 'pending')
-                           ->delete();
-            }
-        }
-
-        if (empty($targets)) return;
-
-        foreach ($targets as $anggota) {
-            $exists = $notifModel
-                ->where('jadwal_id', $jadwalId)
-                ->where('anggota_id', $anggota['id'])
-                ->first();
-
-            if ($exists) {
-                // Jika update jadwal, reset status notifikasi agar dikirim ulang dengan detail terbaru
-                if ($isUpdate) {
-                    $notifModel->update($exists['id'], [
-                        'no_wa'         => $anggota['no_wa'],
-                        'status'        => 'pending',
-                        'executed_at'   => null,
-                        'retry_count'   => 0,
-                        'error_message' => null,
-                    ]);
-                }
-            } else {
-                // Jika belum ada, buat baru
-                $notifModel->insert([
-                    'jadwal_id'  => $jadwalId,
-                    'anggota_id' => $anggota['id'],
-                    'no_wa'      => $anggota['no_wa'],
-                    'status'     => 'pending',
-                    'created_at' => date('Y-m-d H:i:s'),
-                ]);
-            }
-        }
     }
 
     private function unitRapatOptions(array $selectedIds = []): array
@@ -296,7 +233,7 @@ class MeetingController extends BaseController
             return ['error' => 'Judul rapat wajib diisi.'];
         }
 
-        [$tanggal, $waktuMulai, $waktuSelesai, $startTs] = $this->validatedTimes();
+        [$tanggal, $waktuMulai, $waktuSelesai] = $this->validatedTimes();
         if ($tanggal === null) {
             return ['error' => 'Waktu rapat wajib valid dan lengkap.'];
         }
@@ -312,16 +249,6 @@ class MeetingController extends BaseController
 
         if (! empty($this->unitIdsWithoutActiveMembers($unitIds))) {
             return ['error' => 'Kelompok peserta yang dipilih wajib memiliki minimal satu anggota aktif.'];
-        }
-
-        $blastBeforeRaw = $this->request->getPost('blast_before');
-        if ($blastBeforeRaw === null || ! ctype_digit((string) $blastBeforeRaw)) {
-            return ['error' => 'Jadwal blast WA tidak valid.'];
-        }
-
-        $blastBefore = (int) $blastBeforeRaw;
-        if (! in_array($blastBefore, [1440, 120, 60, 30, 0], true)) {
-            return ['error' => 'Jadwal blast WA tidak valid.'];
         }
 
         $locationData = $this->validatedLocationData($jadwalId);
@@ -352,8 +279,6 @@ class MeetingController extends BaseController
                 'waktu_selesai'  => $waktuSelesai,
                 'ruangan_id'     => $locationData['ruangan_id'],
                 'lokasi_lainnya' => $locationData['lokasi_lainnya'],
-                'blast_before'   => $blastBefore,
-                'reminder_time'  => date('Y-m-d H:i:s', $startTs - ($blastBefore * 60)),
                 'materi_url'     => $materiUrl['url'],
                 'stream_url'     => $streamUrl['url'],
                 'is_publik'      => $this->request->getPost('is_publik') ? 1 : 0,
@@ -575,7 +500,6 @@ class MeetingController extends BaseController
             'waktu_selesai'   => $waktuSelesai,
             'ruangan_id'      => (int) $this->request->getPost('ruangan_id'),
             'lokasi_lainnya'  => trim((string) $this->request->getPost('lokasi_lainnya')),
-            'blast_before'    => (int) $this->request->getPost('blast_before'),
             'materi_url'      => trim((string) $this->request->getPost('materi_url')),
             'stream_url'      => trim((string) $this->request->getPost('stream_url')),
             'is_publik'       => $this->request->getPost('is_publik') ? 1 : 0,
@@ -646,37 +570,6 @@ class MeetingController extends BaseController
             'selesai'     => 'selesai',
             default       => $value,
         };
-    }
-
-    private function targetAnggotaByUnitIds(array $unitIds): array
-    {
-        $anggotaModel = new AnggotaModel();
-        $unitIds = array_values(array_filter(array_map('intval', $unitIds)));
-
-        if (empty($unitIds)) {
-            return $anggotaModel->where('aktif', 1)->findAll();
-        }
-
-        $db = \Config\Database::connect();
-        if (!$db->tableExists('anggota_unit_rapat')) {
-            return [];
-        }
-
-        $targets = $db
-            ->table('anggota_unit_rapat aur')
-            ->select('a.*')
-            ->join('anggota a', 'a.id = aur.anggota_id')
-            ->where('a.aktif', 1)
-            ->whereIn('aur.unit_rapat_id', $unitIds)
-            ->get()
-            ->getResultArray();
-
-        $targetsById = [];
-        foreach ($targets as $anggota) {
-            $targetsById[$anggota['id']] = $anggota;
-        }
-
-        return array_values($targetsById);
     }
 
     private function jadwalUnitIds(int $jadwalId): array

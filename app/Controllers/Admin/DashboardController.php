@@ -4,14 +4,12 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\JadwalModel;
-use App\Models\NotifikasiModel;
 
 class DashboardController extends BaseController
 {
     public function index(): string
     {
         $jadwalModel = new JadwalModel();
-        $notifModel  = new NotifikasiModel();
         $today       = date('Y-m-d');
         $monthParam  = (string) $this->request->getGet('month');
         $activeMonth = preg_match('/^\d{4}-\d{2}$/', $monthParam) ? $monthParam : date('Y-m');
@@ -24,8 +22,6 @@ class DashboardController extends BaseController
         $nextMonth    = date('Y-m', strtotime($monthStart . ' +1 month'));
 
         $rapatHariIni = $jadwalModel->where('tanggal', $today)->countAllResults();
-        $waTerkirim   = $notifModel->where('status', 'sent')->countAllResults();
-        $waGagal      = $notifModel->where('status', 'failed')->countAllResults();
 
         $db      = \Config\Database::connect();
         $jadwals = $db->table('jadwal j')
@@ -93,8 +89,6 @@ class DashboardController extends BaseController
             'breadcrumbs'   => [],
             'stats'         => [
                 'rapat_hari_ini' => $rapatHariIni,
-                'wa_terkirim'    => $waTerkirim,
-                'wa_gagal'       => $waGagal,
             ],
             'meetings'      => $meetingsByDate[$selectedDate] ?? [],
             'calendarDays'  => $calendarDays,
