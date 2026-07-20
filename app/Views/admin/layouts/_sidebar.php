@@ -13,7 +13,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD" class="brand-logo-img" />
             <div class="brand-copy">
                 <div class="brand-title">DPRD Sulawesi Tengah</div>
-                <div class="brand-sub">Sistem Notifikasi Rapat & Signage</div>
+                <div class="brand-sub">Sistem Jadwal Rapat & Signage</div>
             </div>
         </div>
         <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Sembunyikan sidebar" aria-expanded="true" title="Sembunyikan sidebar">
@@ -60,14 +60,6 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                     <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
                 </a>
             </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
-                    <i data-lucide="message-circle" class="nav-icon"></i>
-                    <span class="nav-text">Notifikasi WA</span>
-                    <span class="nav-badge badge badge-error badge-sm ml-auto hidden" id="badge-wa-gagal"></span>
-                </a>
-            </li>
-
             <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Sistem</li>
             <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">

@@ -3,7 +3,6 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Libraries\WhatsappService;
 use App\Models\SettingModel;
 
 class SettingController extends BaseController
@@ -23,21 +22,14 @@ class SettingController extends BaseController
             'running_text_aktif' => '0',
             'media_mode'         => 'video',
             'media_file'         => '',
-            'wa_from_env'        => env('WA_API_KEY') ? '1' : '0',
-            'wa_sender_name'     => 'Sekretariat DPRD',
-            'wa_template_reminder' => WhatsappService::defaultReminderTemplate(),
-            'wa_template_default_aktif' => '1',
         ];
 
         $settings = array_merge($defaults, $settings);
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
-        $settings['wa_from_env']        = (bool) $settings['wa_from_env'];
-        $settings['wa_template_default_aktif'] = (bool) $settings['wa_template_default_aktif'];
 
         return view('admin/pengaturan/index', [
             'pageTitle'      => 'Pengaturan Sistem',
             'settings'       => $settings,
-            'waPlaceholders' => WhatsappService::templatePlaceholders(),
         ]);
     }
 
@@ -49,20 +41,6 @@ class SettingController extends BaseController
         if ($requestSizeError !== null) {
             return $this->failSave($requestSizeError);
         }
-
-        $waTemplate = trim((string) ($this->request->getPost('wa_template_reminder') ?? ''));
-        $waTemplate = $waTemplate !== '' ? $waTemplate : WhatsappService::defaultReminderTemplate();
-        $unknownPlaceholders = WhatsappService::findUnknownPlaceholders($waTemplate);
-
-        if (!empty($unknownPlaceholders)) {
-            $labels = array_map(static fn ($key) => '{' . $key . '}', $unknownPlaceholders);
-            $message = 'Template WA memuat placeholder tidak dikenal: ' . implode(', ', $labels);
-
-            return $this->failSave($message, true);
-        }
-
-        $senderName = trim((string) ($this->request->getPost('wa_sender_name') ?? ''));
-        $senderName = $senderName !== '' ? $senderName : 'Sekretariat DPRD';
 
         $mediaUpload = $this->validateMediaUpload();
         if ($mediaUpload['error'] !== null) {
@@ -95,9 +73,6 @@ class SettingController extends BaseController
             $settingModel->upsert('running_text_aktif', $this->request->getPost('running_text_aktif') ? '1' : '0');
             $settingModel->upsert('media_mode',         $this->request->getPost('media_mode') ?? 'video');
             $settingModel->upsert('tema_signage',       $this->request->getPost('tema_signage') ?? 'dark');
-            $settingModel->upsert('wa_sender_name', $senderName);
-            $settingModel->upsert('wa_template_reminder', $waTemplate);
-            $settingModel->upsert('wa_template_default_aktif', $this->request->getPost('wa_template_default_aktif') ? '1' : '0');
 
             if ($newMediaFile !== '') {
                 $settingModel->upsert('media_file', $newMediaFile);
@@ -275,81 +250,4 @@ class SettingController extends BaseController
 
 
 
-    /**
-     * GET admin/pengaturan/wa-status
-     * Cek apakah token Fonnte valid dengan melakukan request ringan ke API.
-     * Hanya merespons AJAX.
-     */
-    public function waStatus()
-    {
-        if (! $this->request->isAJAX()) {
-            return redirect()->to(base_url('admin/pengaturan'));
-        }
-
-        // Lepaskan session lock sesegera mungkin agar request cURL tidak memblokir navigasi/request halaman lain
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_write_close();
-        }
-
-        $token = env('WA_API_KEY') ?: '';
-
-        if (empty($token)) {
-            return $this->response->setJSON([
-                'configured' => false,
-                'connected'  => false,
-                'error_scope' => 'config',
-                'error'       => 'Token API WhatsApp belum disetel.',
-            ]);
-        }
-
-        // Cek ke endpoint devices Fonnte untuk validasi token
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL            => 'https://api.fonnte.com/device',
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => [],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER     => ['Authorization: ' . $token],
-            CURLOPT_TIMEOUT        => 8,
-            CURLOPT_CONNECTTIMEOUT => 5,
-        ]);
-        $raw      = curl_exec($ch);
-        $curlErr  = curl_error($ch);
-        curl_close($ch);
-
-        if ($curlErr) {
-            return $this->response->setJSON([
-                'configured' => true,
-                'connected'  => false,
-                'error_scope' => 'api',
-                'error'       => 'Gagal menghubungi server WhatsApp.',
-            ]);
-        }
-
-        $decoded = json_decode($raw, true);
-        $ok      = isset($decoded['status']) && $decoded['status'] === true;
-
-        $error = null;
-        $errorScope = null;
-        if (!$ok) {
-            $reason = strtolower($decoded['reason'] ?? '');
-            if (str_contains($reason, 'token')) {
-                $error = 'Autentikasi layanan gagal.';
-                $errorScope = 'api_token';
-            } elseif (str_contains($reason, 'device') || str_contains($reason, 'disconnect')) {
-                $error = 'Perangkat WhatsApp pengirim tidak terhubung.';
-                $errorScope = 'api_device';
-            } else {
-                $error = $decoded['reason'] ?? 'Gagal menghubungkan ke layanan WhatsApp.';
-                $errorScope = 'api';
-            }
-        }
-
-        return $this->response->setJSON([
-            'configured'  => true,
-            'connected'   => $ok,
-            'error_scope' => $errorScope,
-            'error'       => $error,
-        ]);
-    }
 }

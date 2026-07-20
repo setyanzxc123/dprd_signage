@@ -546,19 +546,6 @@
                                  Pilih minimal satu kelompok peserta yang memiliki anggota aktif.
                              </div>
 
-                             <div class="mt-3">
-                                 <label class="label-text font-bold text-sm mb-1 block" for="blast_before">
-                                     <span class="inline-flex items-center gap-1"><i data-lucide="message-circle" class="text-success w-4 h-4"></i> Jadwal Blast WA</span>
-                                 </label>
-                                 <select class="select select-bordered w-full" id="blast_before" name="blast_before">
-                                     <option value="1440" <?= ($meeting['blast_before'] ?? '') == 1440 ? 'selected' : '' ?>>H-1 hari sebelum rapat</option>
-                                     <option value="120"  <?= ($meeting['blast_before'] ?? '') == 120  ? 'selected' : '' ?>>H-2 jam sebelum rapat</option>
-                                     <option value="60"   <?= ($meeting['blast_before'] ?? '') == 60   ? 'selected' : '' ?>>H-1 jam sebelum rapat</option>
-                                     <option value="30"   <?= ($meeting['blast_before'] ?? '') == 30   ? 'selected' : '' ?>>H-30 menit sebelum rapat</option>
-                                     <option value="0"    <?= ($meeting['blast_before'] ?? '') == 0    ? 'selected' : '' ?>>Tepat saat rapat dimulai</option>
-                                 </select>
-                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -574,7 +561,7 @@
             <i data-lucide="calendar-check" class="w-4 h-4"></i>
             <span class="sm:hidden">Simpan</span>
             <span class="hidden sm:inline">
-                <?= $meeting ? 'Simpan Perubahan' : 'Simpan & Jadwalkan Notifikasi' ?>
+                <?= $meeting ? 'Simpan Perubahan' : 'Simpan Jadwal' ?>
             </span>
         </button>
     </div>

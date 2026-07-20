@@ -254,8 +254,6 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             'waktu_mulai'   => $schedule['start'],
             'waktu_selesai' => $schedule['end'],
             'ruangan_id'    => $schedule['room'] !== null ? ($roomsByName[$schedule['room']] ?? null) : null,
-            'blast_before'  => 60,
-            'reminder_time' => date('Y-m-d H:i:s', strtotime($dateTime . ' -60 minutes')),
             'status'        => $this->statusFor($schedule['date'], $schedule['start'], $schedule['end']),
             'materi_url'    => null,
         ];

@@ -29,9 +29,6 @@ services:
       # BMKG
       BMKG_ADM4: ${BMKG_ADM4:-72.71.01.1004}
       # WhatsApp Notification
-      WA_API_KEY: ${WA_API_KEY}
-      WA_NOTIF_AKTIF: ${WA_NOTIF_AKTIF:-false}
-      CRON_SECRET_TOKEN: ${CRON_SECRET_TOKEN}
     volumes:
       # Persist data upload & log — tidak hilang saat container restart
       - uploads_data:/var/www/html/public/uploads
