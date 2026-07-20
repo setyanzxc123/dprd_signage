@@ -2,7 +2,6 @@
 
 namespace App\Database\Seeds;
 
-use App\Libraries\WhatsappService;
 use CodeIgniter\Database\Seeder;
 
 class InitialDataSeeder extends Seeder
@@ -12,6 +11,9 @@ class InitialDataSeeder extends Seeder
         $this->deleteObsoleteSettings([
             'logo_path',
             'wa_notif_aktif',
+            'wa_sender_name',
+            'wa_template_reminder',
+            'wa_template_default_aktif',
         ]);
 
         $this->insertMissing('settings', 'key_name', [
@@ -20,9 +22,6 @@ class InitialDataSeeder extends Seeder
             ['key_name' => 'running_text_aktif', 'value' => '1'],
             ['key_name' => 'media_mode',         'value' => 'video'],
             ['key_name' => 'media_file',         'value' => ''],
-            ['key_name' => 'wa_sender_name',     'value' => 'Sekretariat DPRD'],
-            ['key_name' => 'wa_template_reminder', 'value' => WhatsappService::defaultReminderTemplate()],
-            ['key_name' => 'wa_template_default_aktif', 'value' => '1'],
         ]);
 
         $this->insertMissing('users', 'username', [[

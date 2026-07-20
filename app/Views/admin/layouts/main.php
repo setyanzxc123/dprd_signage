@@ -39,7 +39,7 @@ $flashError = session()->getFlashdata('error');
         <?= esc($pageTitle ?? 'Admin') ?> - Panel Admin Signage DPRD Sulawesi Tengah
     </title>
     <meta name="description"
-        content="Panel manajemen sistem informasi digital signage dan notifikasi WhatsApp DPRD Provinsi Sulawesi Tengah." />
+        content="Panel manajemen sistem informasi jadwal rapat dan digital signage DPRD Provinsi Sulawesi Tengah." />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="turbo-cache-control" content="no-preview" />
     <!-- A full reload keeps response-specific CSP nonces in sync for page sections. -->
@@ -118,10 +118,6 @@ $flashError = session()->getFlashdata('error');
         <a href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
             <i data-lucide="calendar-days"></i>
             <span class="mobile-nav-label">Jadwal</span>
-        </a>
-        <a href="<?= base_url('admin/notifikasi') ?>" data-path="/admin/notifikasi">
-            <i data-lucide="message-circle"></i>
-            <span class="mobile-nav-label">Notifikasi</span>
         </a>
         <button type="button" class="mobile-menu-toggle" aria-label="Buka menu lainnya" aria-controls="sidebar"
             aria-expanded="false" data-mobile-menu-toggle>

@@ -207,8 +207,7 @@ class MemberController extends BaseController
             return true;
         }
 
-        return $db->tableExists('notifikasi')
-            && $db->table('notifikasi')->where('anggota_id', $anggotaId)->countAllResults() > 0;
+        return false;
     }
 
     private function failForm(string $message, ?int $id = null)

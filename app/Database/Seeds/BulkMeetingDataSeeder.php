@@ -266,8 +266,6 @@ class BulkMeetingDataSeeder extends Seeder
             'waktu_mulai'   => $start,
             'waktu_selesai' => $end,
             'ruangan_id'    => $roomsByName[$template['room']] ?? null,
-            'blast_before'  => 60,
-            'reminder_time' => date('Y-m-d H:i:s', strtotime($date . ' ' . $start . ' -60 minutes')),
             'status'        => $status,
             'materi_url'    => 'https://example.com/materi/' . $slug . '.pdf',
             'jenis'         => $template['jenis'],

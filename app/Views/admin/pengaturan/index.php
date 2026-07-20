@@ -5,7 +5,7 @@
 <div class="page-header settings-header">
     <div>
         <h1 class="page-title">Pengaturan Sistem</h1>
-        <p class="page-subtitle">Kelola tampilan layar TV dan notifikasi WhatsApp.</p>
+        <p class="page-subtitle">Kelola tampilan layar TV dan konten signage.</p>
     </div>
 </div>
 
@@ -108,110 +108,6 @@
         </div>
 
         <!-- ═══════════════════════════════════════════ -->
-        <!-- CARD 2: Notifikasi WhatsApp                 -->
-        <!-- ═══════════════════════════════════════════ -->
-        <?php
-            $waTemplateValue = old('wa_template_reminder', $settings['wa_template_reminder'] ?? '');
-            $waSenderNameValue = old('wa_sender_name', $settings['wa_sender_name'] ?? 'Sekretariat DPRD');
-        ?>
-        <div class="form-card stg-card" id="wa-notif-card">
-            <div class="stg-card-header">
-                <div class="stg-card-icon green">
-                    <i data-lucide="message-circle"></i>
-                </div>
-                <div class="flex-1">
-                    <h2 class="stg-card-title">Notifikasi WhatsApp</h2>
-                    <p class="stg-card-sub">Pengaturan reminder otomatis peserta rapat</p>
-                </div>
-            </div>
-
-
-            <!-- Sub-section: Nama Pengirim -->
-            <div class="stg-section">
-                <label class="label-text font-bold text-sm mb-1 block" for="wa_sender_name">Nama Pengirim</label>
-                <div class="join w-full">
-                    <span class="join-item bg-base-200 border border-base-300 px-3 flex items-center text-base-content/60">
-                        <i data-lucide="contact" class="w-4 h-4"></i>
-                    </span>
-                    <input type="text" class="join-item input input-bordered w-full" id="wa_sender_name" name="wa_sender_name"
-                        value="<?= esc($waSenderNameValue) ?>"
-                        placeholder="Contoh: Sekretariat DPRD" maxlength="60" />
-                </div>
-            </div>
-
-            <div class="stg-divider"></div>
-
-            <!-- Sub-section: Template Pesan -->
-            <div class="stg-section">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="stg-section-label mb-0">Template Pesan</div>
-                    <div class="flex items-center gap-2 mb-0">
-                        <input class="toggle toggle-primary toggle-sm" type="checkbox" role="switch" id="wa_template_default_aktif"
-                            name="wa_template_default_aktif" value="1" <?= $settings['wa_template_default_aktif'] ? 'checked' : '' ?> />
-                        <label class="label-text font-semibold cursor-pointer" for="wa_template_default_aktif">Gunakan Template Default</label>
-                    </div>
-                </div>
-                <div class="stg-wa-template-row <?= $settings['wa_template_default_aktif'] ? 'default-active' : '' ?>" id="wa-template-row">
-                    <div class="stg-wa-template-left" id="wa-template-editor-wrapper" style="display: <?= $settings['wa_template_default_aktif'] ? 'none' : 'block' ?>;">
-                        <!-- WA Formatting Toolbar -->
-                        <div class="wa-toolbar" id="wa-toolbar">
-                            <button type="button" class="wa-toolbar-btn" id="wa-btn-bold"
-                                onmousedown="event.preventDefault(); waExecFormat('strong')" title="Bold">
-                                <strong>B</strong>
-                            </button>
-                            <button type="button" class="wa-toolbar-btn" id="wa-btn-italic"
-                                onmousedown="event.preventDefault(); waExecFormat('em')" title="Italic">
-                                <em>I</em>
-                            </button>
-                            <button type="button" class="wa-toolbar-btn" id="wa-btn-strike"
-                                onmousedown="event.preventDefault(); waExecFormat('strike')" title="Coret">
-                                <s>S</s>
-                            </button>
-                            <button type="button" class="wa-toolbar-btn" id="wa-btn-mono"
-                                onmousedown="event.preventDefault(); waExecMono()" title="Monospace">
-                                <code style="font-size:.72rem;">&lt;/&gt;</code>
-                            </button>
-                            <span class="wa-toolbar-sep"></span>
-                            <span class="wa-toolbar-hint">Format WhatsApp</span>
-                            
-                            <button type="button" class="btn btn-xs btn-outline flex items-center py-1 px-2 ml-auto" style="font-size:.7rem; height:24px; border:none;" onclick="resetWaTemplateToDefault()">
-                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i>Atur Ulang
-                            </button>
-                        </div>
-
-                        <!-- ProseMirror Rich Editor -->
-                        <div class="wa-rich-editor" id="wa_template_editor"
-                            data-placeholder="Tulis template pesan WA..."></div>
-
-                        <!-- Hidden input for form submission -->
-                        <textarea class="hidden" id="wa_template_reminder"
-                            name="wa_template_reminder"><?= esc($waTemplateValue) ?></textarea>
-
-                        <div class="stg-wa-chips mt-2" id="wa-placeholder-list">
-                            <?php foreach (($waPlaceholders ?? []) as $key => $label): ?>
-                                <button type="button" class="stg-wa-chip"
-                                    data-token="<?= esc($key) ?>"
-                                    data-label="<?= esc($label) ?>"
-                                    title="Variabel: {<?= esc($key) ?>}"
-                                    onmousedown="event.preventDefault(); insertWaToken('<?= esc($key) ?>', '<?= esc($label) ?>')">
-                                    <?= esc($label) ?>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="label-text-alt text-base-content/60 mt-1 block">Klik untuk menyisipkan variabel ke posisi kursor.</div>
-                        <div class="alert alert-warning py-2 px-3 mt-2 mb-0" id="wa-template-warning" style="display:none;"></div>
-                    </div>
-                    <div class="stg-wa-template-right">
-                        <div class="stg-wa-preview-label"><i data-lucide="eye" class="mr-1"></i>Preview</div>
-                        <div id="wa-template-preview" class="stg-wa-preview"></div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-
     <?php if (false): ?>
     <!-- Seksi BMKG (hidden) -->
     <div class="form-card stg-card">
@@ -479,21 +375,6 @@
         100% { transform: translateX(-100%); }
     }
 
-    /* ─── WA Status row ─── */
-    .stg-wa-status-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .stg-wa-conn {
-        flex: 1;
-        background: var(--od-border-soft);
-        border: 1px solid var(--od-border);
-        border-radius: 10px;
-        padding: 12px 14px;
-    }
-    .stg-wa-conn .conn-ok { color: var(--color-success); font-size: .82rem; font-weight: 600; }
-    .stg-wa-conn .conn-err { color: var(--color-error); font-size: .82rem; font-weight: 600; }
 
     /* ─── WA Template row ─── */
     .stg-wa-template-row {
@@ -670,13 +551,6 @@
         white-space: pre-wrap;
     }
 
-    /* ─── WA Badge ─── */
-    .wa-status-badge {
-        font-size: .72rem;
-        padding: .3em .6em;
-        transition: all .3s ease;
-    }
-
     /* ─── Save bar ─── */
     .settings-save-bar {
         position: sticky;
@@ -746,243 +620,22 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<?php $waEditorVersion = is_file(FCPATH . 'assets/js/admin/wa-template-editor.js') ? filemtime(FCPATH . 'assets/js/admin/wa-template-editor.js') : time(); ?>
-<script src="<?= base_url('assets/js/admin/wa-template-editor.js?v=' . $waEditorVersion) ?>" data-turbo-track="reload"></script>
 <script {csp-script-nonce}>
 (() => {
-    const waTemplatePlaceholders = <?= json_encode(array_keys($waPlaceholders ?? []), JSON_UNESCAPED_SLASHES) ?>;
-    const waTemplateSample = <?= json_encode([
-        'nama_peserta'  => 'Bapak/Ibu Anggota',
-        'judul_rapat'   => 'Rapat Badan Musyawarah',
-        'tanggal'       => 'Senin, 15 Juni 2026',
-        'waktu_mulai'   => '09:00',
-        'waktu_selesai' => '11:00',
-        'ruangan'       => 'Ruang Sidang Utama',
-        'unit_rapat'    => 'Badan Musyawarah',
-        'catatan'       => 'Mohon hadir 15 menit sebelum rapat dimulai.',
-        'link_jadwal'   => base_url('jadwal'),
-        'link_berkas'   => 'Materi: https://contoh.go.id/materi-rapat.pdf',
-        'sender_name'   => $waSenderNameValue ?? 'Sekretariat DPRD',
-    ], JSON_UNESCAPED_SLASHES) ?>;
-
-    const waDefaultTemplate = <?= json_encode(\App\Libraries\WhatsappService::defaultReminderTemplate(), JSON_UNESCAPED_SLASHES) ?>;
-
-    // ══════════════════════════════════════════════════════════════
-    // WA Rich Editor — ProseMirror bridge
-    // ══════════════════════════════════════════════════════════════
-
-    /**
-     * Sync ProseMirror doc to hidden textarea before preview or submit.
-     */
-    function syncEditorToHidden() {
-        const hidden = document.getElementById('wa_template_reminder');
-        if (!hidden) return;
-
-        if (window.WaTemplateEditor) {
-            hidden.value = window.WaTemplateEditor.sync();
-        }
-        renderWaTemplatePreview();
-    }
-
-    /**
-     * Build the label map from chip buttons (so we don't duplicate PHP data).
-     */
-    function getPlaceholderLabels() {
-        const map = {};
-        document.querySelectorAll('.stg-wa-chip[data-token]').forEach(btn => {
-            map[btn.dataset.token] = btn.dataset.label || btn.dataset.token;
-        });
-        return map;
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // Toolbar actions
-    // ══════════════════════════════════════════════════════════════
-
-    function waExecFormat(markName) {
-        window.WaTemplateEditor?.format(markName);
-    }
-
-    function waExecMono() {
-        window.WaTemplateEditor?.format('code');
-    }
-
-    function updateToolbarState(active = null) {
-        const marks = active || window.WaTemplateEditor?.activeMarks?.() || {};
-        const map = {
-            'wa-btn-bold': 'strong',
-            'wa-btn-italic': 'em',
-            'wa-btn-strike': 'strike',
-            'wa-btn-mono': 'code',
-        };
-        for (const [id, markName] of Object.entries(map)) {
-            const btn = document.getElementById(id);
-            if (btn) btn.classList.toggle('active', !!marks[markName]);
-        }
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // Insert locked placeholder chip at cursor
-    // ══════════════════════════════════════════════════════════════
-
-    function insertWaToken(tokenKey, tokenLabel) {
-        window.WaTemplateEditor?.insertToken(tokenKey, tokenLabel);
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // Reset & Preview
-    // ══════════════════════════════════════════════════════════════
-
-    function resetWaTemplateToDefault() {
-        const hidden = document.getElementById('wa_template_reminder');
-        if (!hidden) return;
-
-        hidden.value = waDefaultTemplate;
-        window.WaTemplateEditor?.setText(waDefaultTemplate);
-        renderWaTemplatePreview();
-    }
-
-    function renderWaTemplatePreview() {
-        const defaultToggle = document.getElementById('wa_template_default_aktif');
-        const isDefault = defaultToggle ? defaultToggle.checked : true;
-
-        const hidden = document.getElementById('wa_template_reminder');
-        const preview = document.getElementById('wa-template-preview');
-        const warning = document.getElementById('wa-template-warning');
-        const senderInput = document.getElementById('wa_sender_name');
-        if (!hidden || !preview) return;
-
-        const allowed = new Set(waTemplatePlaceholders);
-        const sample = { ...waTemplateSample, sender_name: senderInput?.value.trim() || 'Sekretariat DPRD' };
-        const unknown = new Set();
-
-        const templateText = isDefault ? waDefaultTemplate : hidden.value;
-
-        // Fill placeholders with sample data
-        let text = templateText.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
-            if (!allowed.has(key)) { unknown.add(match); return match; }
-            return sample[key] ?? '';
-        });
-
-        // Escape & render WA formatting for preview
-        text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        text = text.replace(/```([^`]*)```/g, '<code style="background:var(--od-border-soft);color:var(--od-fg);padding:1px 5px;border-radius:3px;font-family:monospace;">$1</code>');
-        text = text.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
-        text = text.replace(/_([^_\n]+)_/g, '<em>$1</em>');
-        text = text.replace(/~([^~\n]+)~/g, '<del>$1</del>');
-        text = text.replace(/\n/g, '<br>');
-        preview.innerHTML = text;
-
-        if (warning) {
-            if (!isDefault && unknown.size > 0) {
-                warning.style.display = 'block';
-                warning.textContent = 'Variabel tidak dikenal: ' + Array.from(unknown).join(', ');
-            } else {
-                warning.style.display = 'none';
-                warning.textContent = '';
-            }
-        }
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // Editor event listeners
-    // ══════════════════════════════════════════════════════════════
-
-
-
-    window.waExecFormat = waExecFormat;
-    window.waExecMono = waExecMono;
-    window.insertWaToken = insertWaToken;
-    window.resetWaTemplateToDefault = resetWaTemplateToDefault;
-
-
     function initSettingsPage() {
-        const form = document.querySelector('.settings-form');
-        if (!form) return;
-
-        if (form.dataset.settingsBootstrapped === '1') {
-            renderWaTemplatePreview();
-            window.renderAdminIcons?.();
-            return;
-        }
+        const form = document.getElementById('settings-form');
+        if (!form || form.dataset.settingsBootstrapped === '1') return;
         form.dataset.settingsBootstrapped = '1';
 
         document.getElementById('running_text')?.addEventListener('input', function () {
             document.getElementById('preview-text').textContent = this.value || 'Teks berjalan akan tampil di sini...';
         });
 
-        document.getElementById('wa_sender_name')?.addEventListener('input', renderWaTemplatePreview);
-
-        const editor = document.getElementById('wa_template_editor');
-        const hidden = document.getElementById('wa_template_reminder');
-
-        if (editor && hidden) {
-            const mountEditor = () => {
-                if (!window.WaTemplateEditor) return;
-                window.WaTemplateEditor.mount({
-                    editor,
-                    hidden,
-                    labels: getPlaceholderLabels(),
-                    onUpdate: () => renderWaTemplatePreview(),
-                    onSelectionUpdate: updateToolbarState,
-                });
-
-                editor.closest('form')?.addEventListener('submit', () => {
-                    syncEditorToHidden();
-                    localStorage.removeItem('dprd_wa_status_cache');
-                    localStorage.removeItem('dprd_wa_status_cache_time');
-                });
-            };
-
-            if (window.WaTemplateEditor) {
-                mountEditor();
-            } else {
-                const scriptEl = document.querySelector('script[src*="wa-template-editor.js"]');
-                if (scriptEl) {
-                    scriptEl.addEventListener('load', mountEditor);
-                } else {
-                    const interval = setInterval(() => {
-                        if (window.WaTemplateEditor) {
-                            clearInterval(interval);
-                            mountEditor();
-                        }
-                    }, 50);
-                    setTimeout(() => clearInterval(interval), 5000);
-                }
-            }
-        }
-        renderWaTemplatePreview();
         setupSettingsSubmitProgress(form);
-
-        document.getElementById('wa_template_default_aktif')?.addEventListener('change', function() {
-            const wrapper = document.getElementById('wa-template-editor-wrapper');
-            const row = document.getElementById('wa-template-row');
-            if (wrapper) {
-                wrapper.style.display = this.checked ? 'none' : 'block';
-            }
-            if (row) {
-                row.classList.toggle('default-active', this.checked);
-            }
-            renderWaTemplatePreview();
-        });
-
-        const locationEl = document.getElementById('bmkg-resolved-location');
-        if (locationEl) {
-            fetch('/api/signage/cuaca').then(r => r.json()).then(data => {
-                if (data.status === 'success' && data.lokasi) {
-                    const l = data.lokasi;
-                    locationEl.innerHTML = `<strong>${l.desa||'-'}, ${l.kecamatan||'-'}, ${l.kotkab||'-'}</strong>`;
-                } else {
-                    locationEl.innerHTML = '<span class="text-red-600">Gagal mendeteksi lokasi.</span>';
-                }
-            }).catch(() => {
-                locationEl.innerHTML = '<span class="text-red-600">Gagal memuat lokasi.</span>';
-            });
-        }
         window.renderAdminIcons?.();
     }
 
-    function setupSettingsSubmitProgress(form) {
+     function setupSettingsSubmitProgress(form) {
         const panel = document.getElementById('settings-upload-progress');
         const bar = document.getElementById('settings-upload-bar');
         const status = document.getElementById('settings-upload-status');
@@ -1036,10 +689,6 @@
             }
 
             event.preventDefault();
-
-            syncEditorToHidden();
-            localStorage.removeItem('dprd_wa_status_cache');
-            localStorage.removeItem('dprd_wa_status_cache_time');
 
             const mediaInput = document.getElementById('media_file');
             const hasMediaFile = !!(mediaInput && mediaInput.files && mediaInput.files.length > 0);

@@ -111,7 +111,7 @@
                         <div class="col-span-12 md:col-span-6">
                             <div class="alert alert-info py-2 px-3 text-xs mb-0 flex gap-2">
                                 <i data-lucide="info" class="w-4 h-4"></i>
-                                <span>Mengubah nomor WA akan mempengaruhi pengiriman notifikasi rapat.</span>
+                                <span>Gunakan nomor WhatsApp aktif milik anggota.</span>
                             </div>
                         </div>
                     <?php endif; ?>

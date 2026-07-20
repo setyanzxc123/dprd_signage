@@ -5,7 +5,7 @@
 <div class="page-header flex items-center justify-between unit-rapat-index-header">
     <div>
         <h1 class="page-title">Kelompok Peserta</h1>
-        <p class="page-subtitle">Kelola kelompok internal DPRD untuk target rapat dan notifikasi WA</p>
+        <p class="page-subtitle">Kelola kelompok internal DPRD untuk peserta rapat</p>
     </div>
     <a href="<?= base_url('admin/unit-rapat/create') ?>" class="btn btn-primary btn-sm gap-1 unit-rapat-add-button">
         <i data-lucide="plus" class="w-4 h-4"></i>Tambah Kelompok

@@ -5,7 +5,7 @@
 <div class="page-header flex items-center justify-between">
     <div>
         <h1 class="page-title">Jadwal Rapat</h1>
-        <p class="page-subtitle">Kelola jadwal rapat dan notifikasi WhatsApp</p>
+        <p class="page-subtitle">Kelola jadwal rapat DPRD</p>
     </div>
     <a href="<?= base_url('admin/jadwal/create') ?>" class="btn btn-sm btn-primary gap-1">
         <i data-lucide="plus" class="w-4 h-4"></i>Tambah Jadwal
