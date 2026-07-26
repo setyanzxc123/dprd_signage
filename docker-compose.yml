@@ -28,7 +28,10 @@ services:
       securityHeaders.trustForwardedProto: ${SECURITY_TRUST_FORWARDED_PROTO:-false}
       # BMKG
       BMKG_ADM4: ${BMKG_ADM4:-72.71.01.1004}
-      # WhatsApp Notification
+      # WhatsApp API - pengiriman langsung untuk autentikasi OTP
+      WA_API_KEY: ${WA_API_KEY:-}
+      WA_API_URL: ${WA_API_URL:-https://api.fonnte.com/send}
+      WA_DEVICE_URL: ${WA_DEVICE_URL:-https://api.fonnte.com/device}
     volumes:
       # Persist data upload & log — tidak hilang saat container restart
       - uploads_data:/var/www/html/public/uploads

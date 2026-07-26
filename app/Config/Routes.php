@@ -68,6 +68,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
+    $routes->get( 'pengaturan/wa-status',    'Admin\SettingController::waStatus');
 });
 
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────

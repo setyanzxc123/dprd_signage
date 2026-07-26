@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\WhatsappService;
 use App\Models\SettingModel;
 
 class SettingController extends BaseController
@@ -234,6 +235,22 @@ class SettingController extends BaseController
 
         session()->setFlashdata('success', 'File media berhasil dihapus.');
         return redirect()->to(base_url('admin/pengaturan'));
+    }
+
+    /**
+     * Memeriksa konfigurasi token dan koneksi perangkat WhatsApp.
+     * Endpoint ini hanya tersedia di dalam group admin yang dilindungi auth.
+     */
+    public function waStatus()
+    {
+        $service = new WhatsappService();
+        $result = $service->checkConnection();
+
+        return $this->response->setJSON([
+            'configured' => $service->isConfigured(),
+            'connected'  => $result['success'],
+            'error'      => $result['error'],
+        ]);
     }
 
     private function deleteMediaFile(string $fileName): void

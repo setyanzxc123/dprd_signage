@@ -23,8 +23,7 @@ RUN apt-get update && apt-get install -y \
         libpng-dev \
         libjpeg-dev \
         libfreetype6-dev \
-        cron \
-        curl \
+        libcurl4-openssl-dev \
         unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
@@ -35,6 +34,7 @@ RUN apt-get update && apt-get install -y \
         intl \
         zip \
         gd \
+        curl \
         opcache \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -72,10 +72,6 @@ COPY . .
 
 # Salin vendor dari stage 1
 COPY --from=vendor /app/vendor ./vendor
-
-# Salin cron job
-COPY docker/cron/wa-notif /etc/cron.d/wa-notif
-RUN chmod 0644 /etc/cron.d/wa-notif
 
 # Permission untuk writable dan uploads
 RUN mkdir -p writable/logs writable/cache writable/session writable/uploads public/uploads/media \
