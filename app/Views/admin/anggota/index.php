@@ -38,6 +38,7 @@
                         <th>Komisi</th>
                         <th>No WhatsApp</th>
                         <th>Status</th>
+                        <th>Akses Login</th>
                         <th class="text-right no-sort">Aksi</th>
                     </tr>
                 </thead>
@@ -76,6 +77,13 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
                                         Nonaktif
                                     </span>
+                                <?php endif; ?>
+                            </td>
+                            <td data-label="Akses Login">
+                                <?php if (! empty($m['login_enabled']) && ! empty($m['aktif'])): ?>
+                                    <span class="badge badge-info badge-soft text-xs">Diaktifkan</span>
+                                <?php else: ?>
+                                    <span class="badge badge-ghost text-xs">Dinonaktifkan</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">

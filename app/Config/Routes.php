@@ -19,10 +19,25 @@ $routes->get('jadwal', 'PublicController::index');
 $routes->get('go/jadwal/(:num)/live',   'RedirectController::live/$1');
 $routes->get('go/jadwal/(:num)/berkas', 'RedirectController::berkas/$1');
 
-// Auth (login/logout, di luar group admin)
+// Login satu pintu
+$routes->get( 'login',         'LoginController::index');
+$routes->post('login/admin',   'Admin\AuthController::loginProcess');
+$routes->post('login/anggota', 'Member\AuthController::loginProcess');
+
+// Alias auth lama untuk kompatibilitas
 $routes->get( 'admin/login',  'Admin\AuthController::loginPage');
 $routes->post('admin/login',  'Admin\AuthController::loginProcess');
 $routes->match(['get', 'post'], 'admin/logout', 'Admin\AuthController::logout');
+
+// Auth anggota DPRD (terpisah dari panel admin)
+$routes->get( 'anggota/login',  'Member\AuthController::loginPage');
+$routes->post('anggota/login',  'Member\AuthController::loginProcess');
+$routes->post('anggota/logout', 'Member\AuthController::logout');
+
+// Portal anggota DPRD
+$routes->group('anggota', ['filter' => 'memberauth'], function ($routes) {
+    $routes->get('', 'Member\PortalController::index');
+});
 
 // Admin — semua route dilindungi filter auth
 $routes->group('admin', ['filter' => 'auth'], function ($routes) {

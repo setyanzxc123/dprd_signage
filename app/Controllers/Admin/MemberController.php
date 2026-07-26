@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\AnggotaModel;
+use App\Models\MemberAccountModel;
 
 class MemberController extends BaseController
 {
@@ -30,6 +31,8 @@ class MemberController extends BaseController
     public function index(): string
     {
         $members = (new AnggotaModel())
+            ->select('anggota.*, ma.login_enabled, ma.last_login_at')
+            ->join('member_accounts ma', 'ma.anggota_id = anggota.id', 'left')
             ->orderBy('name', 'ASC')
             ->findAll();
 
@@ -47,6 +50,7 @@ class MemberController extends BaseController
         return view('admin/anggota/form', [
             'pageTitle'          => 'Tambah Anggota',
             'member'             => null,
+            'account'            => ['login_enabled' => 0],
             'fraksi_list'        => $this->fraksiList,
             'komisi_list'        => $this->komisiOptions(),
             'action_url'         => base_url('admin/anggota/store'),
@@ -62,14 +66,24 @@ class MemberController extends BaseController
             return $this->failForm($input['error']);
         }
 
-        $model->insert([
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $memberId = (int) $model->insert([
             'name'    => $input['name'],
             'jabatan' => $input['jabatan'],
             'fraksi'  => $input['fraksi'],
             'komisi'  => $input['komisi'],
             'no_wa'   => $input['no_wa'],
             'aktif'   => $input['aktif'],
-        ]);
+        ], true);
+
+        $this->syncMemberAccount($memberId, $input);
+        $db->transComplete();
+
+        if (! $db->transStatus()) {
+            return $this->failForm('Gagal menyimpan anggota dan akun login.');
+        }
 
         return $this->formSuccessResponse('Anggota berhasil ditambahkan.', base_url('admin/anggota'));
     }
@@ -87,6 +101,8 @@ class MemberController extends BaseController
         return view('admin/anggota/form', [
             'pageTitle'          => 'Edit Anggota',
             'member'             => $member,
+            'account'            => (new MemberAccountModel())->findByAnggotaId($id)
+                ?? ['login_enabled' => 0],
             'fraksi_list'        => $this->fraksiList,
             'komisi_list'        => $this->komisiOptions($member['komisi'] ?? ''),
             'action_url'         => base_url("admin/anggota/{$id}/update"),
@@ -101,11 +117,14 @@ class MemberController extends BaseController
             return redirect()->to(base_url('admin/anggota'));
         }
 
-        $input = $this->validatedInput();
+        $input = $this->validatedInput($id);
 
         if (isset($input['error'])) {
             return $this->failForm($input['error'], $id);
         }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
 
         $model->update($id, [
             'name'    => $input['name'],
@@ -115,6 +134,13 @@ class MemberController extends BaseController
             'no_wa'   => $input['no_wa'],
             'aktif'   => $input['aktif'],
         ]);
+
+        $this->syncMemberAccount($id, $input);
+        $db->transComplete();
+
+        if (! $db->transStatus()) {
+            return $this->failForm('Gagal memperbarui anggota dan akun login.', $id);
+        }
 
         return $this->formSuccessResponse('Data anggota berhasil diperbarui.', base_url('admin/anggota'));
     }
@@ -129,6 +155,7 @@ class MemberController extends BaseController
 
         if ($this->memberHasRelations($id)) {
             $model->update($id, ['aktif' => 0]);
+            $this->disableMemberLogin($id);
 
             session()->setFlashdata('success', 'Anggota sudah terkait data lain, sehingga hanya dinonaktifkan.');
             return redirect()->to(base_url('admin/anggota'));
@@ -151,7 +178,7 @@ class MemberController extends BaseController
         return $options;
     }
 
-    private function validatedInput(): array
+    private function validatedInput(?int $memberId = null): array
     {
         $name = trim((string) $this->request->getPost('name'));
         if ($name === '') {
@@ -172,6 +199,28 @@ class MemberController extends BaseController
             return ['error' => 'Nomor WhatsApp wajib valid. Gunakan format 8123456789.'];
         }
 
+        if ($this->phoneExists($phone, $memberId)) {
+            return ['error' => 'Nomor WhatsApp sudah digunakan oleh anggota lain.'];
+        }
+
+        $loginEnabled = $this->request->getPost('login_enabled') ? 1 : 0;
+        $password = (string) $this->request->getPost('member_password');
+        $existingAccount = $memberId !== null
+            ? (new MemberAccountModel())->findByAnggotaId($memberId)
+            : null;
+
+        if ($password !== '' && mb_strlen($password) < 8) {
+            return ['error' => 'Password anggota minimal 8 karakter.'];
+        }
+
+        if (
+            $loginEnabled === 1
+            && $password === ''
+            && empty($existingAccount['password_hash'])
+        ) {
+            return ['error' => 'Password wajib diisi saat akses login anggota diaktifkan.'];
+        }
+
         return [
             'name'     => $name,
             'jabatan'  => trim((string) $this->request->getPost('jabatan')),
@@ -179,6 +228,8 @@ class MemberController extends BaseController
             'komisi'   => trim((string) $this->request->getPost('komisi')),
             'no_wa'    => $phone,
             'aktif'    => $this->request->getPost('aktif') === '0' ? 0 : 1,
+            'login_enabled'  => $loginEnabled,
+            'member_password' => $password,
         ];
     }
 
@@ -215,6 +266,7 @@ class MemberController extends BaseController
         return $this->formViewErrorResponse('admin/anggota/form', [
             'pageTitle'         => $id === null ? 'Tambah Anggota' : 'Edit Anggota',
             'member'            => $this->postedMember($id),
+            'account'           => $this->postedAccount(),
             'fraksi_list'       => $this->fraksiList,
             'komisi_list'       => $this->komisiOptions(trim((string) $this->request->getPost('komisi'))),
             'action_url'        => $id === null
@@ -234,5 +286,56 @@ class MemberController extends BaseController
             'no_wa'   => trim((string) $this->request->getPost('no_wa')),
             'aktif'   => $this->request->getPost('aktif') === '0' ? 0 : 1,
         ];
+    }
+
+    private function postedAccount(): array
+    {
+        return [
+            'login_enabled' => $this->request->getPost('login_enabled') ? 1 : 0,
+        ];
+    }
+
+    private function phoneExists(string $phone, ?int $ignoreMemberId): bool
+    {
+        $model = new AnggotaModel();
+        $model->where('no_wa', $phone);
+
+        if ($ignoreMemberId !== null) {
+            $model->where('id !=', $ignoreMemberId);
+        }
+
+        return $model->first() !== null;
+    }
+
+    private function syncMemberAccount(int $memberId, array $input): void
+    {
+        $model = new MemberAccountModel();
+        $account = $model->findByAnggotaId($memberId);
+        $payload = [
+            'anggota_id'    => $memberId,
+            'login_enabled' => (int) $input['login_enabled'],
+        ];
+
+        if ($input['member_password'] !== '') {
+            $payload['password_hash'] = password_hash($input['member_password'], PASSWORD_DEFAULT);
+        }
+
+        if ($account === null) {
+            $model->insert($payload);
+            return;
+        }
+
+        unset($payload['anggota_id']);
+        $model->update((int) $account['id'], $payload);
+    }
+
+    private function disableMemberLogin(int $memberId): void
+    {
+        $model = new MemberAccountModel();
+        $account = $model->findByAnggotaId($memberId);
+
+        if ($account !== null) {
+            $model->update((int) $account['id'], ['login_enabled' => 0]);
+        }
     }
 }
