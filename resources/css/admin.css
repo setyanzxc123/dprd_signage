@@ -4,6 +4,8 @@
 @source "../../app/Views/admin/layouts/*.php";
 @source "../../app/Views/admin/components/*.php";
 @source "../../app/Views/admin/auth/*.php";
+@source "../../app/Views/auth/**/*.php";
+@source "../../app/Views/member/**/*.php";
 @plugin "daisyui" {
     themes: light --default, corporate, dark --prefersdark;
     logs: false;

@@ -5,12 +5,22 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
 $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 ?>
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><?= esc($pageTitle ?? 'Masuk Sistem DPRD') ?></title>
+    <script {csp-script-nonce}>
+        (() => {
+            const stored = localStorage.getItem('dprd-admin-theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = stored === 'dark' || stored === 'light'
+                ? stored
+                : (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <title><?= esc($pageTitle ?? 'Sistem Informasi Agenda dan Jadwal Rapat DPRD') ?></title>
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
@@ -18,30 +28,42 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 </head>
 
 <body class="min-h-screen bg-base-200">
+    <label class="btn btn-ghost btn-circle swap swap-rotate fixed right-4 top-4 z-10 bg-base-100 shadow-sm"
+        title="Ganti tema" aria-label="Ganti tema" data-theme-toggle>
+        <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
+        <i class="swap-on h-5 w-5" data-lucide="moon"></i>
+        <i class="swap-off h-5 w-5" data-lucide="sun"></i>
+    </label>
+
     <main class="flex min-h-screen items-center justify-center px-4 py-8">
         <div class="w-full max-w-md">
             <header class="mb-6 text-center">
                 <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>"
                     alt="Logo DPRD Provinsi Sulawesi Tengah"
                     class="mx-auto mb-4 h-20 w-20 rounded-2xl border border-base-300 bg-white object-contain" />
-                <h1 class="text-2xl font-black text-base-content">Sistem DPRD Sulawesi Tengah</h1>
-                <p class="mt-2 text-sm text-base-content/65">
-                    Pilih jenis akses untuk masuk ke sistem.
-                </p>
+                <h1 class="text-2xl font-black text-base-content">
+                    Sistem Informasi Agenda dan Jadwal Rapat DPRD
+                </h1>
             </header>
 
             <section class="card card-border bg-base-100 shadow-xl">
                 <div class="card-body">
-                    <div role="tablist" class="tabs tabs-box grid grid-cols-2">
-                        <button type="button" role="tab"
-                            class="tab <?= $activeAccess === 'anggota' ? 'tab-active' : '' ?>"
-                            data-login-tab="anggota" aria-selected="<?= $activeAccess === 'anggota' ? 'true' : 'false' ?>">
-                            Anggota DPRD
+                    <p class="text-center text-sm text-base-content/65">
+                        Pilih jenis akses untuk masuk ke sistem.
+                    </p>
+
+                    <div role="group" aria-label="Pilih jenis akses" class="grid grid-cols-2 gap-2">
+                        <button type="button"
+                            class="btn px-2 sm:px-4 <?= $activeAccess === 'anggota' ? 'btn-neutral' : 'btn-outline' ?>"
+                            data-login-tab="anggota" aria-pressed="<?= $activeAccess === 'anggota' ? 'true' : 'false' ?>">
+                            <i data-lucide="users" class="h-5 w-5 shrink-0"></i>
+                            <span>Anggota DPRD</span>
                         </button>
-                        <button type="button" role="tab"
-                            class="tab <?= $activeAccess === 'admin' ? 'tab-active' : '' ?>"
-                            data-login-tab="admin" aria-selected="<?= $activeAccess === 'admin' ? 'true' : 'false' ?>">
-                            Admin / Operator
+                        <button type="button"
+                            class="btn px-2 sm:px-4 <?= $activeAccess === 'admin' ? 'btn-neutral' : 'btn-outline' ?>"
+                            data-login-tab="admin" aria-pressed="<?= $activeAccess === 'admin' ? 'true' : 'false' ?>">
+                            <i data-lucide="settings-2" class="h-5 w-5 shrink-0"></i>
+                            <span>Admin / Operator</span>
                         </button>
                     </div>
 
@@ -122,12 +144,6 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                         </form>
                     </div>
 
-                    <div class="card-actions justify-center">
-                        <a href="<?= base_url('signage') ?>" class="btn btn-ghost btn-sm">
-                            <i data-lucide="arrow-left" class="h-4 w-4"></i>
-                            Kembali ke Signage
-                        </a>
-                    </div>
                 </div>
             </section>
 
@@ -142,14 +158,34 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
         document.addEventListener('DOMContentLoaded', function () {
             if (window.lucide) window.lucide.createIcons();
 
+            const themeInput = document.querySelector('[data-theme-toggle-input]');
+            const themeToggle = document.querySelector('[data-theme-toggle]');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            themeInput.checked = isDark;
+
+            function syncThemeLabel(dark) {
+                const label = dark ? 'Gunakan tema terang' : 'Gunakan tema gelap';
+                themeToggle.setAttribute('aria-label', label);
+                themeToggle.setAttribute('title', label);
+            }
+
+            syncThemeLabel(isDark);
+            themeInput.addEventListener('change', function () {
+                const theme = themeInput.checked ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('dprd-admin-theme', theme);
+                syncThemeLabel(theme === 'dark');
+            });
+
             const tabs = document.querySelectorAll('[data-login-tab]');
             const panels = document.querySelectorAll('[data-login-panel]');
 
             function selectAccess(access) {
                 tabs.forEach(function (tab) {
                     const active = tab.dataset.loginTab === access;
-                    tab.classList.toggle('tab-active', active);
-                    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+                    tab.classList.toggle('btn-neutral', active);
+                    tab.classList.toggle('btn-outline', !active);
+                    tab.setAttribute('aria-pressed', active ? 'true' : 'false');
                 });
                 panels.forEach(function (panel) {
                     panel.classList.toggle('hidden', panel.dataset.loginPanel !== access);
