@@ -94,3 +94,6 @@ $routes->group('api/v1/publik', function ($routes) {
 // ── API Signage (backward compatible) ────────────────────────────────
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
 $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
+
+// Webhook status provider WhatsApp (autentikasi menggunakan secret provider).
+$routes->post('webhooks/whatsapp/fonnte', 'Webhook\FonnteController::status');

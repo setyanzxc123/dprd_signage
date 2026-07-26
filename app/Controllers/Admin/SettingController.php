@@ -3,7 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Libraries\WhatsappService;
+use App\Libraries\WhatsApp\WhatsappGateway;
 use App\Models\SettingModel;
 
 class SettingController extends BaseController
@@ -243,13 +243,16 @@ class SettingController extends BaseController
      */
     public function waStatus()
     {
-        $service = new WhatsappService();
-        $result = $service->checkConnection();
+        $gateway = new WhatsappGateway();
+        $result = $gateway->checkConnection();
 
         return $this->response->setJSON([
-            'configured' => $service->isConfigured(),
-            'connected'  => $result['success'],
-            'error'      => $result['error'],
+            'provider'      => $gateway->providerName(),
+            'configured'    => $gateway->isConfigured(),
+            'connected'     => $result->success && $result->connected,
+            'device'        => $result->device,
+            'device_status' => $result->deviceStatus,
+            'error'         => $result->error,
         ]);
     }
 
