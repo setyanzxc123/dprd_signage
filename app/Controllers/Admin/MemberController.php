@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Otp\OtpService;
 use App\Models\AnggotaModel;
 use App\Models\MemberAccountModel;
 
@@ -30,15 +31,9 @@ class MemberController extends BaseController
 
     public function index(): string
     {
-        $members = (new AnggotaModel())
-            ->select('anggota.*, ma.login_enabled, ma.last_login_at')
-            ->join('member_accounts ma', 'ma.anggota_id = anggota.id', 'left')
-            ->orderBy('name', 'ASC')
-            ->findAll();
-
         return view('admin/anggota/index', [
             'pageTitle' => 'Anggota DPRD',
-            'members'   => $members,
+            'members'   => $this->memberList(),
             'data_scope' => [
                 'label' => 'seluruh master anggota',
             ],
@@ -50,7 +45,6 @@ class MemberController extends BaseController
         return view('admin/anggota/form', [
             'pageTitle'          => 'Tambah Anggota',
             'member'             => null,
-            'account'            => ['login_enabled' => 0],
             'fraksi_list'        => $this->fraksiList,
             'komisi_list'        => $this->komisiOptions(),
             'action_url'         => base_url('admin/anggota/store'),
@@ -101,8 +95,6 @@ class MemberController extends BaseController
         return view('admin/anggota/form', [
             'pageTitle'          => 'Edit Anggota',
             'member'             => $member,
-            'account'            => (new MemberAccountModel())->findByAnggotaId($id)
-                ?? ['login_enabled' => 0],
             'fraksi_list'        => $this->fraksiList,
             'komisi_list'        => $this->komisiOptions($member['komisi'] ?? ''),
             'action_url'         => base_url("admin/anggota/{$id}/update"),
@@ -155,7 +147,6 @@ class MemberController extends BaseController
 
         if ($this->memberHasRelations($id)) {
             $model->update($id, ['aktif' => 0]);
-            $this->disableMemberLogin($id);
 
             session()->setFlashdata('success', 'Anggota sudah terkait data lain, sehingga hanya dinonaktifkan.');
             return redirect()->to(base_url('admin/anggota'));
@@ -165,6 +156,39 @@ class MemberController extends BaseController
 
         session()->setFlashdata('success', 'Anggota berhasil dihapus.');
         return redirect()->to(base_url('admin/anggota'));
+    }
+
+    public function emergencyOtp(int $id)
+    {
+        $account = (new MemberAccountModel())->findByAnggotaId($id);
+        $member = (new AnggotaModel())->find($id);
+        $admin = session()->get('auth_user');
+        $reason = trim((string) $this->request->getPost('reason'));
+
+        if ($account === null || $member === null || ! is_array($admin) || empty($member['aktif'])) {
+            session()->setFlashdata('error', 'Akun anggota tidak aktif atau tidak ditemukan.');
+            return redirect()->to(base_url('admin/anggota'), 303);
+        }
+
+        try {
+            $otp = (new OtpService())->createEmergency((int) $account['id'], (int) $admin['id'], $reason);
+        } catch (\InvalidArgumentException $exception) {
+            session()->setFlashdata('error', $exception->getMessage());
+            return redirect()->to(base_url('admin/anggota'), 303);
+        }
+
+        return $this->response
+            ->setHeader('Cache-Control', 'no-store, private')
+            ->setBody(view('admin/anggota/index', [
+            'pageTitle' => 'Anggota DPRD',
+            'members'   => $this->memberList(),
+            'data_scope' => ['label' => 'seluruh master anggota'],
+            'emergency_otp' => [
+                'member'     => $member['name'],
+                'code'       => $otp->code,
+                'expires_at' => $otp->expiresAt,
+            ],
+        ]));
     }
 
     private function komisiOptions(string $selected = ''): array
@@ -203,24 +227,6 @@ class MemberController extends BaseController
             return ['error' => 'Nomor WhatsApp sudah digunakan oleh anggota lain.'];
         }
 
-        $loginEnabled = $this->request->getPost('login_enabled') ? 1 : 0;
-        $password = (string) $this->request->getPost('member_password');
-        $existingAccount = $memberId !== null
-            ? (new MemberAccountModel())->findByAnggotaId($memberId)
-            : null;
-
-        if ($password !== '' && mb_strlen($password) < 8) {
-            return ['error' => 'Password anggota minimal 8 karakter.'];
-        }
-
-        if (
-            $loginEnabled === 1
-            && $password === ''
-            && empty($existingAccount['password_hash'])
-        ) {
-            return ['error' => 'Password wajib diisi saat akses login anggota diaktifkan.'];
-        }
-
         return [
             'name'     => $name,
             'jabatan'  => trim((string) $this->request->getPost('jabatan')),
@@ -228,8 +234,6 @@ class MemberController extends BaseController
             'komisi'   => trim((string) $this->request->getPost('komisi')),
             'no_wa'    => $phone,
             'aktif'    => $this->request->getPost('aktif') === '0' ? 0 : 1,
-            'login_enabled'  => $loginEnabled,
-            'member_password' => $password,
         ];
     }
 
@@ -266,7 +270,6 @@ class MemberController extends BaseController
         return $this->formViewErrorResponse('admin/anggota/form', [
             'pageTitle'         => $id === null ? 'Tambah Anggota' : 'Edit Anggota',
             'member'            => $this->postedMember($id),
-            'account'           => $this->postedAccount(),
             'fraksi_list'       => $this->fraksiList,
             'komisi_list'       => $this->komisiOptions(trim((string) $this->request->getPost('komisi'))),
             'action_url'        => $id === null
@@ -288,11 +291,13 @@ class MemberController extends BaseController
         ];
     }
 
-    private function postedAccount(): array
+    private function memberList(): array
     {
-        return [
-            'login_enabled' => $this->request->getPost('login_enabled') ? 1 : 0,
-        ];
+        return (new AnggotaModel())
+            ->select('anggota.*, ma.last_login_at')
+            ->join('member_accounts ma', 'ma.anggota_id = anggota.id', 'left')
+            ->orderBy('name', 'ASC')
+            ->findAll();
     }
 
     private function phoneExists(string $phone, ?int $ignoreMemberId): bool
@@ -311,31 +316,11 @@ class MemberController extends BaseController
     {
         $model = new MemberAccountModel();
         $account = $model->findByAnggotaId($memberId);
-        $payload = [
-            'anggota_id'    => $memberId,
-            'login_enabled' => (int) $input['login_enabled'],
-        ];
-
-        if ($input['member_password'] !== '') {
-            $payload['password_hash'] = password_hash($input['member_password'], PASSWORD_DEFAULT);
-        }
+        $payload = ['anggota_id' => $memberId];
 
         if ($account === null) {
             $model->insert($payload);
-            return;
-        }
-
-        unset($payload['anggota_id']);
-        $model->update((int) $account['id'], $payload);
-    }
-
-    private function disableMemberLogin(int $memberId): void
-    {
-        $model = new MemberAccountModel();
-        $account = $model->findByAnggotaId($memberId);
-
-        if ($account !== null) {
-            $model->update((int) $account['id'], ['login_enabled' => 0]);
         }
     }
+
 }

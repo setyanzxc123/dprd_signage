@@ -2,6 +2,17 @@
 
 <?= $this->section('content') ?>
 
+<?php if ($emergencyOtp = ($emergency_otp ?? null)): ?>
+    <div role="alert" class="alert alert-warning mb-4">
+        <i data-lucide="key-round" class="h-5 w-5 shrink-0"></i>
+        <div>
+            <div class="font-bold">OTP darurat untuk <?= esc($emergencyOtp['member']) ?></div>
+            <div class="mt-1">Kode: <span class="font-mono text-xl font-black tracking-widest"><?= esc($emergencyOtp['code']) ?></span></div>
+            <div class="text-xs">Berlaku sampai <?= esc($emergencyOtp['expires_at']) ?>. Kode hanya ditampilkan sekali.</div>
+        </div>
+    </div>
+<?php endif; ?>
+
 <div class="page-header flex items-center justify-between">
     <div>
         <h1 class="page-title">Anggota DPRD</h1>
@@ -38,7 +49,6 @@
                         <th>Komisi</th>
                         <th>No WhatsApp</th>
                         <th>Status</th>
-                        <th>Akses Login</th>
                         <th class="text-right no-sort">Aksi</th>
                     </tr>
                 </thead>
@@ -79,20 +89,26 @@
                                     </span>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="Akses Login">
-                                <?php if (! empty($m['login_enabled']) && ! empty($m['aktif'])): ?>
-                                    <span class="badge badge-info badge-soft text-xs">Diaktifkan</span>
-                                <?php else: ?>
-                                    <span class="badge badge-ghost text-xs">Dinonaktifkan</span>
-                                <?php endif; ?>
-                            </td>
                             <td data-label="Aksi">
                                 <div class="flex items-center justify-end gap-2">
+                                    <?php if (! empty($m['aktif'])): ?>
+                                        <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/otp-darurat") ?>"
+                                            class="inline-flex items-center gap-1 m-0"
+                                            onsubmit="return confirm('Buat OTP darurat untuk anggota ini? Pastikan identitas anggota sudah diverifikasi.');">
+                                            <?= csrf_field() ?>
+                                            <input type="text" name="reason" class="input input-sm w-36"
+                                                minlength="5" maxlength="255" placeholder="Alasan darurat" required />
+                                            <button type="submit" class="btn btn-sm btn-outline btn-warning gap-1" title="Buat OTP darurat">
+                                                <i data-lucide="key-round" class="w-4 h-4"></i>OTP
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                     <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit
                                     </a>
-                                    <form method="get" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
+                                    <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
                                         onsubmit="return confirm('Hapus anggota ini?')" class="inline-flex m-0">
+                                        <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus
                                         </button>

@@ -9,6 +9,7 @@ final class OtpRequestResult
         public readonly string $status,
         public readonly ?int $retryAfter = null,
         public readonly ?string $error = null,
+        public readonly ?int $expiresAt = null,
     ) {
     }
 }

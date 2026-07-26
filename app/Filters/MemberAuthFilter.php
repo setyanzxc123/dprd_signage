@@ -13,7 +13,7 @@ class MemberAuthFilter implements FilterInterface
     {
         $auth = session()->get('member_auth');
         if (! is_array($auth)) {
-            return $this->redirectToLogin($request);
+            return $this->redirectToLogin();
         }
 
         $accountId = (int) ($auth['account_id'] ?? 0);
@@ -22,7 +22,7 @@ class MemberAuthFilter implements FilterInterface
 
         if ($account === null) {
             session()->remove('member_auth');
-            return $this->redirectToLogin($request);
+            return $this->redirectToLogin();
         }
 
         session()->set('member_auth', [
@@ -37,13 +37,8 @@ class MemberAuthFilter implements FilterInterface
         // Tidak ada aksi setelah response.
     }
 
-    private function redirectToLogin(RequestInterface $request)
+    private function redirectToLogin()
     {
-        $path = trim($request->getUri()->getPath(), '/');
-        if ($path !== '' && $path !== 'anggota/login') {
-            session()->set('member_intended_path', '/' . $path);
-        }
-
         return redirect()->to(base_url('login?akses=anggota'));
     }
 }

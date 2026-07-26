@@ -48,19 +48,15 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 
             <section class="card card-border bg-base-100 shadow-xl">
                 <div class="card-body">
-                    <p class="text-center text-sm text-base-content/65">
-                        Pilih jenis akses untuk masuk ke sistem.
-                    </p>
-
                     <div role="group" aria-label="Pilih jenis akses" class="grid grid-cols-2 gap-2">
                         <button type="button"
-                            class="btn px-2 sm:px-4 <?= $activeAccess === 'anggota' ? 'btn-neutral' : 'btn-outline' ?>"
+                            class="btn px-2 sm:px-4 <?= $activeAccess === 'anggota' ? 'btn-outline border-base-content text-base-content' : 'btn-ghost text-base-content/65' ?>"
                             data-login-tab="anggota" aria-pressed="<?= $activeAccess === 'anggota' ? 'true' : 'false' ?>">
                             <i data-lucide="users" class="h-5 w-5 shrink-0"></i>
                             <span>Anggota DPRD</span>
                         </button>
                         <button type="button"
-                            class="btn px-2 sm:px-4 <?= $activeAccess === 'admin' ? 'btn-neutral' : 'btn-outline' ?>"
+                            class="btn px-2 sm:px-4 <?= $activeAccess === 'admin' ? 'btn-outline border-base-content text-base-content' : 'btn-ghost text-base-content/65' ?>"
                             data-login-tab="admin" aria-pressed="<?= $activeAccess === 'admin' ? 'true' : 'false' ?>">
                             <i data-lucide="settings-2" class="h-5 w-5 shrink-0"></i>
                             <span>Admin / Operator</span>
@@ -74,50 +70,89 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                         </div>
                     <?php endif; ?>
 
-                    <?php if (session()->getFlashdata('success')): ?>
+                    <?php if (! empty($flash_success)): ?>
                         <div role="alert" class="alert alert-success text-sm">
                             <i data-lucide="circle-check" class="h-4 w-4 shrink-0"></i>
-                            <span><?= esc(session()->getFlashdata('success')) ?></span>
+                            <span><?= esc($flash_success) ?></span>
                         </div>
                     <?php endif; ?>
 
                     <div data-login-panel="anggota" class="<?= $activeAccess === 'anggota' ? '' : 'hidden' ?>">
                         <div class="mb-3">
-                            <h2 class="font-bold text-base-content">Masuk sebagai Anggota</h2>
-                            <p class="text-sm text-base-content/60">Gunakan nomor WhatsApp yang terdaftar.</p>
+                            <h2 class="font-bold text-base-content">
+                                <?= ($member_step ?? 'request') === 'verify' ? 'Verifikasi Kode OTP' : 'Masuk sebagai Anggota' ?>
+                            </h2>
+                            <?php if (($member_step ?? 'request') === 'verify'): ?>
+                                <p class="text-sm text-base-content/60">
+                                    Masukkan enam digit kode yang dikirim ke <?= esc($masked_phone ?? 'nomor WhatsApp Anda') ?>.
+                                </p>
+                            <?php endif; ?>
                         </div>
 
-                        <form action="<?= base_url('login/anggota') ?>" method="POST" data-login-form>
-                            <?= csrf_field() ?>
+                        <?php if (! empty($otp_success)): ?>
+                            <div role="alert" class="alert alert-info mb-4 text-sm">
+                                <i data-lucide="message-circle-check" class="h-4 w-4 shrink-0"></i>
+                                <span><?= esc($otp_success) ?></span>
+                            </div>
+                        <?php endif; ?>
 
-                            <label class="block text-sm font-semibold text-base-content" for="member-phone">
-                                Nomor WhatsApp
-                            </label>
-                            <label class="input mt-1 flex w-full items-center gap-2">
-                                <span class="text-sm font-semibold text-base-content/60">+62</span>
-                                <input type="tel" class="grow" id="member-phone" name="no_wa"
-                                    value="<?= esc($old_phone ?? '') ?>" placeholder="8123456789"
-                                    inputmode="numeric" autocomplete="tel" required />
-                            </label>
+                        <?php if (($member_step ?? 'request') === 'verify'): ?>
+                            <form action="<?= base_url('login/anggota/verifikasi') ?>" method="POST" data-login-form>
+                                <?= csrf_field() ?>
+                                <label class="block text-sm font-semibold text-base-content" for="member-otp">
+                                    Kode OTP
+                                </label>
+                                <input type="text" class="input input-lg mt-1 w-full text-center text-2xl tracking-[0.35em]"
+                                    id="member-otp" name="otp" placeholder="000000" inputmode="numeric"
+                                    pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code"
+                                    data-digits-only data-max-digits="6" autofocus required />
+                                <button type="submit" class="btn btn-primary btn-block mt-5" data-login-button
+                                    data-loading-label="Memverifikasi...">
+                                    <i data-lucide="shield-check" class="h-4 w-4"></i>
+                                    Verifikasi dan Masuk
+                                </button>
+                            </form>
 
-                            <label class="mt-3 block text-sm font-semibold text-base-content" for="member-password">
-                                Password
-                            </label>
-                            <input type="password" class="input mt-1 w-full" id="member-password"
-                                name="password" placeholder="Masukkan password"
-                                autocomplete="current-password" required />
-
-                            <button type="submit" class="btn btn-primary btn-block mt-5" data-login-button>
-                                <i data-lucide="log-in" class="h-4 w-4"></i>
-                                Masuk sebagai Anggota
-                            </button>
-                        </form>
+                            <form action="<?= base_url('login/anggota/kirim-ulang') ?>" method="POST" class="mt-3" data-resend-form>
+                                <?= csrf_field() ?>
+                                <button type="submit"
+                                    class="btn btn-ghost btn-block text-base-content/80 disabled:opacity-100"
+                                    data-resend-button
+                                    data-retry-after="<?= (int) ($retry_after ?? 0) ?>">
+                                    Kirim ulang kode
+                                </button>
+                            </form>
+                            <form action="<?= base_url('login/anggota/reset') ?>" method="POST" class="mt-1">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-link btn-block btn-sm">
+                                    Gunakan nomor lain
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <form action="<?= base_url('login/anggota') ?>" method="POST" data-login-form>
+                                <?= csrf_field() ?>
+                                <label class="block text-sm font-semibold text-base-content" for="member-phone">
+                                    Nomor WhatsApp
+                                </label>
+                                <label class="input mt-1 flex w-full items-center gap-2">
+                                    <span class="text-sm font-semibold text-base-content/60">+62</span>
+                                    <input type="tel" class="grow" id="member-phone" name="no_wa"
+                                        value="<?= esc($old_phone ?? '') ?>" placeholder="8123456789"
+                                        inputmode="numeric" pattern="8[0-9]{7,12}" minlength="8" maxlength="13"
+                                        autocomplete="tel" data-digits-only data-max-digits="13" required />
+                                </label>
+                                <button type="submit" class="btn btn-primary btn-block mt-5" data-login-button
+                                    data-loading-label="Mengirim kode...">
+                                    <i data-lucide="message-circle" class="h-4 w-4"></i>
+                                    Kirim Kode OTP
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     </div>
 
                     <div data-login-panel="admin" class="<?= $activeAccess === 'admin' ? '' : 'hidden' ?>">
                         <div class="mb-3">
                             <h2 class="font-bold text-base-content">Masuk sebagai Admin</h2>
-                            <p class="text-sm text-base-content/60">Khusus operator dan pengelola sistem.</p>
                         </div>
 
                         <form action="<?= base_url('login/admin') ?>" method="POST" data-login-form>
@@ -183,8 +218,11 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
             function selectAccess(access) {
                 tabs.forEach(function (tab) {
                     const active = tab.dataset.loginTab === access;
-                    tab.classList.toggle('btn-neutral', active);
-                    tab.classList.toggle('btn-outline', !active);
+                    tab.classList.toggle('btn-outline', active);
+                    tab.classList.toggle('border-base-content', active);
+                    tab.classList.toggle('text-base-content', active);
+                    tab.classList.toggle('btn-ghost', !active);
+                    tab.classList.toggle('text-base-content/65', !active);
                     tab.setAttribute('aria-pressed', active ? 'true' : 'false');
                 });
                 panels.forEach(function (panel) {
@@ -207,9 +245,64 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                     const button = form.querySelector('[data-login-button]');
                     if (!button) return;
                     button.disabled = true;
-                    button.innerHTML = '<span class="loading loading-spinner loading-xs"></span>Memverifikasi...';
+                    const label = button.dataset.loadingLabel || 'Memverifikasi...';
+                    button.innerHTML = '<span class="loading loading-spinner loading-xs"></span>' + label;
                 });
             });
+
+            document.querySelectorAll('[data-digits-only]').forEach(function (input) {
+                const maxDigits = Number.parseInt(input.dataset.maxDigits || '0', 10);
+                const sanitizeDigits = function () {
+                    const digits = input.value.replace(/[^0-9]/g, '');
+                    input.value = maxDigits > 0 ? digits.slice(0, maxDigits) : digits;
+                };
+
+                input.addEventListener('keydown', function (event) {
+                    if (event.key.length === 1 && ! /[0-9]/.test(event.key)) {
+                        event.preventDefault();
+                    }
+                });
+                input.addEventListener('input', sanitizeDigits);
+                sanitizeDigits();
+            });
+
+            const countdownMarkup = function (remaining) {
+                const hours = Math.floor(remaining / 3600);
+                const minutes = Math.floor((remaining % 3600) / 60);
+                const seconds = remaining % 60;
+                const unit = function (value, label) {
+                    if (value > 999) {
+                        return '<span aria-label="' + value + ' ' + label + '">' + value + '</span>';
+                    }
+
+                    return '<span class="countdown" aria-live="polite" aria-label="' + value + ' ' + label + '">'
+                        + '<span style="--value:' + value + ';">' + value + '</span></span>';
+                };
+                const minuteAndSecond = unit(minutes, 'menit') + ':' + unit(seconds, 'detik');
+
+                return hours > 0 ? unit(hours, 'jam') + ':' + minuteAndSecond : minuteAndSecond;
+            };
+
+            const resendButton = document.querySelector('[data-resend-button]');
+            if (resendButton) {
+                let remaining = Number.parseInt(resendButton.dataset.retryAfter || '0', 10);
+                const renderCountdown = function () {
+                    const waiting = remaining > 0;
+                    resendButton.disabled = waiting;
+                    resendButton.innerHTML = waiting
+                        ? 'Kirim ulang dalam ' + countdownMarkup(remaining)
+                        : 'Kirim ulang kode';
+                };
+                renderCountdown();
+                if (remaining > 0) {
+                    const timer = window.setInterval(function () {
+                        remaining -= 1;
+                        renderCountdown();
+                        if (remaining <= 0) window.clearInterval(timer);
+                    }, 1000);
+                }
+            }
+
         });
     </script>
 </body>

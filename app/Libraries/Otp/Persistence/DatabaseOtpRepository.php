@@ -14,6 +14,33 @@ final class DatabaseOtpRepository implements OtpRepositoryInterface
 
     private ?BaseConnection $db;
 
+    public function transaction(callable $callback): mixed
+    {
+        $db = $this->db();
+        if (! $db->transBegin()) {
+            throw new \RuntimeException('Transaksi OTP tidak dapat dimulai.');
+        }
+
+        try {
+            $result = $callback();
+            if (! $db->transCommit()) {
+                throw new \RuntimeException('Transaksi OTP gagal disimpan.');
+            }
+
+            return $result;
+        } catch (\Throwable $exception) {
+            $db->transRollback();
+            throw $exception;
+        }
+    }
+
+    public function lockAccount(int $accountId): void
+    {
+        $db = $this->db();
+        $table = $db->prefixTable('member_accounts');
+        $db->query("SELECT id FROM {$table} WHERE id = ? FOR UPDATE", [$accountId]);
+    }
+
     public function cleanup(string $before): int
     {
         $builder = $this->db()->table('member_otps')
@@ -69,6 +96,19 @@ final class DatabaseOtpRepository implements OtpRepositoryInterface
     public function update(int $id, array $changes): void
     {
         $this->db()->table('member_otps')->where('id', $id)->update($changes);
+    }
+
+    public function consume(int $id, string $now): bool
+    {
+        $db = $this->db();
+        $db->table('member_otps')
+            ->where('id', $id)
+            ->where('used_at', null)
+            ->where('cancelled_at', null)
+            ->where('expires_at >=', $now)
+            ->update(['used_at' => $now, 'updated_at' => $now]);
+
+        return $db->affectedRows() === 1;
     }
 
     public function audit(?int $otpId, ?int $accountId, string $event, array $context, string $createdAt): void

@@ -23,7 +23,7 @@ class AuthController extends BaseController
 
         $ipKey = 'admin_login_ip_' . hash('sha256', $this->request->getIPAddress());
         if (! service('throttler')->check($ipKey, 10, 60)) {
-            return $this->loginFailure('Terlalu banyak percobaan login. Silakan tunggu satu menit.', 429, $username);
+            return $this->loginFailure('Terlalu banyak percobaan login. Silakan tunggu satu menit.', $username);
         }
 
         $model = new UserModel();
@@ -32,7 +32,7 @@ class AuthController extends BaseController
         $passwordValid = password_verify((string) $password, $storedHash);
 
         if ($user && $passwordValid) {
-            session()->remove(['member_auth', 'member_intended_path']);
+            session()->remove(['member_auth', 'member_intended_path', 'member_otp_pending']);
             session()->regenerate(true);
             session()->set('auth_user', [
                 'id'       => $user['id'],
@@ -43,24 +43,22 @@ class AuthController extends BaseController
             return redirect()->to(base_url('admin/dashboard'), 303);
         }
 
-        return $this->loginFailure('Username atau password tidak sesuai.', 422, $username);
+        return $this->loginFailure('Username atau password tidak sesuai.', $username);
     }
 
     public function logout()
     {
         session()->destroy();
-        return redirect()->to(base_url('login?akses=admin'));
+        return redirect()->to(base_url('login?akses=admin'), 303);
     }
 
-    private function loginFailure(string $message, int $statusCode, string $username)
+    private function loginFailure(string $message, string $username)
     {
-        return $this->response
-            ->setStatusCode($statusCode)
-            ->setBody(view('auth/login', [
-                'pageTitle'    => 'Masuk Sistem DPRD',
-                'access'       => 'admin',
-                'form_error'   => $message,
-                'old_username' => $username,
-            ]));
+        session()->setFlashdata([
+            'auth_form_error'   => $message,
+            'auth_old_username' => $username,
+        ]);
+
+        return redirect()->to(base_url('login?akses=admin'), 303);
     }
 }

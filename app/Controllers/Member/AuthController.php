@@ -3,103 +3,304 @@
 namespace App\Controllers\Member;
 
 use App\Controllers\BaseController;
+use App\Libraries\Otp\OtpPendingSession;
+use App\Libraries\Otp\OtpService;
 use App\Libraries\WhatsappService;
 use App\Models\MemberAccountModel;
+use Config\Otp;
 
 class AuthController extends BaseController
 {
+    private const GENERIC_REQUEST_MESSAGE = 'Jika nomor terdaftar dan dapat menerima WhatsApp, kode OTP akan segera dikirim.';
+    private const DUMMY_OTP_HASH = '$2y$10$4RbmKauQYgMBcef3l.0pZ.A2OC8LIa1DSANAIiWfeBUMhhEB6vwfq';
+
     public function loginPage()
     {
         if (session()->has('member_auth')) {
-            return redirect()->to(base_url('anggota'));
+            return redirect()->to(base_url('signage'));
         }
 
         return redirect()->to(base_url('login?akses=anggota'));
     }
 
-    public function loginProcess()
+    public function requestOtp()
     {
+        if ($redirect = $this->authenticatedRedirect()) {
+            return $redirect;
+        }
+
         $phone = $this->localPhone((string) $this->request->getPost('no_wa'));
-        $password = (string) $this->request->getPost('password');
-
-        $ipKey = 'member_login_ip_' . hash('sha256', $this->request->getIPAddress());
-        if (! service('throttler')->check($ipKey, 10, 60)) {
-            return $this->loginFailure('Terlalu banyak percobaan login. Silakan tunggu satu menit.', 429);
+        $ip = $this->request->getIPAddress();
+        if (! $this->allowRequest($phone, $ip)) {
+            return $this->requestFailure('Terlalu banyak permintaan. Silakan coba kembali beberapa saat lagi.');
         }
 
-        if ($phone === null || $password === '') {
-            return $this->loginFailure();
+        $account = $phone !== null ? (new MemberAccountModel())->findLoginByPhone($phone) : null;
+        $eligible = $account !== null && (int) $account['aktif'] === 1;
+
+        $config = new Otp();
+        $retryAfter = $config->resendCooldownSeconds;
+        $otpExpiresAt = time() + $config->ttlSeconds;
+        if ($eligible) {
+            $result = (new OtpService())->request(
+                (int) $account['account_id'],
+                '62' . $phone,
+                $ip,
+            );
+            $retryAfter = max(1, (int) ($result->retryAfter ?? $config->resendCooldownSeconds));
+            $otpExpiresAt = $result->expiresAt ?? $otpExpiresAt;
+        } else {
+            // Menyamakan biaya minimum agar status nomor tidak mudah ditebak.
+            password_verify('000000', self::DUMMY_OTP_HASH);
         }
 
-        $phoneKey = 'member_login_phone_' . hash('sha256', $phone);
-        if (! service('throttler')->check($phoneKey, 5, 60)) {
-            return $this->loginFailure('Terlalu banyak percobaan untuk akun ini. Silakan tunggu satu menit.', 429);
+        (new OtpPendingSession())->begin(
+            $eligible ? (int) $account['account_id'] : 0,
+            $eligible ? (int) $account['anggota_id'] : 0,
+            $this->phoneHash($phone),
+            $this->maskPhone($phone),
+            $retryAfter,
+            $otpExpiresAt,
+        );
+
+        return $this->verificationRedirect(success: self::GENERIC_REQUEST_MESSAGE);
+    }
+
+    public function verifyOtp()
+    {
+        if ($redirect = $this->authenticatedRedirect()) {
+            return $redirect;
         }
 
-        $model = new MemberAccountModel();
-        $account = $model->findLoginByPhone($phone);
-        $storedHash = (string) ($account['password_hash'] ?? password_hash('invalid-member-login', PASSWORD_DEFAULT));
-        $passwordValid = password_verify($password, $storedHash);
-
-        if (
-            $account === null
-            || ! $passwordValid
-            || (int) $account['login_enabled'] !== 1
-            || (int) $account['aktif'] !== 1
-        ) {
-            return $this->loginFailure();
+        $pendingSession = new OtpPendingSession();
+        $pending = $pendingSession->get();
+        if (! is_array($pending)) {
+            return $this->requestFailure('Sesi verifikasi berakhir. Silakan minta kode baru.');
         }
 
-        session()->regenerate(true);
+        $code = trim((string) $this->request->getPost('otp'));
+        $accountId = (int) ($pending['account_id'] ?? 0);
+        $account = $accountId > 0 ? $this->currentPendingAccount($pending) : null;
+        $currentPhone = $account !== null ? $this->localPhone((string) $account['no_wa']) : null;
+        if ($accountId > 0 && ($account === null || $currentPhone === null)) {
+            $pendingSession->forget();
+
+            return $this->requestFailure('Data akun berubah atau sudah tidak aktif. Silakan masukkan nomor kembali.');
+        }
+
+        $verified = $account !== null
+            ? (new OtpService())->verify(
+                $accountId,
+                $code,
+                $this->request->getIPAddress(),
+                '62' . $currentPhone,
+            )
+            : null;
+        if ($account === null) {
+            password_verify($code, self::DUMMY_OTP_HASH);
+        }
+
+        if ($verified?->success !== true) {
+            $status = $verified?->status;
+            $message = $status === 'too_many_attempts'
+                ? 'Terlalu banyak percobaan. Silakan minta kode OTP baru.'
+                : 'Kode OTP tidak valid atau sudah kedaluwarsa.';
+
+            return $this->verificationRedirect(error: $message);
+        }
+
         session()->remove('auth_user');
+        $pendingSession->forget();
+        session()->regenerate(true);
         session()->set('member_auth', [
             'account_id' => (int) $account['account_id'],
             'anggota_id' => (int) $account['anggota_id'],
             'name'       => $account['name'],
         ]);
+        (new MemberAccountModel())->update($accountId, ['last_login_at' => date('Y-m-d H:i:s')]);
 
-        $model->update((int) $account['account_id'], [
-            'last_login_at' => date('Y-m-d H:i:s'),
-        ]);
+        return redirect()->to(base_url('signage'), 303);
+    }
 
-        $destination = (string) session()->pull('member_intended_path', '/anggota');
-        if (! str_starts_with($destination, '/anggota') || str_starts_with($destination, '//')) {
-            $destination = '/anggota';
+    public function resendOtp()
+    {
+        if ($redirect = $this->authenticatedRedirect()) {
+            return $redirect;
         }
 
-        return redirect()->to(base_url(ltrim($destination, '/')), 303);
+        $pendingSession = new OtpPendingSession();
+        $pending = $pendingSession->get();
+        if (! is_array($pending)) {
+            return $this->requestFailure('Sesi verifikasi berakhir. Silakan masukkan nomor kembali.');
+        }
+
+        $retryAt = (int) ($pending['retry_at'] ?? 0);
+        if ($retryAt > time()) {
+            return $this->verificationRedirect(
+                error: 'Kode belum dapat dikirim ulang. Tunggu hingga hitung mundur selesai.',
+            );
+        }
+
+        $accountId = (int) ($pending['account_id'] ?? 0);
+        $config = new Otp();
+        $retryAfter = $config->resendCooldownSeconds;
+        $otpExpiresAt = time() + $config->ttlSeconds;
+        $ip = $this->request->getIPAddress();
+        if (! $this->allowPendingRequest($pending, $ip)) {
+            $pendingSession->refresh(
+                $pending,
+                $config->resendCooldownSeconds,
+                (int) ($pending['otp_expires_at'] ?? time()),
+            );
+
+            return $this->verificationRedirect(
+                error: 'Terlalu banyak permintaan. Silakan coba kembali beberapa saat lagi.',
+            );
+        }
+
+        if ($accountId > 0) {
+            $account = $this->currentPendingAccount($pending);
+            $phone = $account !== null ? $this->localPhone((string) $account['no_wa']) : null;
+            if ($account === null || $phone === null) {
+                $pendingSession->forget();
+
+                return $this->requestFailure('Data akun berubah atau sudah tidak aktif. Silakan masukkan nomor kembali.');
+            }
+
+            $result = (new OtpService())->request(
+                $accountId,
+                '62' . $phone,
+                $ip,
+            );
+            $retryAfter = max(1, (int) ($result->retryAfter ?? $config->resendCooldownSeconds));
+            $otpExpiresAt = $result->expiresAt ?? (int) ($pending['otp_expires_at'] ?? $otpExpiresAt);
+        }
+
+        $pendingSession->refresh($pending, $retryAfter, $otpExpiresAt);
+
+        return $this->verificationRedirect(success: self::GENERIC_REQUEST_MESSAGE);
+    }
+
+    public function resetOtp()
+    {
+        (new OtpPendingSession())->forget();
+
+        return redirect()->to(base_url('login?akses=anggota'), 303);
     }
 
     public function logout()
     {
-        session()->remove(['member_auth', 'member_intended_path']);
+        session()->remove('member_auth');
+        (new OtpPendingSession())->forget();
         session()->regenerate(true);
         session()->setFlashdata('success', 'Anda berhasil keluar dari akun anggota.');
 
         return redirect()->to(base_url('login?akses=anggota'), 303);
     }
 
+    private function allowRequest(?string $phone, string $ip): bool
+    {
+        $ipAllowed = service('throttler')->check('member_otp_ip_' . hash('sha256', $ip), 20, 3600);
+        $phoneAllowed = $phone === null
+            || service('throttler')->check('member_otp_phone_' . $this->phoneHash($phone), 5, 3600);
+
+        return $ipAllowed && $phoneAllowed;
+    }
+
+    /** @param array<string, mixed> $pending */
+    private function allowPendingRequest(array $pending, string $ip): bool
+    {
+        $ipAllowed = service('throttler')->check('member_otp_ip_' . hash('sha256', $ip), 20, 3600);
+        $phoneAllowed = service('throttler')->check(
+            'member_otp_phone_' . (string) ($pending['phone_hash'] ?? 'invalid'),
+            5,
+            3600,
+        );
+
+        return $ipAllowed && $phoneAllowed;
+    }
+
     private function localPhone(string $phone): ?string
     {
         $normalized = WhatsappService::normalizePhone($phone);
-        if (! WhatsappService::isValidIndonesianPhone($normalized)) {
+
+        return WhatsappService::isValidIndonesianPhone($normalized) ? substr($normalized, 2) : null;
+    }
+
+    private function maskPhone(?string $phone): string
+    {
+        if ($phone === null || strlen($phone) < 6) {
+            return '+62 •••• ••••';
+        }
+
+        return '+62 ' . substr($phone, 0, 3) . '••••' . substr($phone, -3);
+    }
+
+    private function phoneHash(?string $phone): string
+    {
+        return hash('sha256', $phone === null ? 'invalid-member-phone' : '62' . $phone);
+    }
+
+    /** @param array<string, mixed> $pending */
+    private function currentPendingAccount(array $pending): ?array
+    {
+        $account = (new MemberAccountModel())->findActiveSessionAccount(
+            (int) ($pending['account_id'] ?? 0),
+            (int) ($pending['anggota_id'] ?? 0),
+        );
+        if ($account === null) {
             return null;
         }
 
-        return substr($normalized, 2);
+        $phone = $this->localPhone((string) $account['no_wa']);
+        if ($phone === null || ! hash_equals((string) $pending['phone_hash'], $this->phoneHash($phone))) {
+            return null;
+        }
+
+        return $account;
     }
 
-    private function loginFailure(
-        string $message = 'Nomor WhatsApp atau password tidak sesuai.',
-        int $statusCode = 422,
-    ) {
-        return $this->response
-            ->setStatusCode($statusCode)
-            ->setBody(view('auth/login', [
-                'pageTitle'  => 'Masuk Sistem DPRD',
-                'access'     => 'anggota',
-                'form_error' => $message,
-                'old_phone'  => trim((string) $this->request->getPost('no_wa')),
-            ]));
+    private function authenticatedRedirect()
+    {
+        if (session()->has('auth_user')) {
+            return redirect()->to(base_url('admin/dashboard'), 303);
+        }
+
+        if (session()->has('member_auth')) {
+            return redirect()->to(base_url('signage'), 303);
+        }
+
+        return null;
+    }
+
+    private function requestFailure(string $message)
+    {
+        session()->setFlashdata([
+            'auth_form_error' => $message,
+            'auth_old_phone'  => trim((string) $this->request->getPost('no_wa')),
+        ]);
+
+        return $this->loginRedirect();
+    }
+
+    private function verificationRedirect(?string $success = null, ?string $error = null)
+    {
+        if ((new OtpPendingSession())->get() === null) {
+            return $this->requestFailure('Sesi verifikasi berakhir. Silakan masukkan nomor kembali.');
+        }
+
+        if ($success !== null) {
+            session()->setFlashdata('member_otp_success', $success);
+        }
+        if ($error !== null) {
+            session()->setFlashdata('auth_form_error', $error);
+        }
+
+        return $this->loginRedirect();
+    }
+
+    private function loginRedirect()
+    {
+        return redirect()->to(base_url('login?akses=anggota'), 303);
     }
 }

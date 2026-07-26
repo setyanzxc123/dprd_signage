@@ -63,9 +63,10 @@
                                     <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit
                                     </a>
-                                    <form method="get" action="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
+                                    <form method="post" action="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
                                         onsubmit="return confirm('Nonaktifkan kelompok peserta ini? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman.')"
                                         class="inline-flex m-0">
+                                        <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Nonaktifkan">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>Nonaktif
                                         </button>

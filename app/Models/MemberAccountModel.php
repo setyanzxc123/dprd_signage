@@ -12,8 +12,6 @@ class MemberAccountModel extends Model
     protected $useTimestamps = true;
     protected $allowedFields = [
         'anggota_id',
-        'password_hash',
-        'login_enabled',
         'last_login_at',
     ];
 
@@ -28,8 +26,6 @@ class MemberAccountModel extends Model
             ->select('
                 member_accounts.id AS account_id,
                 member_accounts.anggota_id,
-                member_accounts.password_hash,
-                member_accounts.login_enabled,
                 a.name,
                 a.jabatan,
                 a.fraksi,
@@ -51,7 +47,6 @@ class MemberAccountModel extends Model
             ->select('
                 member_accounts.id AS account_id,
                 member_accounts.anggota_id,
-                member_accounts.login_enabled,
                 a.name,
                 a.jabatan,
                 a.fraksi,
@@ -62,7 +57,6 @@ class MemberAccountModel extends Model
             ->join('anggota a', 'a.id = member_accounts.anggota_id')
             ->where('member_accounts.id', $accountId)
             ->where('member_accounts.anggota_id', $anggotaId)
-            ->where('member_accounts.login_enabled', 1)
             ->where('a.aktif', 1)
             ->first();
     }

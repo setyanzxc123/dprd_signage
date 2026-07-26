@@ -22,16 +22,19 @@ $routes->get('go/jadwal/(:num)/berkas', 'RedirectController::berkas/$1');
 // Login satu pintu
 $routes->get( 'login',         'LoginController::index');
 $routes->post('login/admin',   'Admin\AuthController::loginProcess');
-$routes->post('login/anggota', 'Member\AuthController::loginProcess');
+$routes->group('login/anggota', static function ($routes) {
+    $routes->post('',            'Member\AuthController::requestOtp');
+    $routes->post('verifikasi',  'Member\AuthController::verifyOtp');
+    $routes->post('kirim-ulang', 'Member\AuthController::resendOtp');
+    $routes->post('reset',       'Member\AuthController::resetOtp');
+});
 
 // Alias auth lama untuk kompatibilitas
 $routes->get( 'admin/login',  'Admin\AuthController::loginPage');
-$routes->post('admin/login',  'Admin\AuthController::loginProcess');
-$routes->match(['get', 'post'], 'admin/logout', 'Admin\AuthController::logout');
+$routes->post('admin/logout', 'Admin\AuthController::logout');
 
 // Auth anggota DPRD (terpisah dari panel admin)
 $routes->get( 'anggota/login',  'Member\AuthController::loginPage');
-$routes->post('anggota/login',  'Member\AuthController::loginProcess');
 $routes->post('anggota/logout', 'Member\AuthController::logout');
 
 // Portal anggota DPRD
@@ -52,7 +55,8 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('anggota/store',          'Admin\MemberController::store');
     $routes->get( 'anggota/(:num)/edit',    'Admin\MemberController::edit/$1');
     $routes->post('anggota/(:num)/update',  'Admin\MemberController::update/$1');
-    $routes->get( 'anggota/(:num)/delete',  'Admin\MemberController::delete/$1');
+    $routes->post('anggota/(:num)/otp-darurat', 'Admin\MemberController::emergencyOtp/$1');
+    $routes->post('anggota/(:num)/delete',  'Admin\MemberController::delete/$1');
 
     // Master Data: Ruangan Rapat
     $routes->get( 'ruangan',               'Admin\RoomController::index');
@@ -60,7 +64,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('ruangan/store',         'Admin\RoomController::store');
     $routes->get( 'ruangan/(:num)/edit',   'Admin\RoomController::edit/$1');
     $routes->post('ruangan/(:num)/update', 'Admin\RoomController::update/$1');
-    $routes->get( 'ruangan/(:num)/delete', 'Admin\RoomController::delete/$1');
+    $routes->post('ruangan/(:num)/delete', 'Admin\RoomController::delete/$1');
 
     // Master Data: Kelompok Peserta
     $routes->get( 'unit-rapat',               'Admin\UnitRapatController::index');
@@ -68,7 +72,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('unit-rapat/store',         'Admin\UnitRapatController::store');
     $routes->get( 'unit-rapat/(:num)/edit',   'Admin\UnitRapatController::edit/$1');
     $routes->post('unit-rapat/(:num)/update', 'Admin\UnitRapatController::update/$1');
-    $routes->get( 'unit-rapat/(:num)/delete', 'Admin\UnitRapatController::delete/$1');
+    $routes->post('unit-rapat/(:num)/delete', 'Admin\UnitRapatController::delete/$1');
 
     // Jadwal Rapat
     $routes->get( 'jadwal',                      'Admin\MeetingController::index');
@@ -76,7 +80,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('jadwal/store',                'Admin\MeetingController::store');
     $routes->get( 'jadwal/(:num)/edit',          'Admin\MeetingController::edit/$1');
     $routes->post('jadwal/(:num)/update',        'Admin\MeetingController::update/$1');
-    $routes->get( 'jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
+    $routes->post('jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
 
 
     // Pengaturan Signage

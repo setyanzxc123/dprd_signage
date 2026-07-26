@@ -122,37 +122,10 @@
                 <div class="form-section-title mb-3 pb-2">Akun Login Anggota</div>
 
                 <div class="grid grid-cols-12 gap-3 items-start">
-                    <div class="col-span-12 md:col-span-6">
-                        <label class="label-text font-bold text-sm mb-1 block" for="login_enabled">
-                            Akses Login
-                        </label>
-                        <select class="select select-bordered w-full" id="login_enabled" name="login_enabled">
-                            <option value="0" <?= empty($account['login_enabled']) ? 'selected' : '' ?>>Dinonaktifkan</option>
-                            <option value="1" <?= ! empty($account['login_enabled']) ? 'selected' : '' ?>>Diaktifkan</option>
-                        </select>
-                        <div class="label-text-alt text-base-content/60 mt-1">
-                            Anggota nonaktif tetap tidak dapat login meskipun akses ini diaktifkan.
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-6">
-                        <label class="label-text font-bold text-sm mb-1 block" for="member_password">
-                            <?= $member ? 'Password Baru' : 'Password' ?>
-                        </label>
-                        <input type="password" class="input input-bordered w-full" id="member_password"
-                            name="member_password" minlength="8" autocomplete="new-password"
-                            placeholder="<?= $member ? 'Kosongkan jika tidak diubah' : 'Minimal 8 karakter' ?>" />
-                        <div class="label-text-alt text-base-content/60 mt-1">
-                            <?= $member
-                                ? 'Isi hanya untuk mengganti password. Login OTP akan ditambahkan pada tahap berikutnya.'
-                                : 'Wajib diisi jika akses login langsung diaktifkan.' ?>
-                        </div>
-                    </div>
-
                     <div class="col-span-12">
                         <div class="alert alert-info text-xs">
                             <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
-                            <span>Nomor WhatsApp digunakan sebagai identitas login. Password ini merupakan tahap awal sebelum autentikasi OTP tersedia.</span>
+                            <span>Setiap anggota berstatus aktif dapat masuk menggunakan kode OTP enam digit yang dikirim ke nomor WhatsApp terdaftar.</span>
                         </div>
                     </div>
                 </div>
