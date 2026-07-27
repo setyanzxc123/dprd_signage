@@ -453,8 +453,8 @@
                                                 class="radio radio-primary radio-sm"
                                                 <?= $jenis === 'reguler' ? 'checked' : '' ?> />
                                             <span class="choice-copy">
-                                                <span class="choice-title">Reguler</span>
-                                                <span class="choice-desc">Agenda terencana</span>
+                                                <span class="choice-title">Rapat Reguler</span>
+                                                <span class="choice-desc">Rapat resmi yang terencana atau rutin</span>
                                             </span>
                                         </span>
                                     </label>
@@ -465,8 +465,8 @@
                                                 class="radio radio-primary radio-sm"
                                                 <?= $jenis === 'insidental' ? 'checked' : '' ?> />
                                             <span class="choice-copy">
-                                                <span class="choice-title">Insidental</span>
-                                                <span class="choice-desc">Agenda mendadak</span>
+                                                <span class="choice-title">Rapat Insidental</span>
+                                                <span class="choice-desc">Rapat resmi di luar rencana rutin atau bersifat mendesak</span>
                                             </span>
                                         </span>
                                     </label>

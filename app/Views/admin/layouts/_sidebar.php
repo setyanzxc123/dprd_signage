@@ -60,6 +60,12 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                     <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
                 </a>
             </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/agenda-umum') ?>" data-path="/admin/agenda-umum">
+                    <i data-lucide="calendar-range" class="nav-icon"></i>
+                    <span class="nav-text">Jadwal Umum</span>
+                </a>
+            </li>
             <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Sistem</li>
             <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">

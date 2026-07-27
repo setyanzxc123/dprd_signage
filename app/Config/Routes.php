@@ -82,6 +82,14 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('jadwal/(:num)/update',        'Admin\MeetingController::update/$1');
     $routes->post('jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
 
+    // Jadwal Umum / kegiatan nonrapat
+    $routes->get( 'agenda-umum',                      'Admin\GeneralAgendaController::index');
+    $routes->get( 'agenda-umum/create',               'Admin\GeneralAgendaController::create');
+    $routes->post('agenda-umum/store',                'Admin\GeneralAgendaController::store');
+    $routes->get( 'agenda-umum/(:num)/edit',          'Admin\GeneralAgendaController::edit/$1');
+    $routes->post('agenda-umum/(:num)/update',        'Admin\GeneralAgendaController::update/$1');
+    $routes->post('agenda-umum/(:num)/delete',        'Admin\GeneralAgendaController::delete/$1');
+
 
     // Pengaturan Signage
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
