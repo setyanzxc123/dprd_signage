@@ -12,6 +12,7 @@ $routes->get('/', 'AgendaController::root');
 // Agenda web responsif untuk publik dan anggota
 $routes->get('agenda', 'AgendaController::index');
 $routes->get('agenda/jadwal-banmus', 'AgendaController::banmus');
+$routes->get('agenda/jadwal-banmus/(:num)/dokumen', 'AgendaController::banmusDocument/$1');
 
 // Layar TV Signage
 $routes->get('signage', 'SignageController::index');
@@ -96,6 +97,13 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('agenda-umum/(:num)/update',        'Admin\GeneralAgendaController::update/$1');
     $routes->post('agenda-umum/(:num)/delete',        'Admin\GeneralAgendaController::delete/$1');
 
+    // Jadwal Semester / proyeksi SK Banmus
+    $routes->get( 'jadwal-banmus',                      'Admin\BanmusProjectionController::index');
+    $routes->get( 'jadwal-banmus/create',               'Admin\BanmusProjectionController::create');
+    $routes->post('jadwal-banmus/store',                'Admin\BanmusProjectionController::store');
+    $routes->get( 'jadwal-banmus/(:num)/edit',          'Admin\BanmusProjectionController::edit/$1');
+    $routes->post('jadwal-banmus/(:num)/update',        'Admin\BanmusProjectionController::update/$1');
+    $routes->post('jadwal-banmus/(:num)/delete',        'Admin\BanmusProjectionController::delete/$1');
 
     // Pengaturan Signage
     $routes->get( 'pengaturan',              'Admin\SettingController::index');

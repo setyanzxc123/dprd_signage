@@ -98,8 +98,11 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
 
         $response->assertOK();
         $this->assertStringContainsString('Jadwal Banmus', $response->response()->getBody());
-        $this->assertStringContainsString('Belum ada data proyeksi Banmus', $response->response()->getBody());
+        $this->assertStringContainsString('Belum ada Jadwal Banmus', $response->response()->getBody());
         $this->assertStringNotContainsString('Jadwal Sidang', $response->response()->getBody());
+        $this->assertStringContainsString('name="tahun"', $response->response()->getBody());
+        $this->assertStringContainsString('name="semester"', $response->response()->getBody());
+        $this->assertStringNotContainsString('diselesaikan pada fase berikutnya', $response->response()->getBody());
     }
 
     public function testAgendaShellLinksToBanmusProjectionOutsideItsFilterLogic(): void
@@ -136,6 +139,13 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response->assertRedirectTo(base_url('login?akses=admin'));
     }
 
+    public function testBanmusProjectionAdminRequiresAuthentication(): void
+    {
+        $response = $this->get('/admin/jadwal-banmus');
+
+        $response->assertRedirectTo(base_url('login?akses=admin'));
+    }
+
     /**
      * @dataProvider stateChangingGetRoutes
      */
@@ -154,5 +164,6 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         yield 'room delete' => ['/admin/ruangan/1/delete'];
         yield 'meeting delete' => ['/admin/jadwal/1/delete'];
         yield 'general agenda delete' => ['/admin/agenda-umum/1/delete'];
+        yield 'Banmus projection delete' => ['/admin/jadwal-banmus/1/delete'];
     }
 }
