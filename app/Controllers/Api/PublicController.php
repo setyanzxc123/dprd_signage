@@ -3,6 +3,8 @@
 namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
+use App\Libraries\Schedule\ScheduleReadService;
+use App\Models\AgendaUmumModel;
 
 class PublicController extends BaseController
 {
@@ -10,117 +12,93 @@ class PublicController extends BaseController
      * GET api/v1/publik/jadwal
      * GET api/v1/publik/jadwal?date=YYYY-MM-DD
      * GET api/v1/publik/jadwal?month=YYYY-MM
-     *
-     * Mengembalikan jadwal yang is_publik = 1
-     * Default: hari ini. Bisa difilter dengan query param ?date= atau ?month=
      */
     public function jadwal()
     {
-        // Otomatis perbarui status semua rapat berdasarkan waktu saat ini
-        (new \App\Models\JadwalModel())->autoUpdateStatuses();
+        $result = (new ScheduleReadService())->publicAgenda([
+            'date'  => $this->request->getGet('date'),
+            'month' => $this->request->getGet('month'),
+            'unit'  => $this->request->getGet('unit'),
+        ]);
+        $result['data'] = array_map(static function (array $schedule): array {
+            $id = (int) $schedule['id'];
+            if ($schedule['has_materi']) {
+                $schedule['materi_url'] = base_url("go/jadwal/{$id}/berkas");
+            }
+            if ($schedule['has_stream']) {
+                $schedule['stream_url'] = base_url("go/jadwal/{$id}/live");
+            }
 
-        $db    = \Config\Database::connect();
-        $date  = $this->request->getGet('date');
-        $month = $this->request->getGet('month');
-
-        // Validasi format tanggal, fallback ke hari ini
-        if ($date && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            $date = null;
-        }
-        if ($month && !preg_match('/^\d{4}-\d{2}$/', $month)) {
-            $month = null;
-        }
-
-        $builder = $db->table('jadwal j')
-            ->select('
-                j.id,
-                j.judul,
-                j.keterangan,
-                j.tanggal,
-                j.waktu_mulai,
-                j.waktu_selesai,
-                j.status,
-                j.materi_url,
-                j.stream_url,
-                j.jenis,
-                j.lokasi_lainnya,
-                r.name AS nama_ruangan
-            ')
-            ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
-            ->where('j.is_publik', 1);
-
-        if ($month) {
-            $start = $month . '-01';
-            $end   = date('Y-m-t', strtotime($start));
-            $builder
-                ->where('j.tanggal >=', $start)
-                ->where('j.tanggal <=', $end);
-        } else {
-            $date = $date ?? date('Y-m-d');
-            $builder->where('j.tanggal', $date);
-        }
-
-        $jadwal = $builder
-            ->orderBy('j.tanggal', 'ASC')
-            ->orderBy('j.waktu_mulai', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        $targetMap = $this->targetNamesByJadwalIds(array_column($jadwal, 'id'));
-
-        foreach ($jadwal as &$j) {
-            $j['waktu_mulai']   = substr($j['waktu_mulai'],   0, 5);
-            $j['waktu_selesai'] = substr($j['waktu_selesai'], 0, 5);
-            $j['ruangan']       = $this->displayLocation($j);
-            $j['komisi']        = $targetMap[$j['id']] ?? '';
-            $j['has_materi']    = !empty($j['materi_url']);
-            $j['has_stream']    = !empty($j['stream_url']);
-            unset($j['nama_ruangan'], $j['lokasi_lainnya']);
-        }
+            return $schedule;
+        }, $result['data']);
 
         return $this->response
-            ->setHeader('Cache-Control', 'no-store')
+            ->setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=120')
             ->setHeader('Access-Control-Allow-Origin', '*')
-            ->setJSON([
-                'status' => 'success',
-                'date'   => $date,
-                'month'  => $month,
-                'data'   => $jadwal,
-            ]);
+            ->setJSON(['status' => 'success', ...$result]);
     }
 
-    private function targetNamesByJadwalIds(array $jadwalIds): array
+    /**
+     * GET api/v1/publik/agenda-umum
+     * GET api/v1/publik/agenda-umum?date=YYYY-MM-DD
+     * GET api/v1/publik/agenda-umum?month=YYYY-MM
+     */
+    public function agendaUmum()
     {
-        $jadwalIds = array_values(array_filter(array_map('intval', $jadwalIds)));
-        if (empty($jadwalIds)) {
-            return [];
+        $model = new AgendaUmumModel();
+        $model->where('is_publik', 1);
+
+        $date = trim((string) $this->request->getGet('date'));
+        $month = trim((string) $this->request->getGet('month'));
+        if ($this->validDate($date)) {
+            $model->where('tanggal', $date);
+        } else {
+            $selectedMonth = preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month) === 1
+                ? $month
+                : date('Y-m');
+            $start = $selectedMonth . '-01';
+            $model
+                ->where('tanggal >=', $start)
+                ->where('tanggal <=', date('Y-m-t', strtotime($start)));
         }
 
-        $rows = \Config\Database::connect()
-            ->table('jadwal_unit_rapat jur')
-            ->select('jur.jadwal_id, ur.nama')
-            ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
-            ->whereIn('jur.jadwal_id', $jadwalIds)
-            ->orderBy('ur.urutan', 'ASC')
-            ->orderBy('ur.nama', 'ASC')
-            ->get()
-            ->getResultArray();
+        $rows = $model
+            ->orderBy('tanggal', 'ASC')
+            ->orderBy('waktu_mulai', 'ASC')
+            ->findAll(100);
 
-        $map = [];
-        foreach ($rows as $row) {
-            $map[$row['jadwal_id']][] = $row['nama'];
-        }
+        $data = array_map(static fn (array $row): array => [
+            'id'                => (int) $row['id'],
+            'judul'             => (string) $row['judul'],
+            'kategori'          => (string) $row['kategori'],
+            'tanggal'           => (string) $row['tanggal'],
+            'waktu_mulai'       => substr((string) $row['waktu_mulai'], 0, 5),
+            'waktu_selesai'     => $row['waktu_selesai'] !== null
+                ? substr((string) $row['waktu_selesai'], 0, 5)
+                : null,
+            'lokasi'            => (string) $row['lokasi'],
+            'sumber_informasi'  => $row['sumber_informasi'],
+            'perkiraan_peserta' => $row['perkiraan_peserta'] !== null
+                ? (int) $row['perkiraan_peserta']
+                : null,
+            'keterangan'        => $row['keterangan'],
+            'status'            => (string) $row['status'],
+        ], $rows);
 
-        return array_map(static fn (array $names): string => implode(', ', $names), $map);
+        return $this->response
+            ->setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=120')
+            ->setHeader('Access-Control-Allow-Origin', '*')
+            ->setJSON(['status' => 'success', 'data' => $data]);
     }
 
-    private function displayLocation(array $row): string
+    private function validDate(string $value): bool
     {
-        $other = trim((string) ($row['lokasi_lainnya'] ?? ''));
-        if ($other !== '') {
-            return $other;
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return false;
         }
 
-        return $row['nama_ruangan'] ?? '-';
+        [$year, $month, $day] = array_map('intval', explode('-', $value));
+
+        return checkdate($month, $day, $year);
     }
 }

@@ -13,7 +13,7 @@ class LoginController extends BaseController
         }
 
         if (session()->has('member_auth')) {
-            return redirect()->to(base_url('signage'));
+            return redirect()->to(base_url('agenda'));
         }
 
         $access = strtolower(trim((string) $this->request->getGet('akses')));

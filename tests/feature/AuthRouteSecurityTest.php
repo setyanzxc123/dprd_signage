@@ -84,6 +84,58 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         ]);
     }
 
+    public function testRootRedirectsToAgendaInsteadOfTvSignage(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertStatus(302);
+        $response->assertRedirectTo(base_url('agenda'));
+    }
+
+    public function testBanmusProjectionPageIsSeparateFromAgendaFilters(): void
+    {
+        $response = $this->get('/agenda/jadwal-banmus');
+
+        $response->assertOK();
+        $this->assertStringContainsString('Jadwal Banmus', $response->response()->getBody());
+        $this->assertStringContainsString('Belum ada data proyeksi Banmus', $response->response()->getBody());
+        $this->assertStringNotContainsString('Jadwal Sidang', $response->response()->getBody());
+    }
+
+    public function testAgendaShellLinksToBanmusProjectionOutsideItsFilterLogic(): void
+    {
+        $response = $this->get('/agenda');
+        $body = $response->response()->getBody();
+
+        $response->assertOK();
+        $this->assertStringContainsString(base_url('agenda/jadwal-banmus'), $body);
+        $this->assertStringContainsString('Jadwal Banmus', $body);
+        $this->assertStringNotContainsString("navButtonClass('bamus')", $body);
+        $this->assertStringNotContainsString('Jadwal Sidang', $body);
+        $this->assertStringContainsString('Filter periode agenda rapat', $body);
+        $this->assertStringContainsString('Semester ini', $body);
+        $this->assertStringContainsString('Jumlah agenda per halaman', $body);
+        $this->assertStringContainsString('collapse collapse-arrow', $body);
+        $this->assertStringContainsString('handleAgendaToggle($event, item.id)', $body);
+    }
+
+    public function testMemberScheduleApiRejectsAnonymousRequestWithJson(): void
+    {
+        $response = $this->get('/api/v1/anggota/jadwal');
+
+        $response->assertStatus(401);
+        $response->assertHeader('Cache-Control');
+        $this->assertStringContainsString('no-store', $response->response()->getHeaderLine('Cache-Control'));
+        $this->assertSame('application/json; charset=UTF-8', $response->response()->getHeaderLine('Content-Type'));
+    }
+
+    public function testGeneralAgendaAdminRequiresAuthentication(): void
+    {
+        $response = $this->get('/admin/agenda-umum');
+
+        $response->assertRedirectTo(base_url('login?akses=admin'));
+    }
+
     /**
      * @dataProvider stateChangingGetRoutes
      */
@@ -101,5 +153,6 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         yield 'member delete' => ['/admin/anggota/1/delete'];
         yield 'room delete' => ['/admin/ruangan/1/delete'];
         yield 'meeting delete' => ['/admin/jadwal/1/delete'];
+        yield 'general agenda delete' => ['/admin/agenda-umum/1/delete'];
     }
 }

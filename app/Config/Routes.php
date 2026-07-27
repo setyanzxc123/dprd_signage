@@ -7,13 +7,17 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // Home
-$routes->get('/', 'SignageController::index');
+$routes->get('/', 'AgendaController::root');
+
+// Agenda web responsif untuk publik dan anggota
+$routes->get('agenda', 'AgendaController::index');
+$routes->get('agenda/jadwal-banmus', 'AgendaController::banmus');
 
 // Layar TV Signage
 $routes->get('signage', 'SignageController::index');
 
 // Portal Publik — akses via QR Code / direct link
-$routes->get('jadwal', 'PublicController::index');
+$routes->get('jadwal', 'AgendaController::legacy');
 
 // Redirect QR Code signage — mengarahkan ke URL asli dari jadwal publik tertentu
 $routes->get('go/jadwal/(:num)/live',   'RedirectController::live/$1');
@@ -40,6 +44,8 @@ $routes->post('anggota/logout', 'Member\AuthController::logout');
 // Portal anggota DPRD
 $routes->group('anggota', ['filter' => 'memberauth'], function ($routes) {
     $routes->get('', 'Member\PortalController::index');
+    $routes->get('jadwal/(:num)/live',   'Member\ScheduleLinkController::live/$1');
+    $routes->get('jadwal/(:num)/berkas', 'Member\ScheduleLinkController::berkas/$1');
 });
 
 // Admin — semua route dilindungi filter auth
@@ -101,6 +107,11 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────
 $routes->group('api/v1/publik', function ($routes) {
     $routes->get('jadwal', 'Api\PublicController::jadwal');
+    $routes->get('agenda-umum', 'Api\PublicController::agendaUmum');
+});
+
+$routes->group('api/v1/anggota', ['filter' => 'memberapi'], function ($routes) {
+    $routes->get('jadwal', 'Api\MemberScheduleController::jadwal');
 });
 
 // ── API Signage (backward compatible) ────────────────────────────────

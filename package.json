@@ -3,6 +3,7 @@
     "build:vendor": "node scripts/copy-vendor-assets.mjs",
     "build:wa-editor": "node scripts/build-wa-editor.mjs",
     "build:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
+    "build:agenda": "tailwindcss -i ./resources/css/agenda.css -o ./public/assets/css/agenda.css --minify",
     "watch:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch",
     "build:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --minify",
     "watch:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch",
