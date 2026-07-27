@@ -35,7 +35,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 <img class="h-12 w-12 shrink-0 rounded-lg border border-base-300 bg-white object-contain sm:h-16 sm:w-16" src="<?= esc($logoUrl) ?>" alt="Logo DPRD" />
                 <span class="min-w-0">
                     <span class="block truncate text-base font-black leading-tight sm:text-xl">DPRD Provinsi Sulawesi Tengah</span>
-                    <span class="mt-1 block truncate text-xs font-semibold text-base-content/55 sm:text-sm"><?= $isMember ? 'Portal Agenda Anggota' : 'Portal Agenda Publik' ?></span>
                 </span>
             </a>
 
@@ -58,8 +57,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 
             <div class="navbar-end w-auto shrink-0 gap-1.5">
                 <button class="btn btn-ghost btn-circle btn-sm" type="button" @click="toggleTheme" :aria-label="isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap'">
-                    <svg v-if="!isDark" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v2m0 14v2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M3 12h2m14 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" stroke-linecap="round"/></svg>
-                    <svg v-else viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a7 7 0 1 0 11.5 11.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg v-if="!isDark" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a7 7 0 1 0 11.5 11.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v2m0 14v2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M3 12h2m14 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" stroke-linecap="round"/></svg>
                 </button>
 
                 <?php if ($isMember): ?>
@@ -107,11 +106,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     <div class="carousel-item">
                         <button :class="navButtonClass('all')" type="button" @click="setNavigation('all')">Semua</button>
                     </div>
-                    <?php if ($isMember): ?>
-                        <div class="carousel-item">
-                            <button :class="scopeButtonClass" type="button" @click="toggleMemberScope">Jadwal Saya</button>
-                        </div>
-                    <?php endif; ?>
                     <div v-for="unit in units" :key="unit.id" class="carousel-item">
                         <button :class="navButtonClass('unit:' + unit.id)" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
                     </div>
@@ -122,16 +116,24 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 </a>
             </div>
         </nav>
+
+        <?php if ($isMember): ?>
+            <div class="border-t border-base-300 bg-base-100" aria-label="Cakupan agenda anggota">
+                <div class="mx-auto flex w-[min(1180px,calc(100%-20px))] flex-col gap-2 py-3 sm:w-[min(1180px,calc(100%-32px))] sm:flex-row sm:items-center sm:justify-between">
+                    <div class="join" role="group" aria-label="Pilih cakupan agenda">
+                        <button type="button" class="join-item btn btn-sm" :class="scopeButtonClass('semua')" :aria-pressed="memberScope === 'semua'" @click="setMemberScope('semua')">Semua Jadwal</button>
+                        <button type="button" class="join-item btn btn-sm" :class="scopeButtonClass('saya')" :aria-pressed="memberScope === 'saya'" @click="setMemberScope('saya')">Jadwal Saya</button>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
     </header>
 
     <main class="mx-auto grid w-[min(1180px,calc(100%-20px))] gap-4 py-4 sm:w-[min(1180px,calc(100%-32px))] sm:py-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,.85fr)] lg:items-start">
         <section class="card card-border bg-base-100 shadow-sm">
             <div class="card-body gap-0 p-0">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-6">
-                    <div>
-                        <p class="text-xs font-extrabold uppercase tracking-widest text-base-content/45">Hasil filter</p>
-                        <h1 class="mt-1 text-2xl font-black uppercase tracking-tight">Agenda Rapat</h1>
-                    </div>
+                    <h1 class="text-2xl font-black uppercase tracking-tight">Agenda Rapat</h1>
                     <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                         <select class="select select-sm w-full font-bold sm:w-44" v-model="periodMode" @change="changePeriod" aria-label="Filter periode agenda rapat">
                             <option value="month">Bulan ini</option>
@@ -257,8 +259,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             <section class="card card-border bg-base-100 shadow-sm">
                 <div class="card-body gap-4">
                     <div>
-                        <p class="text-xs font-extrabold uppercase tracking-widest text-base-content/45">Kegiatan nonrapat</p>
-                        <h2 class="card-title mt-1 text-xl font-black uppercase">Jadwal Umum</h2>
+                        <h2 class="card-title text-xl font-black uppercase">Jadwal Umum</h2>
                     </div>
 
                     <div v-if="generalLoading" class="grid gap-2">
@@ -385,9 +386,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 const offset = (currentPage.value - 1) * pageSize.value;
                 return orderedAgendas.value.slice(offset, offset + pageSize.value);
             });
-            const scopeButtonClass = computed(() => memberScope.value === 'saya'
-                ? 'btn btn-sm btn-neutral whitespace-nowrap'
-                : 'btn btn-sm btn-ghost whitespace-nowrap');
+            function scopeButtonClass(scope) {
+                return memberScope.value === scope
+                    ? 'btn-neutral'
+                    : 'btn-ghost';
+            }
 
             function dateKey(date) {
                 return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -511,11 +514,15 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 updateUrl();
             }
 
-            function toggleMemberScope() {
+            function setMemberScope(scope) {
                 if (!IS_MEMBER) {
                     return;
                 }
-                memberScope.value = memberScope.value === 'saya' ? 'semua' : 'saya';
+                if (!['semua', 'saya'].includes(scope) || memberScope.value === scope) {
+                    return;
+                }
+                memberScope.value = scope;
+                activeNavigation.value = 'all';
                 resetAgendaSelection();
                 updateUrl();
                 loadAgenda();
@@ -728,7 +735,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 isDark,
                 loadAgenda,
                 setNavigation,
-                toggleMemberScope,
+                setMemberScope,
                 changePeriod,
                 handleAgendaToggle,
                 changePageSize,

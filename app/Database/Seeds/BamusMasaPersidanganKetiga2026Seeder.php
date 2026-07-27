@@ -178,16 +178,21 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             return;
         }
 
+        // Akun contoh hanya ditempatkan pada satu unit agar perbedaan
+        // "Semua Jadwal" dan "Jadwal Saya" terlihat saat demo.
         $unitIds = array_column(
             $this->db->table('unit_rapat')
                 ->select('id')
-                ->whereIn('nama', $this->allUnitNames())
+                ->where('nama', 'Komisi I')
                 ->get()
                 ->getResultArray(),
             'id'
         );
 
         $now = date('Y-m-d H:i:s');
+        $this->db->table('anggota_unit_rapat')
+            ->where('anggota_id', (int) $member['id'])
+            ->delete();
         foreach ($unitIds as $unitId) {
             $this->insertPivotIfMissing('anggota_unit_rapat', [
                 'anggota_id'    => (int) $member['id'],

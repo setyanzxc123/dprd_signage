@@ -33,7 +33,7 @@ class BanmusProjectionController extends BaseController
         unset($document);
 
         return view('admin/banmus/index', [
-            'pageTitle' => 'Jadwal Banmus',
+            'pageTitle' => 'Proyeksi Banmus',
             'documents' => $documents,
         ]);
     }
@@ -41,7 +41,7 @@ class BanmusProjectionController extends BaseController
     public function create(): string
     {
         return view('admin/banmus/form', $this->formData(
-            'Tambah Jadwal Banmus',
+            'Tambah Proyeksi Banmus',
             null,
             [$this->blankItem()],
             base_url('admin/jadwal-banmus/store'),
@@ -82,7 +82,7 @@ class BanmusProjectionController extends BaseController
             ->findAll();
 
         return view('admin/banmus/form', $this->formData(
-            'Edit Jadwal Banmus',
+            'Edit Proyeksi Banmus',
             $document,
             $items === [] ? [$this->blankItem()] : $items,
             base_url("admin/jadwal-banmus/{$id}/update"),
@@ -393,7 +393,7 @@ class BanmusProjectionController extends BaseController
         $items = $this->postedItemsForForm();
 
         return $this->formViewErrorResponse('admin/banmus/form', $this->formData(
-            $id === null ? 'Tambah Jadwal Banmus' : 'Edit Jadwal Banmus',
+            $id === null ? 'Tambah Proyeksi Banmus' : 'Edit Proyeksi Banmus',
             $document,
             $items === [] ? [$this->blankItem()] : $items,
             $id === null

@@ -48,8 +48,8 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <label class="btn btn-ghost btn-circle swap swap-rotate admin-theme-toggle" title="Gunakan tema gelap"
                aria-label="Gunakan tema gelap" data-theme-toggle>
             <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
-            <i class="swap-on" data-lucide="moon"></i>
-            <i class="swap-off" data-lucide="sun"></i>
+            <i class="swap-on" data-lucide="sun"></i>
+            <i class="swap-off" data-lucide="moon"></i>
         </label>
 
         <div class="topbar-user">

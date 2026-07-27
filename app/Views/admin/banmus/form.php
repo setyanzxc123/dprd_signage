@@ -25,7 +25,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
     <section class="card card-border min-w-0 max-w-full overflow-hidden bg-base-100 shadow-sm">
         <div class="card-body gap-4 p-4 sm:p-5">
             <div>
-                <h2 class="card-title text-base">Dokumen SK Banmus</h2>
+                <h2 class="card-title text-base">Dokumen SK Proyeksi Banmus</h2>
                 <p class="mt-1 text-xs font-semibold text-base-content/55">Satu SK berlaku untuk satu semester.</p>
             </div>
 
@@ -71,7 +71,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
         <div class="card-body gap-4 p-0">
             <div class="flex flex-col justify-between gap-3 px-4 pt-4 sm:flex-row sm:items-center sm:px-5 sm:pt-5">
                 <div>
-                    <h2 class="card-title text-base">Isi Jadwal Banmus</h2>
+                    <h2 class="card-title text-base">Isi Proyeksi Banmus</h2>
                     <p class="mt-1 text-xs font-semibold text-base-content/55">Tambahkan baris dari atas ke bawah sesuai urutan pada SK.</p>
                 </div>
                 <button class="btn btn-outline btn-sm shrink-0 gap-1" type="button" data-add-item>
@@ -149,7 +149,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
         </a>
         <button type="submit" class="btn btn-primary flex-1 sm:btn-sm sm:flex-none">
             <i data-lucide="check" class="h-4 w-4"></i>
-            <?= $isEdit ? 'Simpan Perubahan' : 'Simpan Jadwal Banmus' ?>
+            <?= $isEdit ? 'Simpan Perubahan' : 'Simpan Proyeksi' ?>
         </button>
     </div>
 

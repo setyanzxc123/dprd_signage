@@ -31,8 +31,8 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
     <label class="btn btn-ghost btn-circle swap swap-rotate fixed right-4 top-4 z-10 bg-base-100 shadow-sm"
         title="Ganti tema" aria-label="Ganti tema" data-theme-toggle>
         <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
-        <i class="swap-on h-5 w-5" data-lucide="moon"></i>
-        <i class="swap-off h-5 w-5" data-lucide="sun"></i>
+        <i class="swap-on h-5 w-5" data-lucide="sun"></i>
+        <i class="swap-off h-5 w-5" data-lucide="moon"></i>
     </label>
 
     <main class="flex min-h-screen items-center justify-center px-4 py-8">

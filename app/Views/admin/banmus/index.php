@@ -4,12 +4,12 @@
 
 <div class="page-header flex items-center justify-between gap-3">
     <div>
-        <h1 class="page-title">Jadwal Banmus</h1>
-        <p class="page-subtitle">Kelola SK dan daftar kegiatan Banmus per semester.</p>
+        <h1 class="page-title">Proyeksi Banmus</h1>
+        <p class="page-subtitle">Kelola SK dan proyeksi kegiatan Banmus per semester.</p>
     </div>
     <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="btn btn-primary btn-sm gap-1">
         <i data-lucide="plus" class="h-4 w-4"></i>
-        Tambah SK Banmus
+        Tambah Proyeksi
     </a>
 </div>
 
@@ -20,7 +20,7 @@
                 <i data-lucide="file-stack" class="h-5 w-5"></i>
             </div>
             <div>
-                <h2 class="card-title text-base">Daftar SK Banmus</h2>
+                <h2 class="card-title text-base">Daftar Proyeksi Banmus</h2>
                 <p class="text-xs font-semibold text-base-content/55"><?= count($documents) ?> dokumen terdaftar</p>
             </div>
         </div>
@@ -31,7 +31,7 @@
                     <i data-lucide="calendar-range" class="mx-auto h-10 w-10 text-base-content/30"></i>
                     <h3 class="mt-3 text-base font-extrabold">Belum ada SK Banmus</h3>
                     <p class="mt-1 text-sm text-base-content/55">Tambahkan SK semester beserta baris kegiatannya.</p>
-                    <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="btn btn-outline btn-sm mt-4">Tambah SK Banmus</a>
+                    <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="btn btn-outline btn-sm mt-4">Tambah Proyeksi</a>
                 </div>
             </div>
         <?php else: ?>
