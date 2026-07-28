@@ -85,6 +85,15 @@
 # FONNTE_TIMEOUT_SECONDS = 15
 # FONNTE_WEBHOOK_SECRET =
 
+# OTP provider: internal or fazpass. Set fazpass only after gateway is tested.
+# OTP_PROVIDER = internal
+# FAZPASS_API_URL = https://api.fazpass.com
+# FAZPASS_API_PREFIX = /v1
+# FAZPASS_MERCHANT_KEY =
+# FAZPASS_GATEWAY_KEY =
+# FAZPASS_CALLBACK_SECRET =
+# FAZPASS_TIMEOUT_SECONDS = 15
+
 # OTP policy
 # OTP_TTL_SECONDS = 300
 # OTP_CHALLENGE_TTL_SECONDS = 900

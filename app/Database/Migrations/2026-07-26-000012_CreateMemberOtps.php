@@ -12,7 +12,7 @@ class CreateMemberOtps extends Migration
             $this->forge->addField([
                 'id'                    => ['type' => 'BIGINT', 'unsigned' => true, 'auto_increment' => true],
                 'member_account_id'     => ['type' => 'INT', 'null' => false],
-                'code_hash'             => ['type' => 'VARCHAR', 'constraint' => 255],
+                'code_hash'             => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
                 'phone_hash'            => ['type' => 'CHAR', 'constraint' => 64],
                 'ip_hash'               => ['type' => 'CHAR', 'constraint' => 64],
                 'delivery_status'       => ['type' => 'VARCHAR', 'constraint' => 32, 'default' => 'created'],

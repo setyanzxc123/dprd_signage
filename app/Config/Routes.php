@@ -128,3 +128,4 @@ $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
 
 // Webhook status provider WhatsApp (autentikasi menggunakan secret provider).
 $routes->post('webhooks/whatsapp/fonnte', 'Webhook\FonnteController::status');
+$routes->post('webhooks/otp/fazpass', 'Webhook\FazpassController::status');

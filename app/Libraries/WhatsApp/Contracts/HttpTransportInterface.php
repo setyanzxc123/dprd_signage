@@ -11,4 +11,10 @@ interface HttpTransportInterface
      * @param array<string, scalar> $fields
      */
     public function post(string $url, array $headers, array $fields, int $timeoutSeconds): HttpResponse;
+
+    /**
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $payload
+     */
+    public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse;
 }

@@ -128,4 +128,14 @@ final class RecordingHttpTransport implements HttpTransportInterface
 
         return $this->response;
     }
+
+    public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse
+    {
+        $this->lastUrl = $url;
+        $this->lastHeaders = $headers;
+        $this->lastFields = $payload;
+        $this->lastTimeout = $timeoutSeconds;
+
+        return $this->response;
+    }
 }

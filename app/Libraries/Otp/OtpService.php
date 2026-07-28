@@ -39,6 +39,10 @@ final class OtpService
 
     public function request(int $accountId, string $phone, string $ipAddress): OtpRequestResult
     {
+        if ($this->shouldUseFazpass()) {
+            return (new FazpassOtpService($this->repository, config: $this->config, clock: $this->clock))->request($accountId, $phone, $ipAddress);
+        }
+
         $nowTs = ($this->clock)();
         $now = $this->date($nowTs);
         $phoneHash = $this->fingerprint($phone);
@@ -190,6 +194,10 @@ final class OtpService
 
     public function verify(int $accountId, string $code, string $ipAddress, ?string $phone = null): OtpVerificationResult
     {
+        if ($this->shouldUseFazpass() && $phone !== null) {
+            return (new FazpassOtpService($this->repository, config: $this->config, clock: $this->clock))->verify($accountId, $code, $ipAddress, $phone);
+        }
+
         return $this->repository->transaction(function () use ($accountId, $code, $ipAddress, $phone): OtpVerificationResult {
             $this->repository->lockAccount($accountId);
             $now = $this->date(($this->clock)());
@@ -268,6 +276,15 @@ final class OtpService
     private function generateCode(): string
     {
         return str_pad((string) ($this->randomInt)(0, (10 ** $this->config->length) - 1), $this->config->length, '0', STR_PAD_LEFT);
+    }
+
+    private function shouldUseFazpass(): bool
+    {
+        // Unit/integration callers may inject a delivery double to exercise
+        // the internal lifecycle; only the default application delivery is
+        // switched by the production provider flag.
+        return $this->config->provider === 'fazpass'
+            && $this->delivery instanceof WhatsappOtpDelivery;
     }
 
     private function date(int $timestamp): string

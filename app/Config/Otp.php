@@ -6,6 +6,13 @@ use CodeIgniter\Config\BaseConfig;
 
 class Otp extends BaseConfig
 {
+    public string $provider = 'internal';
+    public string $fazpassApiUrl = 'https://api.fazpass.com';
+    public string $fazpassApiPrefix = '/v1';
+    public string $fazpassMerchantKey = '';
+    public string $fazpassGatewayKey = '';
+    public string $fazpassCallbackSecret = '';
+    public int $fazpassTimeoutSeconds = 15;
     public int $length = 6;
     public int $ttlSeconds = 300;
     public int $challengeTtlSeconds = 900;
@@ -20,6 +27,13 @@ class Otp extends BaseConfig
     {
         parent::__construct();
 
+        $this->provider = strtolower(trim((string) env('OTP_PROVIDER', $this->provider)));
+        $this->fazpassApiUrl = rtrim((string) env('FAZPASS_API_URL', $this->fazpassApiUrl), '/');
+        $this->fazpassApiPrefix = '/' . trim((string) env('FAZPASS_API_PREFIX', trim($this->fazpassApiPrefix, '/')), '/');
+        $this->fazpassMerchantKey = trim((string) env('FAZPASS_MERCHANT_KEY', ''));
+        $this->fazpassGatewayKey = trim((string) env('FAZPASS_GATEWAY_KEY', ''));
+        $this->fazpassCallbackSecret = trim((string) env('FAZPASS_CALLBACK_SECRET', ''));
+        $this->fazpassTimeoutSeconds = $this->envInt('FAZPASS_TIMEOUT_SECONDS', $this->fazpassTimeoutSeconds);
         $this->ttlSeconds = $this->envInt('OTP_TTL_SECONDS', $this->ttlSeconds);
         $this->challengeTtlSeconds = $this->envInt('OTP_CHALLENGE_TTL_SECONDS', $this->challengeTtlSeconds);
         $this->resendCooldownSeconds = $this->envInt('OTP_RESEND_COOLDOWN_SECONDS', $this->resendCooldownSeconds);
