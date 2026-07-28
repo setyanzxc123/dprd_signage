@@ -87,7 +87,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 </a>
             </li>
             <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('jadwal') ?>" target="_blank" title="Buka di tab baru">
+                <a class="nav-link-custom" href="<?= base_url('agenda') ?>" target="_blank" title="Buka di tab baru">
                     <i data-lucide="calendar-check" class="nav-icon"></i>
                     <span class="nav-text">Pratinjau Jadwal Publik</span>
                 </a>

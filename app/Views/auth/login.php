@@ -41,9 +41,12 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                 <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>"
                     alt="Logo DPRD Provinsi Sulawesi Tengah"
                     class="mx-auto mb-4 h-20 w-20 rounded-2xl border border-base-300 bg-white object-contain" />
-                <h1 class="text-2xl font-black text-base-content">
+                <h1 class="text-2xl font-black leading-normal text-base-content">
                     Sistem Informasi Agenda dan Jadwal Rapat DPRD
                 </h1>
+                <p class="mt-1 text-sm font-semibold tracking-widest text-base-content/70">
+                    PROVINSI SULAWESI TENGAH
+                </p>
             </header>
 
             <section class="card card-border bg-base-100 shadow-xl">
@@ -77,13 +80,13 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                         </div>
                     <?php endif; ?>
 
-                    <div data-login-panel="anggota" class="<?= $activeAccess === 'anggota' ? '' : 'hidden' ?>">
-                        <div class="mb-3">
+                    <div data-login-panel="anggota" class="card-body <?= $activeAccess === 'anggota' ? '' : 'hidden' ?>">
+                        <div class="mb-4 text-center">
                             <h2 class="font-bold text-base-content">
                                 <?= ($member_step ?? 'request') === 'verify' ? 'Verifikasi Kode OTP' : 'Masuk sebagai Anggota' ?>
                             </h2>
                             <?php if (($member_step ?? 'request') === 'verify'): ?>
-                                <p class="text-sm text-base-content/60">
+                                <p class="mt-1 text-sm leading-relaxed text-base-content/60">
                                     Masukkan enam digit kode yang dikirim ke <?= esc($masked_phone ?? 'nomor WhatsApp Anda') ?>.
                                 </p>
                             <?php endif; ?>
@@ -150,8 +153,8 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                         <?php endif; ?>
                     </div>
 
-                    <div data-login-panel="admin" class="<?= $activeAccess === 'admin' ? '' : 'hidden' ?>">
-                        <div class="mb-3">
+                    <div data-login-panel="admin" class="card-body <?= $activeAccess === 'admin' ? '' : 'hidden' ?>">
+                        <div class="mb-4 text-center">
                             <h2 class="font-bold text-base-content">Masuk sebagai Admin</h2>
                         </div>
 

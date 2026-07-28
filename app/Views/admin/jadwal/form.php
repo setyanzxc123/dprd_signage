@@ -71,8 +71,8 @@
     .choice-option-body.has-desc {
         align-items: start;
         gap: 10px;
-        min-height: 72px;
-        padding: 13px 12px;
+        min-height: 56px;
+        padding: 8px 10px;
     }
 
     .choice-option-body.has-desc .radio {
@@ -450,7 +450,7 @@
                                     <label class="choice-option" for="jenis-reguler">
                                         <span class="choice-option-body has-desc">
                                             <input type="radio" name="jenis" id="jenis-reguler" value="reguler"
-                                                class="radio radio-primary radio-sm"
+                                                class="radio radio-primary radio-xs"
                                                 <?= $jenis === 'reguler' ? 'checked' : '' ?> />
                                             <span class="choice-copy">
                                                 <span class="choice-title">Rapat Reguler</span>
@@ -462,7 +462,7 @@
                                     <label class="choice-option" for="jenis-insidental">
                                         <span class="choice-option-body has-desc">
                                             <input type="radio" name="jenis" id="jenis-insidental" value="insidental"
-                                                class="radio radio-primary radio-sm"
+                                                class="radio radio-primary radio-xs"
                                                 <?= $jenis === 'insidental' ? 'checked' : '' ?> />
                                             <span class="choice-copy">
                                                 <span class="choice-title">Rapat Insidental</span>
