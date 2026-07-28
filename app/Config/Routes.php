@@ -82,12 +82,17 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('unit-rapat/(:num)/delete', 'Admin\UnitRapatController::delete/$1');
 
     // Agenda Internal: Banmus
-    $routes->get( 'jadwal-banmus',                      'Admin\BanmusProjectionController::index');
-    $routes->get( 'jadwal-banmus/create',               'Admin\BanmusProjectionController::create');
-    $routes->post('jadwal-banmus/store',                'Admin\BanmusProjectionController::store');
-    $routes->get( 'jadwal-banmus/(:num)/edit',          'Admin\BanmusProjectionController::edit/$1');
-    $routes->post('jadwal-banmus/(:num)/update',        'Admin\BanmusProjectionController::update/$1');
-    $routes->post('jadwal-banmus/(:num)/delete',        'Admin\BanmusProjectionController::delete/$1');
+    $routes->get( 'jadwal-banmus',                                 'Admin\BanmusProjectionController::index');
+    $routes->get( 'jadwal-banmus/create',                          'Admin\BanmusProjectionController::create');
+    $routes->post('jadwal-banmus/store',                           'Admin\BanmusProjectionController::store');
+    $routes->get( 'jadwal-banmus/(:num)',                          'Admin\BanmusProjectionController::show/$1');
+    $routes->get( 'jadwal-banmus/(:num)/edit',                     'Admin\BanmusProjectionController::edit/$1');
+    $routes->post('jadwal-banmus/(:num)/update',                   'Admin\BanmusProjectionController::update/$1');
+    $routes->post('jadwal-banmus/(:num)/delete',                   'Admin\BanmusProjectionController::delete/$1');
+    $routes->post('jadwal-banmus/(:num)/item/store',               'Admin\BanmusProjectionController::storeItem/$1');
+    $routes->post('jadwal-banmus/(:num)/item/(:num)/update',       'Admin\BanmusProjectionController::updateItem/$1/$2');
+    $routes->post('jadwal-banmus/(:num)/item/(:num)/delete',       'Admin\BanmusProjectionController::deleteItem/$1/$2');
+    $routes->post('jadwal-banmus/(:num)/item/(:num)/status',       'Admin\BanmusProjectionController::updateItemStatus/$1/$2');
 
     // Agenda Internal: Insidental Internal (dahulu Jadwal Rapat)
     $routes->get( 'jadwal',                      'Admin\MeetingController::index');

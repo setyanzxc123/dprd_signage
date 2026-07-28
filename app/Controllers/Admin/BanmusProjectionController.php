@@ -5,6 +5,8 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\BanmusDocumentModel;
 use App\Models\BanmusProjectionModel;
+use App\Models\RoomModel;
+use App\Models\UnitRapatModel;
 use CodeIgniter\HTTP\Files\UploadedFile;
 use Config\Database;
 use RuntimeException;
@@ -12,7 +14,6 @@ use Throwable;
 
 class BanmusProjectionController extends BaseController
 {
-    private const MAX_ITEMS = 100;
     private const MAX_PDF_SIZE = 10 * 1024 * 1024;
 
     public function index(): string
@@ -40,37 +41,38 @@ class BanmusProjectionController extends BaseController
 
     public function create(): string
     {
-        return view('admin/banmus/form', $this->formData(
-            'Tambah Jadwal Rapat Hasil Banmus',
-            null,
-            [$this->blankItem()],
-            base_url('admin/jadwal-banmus/store'),
-        ));
+        return view('admin/banmus/form', [
+            'pageTitle'  => 'Tambah SK Banmus',
+            'document'   => null,
+            'action_url' => base_url('admin/jadwal-banmus/store'),
+        ]);
     }
 
     public function store()
     {
-        $input = $this->validatedForm();
+        $input = $this->validatedSkForm();
         if (isset($input['error'])) {
-            return $this->failForm($input['error']);
+            return $this->failSkForm($input['error']);
         }
 
-        $result = $this->persist(null, $input);
+        $result = $this->persistSk(null, $input);
         if (isset($result['error'])) {
-            return $this->failForm($result['error']);
+            return $this->failSkForm($result['error']);
         }
+
+        $newId = $result['id'];
 
         return $this->formSuccessResponse(
-            'Jadwal rapat hasil Banmus berhasil ditambahkan.',
-            base_url('admin/jadwal-banmus'),
+            'Dokumen SK Banmus berhasil disimpan. Silakan kelola item agenda di bawah.',
+            base_url("admin/jadwal-banmus/{$newId}"),
         );
     }
 
-    public function edit(int $id)
+    public function show(int $id)
     {
         $document = (new BanmusDocumentModel())->find($id);
         if ($document === null) {
-            session()->setFlashdata('error', 'Dokumen hasil Banmus tidak ditemukan.');
+            session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
@@ -81,36 +83,63 @@ class BanmusProjectionController extends BaseController
             ->orderBy('id', 'ASC')
             ->findAll();
 
-        return view('admin/banmus/form', $this->formData(
-            'Edit Jadwal Rapat Hasil Banmus',
-            $document,
-            $items === [] ? [$this->blankItem()] : $items,
-            base_url("admin/jadwal-banmus/{$id}/update"),
-        ));
+        $rooms = (new RoomModel())
+            ->where('is_active', 1)
+            ->orderBy('nama_ruangan', 'ASC')
+            ->findAll();
+
+        $units = (new UnitRapatModel())
+            ->where('is_active', 1)
+            ->orderBy('nama_unit', 'ASC')
+            ->findAll();
+
+        return view('admin/banmus/show', [
+            'pageTitle' => "Agenda SK Banmus No. {$document['nomor_sk']}",
+            'document'  => $document,
+            'items'     => $items,
+            'rooms'     => $rooms,
+            'units'     => $units,
+        ]);
+    }
+
+    public function edit(int $id)
+    {
+        $document = (new BanmusDocumentModel())->find($id);
+        if ($document === null) {
+            session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
+
+            return redirect()->to(base_url('admin/jadwal-banmus'));
+        }
+
+        return view('admin/banmus/form', [
+            'pageTitle'  => 'Edit SK Banmus',
+            'document'   => $document,
+            'action_url' => base_url("admin/jadwal-banmus/{$id}/update"),
+        ]);
     }
 
     public function update(int $id)
     {
         $document = (new BanmusDocumentModel())->find($id);
         if ($document === null) {
-            session()->setFlashdata('error', 'Dokumen hasil Banmus tidak ditemukan.');
+            session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
-        $input = $this->validatedForm($document);
+        $input = $this->validatedSkForm($document);
         if (isset($input['error'])) {
-            return $this->failForm($input['error'], $id, $document);
+            return $this->failSkForm($input['error'], $id, $document);
         }
 
-        $result = $this->persist($id, $input, $document);
+        $result = $this->persistSk($id, $input, $document);
         if (isset($result['error'])) {
-            return $this->failForm($result['error'], $id, $document);
+            return $this->failSkForm($result['error'], $id, $document);
         }
 
         return $this->formSuccessResponse(
-            'Jadwal rapat hasil Banmus berhasil diperbarui.',
-            base_url('admin/jadwal-banmus'),
+            'Dokumen SK Banmus berhasil diperbarui.',
+            base_url("admin/jadwal-banmus/{$id}"),
         );
     }
 
@@ -119,29 +148,184 @@ class BanmusProjectionController extends BaseController
         $model = new BanmusDocumentModel();
         $document = $model->find($id);
         if ($document === null) {
-            session()->setFlashdata('error', 'Dokumen hasil Banmus tidak ditemukan.');
+            session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
         if (! $model->delete($id)) {
-            session()->setFlashdata('error', 'Jadwal rapat hasil Banmus gagal dihapus. Silakan coba kembali.');
+            session()->setFlashdata('error', 'Dokumen SK Banmus gagal dihapus.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
         $this->deleteStoredPdf($document['dokumen_file'] ?? null);
 
         return $this->formSuccessResponse(
-            'Jadwal rapat hasil Banmus berhasil dihapus.',
+            'Dokumen SK Banmus berhasil dihapus.',
             base_url('admin/jadwal-banmus'),
         );
     }
 
-    /**
-     * @param array<string, mixed>|null $existingDocument
-     * @return array<string, mixed>
-     */
-    private function validatedForm(?array $existingDocument = null): array
+    // ── CRUD ITEM AGENDA ─────────────────────────────────────────────
+
+    public function storeItem(int $documentId)
+    {
+        $document = (new BanmusDocumentModel())->find($documentId);
+        if ($document === null) {
+            session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
+
+            return redirect()->to(base_url('admin/jadwal-banmus'));
+        }
+
+        $input = $this->validatedItemPayload();
+        if (isset($input['error'])) {
+            session()->setFlashdata('error', $input['error']);
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        $model = new BanmusProjectionModel();
+        $nextUrutan = (int) ($model->where('dokumen_banmus_id', $documentId)->selectMax('urutan')->first()['urutan'] ?? 0) + 1;
+
+        $payload = array_merge($input['payload'], [
+            'dokumen_banmus_id' => $documentId,
+            'urutan'            => $nextUrutan,
+        ]);
+        $payload['status'] = $model->resolveStatus($payload);
+
+        if (! $model->insert($payload)) {
+            session()->setFlashdata('error', 'Gagal menambahkan item agenda.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        return $this->formSuccessResponse(
+            'Item agenda berhasil ditambahkan.',
+            base_url("admin/jadwal-banmus/{$documentId}"),
+        );
+    }
+
+    public function updateItem(int $documentId, int $itemId)
+    {
+        $model = new BanmusProjectionModel();
+        $item = $model->where('dokumen_banmus_id', $documentId)->find($itemId);
+        if ($item === null) {
+            session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        $input = $this->validatedItemPayload();
+        if (isset($input['error'])) {
+            session()->setFlashdata('error', $input['error']);
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        $payload = $input['payload'];
+        $payload['status'] = $model->resolveStatus($payload);
+
+        if (! $model->update($itemId, $payload)) {
+            session()->setFlashdata('error', 'Gagal memperbarui item agenda.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        return $this->formSuccessResponse(
+            'Item agenda berhasil diperbarui.',
+            base_url("admin/jadwal-banmus/{$documentId}"),
+        );
+    }
+
+    public function deleteItem(int $documentId, int $itemId)
+    {
+        $model = new BanmusProjectionModel();
+        $item = $model->where('dokumen_banmus_id', $documentId)->find($itemId);
+        if ($item === null) {
+            session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        $model->delete($itemId);
+
+        return $this->formSuccessResponse(
+            'Item agenda berhasil dihapus.',
+            base_url("admin/jadwal-banmus/{$documentId}"),
+        );
+    }
+
+    public function updateItemStatus(int $documentId, int $itemId)
+    {
+        $model = new BanmusProjectionModel();
+        $item = $model->where('dokumen_banmus_id', $documentId)->find($itemId);
+        if ($item === null) {
+            session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        $status = trim((string) $this->request->getPost('status'));
+        if (! in_array($status, ['proyeksi', 'fixed', 'selesai', 'ditunda', 'dibatalkan'], true)) {
+            session()->setFlashdata('error', 'Status tidak valid.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        $model->update($itemId, ['status' => $status]);
+
+        return $this->formSuccessResponse(
+            'Status item agenda berhasil diubah.',
+            base_url("admin/jadwal-banmus/{$documentId}"),
+        );
+    }
+
+    // ── PRIVATE HELPERS ──────────────────────────────────────────────
+
+    private function validatedItemPayload(): array
+    {
+        $agenda = trim((string) $this->request->getPost('agenda'));
+        if ($agenda === '') {
+            return ['error' => 'Uraian agenda SK wajib diisi.'];
+        }
+
+        $periodeLabel = trim((string) $this->request->getPost('periode_label'));
+
+        $tanggal = trim((string) $this->request->getPost('tanggal'));
+        if ($tanggal !== '' && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+            return ['error' => 'Format tanggal pasti tidak valid.'];
+        }
+
+        $jamMulai = trim((string) $this->request->getPost('jam_mulai'));
+        $jamSelesai = trim((string) $this->request->getPost('jam_selesai'));
+        $ruanganId = $this->request->getPost('ruangan_id');
+        $lokasiLainnya = trim((string) $this->request->getPost('lokasi_lainnya'));
+        $targetUnitIds = $this->request->getPost('target_unit_ids');
+        $publikasi = trim((string) $this->request->getPost('publikasi'));
+        $catatan = trim((string) $this->request->getPost('catatan'));
+
+        $targetUnitIdsJson = is_array($targetUnitIds) && $targetUnitIds !== []
+            ? json_encode(array_values(array_map('intval', $targetUnitIds)))
+            : null;
+
+        return [
+            'payload' => [
+                'agenda'            => $agenda,
+                'periode_label'     => $periodeLabel !== '' ? $periodeLabel : null,
+                'tanggal'           => $tanggal !== '' ? $tanggal : null,
+                'jam_mulai'         => $jamMulai !== '' ? $jamMulai : null,
+                'jam_selesai'       => $jamSelesai !== '' ? $jamSelesai : null,
+                'ruangan_id'        => ! empty($ruanganId) ? (int) $ruanganId : null,
+                'lokasi_lainnya'    => $lokasiLainnya !== '' ? $lokasiLainnya : null,
+                'target_unit_ids'   => $targetUnitIdsJson,
+                'catatan'           => $catatan !== '' ? $catatan : null,
+                'publikasi'         => in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'internal',
+                'kepastian_tanggal' => $tanggal !== '' ? 'tanggal_pasti' : 'bulan',
+            ],
+        ];
+    }
+
+    private function validatedSkForm(?array $existingDocument = null): array
     {
         $nomorSk = trim((string) $this->request->getPost('nomor_sk'));
         if ($nomorSk === '' || mb_strlen($nomorSk) > 100) {
@@ -166,11 +350,6 @@ class BanmusProjectionController extends BaseController
             return ['error' => 'Semester wajib dipilih.'];
         }
 
-        $documentUrl = trim((string) $this->request->getPost('dokumen_url'));
-        if ($documentUrl !== '' && (! $this->validHttpUrl($documentUrl) || mb_strlen($documentUrl) > 500)) {
-            return ['error' => 'Tautan dokumen tidak valid.'];
-        }
-
         $uploadResult = $this->validatedPdfUpload();
         if (isset($uploadResult['error'])) {
             return ['error' => $uploadResult['error']];
@@ -178,109 +357,37 @@ class BanmusProjectionController extends BaseController
 
         /** @var UploadedFile|null $upload */
         $upload = $uploadResult['file'];
-        if ($upload !== null && $documentUrl !== '') {
-            return ['error' => 'Dokumen hanya boleh memiliki satu sumber.'];
-        }
-
-        $hasExistingSource = ! empty($existingDocument['dokumen_file'])
-            || ! empty($existingDocument['dokumen_url']);
-        if ($upload === null && $documentUrl === '' && ! $hasExistingSource) {
+        $hasExistingSource = ! empty($existingDocument['dokumen_file']);
+        if ($upload === null && ! $hasExistingSource) {
             return ['error' => 'File SK dalam format PDF wajib diunggah.'];
-        }
-
-        $itemsResult = $this->validatedItems();
-        if (isset($itemsResult['error'])) {
-            return ['error' => $itemsResult['error']];
         }
 
         $year = (int) $tahunRaw;
         $semester = (int) $semesterRaw;
+        $customJudul = trim((string) $this->request->getPost('judul'));
+        $catatan = trim((string) $this->request->getPost('catatan'));
+
         $payload = [
-            'judul'            => "Jadwal Rapat Hasil Banmus Semester {$semester} Tahun {$year}",
+            'judul'            => $customJudul !== '' ? $customJudul : "Jadwal Rapat Hasil Banmus Semester {$semester} Tahun {$year}",
             'nomor_sk'         => $nomorSk,
-            'tanggal_sk'       => null,
             'tahun'            => $year,
             'semester'         => $semester,
-            'masa_persidangan' => null,
-            'periode_mulai'    => null,
-            'periode_selesai'  => null,
             'status'           => 'disahkan',
             'is_publik'        => 1,
-            'catatan'          => null,
+            'catatan'          => $catatan !== '' ? $catatan : null,
         ];
 
-        if ($documentUrl !== '') {
-            $payload['dokumen_file'] = null;
-            $payload['dokumen_nama_asli'] = null;
-            $payload['dokumen_url'] = $documentUrl;
-        } elseif ($upload === null && $existingDocument !== null) {
+        if ($upload === null && $existingDocument !== null) {
             $payload['dokumen_file'] = $existingDocument['dokumen_file'] ?? null;
             $payload['dokumen_nama_asli'] = $existingDocument['dokumen_nama_asli'] ?? null;
-            $payload['dokumen_url'] = $existingDocument['dokumen_url'] ?? null;
         }
 
         return [
             'payload' => $payload,
-            'items'   => $itemsResult['items'],
             'upload'  => $upload,
         ];
     }
 
-    /**
-     * @return array{items?: list<array<string, mixed>>, error?: string}
-     */
-    private function validatedItems(): array
-    {
-        $postedItems = $this->request->getPost('items');
-        if (! is_array($postedItems) || $postedItems === []) {
-            return ['error' => 'Tambahkan minimal satu jadwal rapat.'];
-        }
-        if (count($postedItems) > self::MAX_ITEMS) {
-            return ['error' => 'Satu SK maksimal memuat 100 jadwal rapat.'];
-        }
-
-        $items = [];
-        $position = 0;
-        foreach ($postedItems as $postedItem) {
-            $position++;
-            if (! is_array($postedItem)) {
-                return ['error' => "Baris ke-{$position} tidak valid."];
-            }
-
-            $implementationDate = trim((string) ($postedItem['tanggal_pelaksanaan'] ?? ''));
-            if ($implementationDate === '' || mb_strlen($implementationDate) > 100) {
-                return ['error' => "Tanggal pelaksanaan pada baris ke-{$position} wajib diisi dan maksimal 100 karakter."];
-            }
-
-            $activity = trim((string) ($postedItem['uraian_kegiatan'] ?? ''));
-            if ($activity === '' || mb_strlen($activity) > 10000) {
-                return ['error' => "Uraian rapat pada baris ke-{$position} wajib diisi dan maksimal 10.000 karakter."];
-            }
-
-            $notes = trim((string) ($postedItem['keterangan'] ?? ''));
-            if (mb_strlen($notes) > 2000) {
-                return ['error' => "Keterangan pada baris ke-{$position} maksimal 2.000 karakter."];
-            }
-
-            $items[] = [
-                'agenda'          => $activity,
-                'periode_label'   => $implementationDate,
-                'tanggal_mulai'   => null,
-                'tanggal_selesai' => null,
-                'unit_rapat_id'   => null,
-                'urutan'          => $position,
-                'status'          => 'proyeksi',
-                'catatan'         => $notes !== '' ? $notes : null,
-                'jadwal_id'       => null,
-            ];
-        }
-
-        return ['items' => $items];
-    }
-
-    /**
-     * @return array{file: UploadedFile|null, error?: string}
-     */
     private function validatedPdfUpload(): array
     {
         $file = $this->request->getFile('dokumen_file');
@@ -303,17 +410,9 @@ class BanmusProjectionController extends BaseController
         return ['file' => $file];
     }
 
-    /**
-     * @param array<string, mixed> $input
-     * @param array<string, mixed>|null $oldDocument
-     * @return array{error?: string}
-     */
-    private function persist(?int $id, array $input, ?array $oldDocument = null): array
+    private function persistSk(?int $id, array $input, ?array $oldDocument = null): array
     {
         $newFileName = null;
-        $db = null;
-        $transactionStarted = false;
-
         try {
             /** @var UploadedFile|null $upload */
             $upload = $input['upload'];
@@ -330,14 +429,9 @@ class BanmusProjectionController extends BaseController
 
                 $input['payload']['dokumen_file'] = $newFileName;
                 $input['payload']['dokumen_nama_asli'] = mb_substr(basename($upload->getClientName()), 0, 255);
-                $input['payload']['dokumen_url'] = null;
             }
 
-            $db = Database::connect();
             $documentModel = new BanmusDocumentModel();
-            $projectionModel = new BanmusProjectionModel();
-            $db->transBegin();
-            $transactionStarted = true;
 
             if ($id === null) {
                 $id = (int) $documentModel->insert($input['payload'], true);
@@ -348,22 +442,7 @@ class BanmusProjectionController extends BaseController
                 if (! $documentModel->update($id, $input['payload'])) {
                     throw new RuntimeException('Dokumen SK gagal diperbarui.');
                 }
-                $projectionModel->where('dokumen_banmus_id', $id)->delete();
             }
-
-            $items = array_map(
-                static fn (array $item): array => ['dokumen_banmus_id' => $id] + $item,
-                $input['items'],
-            );
-            if ($projectionModel->insertBatch($items) === false) {
-                throw new RuntimeException('Jadwal rapat hasil Banmus gagal disimpan.');
-            }
-
-            if ($db->transStatus() === false) {
-                throw new RuntimeException('Transaksi penyimpanan jadwal rapat hasil Banmus gagal.');
-            }
-            $db->transCommit();
-            $transactionStarted = false;
 
             $oldFileName = $oldDocument['dokumen_file'] ?? null;
             $currentFileName = $input['payload']['dokumen_file'] ?? null;
@@ -371,108 +450,37 @@ class BanmusProjectionController extends BaseController
                 $this->deleteStoredPdf($oldFileName);
             }
 
-            return [];
+            return ['id' => $id];
         } catch (Throwable $exception) {
-            if ($transactionStarted && $db !== null) {
-                $db->transRollback();
-            }
             if ($newFileName !== null) {
                 $this->deleteStoredPdf($newFileName);
             }
-            log_message('error', 'Gagal menyimpan jadwal rapat hasil Banmus: {message}', [
+            log_message('error', 'Gagal menyimpan dokumen SK Banmus: {message}', [
                 'message' => $exception->getMessage(),
             ]);
 
-            return ['error' => 'Jadwal rapat hasil Banmus gagal disimpan. Periksa data dan coba kembali.'];
+            return ['error' => 'Dokumen SK Banmus gagal disimpan. Periksa data dan coba kembali.'];
         }
     }
 
-    private function failForm(string $message, ?int $id = null, ?array $existingDocument = null)
+    private function failSkForm(string $message, ?int $id = null, ?array $existingDocument = null)
     {
-        $document = $this->postedDocument($id, $existingDocument);
-        $items = $this->postedItemsForForm();
+        $document = [
+            'id'       => $id,
+            'nomor_sk' => trim((string) $this->request->getPost('nomor_sk')),
+            'judul'    => trim((string) $this->request->getPost('judul')),
+            'tahun'    => trim((string) $this->request->getPost('tahun')),
+            'semester' => trim((string) $this->request->getPost('semester')),
+            'catatan'  => trim((string) $this->request->getPost('catatan')),
+            'dokumen_file'      => $existingDocument['dokumen_file'] ?? null,
+            'dokumen_nama_asli' => $existingDocument['dokumen_nama_asli'] ?? null,
+        ];
 
-        return $this->formViewErrorResponse('admin/banmus/form', $this->formData(
-            $id === null ? 'Tambah Jadwal Rapat Hasil Banmus' : 'Edit Jadwal Rapat Hasil Banmus',
-            $document,
-            $items === [] ? [$this->blankItem()] : $items,
-            $id === null
-                ? base_url('admin/jadwal-banmus/store')
-                : base_url("admin/jadwal-banmus/{$id}/update"),
-        ), $message);
-    }
-
-    /**
-     * @param array<string, mixed>|null $document
-     * @param list<array<string, mixed>> $items
-     * @return array<string, mixed>
-     */
-    private function formData(string $title, ?array $document, array $items, string $actionUrl): array
-    {
-        return [
-            'pageTitle'  => $title,
+        return $this->formViewErrorResponse('admin/banmus/form', [
+            'pageTitle'  => $id === null ? 'Tambah SK Banmus' : 'Edit SK Banmus',
             'document'   => $document,
-            'items'      => $items,
-            'action_url' => $actionUrl,
-        ];
-    }
-
-    /**
-     * @param array<string, mixed>|null $existingDocument
-     * @return array<string, mixed>
-     */
-    private function postedDocument(?int $id, ?array $existingDocument): array
-    {
-        $year = trim((string) $this->request->getPost('tahun'));
-        $semester = trim((string) $this->request->getPost('semester'));
-
-        return [
-            'id'                    => $id,
-            'judul'                 => "Jadwal Rapat Hasil Banmus Semester {$semester} Tahun {$year}",
-            'nomor_sk'              => trim((string) $this->request->getPost('nomor_sk')),
-            'tahun'                 => $year,
-            'semester'              => $semester,
-            'dokumen_file'          => $existingDocument['dokumen_file'] ?? null,
-            'dokumen_nama_asli'     => $existingDocument['dokumen_nama_asli'] ?? null,
-            'dokumen_url'           => $existingDocument['dokumen_url'] ?? null,
-        ];
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function postedItemsForForm(): array
-    {
-        $postedItems = $this->request->getPost('items');
-        if (! is_array($postedItems)) {
-            return [];
-        }
-
-        return array_values(array_filter($postedItems, 'is_array'));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function blankItem(): array
-    {
-        return [
-            'agenda'                => '',
-            'periode_label'         => '',
-            'catatan'               => '',
-            'tanggal_pelaksanaan'   => '',
-            'uraian_kegiatan'       => '',
-            'keterangan'            => '',
-        ];
-    }
-
-    private function validHttpUrl(string $url): bool
-    {
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            return false;
-        }
-
-        return in_array(strtolower((string) parse_url($url, PHP_URL_SCHEME)), ['http', 'https'], true);
+            'action_url' => $id === null ? base_url('admin/jadwal-banmus/store') : base_url("admin/jadwal-banmus/{$id}/update"),
+        ], $message);
     }
 
     private function uploadDirectory(): string
