@@ -33,7 +33,7 @@ class BanmusProjectionController extends BaseController
         unset($document);
 
         return view('admin/banmus/index', [
-            'pageTitle' => 'Jadwal Rapat Hasil Banmus',
+            'pageTitle' => 'Agenda Banmus',
             'documents' => $documents,
         ]);
     }

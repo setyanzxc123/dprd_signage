@@ -52,24 +52,42 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 </a>
             </li>
 
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Operasional</li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
-                    <i data-lucide="calendar-days" class="nav-icon"></i>
-                    <span class="nav-text">Jadwal Rapat</span>
-                    <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
-                </a>
-            </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/agenda-umum') ?>" data-path="/admin/agenda-umum">
-                    <i data-lucide="calendar-range" class="nav-icon"></i>
-                    <span class="nav-text">Jadwal Umum</span>
-                </a>
-            </li>
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Agenda Internal DPRD</li>
             <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/jadwal-banmus') ?>" data-path="/admin/jadwal-banmus">
                     <i data-lucide="file-stack" class="nav-icon"></i>
-                    <span class="nav-text">Proyeksi Hasil Banmus</span>
+                    <span class="nav-text">Agenda Banmus</span>
+                </a>
+            </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
+                    <i data-lucide="calendar-days" class="nav-icon"></i>
+                    <span class="nav-text">Insidental Internal</span>
+                    <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
+                </a>
+            </li>
+
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Layanan Publik</li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/agenda-umum') ?>" data-path="/admin/agenda-umum">
+                    <i data-lucide="calendar-range" class="nav-icon"></i>
+                    <span class="nav-text">Agenda Eksternal</span>
+                </a>
+            </li>
+
+            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Operasional</li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender">
+                    <i data-lucide="layout-dashboard" class="nav-icon"></i>
+                    <span class="nav-text">Kalender Seluruh Agenda</span>
+                    <span class="badge badge-ghost badge-xs ml-auto">segera</span>
+                </a>
+            </li>
+            <li class="nav-item-custom">
+                <a class="nav-link-custom" href="<?= base_url('admin/laporan') ?>" data-path="/admin/laporan">
+                    <i data-lucide="chart-bar" class="nav-icon"></i>
+                    <span class="nav-text">Laporan Agenda</span>
+                    <span class="badge badge-ghost badge-xs ml-auto">segera</span>
                 </a>
             </li>
             <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Sistem</li>

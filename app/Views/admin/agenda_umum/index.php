@@ -25,10 +25,14 @@ $statusClasses = [
 ?>
 
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h1 class="page-title">Jadwal Umum</h1>
+    <div>
+        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Layanan Publik</p>
+        <h1 class="page-title">Agenda Eksternal & Layanan Publik</h1>
+        <p class="mt-1 text-sm text-base-content/60">Kegiatan yang melibatkan masyarakat, tamu, instansi, atau pihak luar.</p>
+    </div>
     <a href="<?= base_url('admin/agenda-umum/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
         <i data-lucide="plus" class="h-4 w-4"></i>
-        Tambah Jadwal Umum
+        Tambah Kegiatan
     </a>
 </div>
 

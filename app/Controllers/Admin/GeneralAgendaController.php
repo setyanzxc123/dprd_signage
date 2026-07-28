@@ -30,7 +30,7 @@ class GeneralAgendaController extends BaseController
             ->findAll();
 
         return view('admin/agenda_umum/index', [
-            'pageTitle' => 'Jadwal Umum',
+            'pageTitle' => 'Agenda Eksternal & Layanan Publik',
             'agendas'   => $agendas,
         ]);
     }

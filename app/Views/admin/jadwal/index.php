@@ -3,7 +3,11 @@
 <?= $this->section('content') ?>
 
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h1 class="page-title">Jadwal Rapat</h1>
+    <div>
+        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Agenda Internal DPRD</p>
+        <h1 class="page-title">Insidental Internal</h1>
+        <p class="mt-1 text-sm text-base-content/60">Rapat dan agenda internal mendadak di luar SK Banmus.</p>
+    </div>
     <a href="<?= base_url('admin/jadwal/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
         <i data-lucide="plus" class="h-4 w-4"></i>
         Tambah Jadwal

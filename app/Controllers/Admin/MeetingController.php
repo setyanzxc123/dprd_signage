@@ -74,7 +74,7 @@ class MeetingController extends BaseController
         }
 
         return view('admin/jadwal/index', [
-            'pageTitle'   => 'Jadwal Rapat',
+            'pageTitle'   => 'Insidental Internal',
             'meetings'    => $meetings,
             'filters'     => [
                 'tahun'    => $tahun,
@@ -91,7 +91,7 @@ class MeetingController extends BaseController
     public function create(): string
     {
         return view('admin/jadwal/form', [
-            'pageTitle'   => 'Tambah Jadwal Rapat',
+            'pageTitle'   => 'Tambah Jadwal Insidental',
             'meeting'     => null,
             'rooms'       => $this->roomOptions(),
             'unit_rapat_list' => $this->unitRapatOptions(),
@@ -130,7 +130,7 @@ class MeetingController extends BaseController
         $jadwal['jenis'] = $this->normalizeJenis($jadwal['jenis'] ?? null);
 
         return view('admin/jadwal/form', [
-            'pageTitle'   => 'Edit Jadwal Rapat',
+            'pageTitle'   => 'Edit Jadwal Insidental',
             'meeting'     => $jadwal,
             'rooms'       => $this->roomOptions((int) ($jadwal['ruangan_id'] ?? 0)),
             'unit_rapat_list' => $this->unitRapatOptions($jadwal['target_unit_ids']),
@@ -474,7 +474,7 @@ class MeetingController extends BaseController
         $meeting = $this->postedMeeting($id);
 
         return $this->formViewErrorResponse('admin/jadwal/form', [
-            'pageTitle'        => $id === null ? 'Tambah Jadwal Rapat' : 'Edit Jadwal Rapat',
+            'pageTitle'        => $id === null ? 'Tambah Jadwal Insidental' : 'Edit Jadwal Insidental',
             'meeting'          => $meeting,
             'rooms'            => $this->roomOptions((int) ($meeting['ruangan_id'] ?? 0)),
             'unit_rapat_list'  => $this->unitRapatOptions($meeting['target_unit_ids'] ?? []),
