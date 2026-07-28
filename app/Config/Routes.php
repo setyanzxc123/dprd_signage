@@ -81,7 +81,15 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('unit-rapat/(:num)/update', 'Admin\UnitRapatController::update/$1');
     $routes->post('unit-rapat/(:num)/delete', 'Admin\UnitRapatController::delete/$1');
 
-    // Jadwal Rapat
+    // Agenda Internal: Banmus
+    $routes->get( 'jadwal-banmus',                      'Admin\BanmusProjectionController::index');
+    $routes->get( 'jadwal-banmus/create',               'Admin\BanmusProjectionController::create');
+    $routes->post('jadwal-banmus/store',                'Admin\BanmusProjectionController::store');
+    $routes->get( 'jadwal-banmus/(:num)/edit',          'Admin\BanmusProjectionController::edit/$1');
+    $routes->post('jadwal-banmus/(:num)/update',        'Admin\BanmusProjectionController::update/$1');
+    $routes->post('jadwal-banmus/(:num)/delete',        'Admin\BanmusProjectionController::delete/$1');
+
+    // Agenda Internal: Insidental Internal (dahulu Jadwal Rapat)
     $routes->get( 'jadwal',                      'Admin\MeetingController::index');
     $routes->get( 'jadwal/create',               'Admin\MeetingController::create');
     $routes->post('jadwal/store',                'Admin\MeetingController::store');
@@ -89,7 +97,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('jadwal/(:num)/update',        'Admin\MeetingController::update/$1');
     $routes->post('jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
 
-    // Jadwal Umum / kegiatan nonrapat
+    // Agenda Eksternal & Layanan Publik (dahulu Jadwal Umum)
     $routes->get( 'agenda-umum',                      'Admin\GeneralAgendaController::index');
     $routes->get( 'agenda-umum/create',               'Admin\GeneralAgendaController::create');
     $routes->post('agenda-umum/store',                'Admin\GeneralAgendaController::store');
@@ -97,13 +105,11 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('agenda-umum/(:num)/update',        'Admin\GeneralAgendaController::update/$1');
     $routes->post('agenda-umum/(:num)/delete',        'Admin\GeneralAgendaController::delete/$1');
 
-    // Jadwal Semester / proyeksi SK Banmus
-    $routes->get( 'jadwal-banmus',                      'Admin\BanmusProjectionController::index');
-    $routes->get( 'jadwal-banmus/create',               'Admin\BanmusProjectionController::create');
-    $routes->post('jadwal-banmus/store',                'Admin\BanmusProjectionController::store');
-    $routes->get( 'jadwal-banmus/(:num)/edit',          'Admin\BanmusProjectionController::edit/$1');
-    $routes->post('jadwal-banmus/(:num)/update',        'Admin\BanmusProjectionController::update/$1');
-    $routes->post('jadwal-banmus/(:num)/delete',        'Admin\BanmusProjectionController::delete/$1');
+    // Kalender Seluruh Agenda — placeholder (Fase 5)
+    $routes->get('kalender', 'Admin\AgendaWorkspaceController::kalender');
+
+    // Laporan Agenda — placeholder (Fase 6)
+    $routes->get('laporan', 'Admin\AgendaWorkspaceController::laporan');
 
     // Pengaturan Signage
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
