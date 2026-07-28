@@ -223,8 +223,9 @@ class AuthController extends BaseController
     private function localPhone(string $phone): ?string
     {
         $normalized = PhoneNumberService::normalizeIndonesia($phone);
+        $localPhone = str_starts_with($normalized, '62') ? substr($normalized, 2) : '';
 
-        return PhoneNumberService::isValidIndonesia($normalized) ? substr($normalized, 2) : null;
+        return preg_match('/^8\d{7,11}$/', $localPhone) === 1 ? $localPhone : null;
     }
 
     private function maskPhone(?string $phone): string

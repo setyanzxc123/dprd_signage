@@ -69,7 +69,7 @@
         --od-ease: cubic-bezier(0.2, 0, 0, 1);
         --od-motion-fast: 120ms;
         --od-motion-base: 200ms;
-        --od-sidebar-w: 250px;
+        --od-sidebar-w: 270px;
         --sidebar-width: var(--od-sidebar-w);
         --body-bg: var(--od-bg);
         --card-bg: var(--od-surface);
@@ -310,6 +310,11 @@
 
     .nav-text {
         color: inherit;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .nav-badge {
@@ -384,16 +389,8 @@
         color: var(--od-danger);
     }
 
-    /* ── Desktop Sidebar Layout & Collapse (Mimic TailAdmin 290px/90px) ── */
+    /* ── Desktop Sidebar Collapse ── */
     @media (min-width: 1181px) {
-        .od-shell {
-            grid-template-columns: 290px minmax(0, 1fr);
-        }
-
-        #sidebar {
-            width: 290px;
-        }
-
         /* Collapsed State */
         .sidebar-collapsed .od-shell {
             grid-template-columns: 90px minmax(0, 1fr);
@@ -480,7 +477,12 @@
         font-size: var(--od-text-sm);
     }
     .topbar-breadcrumb a:hover { color: var(--od-accent); }
-    .topbar-breadcrumb .bc-sep { color: var(--color-base-300); user-select: none; }
+    .topbar-breadcrumb .bc-sep {
+        color: var(--color-base-content);
+        font-weight: 700;
+        opacity: .45;
+        user-select: none;
+    }
     .topbar-breadcrumb .current { color: var(--od-fg); font-weight: 700; }
     .topbar-actions {
         margin-left: auto;

@@ -593,12 +593,21 @@
             const container = form.querySelector('[data-items-container]');
             const template = form.querySelector('[data-item-template]');
 
+            const resizeTextarea = (field) => {
+                if (!(field instanceof HTMLTextAreaElement)) return;
+
+                field.style.height = 'auto';
+                const borderHeight = field.offsetHeight - field.clientHeight;
+                field.style.height = `${Math.max(64, field.scrollHeight + borderHeight)}px`;
+            };
+
             const refreshItems = () => {
                 const rows = [...container.querySelectorAll('[data-banmus-item]')];
                 rows.forEach((row, position) => {
                     row.querySelector('[data-item-index]').textContent = String(position + 1);
                     row.querySelectorAll('[data-field]').forEach((field) => {
                         field.name = `items[${position}][${field.dataset.field}]`;
+                        resizeTextarea(field);
                     });
 
                     const removeButton = row.querySelector('[data-remove-item]');
@@ -606,6 +615,10 @@
                     removeButton.setAttribute('aria-label', `Hapus baris ${position + 1}`);
                 });
             };
+
+            container.addEventListener('input', (event) => {
+                resizeTextarea(event.target.closest('textarea[data-field]'));
+            });
 
             form.querySelectorAll('[data-add-item]').forEach((button) => {
                 button.addEventListener('click', () => {

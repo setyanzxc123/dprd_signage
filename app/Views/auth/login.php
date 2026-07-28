@@ -51,20 +51,27 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 
             <section class="card card-border bg-base-100 shadow-xl">
                 <div class="card-body">
-                    <div role="group" aria-label="Pilih jenis akses" class="grid grid-cols-2 gap-2">
-                        <button type="button"
-                            class="btn px-2 sm:px-4 <?= $activeAccess === 'anggota' ? 'btn-outline border-base-content text-base-content' : 'btn-ghost text-base-content/65' ?>"
-                            data-login-tab="anggota" aria-pressed="<?= $activeAccess === 'anggota' ? 'true' : 'false' ?>">
-                            <i data-lucide="users" class="h-5 w-5 shrink-0"></i>
-                            <span>Anggota DPRD</span>
-                        </button>
-                        <button type="button"
-                            class="btn px-2 sm:px-4 <?= $activeAccess === 'admin' ? 'btn-outline border-base-content text-base-content' : 'btn-ghost text-base-content/65' ?>"
-                            data-login-tab="admin" aria-pressed="<?= $activeAccess === 'admin' ? 'true' : 'false' ?>">
-                            <i data-lucide="settings-2" class="h-5 w-5 shrink-0"></i>
-                            <span>Admin / Operator</span>
-                        </button>
-                    </div>
+                    <fieldset class="fieldset gap-2">
+                        <legend class="fieldset-legend">Jenis Akses</legend>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="label min-w-0 cursor-pointer justify-start gap-2 rounded-lg border border-base-300 px-3 py-2 has-checked:border-primary has-checked:bg-primary/10 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
+                                for="akses-anggota">
+                                <input type="radio" name="login_access" id="akses-anggota" value="anggota"
+                                    class="sr-only" data-login-tab="anggota"
+                                    <?= $activeAccess === 'anggota' ? 'checked' : '' ?> />
+                                <i data-lucide="users" class="h-4 w-4 shrink-0"></i>
+                                <span class="min-w-0 text-sm font-semibold">Anggota DPRD</span>
+                            </label>
+                            <label class="label min-w-0 cursor-pointer justify-start gap-2 rounded-lg border border-base-300 px-3 py-2 has-checked:border-primary has-checked:bg-primary/10 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
+                                for="akses-admin">
+                                <input type="radio" name="login_access" id="akses-admin" value="admin"
+                                    class="sr-only" data-login-tab="admin"
+                                    <?= $activeAccess === 'admin' ? 'checked' : '' ?> />
+                                <i data-lucide="settings-2" class="h-4 w-4 shrink-0"></i>
+                                <span class="min-w-0 text-sm font-semibold">Admin / Operator</span>
+                            </label>
+                        </div>
+                    </fieldset>
 
                     <?php if (! empty($form_error)): ?>
                         <div role="alert" class="alert alert-error text-sm">
@@ -141,8 +148,8 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                                     <span class="text-sm font-semibold text-base-content/60">+62</span>
                                     <input type="tel" class="grow" id="member-phone" name="no_wa"
                                         value="<?= esc($old_phone ?? '') ?>" placeholder="8123456789"
-                                        inputmode="numeric" pattern="8[0-9]{7,12}" minlength="8" maxlength="13"
-                                        autocomplete="tel" data-digits-only data-max-digits="13" required />
+                                        inputmode="numeric" pattern="8[0-9]{7,11}" minlength="8" maxlength="12"
+                                        autocomplete="tel" data-digits-only data-max-digits="12" required />
                                 </label>
                                 <button type="submit" class="btn btn-primary btn-block mt-5" data-login-button
                                     data-loading-label="Mengirim kode...">
@@ -220,13 +227,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 
             function selectAccess(access) {
                 tabs.forEach(function (tab) {
-                    const active = tab.dataset.loginTab === access;
-                    tab.classList.toggle('btn-outline', active);
-                    tab.classList.toggle('border-base-content', active);
-                    tab.classList.toggle('text-base-content', active);
-                    tab.classList.toggle('btn-ghost', !active);
-                    tab.classList.toggle('text-base-content/65', !active);
-                    tab.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    tab.checked = tab.dataset.loginTab === access;
                 });
                 panels.forEach(function (panel) {
                     panel.classList.toggle('hidden', panel.dataset.loginPanel !== access);
@@ -238,8 +239,8 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
             }
 
             tabs.forEach(function (tab) {
-                tab.addEventListener('click', function () {
-                    selectAccess(tab.dataset.loginTab);
+                tab.addEventListener('change', function () {
+                    if (tab.checked) selectAccess(tab.dataset.loginTab);
                 });
             });
 

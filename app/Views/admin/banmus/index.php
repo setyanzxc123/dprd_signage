@@ -3,10 +3,10 @@
 <?= $this->section('content') ?>
 
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h1 class="page-title">Proyeksi Banmus</h1>
+    <h1 class="page-title">Jadwal Rapat Hasil Banmus</h1>
     <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
         <i data-lucide="plus" class="h-4 w-4"></i>
-        Tambah Proyeksi
+        Tambah Jadwal
     </a>
 </div>
 
@@ -14,7 +14,7 @@
     <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
         <h2 class="card-title text-base">
             <i data-lucide="file-stack" class="h-5 w-5 text-primary"></i>
-            Daftar Proyeksi
+            Daftar Jadwal
         </h2>
         <span class="badge badge-ghost whitespace-nowrap"><?= count($documents) ?> dokumen</span>
     </div>
@@ -24,8 +24,8 @@
             <div class="grid min-h-56 place-items-center rounded-box border border-dashed border-base-300 bg-base-200 p-8 text-center">
                 <div>
                     <i data-lucide="calendar-range" class="mx-auto h-10 w-10 text-base-content/30"></i>
-                    <h3 class="mt-3 text-base font-extrabold">Belum ada SK Banmus</h3>
-                    <p class="mt-1 text-sm text-base-content/55">Tambahkan SK semester beserta baris kegiatannya.</p>
+                    <h3 class="mt-3 text-base font-extrabold">Belum ada hasil Banmus</h3>
+                    <p class="mt-1 text-sm text-base-content/55">Tambahkan SK beserta jadwal rapat resmi yang telah ditetapkan.</p>
                 </div>
             </div>
         </div>
@@ -40,7 +40,7 @@
                             <th>Tahun</th>
                             <th>Semester</th>
                             <th>Nomor SK</th>
-                            <th>Kegiatan</th>
+                            <th>Jadwal Rapat</th>
                             <th>Sumber</th>
                             <th class="text-right no-sort">Aksi</th>
                         </tr>
@@ -58,8 +58,8 @@
                                 <td data-label="Nomor SK">
                                     <span class="font-extrabold"><?= esc($document['nomor_sk']) ?></span>
                                 </td>
-                                <td data-label="Kegiatan">
-                                    <span class="badge badge-outline badge-sm"><?= (int) $document['jumlah_item'] ?> kegiatan</span>
+                                <td data-label="Jadwal Rapat">
+                                    <span class="badge badge-outline badge-sm"><?= (int) $document['jumlah_item'] ?> jadwal</span>
                                 </td>
                                 <td data-label="Sumber">
                                     <span class="badge badge-ghost badge-sm">
@@ -74,7 +74,7 @@
                                             Edit
                                         </a>
                                         <form method="post" action="<?= base_url("admin/jadwal-banmus/{$document['id']}/delete") ?>"
-                                            class="m-0 inline-flex" data-confirm-message="Hapus SK Banmus beserta seluruh baris kegiatannya?">
+                                            class="m-0 inline-flex" data-confirm-message="Hapus SK Banmus beserta seluruh jadwal rapat hasilnya?">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-outline btn-error btn-sm gap-1">
                                                 <i data-lucide="trash-2" class="h-4 w-4"></i>

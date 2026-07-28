@@ -33,7 +33,7 @@ class BanmusProjectionController extends BaseController
         unset($document);
 
         return view('admin/banmus/index', [
-            'pageTitle' => 'Proyeksi Banmus',
+            'pageTitle' => 'Jadwal Rapat Hasil Banmus',
             'documents' => $documents,
         ]);
     }
@@ -41,7 +41,7 @@ class BanmusProjectionController extends BaseController
     public function create(): string
     {
         return view('admin/banmus/form', $this->formData(
-            'Tambah Proyeksi Banmus',
+            'Tambah Jadwal Rapat Hasil Banmus',
             null,
             [$this->blankItem()],
             base_url('admin/jadwal-banmus/store'),
@@ -61,7 +61,7 @@ class BanmusProjectionController extends BaseController
         }
 
         return $this->formSuccessResponse(
-            'Jadwal Banmus berhasil ditambahkan.',
+            'Jadwal rapat hasil Banmus berhasil ditambahkan.',
             base_url('admin/jadwal-banmus'),
         );
     }
@@ -70,7 +70,7 @@ class BanmusProjectionController extends BaseController
     {
         $document = (new BanmusDocumentModel())->find($id);
         if ($document === null) {
-            session()->setFlashdata('error', 'Dokumen Jadwal Banmus tidak ditemukan.');
+            session()->setFlashdata('error', 'Dokumen hasil Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
@@ -82,7 +82,7 @@ class BanmusProjectionController extends BaseController
             ->findAll();
 
         return view('admin/banmus/form', $this->formData(
-            'Edit Proyeksi Banmus',
+            'Edit Jadwal Rapat Hasil Banmus',
             $document,
             $items === [] ? [$this->blankItem()] : $items,
             base_url("admin/jadwal-banmus/{$id}/update"),
@@ -93,7 +93,7 @@ class BanmusProjectionController extends BaseController
     {
         $document = (new BanmusDocumentModel())->find($id);
         if ($document === null) {
-            session()->setFlashdata('error', 'Dokumen Jadwal Banmus tidak ditemukan.');
+            session()->setFlashdata('error', 'Dokumen hasil Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
@@ -109,7 +109,7 @@ class BanmusProjectionController extends BaseController
         }
 
         return $this->formSuccessResponse(
-            'Jadwal Banmus berhasil diperbarui.',
+            'Jadwal rapat hasil Banmus berhasil diperbarui.',
             base_url('admin/jadwal-banmus'),
         );
     }
@@ -119,20 +119,20 @@ class BanmusProjectionController extends BaseController
         $model = new BanmusDocumentModel();
         $document = $model->find($id);
         if ($document === null) {
-            session()->setFlashdata('error', 'Dokumen Jadwal Banmus tidak ditemukan.');
+            session()->setFlashdata('error', 'Dokumen hasil Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
         if (! $model->delete($id)) {
-            session()->setFlashdata('error', 'Jadwal Banmus gagal dihapus. Silakan coba kembali.');
+            session()->setFlashdata('error', 'Jadwal rapat hasil Banmus gagal dihapus. Silakan coba kembali.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
         $this->deleteStoredPdf($document['dokumen_file'] ?? null);
 
         return $this->formSuccessResponse(
-            'Jadwal Banmus beserta seluruh kegiatannya berhasil dihapus.',
+            'Jadwal rapat hasil Banmus berhasil dihapus.',
             base_url('admin/jadwal-banmus'),
         );
     }
@@ -196,7 +196,7 @@ class BanmusProjectionController extends BaseController
         $year = (int) $tahunRaw;
         $semester = (int) $semesterRaw;
         $payload = [
-            'judul'            => "Jadwal Banmus Semester {$semester} Tahun {$year}",
+            'judul'            => "Jadwal Rapat Hasil Banmus Semester {$semester} Tahun {$year}",
             'nomor_sk'         => $nomorSk,
             'tanggal_sk'       => null,
             'tahun'            => $year,
@@ -233,10 +233,10 @@ class BanmusProjectionController extends BaseController
     {
         $postedItems = $this->request->getPost('items');
         if (! is_array($postedItems) || $postedItems === []) {
-            return ['error' => 'Tambahkan minimal satu baris kegiatan.'];
+            return ['error' => 'Tambahkan minimal satu jadwal rapat.'];
         }
         if (count($postedItems) > self::MAX_ITEMS) {
-            return ['error' => 'Satu SK maksimal memuat 100 baris kegiatan.'];
+            return ['error' => 'Satu SK maksimal memuat 100 jadwal rapat.'];
         }
 
         $items = [];
@@ -254,7 +254,7 @@ class BanmusProjectionController extends BaseController
 
             $activity = trim((string) ($postedItem['uraian_kegiatan'] ?? ''));
             if ($activity === '' || mb_strlen($activity) > 10000) {
-                return ['error' => "Uraian kegiatan pada baris ke-{$position} wajib diisi dan maksimal 10.000 karakter."];
+                return ['error' => "Uraian rapat pada baris ke-{$position} wajib diisi dan maksimal 10.000 karakter."];
             }
 
             $notes = trim((string) ($postedItem['keterangan'] ?? ''));
@@ -356,11 +356,11 @@ class BanmusProjectionController extends BaseController
                 $input['items'],
             );
             if ($projectionModel->insertBatch($items) === false) {
-                throw new RuntimeException('Baris kegiatan Banmus gagal disimpan.');
+                throw new RuntimeException('Jadwal rapat hasil Banmus gagal disimpan.');
             }
 
             if ($db->transStatus() === false) {
-                throw new RuntimeException('Transaksi penyimpanan Jadwal Banmus gagal.');
+                throw new RuntimeException('Transaksi penyimpanan jadwal rapat hasil Banmus gagal.');
             }
             $db->transCommit();
             $transactionStarted = false;
@@ -379,11 +379,11 @@ class BanmusProjectionController extends BaseController
             if ($newFileName !== null) {
                 $this->deleteStoredPdf($newFileName);
             }
-            log_message('error', 'Gagal menyimpan Jadwal Banmus: {message}', [
+            log_message('error', 'Gagal menyimpan jadwal rapat hasil Banmus: {message}', [
                 'message' => $exception->getMessage(),
             ]);
 
-            return ['error' => 'Jadwal Banmus gagal disimpan. Periksa data dan coba kembali.'];
+            return ['error' => 'Jadwal rapat hasil Banmus gagal disimpan. Periksa data dan coba kembali.'];
         }
     }
 
@@ -393,7 +393,7 @@ class BanmusProjectionController extends BaseController
         $items = $this->postedItemsForForm();
 
         return $this->formViewErrorResponse('admin/banmus/form', $this->formData(
-            $id === null ? 'Tambah Proyeksi Banmus' : 'Edit Proyeksi Banmus',
+            $id === null ? 'Tambah Jadwal Rapat Hasil Banmus' : 'Edit Jadwal Rapat Hasil Banmus',
             $document,
             $items === [] ? [$this->blankItem()] : $items,
             $id === null
@@ -428,7 +428,7 @@ class BanmusProjectionController extends BaseController
 
         return [
             'id'                    => $id,
-            'judul'                 => "Jadwal Banmus Semester {$semester} Tahun {$year}",
+            'judul'                 => "Jadwal Rapat Hasil Banmus Semester {$semester} Tahun {$year}",
             'nomor_sk'              => trim((string) $this->request->getPost('nomor_sk')),
             'tahun'                 => $year,
             'semester'              => $semester,
