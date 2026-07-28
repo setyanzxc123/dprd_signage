@@ -109,7 +109,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
-    $routes->get( 'pengaturan/wa-status',    'Admin\SettingController::waStatus');
 });
 
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────
@@ -127,5 +126,4 @@ $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
 $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
 
 // Webhook status provider WhatsApp (autentikasi menggunakan secret provider).
-$routes->post('webhooks/whatsapp/fonnte', 'Webhook\FonnteController::status');
 $routes->post('webhooks/otp/fazpass', 'Webhook\FazpassController::status');

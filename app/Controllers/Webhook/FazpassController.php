@@ -33,8 +33,8 @@ final class FazpassController extends BaseController
         }
         $hash = hash('sha256', implode('|', ['fazpass', $transactionId ?? '', $otpId ?? '', $status]));
         $now = date('Y-m-d H:i:s');
-        if ($db->tableExists('whatsapp_webhook_events')) {
-            $db->table('whatsapp_webhook_events')->ignore(true)->insert([
+        if ($db->tableExists('otp_webhook_events')) {
+            $db->table('otp_webhook_events')->ignore(true)->insert([
                 'provider' => 'fazpass', 'event_hash' => $hash,
                 'provider_message_id' => $otpId ?? $transactionId,
                 'status' => $status, 'raw_payload' => $raw,

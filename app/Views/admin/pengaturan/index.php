@@ -109,32 +109,6 @@
         </div>
 
         <!-- ═══════════════════════════════════════════ -->
-        <section class="card card-border bg-base-100 shadow-sm" aria-labelledby="fonnte-status-title">
-            <div class="card-body">
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h2 class="card-title text-base" id="fonnte-status-title">
-                            <i data-lucide="message-circle" class="h-5 w-5"></i>
-                            WhatsApp Gateway
-                        </h2>
-                        <p class="mt-1 text-sm text-base-content/60">
-                            Provider aktif: <strong>Fonnte</strong>. Digunakan untuk pesan autentikasi transaksional.
-                        </p>
-                    </div>
-
-                    <button class="btn btn-outline btn-sm" type="button" id="fonnte-status-check">
-                        <i data-lucide="refresh-cw" class="h-4 w-4"></i>
-                        Periksa koneksi
-                    </button>
-                </div>
-
-                <div class="alert alert-soft mt-1" role="status" aria-live="polite" id="fonnte-status-panel">
-                    <span class="status status-neutral" id="fonnte-status-indicator" aria-hidden="true"></span>
-                    <span id="fonnte-status-text">Status koneksi belum diperiksa.</span>
-                </div>
-            </div>
-        </section>
-
     <?php if (false): ?>
     <!-- Seksi BMKG (hidden) -->
     <div class="form-card stg-card">
@@ -659,59 +633,7 @@
         });
 
         setupSettingsSubmitProgress(form);
-        setupFonnteStatus();
         window.renderAdminIcons?.();
-    }
-
-    function setupFonnteStatus() {
-        const button = document.getElementById('fonnte-status-check');
-        const panel = document.getElementById('fonnte-status-panel');
-        const indicator = document.getElementById('fonnte-status-indicator');
-        const text = document.getElementById('fonnte-status-text');
-        if (!button || !panel || !indicator || !text || button.dataset.bound === '1') return;
-
-        button.dataset.bound = '1';
-        button.addEventListener('click', async () => {
-            button.disabled = true;
-            button.innerHTML = '<span class="loading loading-spinner loading-xs"></span>Memeriksa...';
-            panel.classList.remove('alert-success', 'alert-error', 'alert-warning');
-            indicator.classList.remove('status-success', 'status-error', 'status-warning');
-            indicator.classList.add('status-neutral');
-            text.textContent = 'Menghubungi Fonnte...';
-
-            try {
-                const response = await fetch('<?= base_url('admin/pengaturan/wa-status') ?>', {
-                    headers: { Accept: 'application/json' },
-                });
-                const result = await response.json();
-
-                indicator.classList.remove('status-neutral');
-                if (result.connected) {
-                    panel.classList.add('alert-success');
-                    indicator.classList.add('status-success');
-                    text.textContent = result.device
-                        ? `Fonnte terhubung pada perangkat ${result.device}.`
-                        : 'Fonnte terhubung.';
-                } else if (!result.configured) {
-                    panel.classList.add('alert-warning');
-                    indicator.classList.add('status-warning');
-                    text.textContent = 'Token Fonnte belum dikonfigurasi pada environment.';
-                } else {
-                    panel.classList.add('alert-error');
-                    indicator.classList.add('status-error');
-                    text.textContent = result.error || 'Perangkat Fonnte tidak terhubung.';
-                }
-            } catch (error) {
-                indicator.classList.remove('status-neutral');
-                indicator.classList.add('status-error');
-                panel.classList.add('alert-error');
-                text.textContent = 'Status Fonnte tidak dapat diperiksa.';
-            } finally {
-                button.disabled = false;
-                button.innerHTML = '<i data-lucide="refresh-cw" class="h-4 w-4"></i>Periksa koneksi';
-                window.renderAdminIcons?.();
-            }
-        });
     }
 
      function setupSettingsSubmitProgress(form) {

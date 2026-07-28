@@ -5,7 +5,7 @@ namespace App\Controllers\Member;
 use App\Controllers\BaseController;
 use App\Libraries\Otp\OtpPendingSession;
 use App\Libraries\Otp\OtpService;
-use App\Libraries\WhatsappService;
+use App\Libraries\PhoneNumberService;
 use App\Models\MemberAccountModel;
 use Config\Otp;
 
@@ -222,9 +222,9 @@ class AuthController extends BaseController
 
     private function localPhone(string $phone): ?string
     {
-        $normalized = WhatsappService::normalizePhone($phone);
+        $normalized = PhoneNumberService::normalizeIndonesia($phone);
 
-        return WhatsappService::isValidIndonesianPhone($normalized) ? substr($normalized, 2) : null;
+        return PhoneNumberService::isValidIndonesia($normalized) ? substr($normalized, 2) : null;
     }
 
     private function maskPhone(?string $phone): string
