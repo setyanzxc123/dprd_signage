@@ -52,13 +52,14 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             <i class="swap-off" data-lucide="moon"></i>
         </label>
 
-        <div class="topbar-user">
+        <a href="<?= base_url('admin/profile') ?>" class="topbar-user" title="Buka profil admin"
+            aria-label="Buka profil admin">
             <div class="topbar-avatar"><?= esc($userInit) ?></div>
             <div class="topbar-user-info">
                 <div class="topbar-user-name"><?= esc($userName) ?></div>
                 <div class="topbar-user-role"><?= esc($roleLabel) ?></div>
             </div>
-        </div>
+        </a>
 
         <form class="topbar-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
               data-confirm-message="Yakin ingin keluar?">

@@ -109,6 +109,10 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
+
+    // Profil akun admin
+    $routes->get( 'profile',        'Admin\ProfileController::index');
+    $routes->post('profile/update', 'Admin\ProfileController::update');
 });
 
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────

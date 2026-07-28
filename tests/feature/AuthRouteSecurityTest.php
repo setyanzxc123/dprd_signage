@@ -146,6 +146,13 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response->assertRedirectTo(base_url('login?akses=admin'));
     }
 
+    public function testAdminProfilePageRequiresAuthentication(): void
+    {
+        $response = $this->get('/admin/profile');
+
+        $response->assertRedirectTo(base_url('login?akses=admin'));
+    }
+
     /**
      * @dataProvider stateChangingGetRoutes
      */
@@ -165,5 +172,6 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         yield 'meeting delete' => ['/admin/jadwal/1/delete'];
         yield 'general agenda delete' => ['/admin/agenda-umum/1/delete'];
         yield 'Banmus projection delete' => ['/admin/jadwal-banmus/1/delete'];
+        yield 'admin profile update' => ['/admin/profile/update'];
     }
 }
