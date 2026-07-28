@@ -1539,22 +1539,6 @@
 }
 
 @media (max-width: 640px) {
-    .unit-rapat-card {
-        overflow: hidden;
-    }
-    .unit-rapat-index-header {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 12px;
-    }
-    .unit-rapat-index-header .unit-rapat-add-button {
-        width: 100%;
-        justify-content: center;
-    }
-    .unit-rapat-table-container {
-        overflow-x: visible !important;
-    }
-
     /* Responsive Card Table (Method A) */
     .responsive-card-table {
         display: block !important;
@@ -1644,15 +1628,6 @@
     }
     .participant-group-form {
         padding-bottom: 18px;
-    }
-    .participant-info-col,
-    .participant-member-col,
-    .participant-source-col,
-    .participant-target-col {
-        grid-column: span 12 / span 12;
-    }
-    .participant-summary-card {
-        display: none;
     }
     .participant-member-card {
         padding: 0 !important;
@@ -1943,253 +1918,6 @@
         font-size: 0.62rem;
     }
 }
-
-/* Jadwal form: bundled here so Turbo navigation never depends on response-specific CSP nonces. */
-.schedule-form {
-        --form-gap: 18px;
-    }
-
-    .choice-option {
-        position: relative;
-        display: block;
-    }
-
-    .choice-option-body {
-        display: grid;
-        align-items: center;
-        gap: 8px;
-        grid-template-columns: auto minmax(0, 1fr);
-        min-height: 38px;
-        padding: 8px 10px;
-        border: 1px solid var(--od-border);
-        border-radius: 6px;
-        background: var(--od-surface);
-        cursor: pointer;
-        transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-        height: 100%;
-    }
-
-    .choice-option-body:hover {
-        border-color: var(--od-accent);
-        background: var(--od-border-soft);
-    }
-
-    .choice-option-body:has(input:checked) {
-        border-color: var(--od-accent);
-        background: var(--od-surface-warm);
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--od-accent) 12%, transparent);
-    }
-
-    .choice-option-body:has(input:focus-visible) {
-        box-shadow: var(--od-focus);
-    }
-
-    .choice-title {
-        display: block;
-        color: var(--od-fg);
-        font-size: .82rem;
-        font-weight: 700;
-        line-height: 1.15;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .choice-copy {
-        min-width: 0;
-    }
-
-    .choice-desc {
-        color: var(--od-muted);
-        display: block;
-        font-size: .72rem;
-        line-height: 1.25;
-        margin-top: 2px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .choice-option-body.has-desc {
-        align-items: start;
-        gap: 10px;
-        min-height: 56px;
-        padding: 8px 10px;
-    }
-
-    .choice-option-body.has-desc .radio {
-        margin-top: 2px;
-    }
-
-    .choice-option-body.has-desc .choice-title {
-        font-size: .9rem;
-        line-height: 1.2;
-    }
-
-    .choice-option-body.has-desc .choice-desc {
-        color: var(--od-fg2);
-        font-size: .8rem;
-        line-height: 1.4;
-        margin-top: 4px;
-        overflow: visible;
-        text-overflow: clip;
-        white-space: normal;
-    }
-
-    .settings-subgroup + .settings-subgroup {
-        border-top: 1px solid var(--od-border-soft);
-        margin-top: 14px;
-        padding-top: 14px;
-    }
-
-    .visibility-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: center;
-        padding: 10px;
-        border: 1px solid var(--od-border-soft);
-        border-radius: var(--od-radius-md);
-        background: var(--od-surface);
-    }
-
-    .visibility-title {
-        color: var(--od-fg2);
-        font-size: var(--od-text-sm);
-        font-weight: 700;
-        line-height: 1.2;
-        margin: 0;
-    }
-
-    .visibility-control {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        margin: 0;
-        white-space: nowrap;
-    }
-
-    .location-fields {
-        margin-top: 10px;
-    }
-
-    .location-panel[hidden] {
-        display: none;
-    }
-
-    .target-picker {
-        border: 1px solid var(--od-border);
-        border-radius: var(--od-radius-md);
-        overflow: hidden;
-        background: var(--od-surface);
-    }
-
-    .target-picker-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 7px 10px;
-        border-bottom: 1px solid var(--od-border-soft);
-        background: var(--od-border-soft);
-    }
-
-    .target-picker-title {
-        color: var(--od-muted);
-        font-size: 0.68rem;
-        font-weight: 800;
-        letter-spacing: 0.45px;
-        text-transform: uppercase;
-    }
-
-    .target-picker-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        flex-shrink: 0;
-    }
-
-    .target-picker-search {
-        padding: 8px;
-        border-bottom: 1px solid var(--od-border-soft);
-    }
-
-    .target-list {
-        max-height: 190px;
-        overflow-y: auto;
-    }
-
-    .target-option {
-        display: flex;
-        align-items: center;
-        min-height: 36px;
-        padding: 7px 10px;
-        border-bottom: 1px solid var(--od-border-soft);
-        background: var(--od-surface);
-        color: var(--od-fg2);
-        font-size: var(--od-text-sm);
-        font-weight: 500;
-        cursor: pointer;
-        margin-bottom: 0;
-        user-select: none;
-        transition: border-color 0.15s ease, background-color 0.15s ease;
-    }
-
-    .target-option:last-child {
-        border-bottom: 0;
-    }
-
-    .target-option:hover {
-        background: var(--od-border-soft);
-    }
-
-    .target-option.is-selected {
-        background-color: var(--od-surface-warm);
-        color: var(--od-fg);
-        font-weight: 700;
-    }
-
-    .target-option.is-disabled {
-        cursor: not-allowed;
-        opacity: 0.72;
-    }
-
-    .target-option.is-disabled .checkbox {
-        pointer-events: none;
-    }
-
-    .target-option .checkbox {
-        margin-top: 0;
-    }
-
-    .side-stack {
-        position: sticky;
-        top: 88px;
-    }
-
-    @media (max-width: 991.98px) {
-        .side-stack {
-            position: static;
-        }
-    }
-
-    .option-group.two-col {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-        margin-top: 8px;
-    }
-
-    @media (max-width: 575.98px) {
-        .option-group.two-col {
-            grid-template-columns: 1fr;
-        }
-
-        .visibility-row {
-            align-items: center;
-        }
-    }
 
 /* Settings page: bundled here so Turbo navigation never depends on response-specific CSP nonces. */
 /* ─── Header ─── */
@@ -2647,4 +2375,22 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+    }
+
+    .settings-running-track {
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .settings-running-track span {
+        animation: settings-running-preview 12s linear infinite;
+        color: var(--color-warning);
+        display: inline-block;
+        font-size: .875rem;
+        font-weight: 700;
+    }
+
+    @keyframes settings-running-preview {
+        from { transform: translateX(100%); }
+        to { transform: translateX(-100%); }
     }

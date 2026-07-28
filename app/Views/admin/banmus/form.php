@@ -9,7 +9,6 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
 
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
-    <p class="page-subtitle">Masukkan identitas SK dan salin baris kegiatan sesuai tabel pada dokumen.</p>
 </div>
 
 <form class="min-w-0 max-w-full" action="<?= esc($action_url) ?>" method="post" enctype="multipart/form-data" data-banmus-form>
@@ -24,26 +23,26 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
 
     <section class="card card-border min-w-0 max-w-full overflow-hidden bg-base-100 shadow-sm">
         <div class="card-body gap-4 p-4 sm:p-5">
-            <div>
-                <h2 class="card-title text-base">Dokumen SK Proyeksi Banmus</h2>
-                <p class="mt-1 text-xs font-semibold text-base-content/55">Satu SK berlaku untuk satu semester.</p>
-            </div>
+            <h2 class="card-title text-base">
+                <i data-lucide="file-text" class="h-5 w-5 text-primary"></i>
+                Dokumen SK Banmus
+            </h2>
 
             <div class="grid min-w-0 grid-cols-12 gap-3">
-                <fieldset class="fieldset col-span-12 min-w-0 sm:col-span-6 lg:col-span-4">
+                <fieldset class="fieldset col-span-12 min-w-0 sm:col-span-6 lg:col-span-3">
                     <legend class="fieldset-legend">Nomor SK <span class="text-error">*</span></legend>
                     <input class="input min-w-0 max-w-full" id="nomor_sk" name="nomor_sk" type="text" maxlength="100" required
                         value="<?= esc($document['nomor_sk'] ?? '') ?>"
                         placeholder="Contoh: 160/9/2026" />
                 </fieldset>
 
-                <fieldset class="fieldset col-span-6 min-w-0 sm:col-span-3 lg:col-span-2">
+                <fieldset class="fieldset col-span-12 min-w-0 sm:col-span-6 lg:col-span-3">
                     <legend class="fieldset-legend">Tahun <span class="text-error">*</span></legend>
                     <input class="input min-w-0 max-w-full" id="tahun" name="tahun" type="number" min="2000" max="2100" required
                         value="<?= esc($document['tahun'] ?? date('Y')) ?>" />
                 </fieldset>
 
-                <fieldset class="fieldset col-span-6 min-w-0 sm:col-span-3 lg:col-span-2">
+                <fieldset class="fieldset col-span-12 min-w-0 sm:col-span-6 lg:col-span-3">
                     <legend class="fieldset-legend">Semester <span class="text-error">*</span></legend>
                     <select class="select min-w-0 max-w-full" id="semester" name="semester" required>
                         <option value="1" <?= $selectedSemester === 1 ? 'selected' : '' ?>>Semester 1</option>
@@ -51,15 +50,20 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
                     </select>
                 </fieldset>
 
-                <fieldset class="fieldset col-span-12 min-w-0 lg:col-span-4">
-                    <legend class="fieldset-legend">File SK <span class="text-error">*</span></legend>
+                <fieldset class="fieldset col-span-12 min-w-0 sm:col-span-6 lg:col-span-3">
+                    <legend class="fieldset-legend">
+                        File SK
+                        <?php if (! $isEdit): ?>
+                            <span class="text-error">*</span>
+                        <?php endif; ?>
+                    </legend>
                     <input class="file-input min-w-0 max-w-full" id="dokumen_file" name="dokumen_file" type="file"
                         accept="application/pdf,.pdf" <?= $isEdit ? '' : 'required' ?> />
                     <p class="label">
                         <?php if ($isEdit && (! empty($document['dokumen_file']) || ! empty($document['dokumen_url']))): ?>
-                            Saat ini: <?= esc($document['dokumen_nama_asli'] ?: 'Dokumen SK tersimpan') ?>. Pilih PDF baru hanya untuk mengganti.
+                            Tersimpan: <?= esc($document['dokumen_nama_asli'] ?: 'Dokumen SK') ?>
                         <?php else: ?>
-                            PDF maksimal 10 MB.
+                            PDF, maksimal 10 MB.
                         <?php endif; ?>
                     </p>
                 </fieldset>
@@ -69,15 +73,11 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
 
     <section class="card card-border mt-5 min-w-0 max-w-full overflow-hidden bg-base-100 shadow-sm">
         <div class="card-body gap-4 p-0">
-            <div class="flex flex-col justify-between gap-3 px-4 pt-4 sm:flex-row sm:items-center sm:px-5 sm:pt-5">
-                <div>
-                    <h2 class="card-title text-base">Isi Proyeksi Banmus</h2>
-                    <p class="mt-1 text-xs font-semibold text-base-content/55">Tambahkan baris dari atas ke bawah sesuai urutan pada SK.</p>
-                </div>
-                <button class="btn btn-outline btn-sm shrink-0 gap-1" type="button" data-add-item>
-                    <i data-lucide="plus" class="h-4 w-4"></i>
-                    Tambah Baris
-                </button>
+            <div class="px-4 pt-4 sm:px-5 sm:pt-5">
+                <h2 class="card-title text-base">
+                    <i data-lucide="rows-3" class="h-5 w-5 text-primary"></i>
+                    Kegiatan Banmus
+                </h2>
             </div>
 
             <div class="overflow-x-auto border-y border-base-300 max-sm:overflow-x-visible">
@@ -104,21 +104,21 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
                                 </td>
                                 <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                                     <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Tanggal Pelaksanaan</span>
-                                    <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="100" required
+                                    <textarea class="textarea min-h-16 w-full resize-y" rows="2" maxlength="100" required
                                         name="items[<?= $index ?>][tanggal_pelaksanaan]" data-field="tanggal_pelaksanaan"
-                                        placeholder="Contoh: Juniâ€“Juli 2026"><?= esc($implementationDate) ?></textarea>
+                                        placeholder="Contoh: Juni-Juli 2026"><?= esc($implementationDate) ?></textarea>
                                 </td>
                                 <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                                     <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Uraian Kegiatan</span>
-                                    <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="10000" required
+                                    <textarea class="textarea min-h-16 w-full resize-y" rows="2" maxlength="10000" required
                                         name="items[<?= $index ?>][uraian_kegiatan]" data-field="uraian_kegiatan"
                                         placeholder="Uraian kegiatan sesuai SK"><?= esc($activity) ?></textarea>
                                 </td>
                                 <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                                     <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Keterangan</span>
-                                    <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="2000"
+                                    <textarea class="textarea min-h-16 w-full resize-y" rows="2" maxlength="2000"
                                         name="items[<?= $index ?>][keterangan]" data-field="keterangan"
-                                        placeholder="Opsional"><?= esc($notes) ?></textarea>
+                                        placeholder="Keterangan tambahan"><?= esc($notes) ?></textarea>
                                 </td>
                                 <td class="pt-4 text-center max-sm:block max-sm:border-0 max-sm:px-1 max-sm:pb-0 max-sm:pt-2 max-sm:text-right">
                                     <button class="btn btn-ghost btn-error btn-sm sm:btn-square" type="button"
@@ -133,12 +133,13 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
                 </table>
             </div>
 
-            <div class="px-4 pb-4 sm:px-5 sm:pb-5">
-                <button class="btn btn-outline btn-sm gap-1" type="button" data-add-item>
+            <div class="flex justify-center px-4 pb-4 sm:px-5 sm:pb-5">
+                <button class="btn btn-outline btn-sm w-full gap-1 sm:w-auto" type="button" data-add-item>
                     <i data-lucide="plus" class="h-4 w-4"></i>
                     Tambah Baris
                 </button>
             </div>
+
         </div>
     </section>
 
@@ -160,18 +161,18 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
             </td>
             <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                 <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Tanggal Pelaksanaan</span>
-                <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="100" required
-                    data-field="tanggal_pelaksanaan" placeholder="Contoh: Juniâ€“Juli 2026"></textarea>
+                <textarea class="textarea min-h-16 w-full resize-y" rows="2" maxlength="100" required
+                    data-field="tanggal_pelaksanaan" placeholder="Contoh: Juni-Juli 2026"></textarea>
             </td>
             <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                 <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Uraian Kegiatan</span>
-                <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="10000" required
+                <textarea class="textarea min-h-16 w-full resize-y" rows="2" maxlength="10000" required
                     data-field="uraian_kegiatan" placeholder="Uraian kegiatan sesuai SK"></textarea>
             </td>
             <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                 <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Keterangan</span>
-                <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="2000"
-                    data-field="keterangan" placeholder="Opsional"></textarea>
+                <textarea class="textarea min-h-16 w-full resize-y" rows="2" maxlength="2000"
+                    data-field="keterangan" placeholder="Keterangan tambahan"></textarea>
             </td>
             <td class="pt-4 text-center max-sm:block max-sm:border-0 max-sm:px-1 max-sm:pb-0 max-sm:pt-2 max-sm:text-right">
                 <button class="btn btn-ghost btn-error btn-sm sm:btn-square" type="button"

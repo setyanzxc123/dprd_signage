@@ -247,7 +247,7 @@ class MemberController extends BaseController
             $digits = substr($digits, 1);
         }
 
-        if (! preg_match('/^8\d{7,12}$/', $digits)) {
+        if (! preg_match('/^8\d{7,11}$/', $digits)) {
             return null;
         }
 

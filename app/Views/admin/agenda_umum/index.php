@@ -24,36 +24,33 @@ $statusClasses = [
 ];
 ?>
 
-<div class="page-header flex items-center justify-between gap-3">
-    <div>
-        <h1 class="page-title">Jadwal Umum</h1>
-        <p class="page-subtitle">Kelola demonstrasi dan kegiatan publik nonrapat di lingkungan DPRD</p>
-    </div>
-    <a href="<?= base_url('admin/agenda-umum/create') ?>" class="btn btn-sm btn-primary gap-1">
+<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="page-title">Jadwal Umum</h1>
+    <a href="<?= base_url('admin/agenda-umum/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
         <i data-lucide="plus" class="h-4 w-4"></i>
         Tambah Jadwal Umum
     </a>
 </div>
 
-<div class="section-card">
-    <div class="section-card-header">
-        <div class="header-icon"><i data-lucide="calendar-range"></i></div>
-        <div>
-            <h6>Daftar Jadwal Umum</h6>
-            <p class="header-sub"><?= count($agendas) ?> kegiatan terdaftar</p>
-        </div>
+<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
+        <h2 class="card-title text-base">
+            <i data-lucide="calendar-range" class="h-5 w-5 text-primary"></i>
+            Daftar Jadwal
+        </h2>
+        <span class="badge badge-ghost whitespace-nowrap"><?= count($agendas) ?> kegiatan</span>
     </div>
 
-    <div class="section-card-body pt-3.5">
-        <div role="alert" class="alert alert-info mb-3 text-sm">
-            <i data-lucide="info" class="h-4 w-4"></i>
-            <span>Jadwal Umum digunakan untuk kegiatan nonrapat. Rapat resmi yang mendadak tetap dicatat sebagai <strong>Rapat Insidental</strong> pada menu Jadwal Rapat.</span>
-        </div>
+    <div role="alert" class="alert alert-info rounded-none border-x-0 border-t-0 py-2 text-sm">
+        <i data-lucide="info" class="h-4 w-4"></i>
+        <span>Khusus kegiatan nonrapat. Rapat mendadak dicatat sebagai <strong>Rapat Insidental</strong>.</span>
+    </div>
 
-        <div class="overflow-x-auto">
+    <div class="min-w-0">
+        <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
             <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"desc"]]'>
                 <thead>
-                    <tr class="bg-base-200/50">
+                    <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
                         <th>Tanggal</th>
                         <th>Kegiatan</th>
@@ -65,7 +62,7 @@ $statusClasses = [
                 </thead>
                 <tbody>
                     <?php foreach ($agendas as $agenda): ?>
-                        <tr class="transition-colors hover:bg-base-200/30">
+                        <tr class="transition-colors hover:bg-base-200/40">
                             <td class="dt-row-number" data-label="No"></td>
                             <td data-label="Tanggal" data-order="<?= esc($agenda['tanggal'] . ' ' . $agenda['waktu_mulai']) ?>">
                                 <div class="whitespace-nowrap text-sm font-bold">
@@ -107,7 +104,7 @@ $statusClasses = [
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex items-center justify-end gap-2">
+                                <div class="flex flex-wrap items-center justify-end gap-2">
                                     <a href="<?= base_url("admin/agenda-umum/{$agenda['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1">
                                         <i data-lucide="pencil" class="h-4 w-4"></i>
                                         Edit
@@ -128,6 +125,6 @@ $statusClasses = [
             </table>
         </div>
     </div>
-</div>
+</section>
 
 <?= $this->endSection() ?>

@@ -342,7 +342,7 @@
             lbl.textContent = label + ':';
 
             var sel = document.createElement('select');
-            sel.className = 'select select-sm select-bordered dt-col-filter-select';
+            sel.className = 'select select-sm dt-col-filter-select';
             sel.setAttribute('data-dt-filter-col', colIdx);
             sel.setAttribute('aria-label', 'Filter ' + label);
 

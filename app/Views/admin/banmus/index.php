@@ -2,56 +2,52 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header flex items-center justify-between gap-3">
-    <div>
-        <h1 class="page-title">Proyeksi Banmus</h1>
-        <p class="page-subtitle">Kelola SK dan proyeksi kegiatan Banmus per semester.</p>
-    </div>
-    <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="btn btn-primary btn-sm gap-1">
+<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="page-title">Proyeksi Banmus</h1>
+    <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
         <i data-lucide="plus" class="h-4 w-4"></i>
         Tambah Proyeksi
     </a>
 </div>
 
-<section class="card card-border bg-base-100 shadow-sm">
-    <div class="card-body gap-4 p-4 sm:p-5">
-        <div class="flex items-center gap-3">
-            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-box bg-base-200 text-base-content/70">
-                <i data-lucide="file-stack" class="h-5 w-5"></i>
-            </div>
-            <div>
-                <h2 class="card-title text-base">Daftar Proyeksi Banmus</h2>
-                <p class="text-xs font-semibold text-base-content/55"><?= count($documents) ?> dokumen terdaftar</p>
-            </div>
-        </div>
+<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
+        <h2 class="card-title text-base">
+            <i data-lucide="file-stack" class="h-5 w-5 text-primary"></i>
+            Daftar Proyeksi
+        </h2>
+        <span class="badge badge-ghost whitespace-nowrap"><?= count($documents) ?> dokumen</span>
+    </div>
 
-        <?php if ($documents === []): ?>
+    <?php if ($documents === []): ?>
+        <div class="p-4 sm:p-5">
             <div class="grid min-h-56 place-items-center rounded-box border border-dashed border-base-300 bg-base-200 p-8 text-center">
                 <div>
                     <i data-lucide="calendar-range" class="mx-auto h-10 w-10 text-base-content/30"></i>
                     <h3 class="mt-3 text-base font-extrabold">Belum ada SK Banmus</h3>
                     <p class="mt-1 text-sm text-base-content/55">Tambahkan SK semester beserta baris kegiatannya.</p>
-                    <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="btn btn-outline btn-sm mt-4">Tambah Proyeksi</a>
                 </div>
             </div>
-        <?php else: ?>
-            <div class="overflow-x-auto">
+        </div>
+    <?php else: ?>
+        <div class="min-w-0">
+            <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
                 <table class="table table-zebra table-md w-full admin-data-table responsive-card-table"
                     data-admin-datatable data-dt-order='[[1,"desc"],[2,"desc"]]'>
                     <thead>
-                        <tr class="bg-base-200/50">
+                        <tr class="bg-base-200">
                             <th class="dt-row-number no-sort">No</th>
                             <th>Tahun</th>
                             <th>Semester</th>
                             <th>Nomor SK</th>
-                            <th>Isi Jadwal</th>
+                            <th>Kegiatan</th>
                             <th>Sumber</th>
                             <th class="text-right no-sort">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($documents as $document): ?>
-                            <tr class="transition-colors hover:bg-base-200/30">
+                            <tr class="transition-colors hover:bg-base-200/40">
                                 <td class="dt-row-number" data-label="No"></td>
                                 <td data-label="Tahun" data-order="<?= (int) $document['tahun'] ?>">
                                     <span class="font-extrabold"><?= (int) $document['tahun'] ?></span>
@@ -62,8 +58,8 @@
                                 <td data-label="Nomor SK">
                                     <span class="font-extrabold"><?= esc($document['nomor_sk']) ?></span>
                                 </td>
-                                <td data-label="Isi Jadwal">
-                                    <span class="badge badge-outline badge-sm"><?= (int) $document['jumlah_item'] ?> baris</span>
+                                <td data-label="Kegiatan">
+                                    <span class="badge badge-outline badge-sm"><?= (int) $document['jumlah_item'] ?> kegiatan</span>
                                 </td>
                                 <td data-label="Sumber">
                                     <span class="badge badge-ghost badge-sm">
@@ -71,7 +67,7 @@
                                     </span>
                                 </td>
                                 <td data-label="Aksi">
-                                    <div class="flex items-center justify-end gap-2">
+                                    <div class="flex flex-wrap items-center justify-end gap-2">
                                         <a href="<?= base_url("admin/jadwal-banmus/{$document['id']}/edit") ?>"
                                             class="btn btn-outline btn-primary btn-sm gap-1">
                                             <i data-lucide="pencil" class="h-4 w-4"></i>
@@ -92,8 +88,8 @@
                     </tbody>
                 </table>
             </div>
-        <?php endif; ?>
-    </div>
+        </div>
+    <?php endif; ?>
 </section>
 
 <?= $this->endSection() ?>

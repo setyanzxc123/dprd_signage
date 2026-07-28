@@ -3,46 +3,38 @@
 <?= $this->section('content') ?>
 
 <?php if ($emergencyOtp = ($emergency_otp ?? null)): ?>
-    <div role="alert" class="alert alert-warning mb-4">
+    <div role="alert" class="alert alert-warning mb-4 items-start shadow-sm">
         <i data-lucide="key-round" class="h-5 w-5 shrink-0"></i>
-        <div>
-            <div class="font-bold">OTP darurat untuk <?= esc($emergencyOtp['member']) ?></div>
-            <div class="mt-1">Kode: <span class="font-mono text-xl font-black tracking-widest"><?= esc($emergencyOtp['code']) ?></span></div>
-            <div class="text-xs">Berlaku sampai <?= esc($emergencyOtp['expires_at']) ?>. Kode hanya ditampilkan sekali.</div>
+        <div class="min-w-0">
+            <h2 class="font-bold">OTP darurat — <?= esc($emergencyOtp['member']) ?></h2>
+            <div class="my-1 font-mono text-xl font-black tracking-widest"><?= esc($emergencyOtp['code']) ?></div>
+            <p class="text-xs">Berlaku sampai <?= esc($emergencyOtp['expires_at']) ?> dan hanya ditampilkan sekali.</p>
         </div>
     </div>
 <?php endif; ?>
 
-<div class="page-header flex items-center justify-between">
-    <div>
-        <h1 class="page-title">Anggota DPRD</h1>
-        <p class="page-subtitle">Kelola data anggota dan nomor WhatsApp</p>
-    </div>
-    <a href="<?= base_url('admin/anggota/create') ?>" class="btn btn-sm btn-primary gap-1">
-        <i data-lucide="plus" class="w-4 h-4"></i>Tambah Anggota
+<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="page-title">Anggota DPRD</h1>
+    <a href="<?= base_url('admin/anggota/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        Tambah Anggota
     </a>
 </div>
 
-<div class="section-card">
-    <div class="section-card-header">
-        <div class="header-icon"><i data-lucide="users"></i></div>
-        <div>
-            <h6>Daftar Anggota</h6>
-            <?php $scope = $data_scope ?? ['label' => 'seluruh master anggota']; ?>
-            <p class="header-sub">
-                <?= count($members) ?> anggota terdaftar
-                <span class="text-base-content/50">
-                    &bull; <?= esc($scope['label']) ?>
-                </span>
-            </p>
-        </div>
+<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
+        <h2 class="card-title text-base">
+            <i data-lucide="users" class="h-5 w-5 text-primary"></i>
+            Daftar Anggota
+        </h2>
+        <span class="badge badge-ghost whitespace-nowrap"><?= count($members) ?> anggota</span>
     </div>
 
-    <div class="section-card-body p-0">
-        <div class="overflow-x-auto w-full">
+    <div class="min-w-0">
+        <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
             <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
-                    <tr class="bg-base-200/50">
+                    <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
                         <th>Nama Lengkap</th>
                         <th>Fraksi</th>
@@ -54,63 +46,68 @@
                 </thead>
                 <tbody>
                     <?php foreach ($members as $m): ?>
-                        <tr class="hover:bg-base-200/30 transition-colors">
+                        <tr class="transition-colors hover:bg-base-200/40">
                             <td class="dt-row-number" data-label="No"></td>
                             <td data-label="Nama Lengkap">
                                 <div class="flex items-center gap-3">
                                     <div class="avatar placeholder">
-                                        <div class="bg-primary text-primary-content rounded-full w-8 h-8 font-bold text-sm flex items-center justify-center">
-                                            <span><?= strtoupper(substr($m['name'], 0, 1)) ?></span>
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-content">
+                                            <span><?= esc(strtoupper(substr($m['name'], 0, 1))) ?></span>
                                         </div>
                                     </div>
-                                    <div>
-                                        <div class="font-bold text-base-content text-sm"><?= esc($m['name']) ?></div>
-                                        <div class="text-xs text-base-content/60 mt-0.5"><?= esc($m['jabatan'] ?? '') ?></div>
+                                    <div class="min-w-0">
+                                        <div class="text-sm font-bold text-base-content"><?= esc($m['name']) ?></div>
+                                        <?php if (! empty($m['jabatan'])): ?>
+                                            <div class="mt-0.5 text-xs text-base-content/60"><?= esc($m['jabatan']) ?></div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </td>
                             <td data-label="Fraksi" class="text-base-content/85"><?= esc($m['fraksi']) ?></td>
                             <td data-label="Komisi">
-                                <span class="badge badge-ghost h-auto py-1 px-2 text-xs">
+                                <span class="badge badge-ghost h-auto px-2 py-1 text-xs">
                                     <?= esc($m['komisi']) ?>
                                 </span>
                             </td>
                             <td data-label="No WhatsApp" class="font-mono text-sm text-base-content/85"><?= esc($m['no_wa']) ?></td>
                             <td data-label="Status">
                                 <?php if ($m['aktif']): ?>
-                                    <span class="badge badge-success h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                    <span class="badge badge-success h-auto gap-1.5 whitespace-nowrap px-2 py-0.5 text-xs font-semibold">
+                                        <span class="status status-success"></span>
                                         Aktif
                                     </span>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap text-base-content/60 gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                    <span class="badge badge-ghost h-auto gap-1.5 whitespace-nowrap px-2 py-0.5 text-xs font-semibold text-base-content/60">
+                                        <span class="status"></span>
                                         Nonaktif
                                     </span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex items-center justify-end gap-2">
+                                <div class="flex flex-wrap items-center justify-end gap-2">
                                     <?php if (! empty($m['aktif'])): ?>
                                         <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/otp-darurat") ?>"
-                                            class="inline-flex items-center gap-1 m-0"
+                                            class="join m-0 inline-flex"
                                             data-confirm-message="Buat OTP darurat untuk anggota ini? Pastikan identitas anggota sudah diverifikasi.">
                                             <?= csrf_field() ?>
-                                            <input type="text" name="reason" class="input input-sm w-36"
+                                            <input type="text" name="reason" class="input input-sm join-item w-40"
                                                 minlength="5" maxlength="255" placeholder="Alasan darurat" required />
-                                            <button type="submit" class="btn btn-sm btn-outline btn-warning gap-1" title="Buat OTP darurat">
-                                                <i data-lucide="key-round" class="w-4 h-4"></i>OTP
+                                            <button type="submit" class="btn btn-outline btn-warning btn-sm join-item gap-1" title="Buat OTP darurat">
+                                                <i data-lucide="key-round" class="h-4 w-4"></i>
+                                                OTP
                                             </button>
                                         </form>
                                     <?php endif; ?>
-                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
-                                        <i data-lucide="pencil" class="w-4 h-4"></i>Edit
+                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn btn-outline btn-primary btn-sm gap-1">
+                                        <i data-lucide="pencil" class="h-4 w-4"></i>
+                                        Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
-                                        data-confirm-message="Hapus anggota ini?" class="inline-flex m-0">
+                                        data-confirm-message="Hapus anggota ini?" class="m-0 inline-flex">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus
+                                        <button type="submit" class="btn btn-outline btn-error btn-sm gap-1">
+                                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                            Hapus
                                         </button>
                                     </form>
                                 </div>
@@ -121,6 +118,6 @@
             </table>
         </div>
     </div>
-</div>
+</section>
 
 <?= $this->endSection() ?>

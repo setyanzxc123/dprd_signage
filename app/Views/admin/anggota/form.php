@@ -4,14 +4,19 @@
 
 <?= $this->section('content') ?>
 
+<?php
+$whatsAppValue = preg_replace('/\D/', '', (string) ($member['no_wa'] ?? '')) ?? '';
+if (str_starts_with($whatsAppValue, '62')) {
+    $whatsAppValue = substr($whatsAppValue, 2);
+} elseif (str_starts_with($whatsAppValue, '0')) {
+    $whatsAppValue = substr($whatsAppValue, 1);
+}
+?>
 
 <div class="page-header">
     <h1 class="page-title">
         <?= esc($pageTitle) ?>
     </h1>
-    <p class="page-subtitle">
-        <?= $member ? 'Perbarui data anggota DPRD' : 'Tambahkan anggota baru ke sistem' ?>
-    </p>
 </div>
 
 <form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form" data-turbo="true">
@@ -24,37 +29,36 @@
         </div>
     <?php endif; ?>
 
-    <div class="grid grid-cols-12 gap-3">
+    <section class="card card-border bg-base-100 shadow-sm">
+        <div class="card-body gap-5 p-4 sm:p-5">
+            <h2 class="card-title text-base">
+                <i data-lucide="user-round" class="h-5 w-5 text-primary"></i>
+                Data Anggota
+            </h2>
 
-        <!-- Kolom kiri: Data Utama -->
-        <div class="col-span-12">
-            <div class="form-card p-[18px]">
-
-                <div class="form-section-title mb-3 pb-2">Informasi Anggota</div>
-
+            <fieldset class="fieldset gap-3">
                 <div class="grid grid-cols-12 gap-3">
-
                     <div class="col-span-12">
-                        <label class="label-text font-bold text-sm mb-1 block" for="name">
+                        <label class="label py-1 font-semibold" for="name">
                             Nama Lengkap <span class="text-error">*</span>
                         </label>
-                        <input type="text" class="input input-bordered w-full" id="name" name="name"
-                            value="<?= esc($member['name'] ?? '') ?>" placeholder="Contoh: H. Ahmad Fauzi, S.H., M.M."
+                        <input type="text" class="input w-full" id="name" name="name"
+                            value="<?= esc($member['name'] ?? '') ?>" placeholder="Masukkan nama lengkap"
                             required />
                     </div>
 
                     <div class="col-span-12 md:col-span-6">
-                        <label class="label-text font-bold text-sm mb-1 block" for="jabatan">Jabatan</label>
-                        <input type="text" class="input input-bordered w-full" id="jabatan" name="jabatan"
-                            value="<?= esc($member['jabatan'] ?? '') ?>" placeholder="Contoh: Ketua Komisi III" />
+                        <label class="label py-1 font-semibold" for="jabatan">Jabatan</label>
+                        <input type="text" class="input w-full" id="jabatan" name="jabatan"
+                            value="<?= esc($member['jabatan'] ?? '') ?>" placeholder="Masukkan jabatan" />
                     </div>
 
                     <div class="col-span-12 md:col-span-6">
-                        <label class="label-text font-bold text-sm mb-1 block" for="fraksi">
+                        <label class="label py-1 font-semibold" for="fraksi">
                             Fraksi <span class="text-error">*</span>
                         </label>
-                        <select class="select select-bordered w-full" id="fraksi" name="fraksi" required>
-                            <option value="">-- Pilih Fraksi --</option>
+                        <select class="select w-full" id="fraksi" name="fraksi" required>
+                            <option value="">Pilih fraksi</option>
                             <?php foreach ($fraksi_list as $f):
                                 $selected = ($member['fraksi'] ?? '') === $f ? 'selected' : '';
                             ?>
@@ -66,8 +70,8 @@
                     </div>
 
                     <div class="col-span-12 md:col-span-6">
-                        <label class="label-text font-bold text-sm mb-1 block" for="komisi">Komisi</label>
-                        <select class="select select-bordered w-full" id="komisi" name="komisi">
+                        <label class="label py-1 font-semibold" for="komisi">Komisi</label>
+                        <select class="select w-full" id="komisi" name="komisi">
                             <option value="">Tidak dalam komisi</option>
                             <?php foreach ($komisi_list as $k):
                                 $selected = ($member['komisi'] ?? '') === $k ? 'selected' : '';
@@ -80,58 +84,34 @@
                     </div>
 
                     <div class="col-span-12 md:col-span-6">
-                        <label class="label-text font-bold text-sm mb-1 block" for="status">Status</label>
-                        <select class="select select-bordered w-full" id="status" name="aktif">
+                        <label class="label py-1 font-semibold" for="status">Status</label>
+                        <select class="select w-full" id="status" name="aktif">
                             <option value="1" <?= ($member['aktif'] ?? 1) ? 'selected' : '' ?>>Aktif</option>
                             <option value="0" <?= !($member['aktif'] ?? 1) ? 'selected' : '' ?>>Nonaktif</option>
                         </select>
                     </div>
-
                 </div>
-            </div>
+            </fieldset>
 
-            <div class="form-card mt-2 p-[18px]">
-                <div class="form-section-title mb-3 pb-2">Kontak WhatsApp</div>
-
-                <div class="grid grid-cols-12 gap-3 items-start">
+            <fieldset class="fieldset gap-3 border-t border-base-300 pt-4">
+                <legend class="fieldset-legend">Kontak WhatsApp</legend>
+                <div class="grid grid-cols-12 gap-3">
                     <div class="col-span-12 md:col-span-6">
-                        <label class="label-text font-bold text-sm mb-1 block" for="no_wa">
+                        <label class="label py-1 font-semibold" for="no_wa">
                             Nomor WhatsApp <span class="text-error">*</span>
                         </label>
                         <div class="join w-full">
                             <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold font-mono">+62</span>
-                            <input type="text" class="input input-bordered join-item flex-1 w-full" id="no_wa" name="no_wa"
-                                value="<?= esc($member['no_wa'] ?? '') ?>" placeholder="8123456789"
-                                inputmode="numeric" pattern="8[0-9]{7,12}" title="Gunakan format 8123456789 tanpa 0 di depan." required />
-                        </div>
-                        <div class="label-text-alt text-base-content/60 mt-1">Format tanpa 0 di depan. Contoh: 8123456789</div>
-                    </div>
-
-                    <?php if ($member): ?>
-                        <div class="col-span-12 md:col-span-6">
-                            <div class="alert alert-info py-2 px-3 text-xs mb-0 flex gap-2">
-                                <i data-lucide="info" class="w-4 h-4"></i>
-                                <span>Gunakan nomor WhatsApp aktif milik anggota.</span>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="form-card mt-2 p-[18px]">
-                <div class="form-section-title mb-3 pb-2">Akun Login Anggota</div>
-
-                <div class="grid grid-cols-12 gap-3 items-start">
-                    <div class="col-span-12">
-                        <div class="alert alert-info text-xs">
-                            <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
-                            <span>Setiap anggota berstatus aktif dapat masuk menggunakan kode OTP enam digit yang dikirim ke nomor WhatsApp terdaftar.</span>
+                            <input type="text" class="input join-item flex-1 w-full" id="no_wa" name="no_wa"
+                                value="<?= esc($whatsAppValue) ?>" placeholder="8123456789"
+                                inputmode="numeric" pattern="8[0-9]{7,11}" maxlength="12"
+                                title="Gunakan maksimal 12 digit setelah +62." required />
                         </div>
                     </div>
                 </div>
-            </div>
+            </fieldset>
         </div>
-    </div>
+    </section>
 
     <!-- Tombol Aksi -->
     <div class="form-actions-sticky">

@@ -2,36 +2,28 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header flex items-center justify-between unit-rapat-index-header">
-    <div>
-        <h1 class="page-title">Kelompok Peserta</h1>
-        <p class="page-subtitle">Kelola kelompok internal DPRD untuk peserta rapat</p>
-    </div>
-    <a href="<?= base_url('admin/unit-rapat/create') ?>" class="btn btn-primary btn-sm gap-1 unit-rapat-add-button">
-        <i data-lucide="plus" class="w-4 h-4"></i>Tambah Kelompok
+<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="page-title">Kelompok Peserta</h1>
+    <a href="<?= base_url('admin/unit-rapat/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        Tambah Kelompok
     </a>
 </div>
 
-<div class="section-card unit-rapat-card">
-    <div class="section-card-header">
-        <div class="header-icon"><i data-lucide="workflow"></i></div>
-        <div>
-            <h6>Daftar Kelompok Peserta</h6>
-            <?php $scope = $data_scope ?? ['label' => 'seluruh kelompok, termasuk nonaktif']; ?>
-            <p class="header-sub">
-                <?= count($units) ?> kelompok terdaftar
-                <span class="text-base-content/50">
-                    &bull; <?= esc($scope['label']) ?>
-                </span>
-            </p>
-        </div>
+<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
+        <h2 class="card-title text-base">
+            <i data-lucide="workflow" class="h-5 w-5 text-primary"></i>
+            Daftar Kelompok
+        </h2>
+        <span class="badge badge-ghost whitespace-nowrap"><?= count($units) ?> kelompok</span>
     </div>
 
-    <div class="section-card-body p-0">
-        <div class="overflow-x-auto w-full unit-rapat-table-container">
+    <div class="min-w-0">
+        <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
             <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
-                    <tr class="bg-base-200/50">
+                    <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
                         <th>Nama Kelompok</th>
                         <th>Status</th>
@@ -40,37 +32,41 @@
                 </thead>
                 <tbody>
                     <?php foreach ($units as $unit): ?>
-                        <tr class="hover:bg-base-200/30 transition-colors">
+                        <tr class="transition-colors hover:bg-base-200/40">
                             <td class="dt-row-number" data-label="No"></td>
                             <td data-label="Nama Kelompok">
-                                <div class="font-bold text-base-content text-sm"><?= esc($unit['nama']) ?></div>
+                                <div class="text-sm font-bold text-base-content"><?= esc($unit['nama']) ?></div>
                             </td>
                             <td data-label="Status">
                                 <?php if ($unit['aktif']): ?>
-                                    <span class="badge badge-success h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                    <span class="badge badge-success h-auto gap-1.5 whitespace-nowrap px-2 py-0.5 text-xs font-semibold">
+                                        <span class="status status-success"></span>
                                         Aktif
                                     </span>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost h-auto py-0.5 px-2 text-xs font-semibold whitespace-nowrap text-base-content/60 gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                    <span class="badge badge-ghost h-auto gap-1.5 whitespace-nowrap px-2 py-0.5 text-xs font-semibold text-base-content/60">
+                                        <span class="status"></span>
                                         Nonaktif
                                     </span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
-                                        <i data-lucide="pencil" class="w-4 h-4"></i>Edit
+                                    <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>" class="btn btn-outline btn-primary btn-sm gap-1">
+                                        <i data-lucide="pencil" class="h-4 w-4"></i>
+                                        Edit
                                     </a>
-                                    <form method="post" action="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
+                                    <?php if ($unit['aktif']): ?>
+                                        <form method="post" action="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
                                             data-confirm-message="Nonaktifkan kelompok peserta ini? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman."
-                                        class="inline-flex m-0">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Nonaktifkan">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>Nonaktif
-                                        </button>
-                                    </form>
+                                            class="m-0 inline-flex">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-outline btn-error btn-sm gap-1">
+                                                <i data-lucide="circle-off" class="h-4 w-4"></i>
+                                                Nonaktifkan
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -79,6 +75,6 @@
             </table>
         </div>
     </div>
-</div>
+</section>
 
 <?= $this->endSection() ?>

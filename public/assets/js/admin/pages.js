@@ -216,7 +216,6 @@
         const targetOptions = Array.from(document.querySelectorAll('.target-option'));
         const targetSearch = document.getElementById('target-search');
         const targetSelectedCount = document.getElementById('target-selected-count');
-        const targetVisibleCount = document.getElementById('target-visible-count');
         const targetEmpty = document.getElementById('target-empty');
         const targetError = document.getElementById('target-peserta-error');
 
@@ -273,9 +272,6 @@
                 if (match) shown++;
             });
 
-            if (targetVisibleCount) {
-                targetVisibleCount.textContent = shown;
-            }
             if (targetEmpty) {
                 targetEmpty.classList.toggle('hidden', shown > 0);
             }
@@ -342,13 +338,14 @@
             submitButton.disabled = busy;
             if (submitSpinner) submitSpinner.hidden = !busy;
             if (submitIcon) submitIcon.hidden = busy;
-            if (submitLabel) submitLabel.textContent = busy ? 'Menyimpan...' : 'Simpan Semua Pengaturan';
+            if (submitLabel) submitLabel.textContent = busy ? 'Menyimpan...' : 'Simpan Pengaturan';
         };
 
         const showError = (message) => {
             const currentValue = Number(bar.value) || 0;
             panel.hidden = false;
-            panel.classList.add('is-error');
+            panel.classList.remove('alert-info');
+            panel.classList.add('alert-error');
             setProgress(currentValue, message || 'Gagal menyimpan pengaturan.');
             setBusy(false);
         };
@@ -376,7 +373,8 @@
             const formData = new FormData(form);
 
             panel.hidden = false;
-            panel.classList.remove('is-error');
+            panel.classList.remove('alert-error');
+            panel.classList.add('alert-info');
             bar.classList.remove('progress-error');
             bar.classList.add('progress-primary');
             setBusy(true);
@@ -453,7 +451,6 @@
         const targetCount = document.getElementById('target-count');
         const sourceCount = document.getElementById('source-count');
         const memberCountBadge = document.getElementById('member-count-badge');
-        const sidebarSelectedCount = document.getElementById('sidebar-selected-count');
         const allSourceItems = document.querySelectorAll('.anggota-source');
         const allCheckboxes = document.querySelectorAll('.source-checkbox');
 
@@ -461,18 +458,19 @@
             return document.querySelectorAll('.source-checkbox:checked').length;
         };
 
-        const syncMemberValidity = function() {
+        const syncMemberValidity = function(showError) {
             const invalid = !!(aktifToggle?.checked && selectedMemberCount() === 0);
-            if (anggotaError) anggotaError.classList.toggle('hidden', !invalid);
+            const shouldShow = invalid && showError === true;
+            if (anggotaError) anggotaError.classList.toggle('hidden', !shouldShow);
             allCheckboxes.forEach(function(cb) {
-                cb.classList.toggle('checkbox-error', invalid);
+                cb.classList.toggle('checkbox-error', shouldShow);
             });
             return !invalid;
         };
 
         aktifToggle?.addEventListener('change', function() {
             if (aktifLabel) aktifLabel.textContent = this.checked ? 'Aktif' : 'Nonaktif';
-            syncMemberValidity();
+            syncMemberValidity(true);
         });
 
         const updateTargetPanel = function() {
@@ -491,7 +489,6 @@
 
             targetCount.textContent = count;
             if (memberCountBadge) memberCountBadge.textContent = count + ' dipilih';
-            if (sidebarSelectedCount) sidebarSelectedCount.textContent = count;
 
             targetList.querySelectorAll('.transfer-target-item').forEach(el => el.remove());
 
@@ -505,7 +502,7 @@
                 div.innerHTML = '<i data-lucide="shuffle" class="w-5 h-5 opacity-40"></i><small>Pilih anggota dari panel kiri</small>';
                 targetList.appendChild(div);
                 window.renderAdminIcons?.();
-                syncMemberValidity();
+                syncMemberValidity(true);
                 return;
             }
 
@@ -540,7 +537,7 @@
             });
 
             window.renderAdminIcons?.();
-            syncMemberValidity();
+            syncMemberValidity(true);
         };
 
         allCheckboxes.forEach(function(cb) {
@@ -548,7 +545,7 @@
         });
 
         form?.addEventListener('submit', function(event) {
-            if (!syncMemberValidity()) {
+            if (!syncMemberValidity(true)) {
                 event.preventDefault();
                 allCheckboxes[0]?.focus();
             }
@@ -582,7 +579,7 @@
             if (sourceCount) sourceCount.textContent = n;
         });
 
-        syncMemberValidity();
+        syncMemberValidity(false);
     };
 
     document.addEventListener('turbo:load', initUnitForm);

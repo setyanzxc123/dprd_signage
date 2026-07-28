@@ -2,13 +2,11 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header flex items-center justify-between">
-    <div>
-        <h1 class="page-title">Jadwal Rapat</h1>
-        <p class="page-subtitle">Kelola jadwal rapat DPRD</p>
-    </div>
-    <a href="<?= base_url('admin/jadwal/create') ?>" class="btn btn-sm btn-primary gap-1">
-        <i data-lucide="plus" class="w-4 h-4"></i>Tambah Jadwal
+<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="page-title">Jadwal Rapat</h1>
+    <a href="<?= base_url('admin/jadwal/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        Tambah Jadwal
     </a>
 </div>
 
@@ -21,58 +19,46 @@
     ];
 ?>
 
-<div class="section-card">
-    <div class="section-card-header">
-        <div class="header-icon"><i data-lucide="calendar-days"></i></div>
-        <div>
-            <h6>Daftar Jadwal</h6>
-            <?php $scope = $data_scope ?? ['label' => 'filter aktif']; ?>
-            <p class="header-sub">
-                <?= count($meetings) ?> jadwal ditemukan
-                <span class="text-base-content/50">
-                    &bull; <?= esc($scope['label']) ?>
-                </span>
-            </p>
-        </div>
+<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
+        <h2 class="card-title text-base">
+            <i data-lucide="calendar-days" class="h-5 w-5 text-primary"></i>
+            Daftar Jadwal
+        </h2>
+        <span class="badge badge-ghost whitespace-nowrap"><?= count($meetings) ?> jadwal</span>
     </div>
 
-    <form method="get" class="p-3 border-b border-base-200">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div>
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-tahun">Tahun</label>
-                <select class="select select-sm select-bordered" id="filter-tahun" name="tahun" data-auto-submit>
-                    <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?>
-                        <option value="<?= $y ?>" <?= (int) $filters['tahun'] === $y ? 'selected' : '' ?>><?= $y ?></option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-            <div>
-                <label class="label-text font-bold text-xs mb-1 block" for="filter-semester">Semester</label>
-                <select class="select select-sm select-bordered" id="filter-semester" name="semester" data-auto-submit>
-                    <option value="all" <?= $filters['semester'] === 'all' ? 'selected' : '' ?>>Semua</option>
-                    <option value="1" <?= $filters['semester'] === '1' ? 'selected' : '' ?>>Semester I</option>
-                    <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-sm btn-outline btn-ghost" title="Reset semua filter">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                </a>
-            </div>
-            <p class="text-xs text-base-content/40 self-end pb-1 ml-auto hidden md:block">
-
-
-                Filter Jenis &amp; Status tersedia langsung di tabel ↓
-            </p>
+    <form method="get" class="grid grid-cols-12 items-end gap-3 border-b border-base-300 px-4 py-3 sm:px-5">
+        <fieldset class="fieldset col-span-6 min-w-0 sm:col-span-3 lg:col-span-2">
+            <legend class="fieldset-legend">Tahun</legend>
+            <select class="select select-sm w-full min-w-0" id="filter-tahun" name="tahun" data-auto-submit>
+                <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?>
+                    <option value="<?= $y ?>" <?= (int) $filters['tahun'] === $y ? 'selected' : '' ?>><?= $y ?></option>
+                <?php endfor; ?>
+            </select>
+        </fieldset>
+        <fieldset class="fieldset col-span-6 min-w-0 sm:col-span-3 lg:col-span-2">
+            <legend class="fieldset-legend">Semester</legend>
+            <select class="select select-sm w-full min-w-0" id="filter-semester" name="semester" data-auto-submit>
+                <option value="all" <?= $filters['semester'] === 'all' ? 'selected' : '' ?>>Semua</option>
+                <option value="1" <?= $filters['semester'] === '1' ? 'selected' : '' ?>>Semester I</option>
+                <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
+            </select>
+        </fieldset>
+        <div class="col-span-12 sm:col-span-3 lg:col-span-2">
+            <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-ghost btn-sm w-full gap-1 sm:w-auto">
+                <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
+                Reset
+            </a>
         </div>
     </form>
 
-    <div class="section-card-body p-0">
-        <div class="overflow-x-auto w-full">
+    <div class="min-w-0">
+        <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
             <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-jadwal" data-admin-datatable data-dt-order='[[1,"desc"]]'
                 data-dt-col-filters='[{"col":5,"label":"Jenis","all":"Semua Jenis"},{"col":7,"label":"Status","all":"Semua Status"}]'>
                 <thead>
-                    <tr class="bg-base-200/50">
+                    <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
                         <th>Tanggal & Waktu</th>
                         <th>Judul Rapat</th>
@@ -89,61 +75,72 @@
                         $badge = status_badge($m['status']);
                         $dateOrder = $m['tanggal'] . ' ' . $m['waktu_mulai'];
                     ?>
-                        <tr class="hover:bg-base-200/30 transition-colors">
+                        <tr class="transition-colors hover:bg-base-200/40">
                             <td class="dt-row-number" data-label="No"></td>
                             <td class="whitespace-nowrap text-right sm:text-left" data-order="<?= esc($dateOrder, 'attr') ?>" data-label="Tanggal & Waktu">
-                                <div class="flex flex-col items-end sm:items-start gap-0.5">
-                                    <span class="font-bold text-sm text-base-content">
+                                <div class="flex flex-col items-end gap-0.5 sm:items-start">
+                                    <span class="text-sm font-bold text-base-content">
                                         <?= esc(date('d/m/Y', strtotime($m['tanggal']))) ?>
                                     </span>
-                                    <span class="text-xs text-base-content/60 font-medium">
-                                        <?= esc($m['waktu_mulai']) ?> - <?= esc($m['waktu_selesai']) ?>
+                                    <span class="text-xs font-medium text-base-content/60">
+                                        <?= esc($m['waktu_mulai']) ?>&ndash;<?= esc($m['waktu_selesai']) ?>
                                     </span>
                                 </div>
                             </td>
                             <td data-label="Judul Rapat">
-                                <div class="font-bold text-base-content text-sm"><?= esc($m['judul']) ?></div>
-                                <div class="text-xs text-base-content/60 mt-1 max-w-md truncate hidden sm:block" title="<?= esc($m['keterangan'] ?? '') ?>">
-                                    <?= esc($m['keterangan'] ?? '') ?>
-                                </div>
+                                <div class="text-sm font-bold text-base-content"><?= esc($m['judul']) ?></div>
+                                <?php if (! empty($m['keterangan'])): ?>
+                                    <div class="mt-1 hidden max-w-md truncate text-xs text-base-content/60 sm:block" title="<?= esc($m['keterangan']) ?>">
+                                        <?= esc($m['keterangan']) ?>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                             <td class="whitespace-nowrap text-base-content/85" data-label="Ruangan"><?= esc($m['ruangan']) ?></td>
                             <td data-label="Peserta" class="mobile-hidden">
-                                <span class="badge badge-ghost h-auto py-1 px-2 text-xs whitespace-nowrap">
+                                <span class="badge badge-ghost h-auto whitespace-nowrap px-2 py-1 text-xs">
                                     <?= esc($m['target_peserta']) ?>
                                 </span>
                             </td>
                             <td data-label="Jenis" class="mobile-hidden">
                                 <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
-                                    <span class="badge badge-primary h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap">Reguler</span>
+                                    <span class="badge badge-primary h-auto whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold">Reguler</span>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap">Insidental</span>
+                                    <span class="badge badge-ghost h-auto whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold text-base-content/60">Insidental</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Publik" class="mobile-hidden">
                                 <?php if ($m['is_publik'] ?? 0): ?>
-                                    <span class="badge badge-success h-auto py-0.5 px-1.5 text-[10px] font-semibold whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Publik</span>
+                                    <span class="badge badge-success h-auto whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold" title="Ubah publikasi melalui halaman edit">Publik</span>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost h-auto py-0.5 px-1.5 text-[10px] font-semibold text-base-content/60 whitespace-nowrap" title="Ubah publikasi melalui halaman edit">Internal</span>
+                                    <span class="badge badge-ghost h-auto whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold text-base-content/60" title="Ubah publikasi melalui halaman edit">Internal</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Status">
-                                <?php $dotClass = ($m['status'] === 'berlangsung') ? 'bg-current animate-pulse' : 'bg-current'; ?>
-                                <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2.5 text-xs font-semibold whitespace-nowrap">
-                                    <span class="w-1.5 h-1.5 rounded-full <?= $dotClass ?>"></span>
+                                <?php
+                                $statusClass = match ($m['status']) {
+                                    'berlangsung' => 'status-success animate-pulse',
+                                    'persiapan'   => 'status-warning',
+                                    'selesai'     => 'status-info',
+                                    default       => 'status-neutral',
+                                };
+                                ?>
+                                <span class="badge <?= $badge['class'] ?> h-auto whitespace-nowrap px-2.5 py-1 text-xs font-semibold">
+                                    <span class="status <?= $statusClass ?>"></span>
                                     <?= $badge['label'] ?>
                                 </span>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a href="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>" class="btn btn-sm btn-outline btn-primary gap-1" title="Edit">
-                                        <i data-lucide="pencil" class="w-4 h-4"></i>Edit
+                                <div class="flex flex-wrap items-center justify-end gap-2">
+                                    <a href="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>" class="btn btn-outline btn-primary btn-sm gap-1">
+                                        <i data-lucide="pencil" class="h-4 w-4"></i>
+                                        Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/jadwal/{$m['id']}/delete") ?>"
-                                            data-confirm-message="Hapus jadwal ini?" class="inline-flex m-0">
+                                        data-confirm-message="Hapus jadwal ini?" class="m-0 inline-flex">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus
+                                        <button type="submit" class="btn btn-outline btn-error btn-sm gap-1">
+                                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                            Hapus
                                         </button>
                                     </form>
                                 </div>
@@ -154,6 +151,6 @@
             </table>
         </div>
     </div>
-</div>
+</section>
 
 <?= $this->endSection() ?>

@@ -12,9 +12,6 @@
 
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
-    <p class="page-subtitle">
-        <?= $unit ? 'Perbarui kelompok internal DPRD' : 'Tambahkan kelompok internal DPRD untuk target rapat' ?>
-    </p>
 </div>
 
 <form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form" data-turbo="true">
@@ -28,59 +25,58 @@
     <?php endif; ?>
 
     <div class="grid grid-cols-12 gap-3 participant-group-grid">
-        <div class="col-span-12 lg:col-span-4 participant-info-col">
-            <div class="form-card p-[18px]">
-                <div class="form-section-title mb-3 pb-2">Informasi Kelompok</div>
+        <div class="col-span-12 participant-info-col">
+            <section class="card card-border bg-base-100 shadow-sm">
+                <div class="card-body gap-4 p-4 sm:p-5">
+                    <h2 class="card-title text-base">
+                        <i data-lucide="users-round" class="h-5 w-5 text-primary"></i>
+                        Informasi Kelompok
+                    </h2>
 
-                <div class="mb-4">
-                    <label class="label-text font-bold text-sm mb-1 block" for="nama">
-                        Nama Kelompok <span class="text-error">*</span>
-                    </label>
-                    <input type="text" class="input input-bordered w-full" id="nama" name="nama"
-                        value="<?= esc($unitNama) ?>"
-                        placeholder="Contoh: Pimpinan DPRD, Komisi I, Badan Anggaran"
-                        required />
-                    <div class="label-text-alt text-base-content/60 mt-1.5">
-                        Kelompok peserta adalah target internal DPRD untuk rapat. Bisa berisi satu atau banyak anggota.
-                    </div>
-                </div>
+                    <fieldset class="fieldset grid grid-cols-12 gap-3">
+                        <div class="col-span-12 lg:col-span-8">
+                            <label class="label py-1 font-semibold" for="nama">
+                                Nama Kelompok <span class="text-error">*</span>
+                            </label>
+                            <input type="text" class="input w-full" id="nama" name="nama"
+                                value="<?= esc($unitNama) ?>"
+                                placeholder="Masukkan nama kelompok"
+                                required />
+                        </div>
 
-                <div class="mb-4">
-                    <label class="label-text font-bold text-sm mb-1 block">Status</label>
-                    <div class="flex items-center gap-3 mt-1.5">
-                        <input class="toggle toggle-primary" type="checkbox" role="switch"
-                            id="aktif" name="aktif" value="1"
-                            <?= ($unit['aktif'] ?? 1) ? 'checked' : '' ?> />
-                        <label class="label-text font-semibold cursor-pointer" for="aktif" id="aktif-label">
-                            <?= ($unit['aktif'] ?? 1) ? 'Aktif' : 'Nonaktif' ?>
-                        </label>
-                    </div>
-                    <div class="label-text-alt text-base-content/60 mt-1.5">Nonaktif tidak muncul di pilihan target jadwal baru.</div>
+                        <div class="col-span-12 lg:col-span-4">
+                            <label class="label py-1 font-semibold" for="aktif">Status</label>
+                            <label class="label h-10 w-full cursor-pointer items-center justify-between rounded-lg border border-base-300 px-3" for="aktif">
+                                <span class="font-semibold" id="aktif-label">
+                                    <?= ($unit['aktif'] ?? 1) ? 'Aktif' : 'Nonaktif' ?>
+                                </span>
+                                <input class="toggle toggle-primary" type="checkbox" role="switch"
+                                    id="aktif" name="aktif" value="1"
+                                    <?= ($unit['aktif'] ?? 1) ? 'checked' : '' ?> />
+                            </label>
+                        </div>
+                    </fieldset>
                 </div>
-            </div>
-
-            <div class="form-card mt-2 p-[18px] participant-summary-card">
-                <div class="form-section-title mb-3 pb-2">Ringkasan</div>
-                <div class="flex items-center gap-2">
-                    <span class="badge badge-neutral rounded-full font-bold" id="sidebar-selected-count"><?= count($selectedAnggotaIds) ?></span>
-                    <small class="text-base-content/60 font-semibold">anggota terpilih</small>
-                </div>
-            </div>
+            </section>
         </div>
 
-        <div class="col-span-12 lg:col-span-8 participant-member-col">
-            <div class="form-card p-[18px] participant-member-card">
-                <div class="form-section-title participant-member-head flex items-center justify-between gap-2 mb-3 pb-2">
-                    <span>Anggota Kelompok</span>
-                    <span class="badge badge-neutral" id="member-count-badge">
-                        <?= count($selectedAnggotaIds) ?> dipilih
-                    </span>
-                </div>
+        <div class="col-span-12 participant-member-col">
+            <section class="card card-border bg-base-100 shadow-sm">
+                <div class="card-body participant-member-card gap-4 p-4 sm:p-5">
+                    <h2 class="card-title participant-member-head flex items-center justify-between gap-2 text-base">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="contact-round" class="h-5 w-5 text-primary"></i>
+                            Anggota Kelompok
+                        </span>
+                        <span class="badge badge-primary badge-sm" id="member-count-badge">
+                            <?= count($selectedAnggotaIds) ?> dipilih
+                        </span>
+                    </h2>
 
                 <?php if (empty($members)): ?>
-                    <div class="alert alert-warning mb-0 py-2 px-3 flex gap-2">
+                    <div class="alert alert-warning">
                         <i data-lucide="triangle-alert" class="w-4 h-4"></i>
-                        <span>Belum ada anggota DPRD aktif. Tambahkan melalui menu <strong>Anggota DPRD</strong>.</span>
+                        <span>Belum ada anggota DPRD aktif.</span>
                     </div>
                     <div class="text-error text-xs mt-2 hidden" id="anggota-kelompok-error">
                         Kelompok peserta aktif wajib memiliki minimal satu anggota.
@@ -88,16 +84,17 @@
                 <?php else: ?>
                     <div class="grid grid-cols-12 gap-3 participant-member-grid">
                         <div class="col-span-12 md:col-span-6 participant-source-col">
-                            <div class="border border-base-300 rounded overflow-hidden participant-list-panel">
-                                <div class="flex items-center justify-between px-3 py-2 border-b border-base-300 bg-base-200">
-                                    <span class="text-xs font-bold text-base-content/60 uppercase">Tersedia</span>
-                                    <span class="badge badge-neutral" id="source-count"><?= count($members) ?></span>
-                                </div>
-                                <div class="p-2 border-b border-base-300 bg-base-100">
-                                    <input type="text" class="input input-sm input-bordered w-full" id="source-search"
-                                        placeholder="Cari nama, jabatan, atau komisi..." autocomplete="off" />
-                                </div>
-                                <div class="max-h-[240px] overflow-y-auto participant-source-list" id="source-list">
+                            <section class="card card-border card-sm h-full overflow-hidden participant-list-panel">
+                                <div class="card-body gap-0 p-0">
+                                    <div class="flex items-center justify-between border-b border-base-300 bg-base-200 px-3 py-2">
+                                        <span class="font-semibold">Tersedia</span>
+                                        <span class="badge badge-neutral badge-sm" id="source-count"><?= count($members) ?></span>
+                                    </div>
+                                    <div class="border-b border-base-300 bg-base-100 p-2">
+                                        <input type="text" class="input input-sm w-full" id="source-search"
+                                            placeholder="Cari anggota" autocomplete="off" />
+                                    </div>
+                                    <div class="overflow-y-auto md:h-[240px] participant-source-list" id="source-list">
                                     <?php foreach ($members as $member):
                                         $memberId = (int) $member['id'];
                                         $checked = in_array($memberId, $selectedAnggotaIds, true);
@@ -125,17 +122,19 @@
                                             </div>
                                         </label>
                                     <?php endforeach; ?>
+                                    </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
 
                         <div class="col-span-12 md:col-span-6 participant-target-col">
-                            <div class="border border-base-300 rounded overflow-hidden participant-list-panel">
-                                <div class="flex items-center justify-between px-3 py-2 border-b border-base-300 bg-base-200">
-                                    <span class="text-xs font-bold text-base-content/60 uppercase">Terpilih</span>
-                                    <span class="badge badge-primary" id="target-count"><?= count($selectedAnggotaIds) ?></span>
-                                </div>
-                                <div class="max-h-[282px] overflow-y-auto participant-target-list" id="target-list">
+                            <section class="card card-border card-sm h-full overflow-hidden participant-list-panel">
+                                <div class="card-body gap-0 p-0">
+                                    <div class="flex items-center justify-between border-b border-base-300 bg-base-200 px-3 py-2">
+                                        <span class="font-semibold">Terpilih</span>
+                                        <span class="badge badge-primary badge-sm" id="target-count"><?= count($selectedAnggotaIds) ?></span>
+                                    </div>
+                                    <div class="overflow-y-auto md:h-[282px] participant-target-list" id="target-list">
                                     <?php
                                     $hasSelected = false;
                                     foreach ($members as $member):
@@ -171,15 +170,17 @@
                                             <small>Pilih anggota dari panel kiri</small>
                                         </div>
                                     <?php endif; ?>
+                                    </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
                     </div>
                     <div class="text-error text-xs mt-2 hidden" id="anggota-kelompok-error">
                         Kelompok peserta aktif wajib memiliki minimal satu anggota.
                     </div>
                 <?php endif; ?>
-            </div>
+                </div>
+            </section>
         </div>
 
     </div>
