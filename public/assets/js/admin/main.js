@@ -83,6 +83,27 @@
         });
     }
 
+    function bindFormConfirmations() {
+        if (document.documentElement.dataset.adminConfirmBound === '1') return;
+        document.documentElement.dataset.adminConfirmBound = '1';
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target.closest('form[data-confirm-message]');
+            if (!form || window.confirm(form.dataset.confirmMessage || 'Lanjutkan tindakan ini?')) return;
+            event.preventDefault();
+        });
+    }
+
+    function bindAutoSubmitControls() {
+        if (document.documentElement.dataset.adminAutoSubmitBound === '1') return;
+        document.documentElement.dataset.adminAutoSubmitBound = '1';
+
+        document.addEventListener('change', function (event) {
+            const control = event.target.closest('[data-auto-submit]');
+            if (control?.form) control.form.requestSubmit();
+        });
+    }
+
     /* ── Alert close handler ────────────────────────────────────────────── */
     function dismissAdminAlert(alert) {
         if (!alert || alert.dataset.dismissed === '1') return;
@@ -470,6 +491,8 @@
      * turbo:load sudah cukup — ia meng-cover semua skenario.
      */
     bindAlertHandlers();
+    bindFormConfirmations();
+    bindAutoSubmitControls();
     refreshAdminPage();
     startClock();
 

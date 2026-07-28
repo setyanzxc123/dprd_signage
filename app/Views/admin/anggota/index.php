@@ -94,7 +94,7 @@
                                     <?php if (! empty($m['aktif'])): ?>
                                         <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/otp-darurat") ?>"
                                             class="inline-flex items-center gap-1 m-0"
-                                            onsubmit="return confirm('Buat OTP darurat untuk anggota ini? Pastikan identitas anggota sudah diverifikasi.');">
+                                            data-confirm-message="Buat OTP darurat untuk anggota ini? Pastikan identitas anggota sudah diverifikasi.">
                                             <?= csrf_field() ?>
                                             <input type="text" name="reason" class="input input-sm w-36"
                                                 minlength="5" maxlength="255" placeholder="Alasan darurat" required />
@@ -107,7 +107,7 @@
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
-                                        onsubmit="return confirm('Hapus anggota ini?')" class="inline-flex m-0">
+                                        data-confirm-message="Hapus anggota ini?" class="inline-flex m-0">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus

@@ -79,7 +79,7 @@
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/ruangan/{$r['id']}/delete") ?>"
-                                        onsubmit="return confirm('Hapus ruangan ini?')" class="inline-flex m-0">
+                                            data-confirm-message="Hapus ruangan ini?" class="inline-flex m-0">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus

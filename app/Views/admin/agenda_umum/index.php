@@ -113,7 +113,7 @@ $statusClasses = [
                                         Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/agenda-umum/{$agenda['id']}/delete") ?>" class="m-0 inline-flex"
-                                        onsubmit="return confirm('Hapus jadwal umum ini?')">
+                                                data-confirm-message="Hapus jadwal umum ini?">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1">
                                             <i data-lucide="trash-2" class="h-4 w-4"></i>

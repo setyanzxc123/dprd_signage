@@ -64,7 +64,7 @@
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/unit-rapat/{$unit['id']}/delete") ?>"
-                                        onsubmit="return confirm('Nonaktifkan kelompok peserta ini? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman.')"
+                                            data-confirm-message="Nonaktifkan kelompok peserta ini? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman."
                                         class="inline-flex m-0">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Nonaktifkan">

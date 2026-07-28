@@ -106,7 +106,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
                                     <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Tanggal Pelaksanaan</span>
                                     <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="100" required
                                         name="items[<?= $index ?>][tanggal_pelaksanaan]" data-field="tanggal_pelaksanaan"
-                                        placeholder="Contoh: Juni–Juli 2026"><?= esc($implementationDate) ?></textarea>
+                                        placeholder="Contoh: Juniâ€“Juli 2026"><?= esc($implementationDate) ?></textarea>
                                 </td>
                                 <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                                     <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Uraian Kegiatan</span>
@@ -161,7 +161,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
             <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                 <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Tanggal Pelaksanaan</span>
                 <textarea class="textarea min-h-24 w-full resize-y" rows="3" maxlength="100" required
-                    data-field="tanggal_pelaksanaan" placeholder="Contoh: Juni–Juli 2026"></textarea>
+                    data-field="tanggal_pelaksanaan" placeholder="Contoh: Juniâ€“Juli 2026"></textarea>
             </td>
             <td class="max-sm:block max-sm:w-full max-sm:min-w-0 max-sm:border-0 max-sm:px-1 max-sm:py-2">
                 <span class="mb-1 block text-xs font-bold text-base-content/60 sm:hidden">Uraian Kegiatan</span>
@@ -184,64 +184,4 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
     </template>
 </form>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<script {csp-script-nonce}>
-    (() => {
-        const initializeBanmusForm = () => {
-            const form = document.querySelector('[data-banmus-form]');
-            if (!form || form.dataset.initialized === 'true') {
-                return;
-            }
-            form.dataset.initialized = 'true';
-
-            const container = form.querySelector('[data-items-container]');
-            const template = form.querySelector('[data-item-template]');
-
-            const refreshItems = () => {
-                const rows = [...container.querySelectorAll('[data-banmus-item]')];
-                rows.forEach((row, position) => {
-                    row.querySelector('[data-item-index]').textContent = String(position + 1);
-                    row.querySelectorAll('[data-field]').forEach((field) => {
-                        field.name = `items[${position}][${field.dataset.field}]`;
-                    });
-
-                    const removeButton = row.querySelector('[data-remove-item]');
-                    removeButton.disabled = rows.length === 1;
-                    removeButton.setAttribute('aria-label', `Hapus baris ${position + 1}`);
-                });
-            };
-
-            form.querySelectorAll('[data-add-item]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    const wrapper = document.createElement('tbody');
-                    wrapper.innerHTML = template.innerHTML.trim();
-                    const row = wrapper.firstElementChild;
-                    container.appendChild(row);
-                    refreshItems();
-                    if (window.lucide) {
-                        window.lucide.createIcons();
-                    }
-                    row.querySelector('[data-field]')?.focus();
-                });
-            });
-
-            container.addEventListener('click', (event) => {
-                const removeButton = event.target.closest('[data-remove-item]');
-                if (!removeButton || container.querySelectorAll('[data-banmus-item]').length <= 1) {
-                    return;
-                }
-
-                removeButton.closest('[data-banmus-item]')?.remove();
-                refreshItems();
-            });
-
-            refreshItems();
-        };
-
-        document.addEventListener('DOMContentLoaded', initializeBanmusForm);
-        document.addEventListener('turbo:load', initializeBanmusForm);
-    })();
-</script>
 <?= $this->endSection() ?>

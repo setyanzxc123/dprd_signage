@@ -91,7 +91,12 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public array|string $styleSrcElem = 'self';
+    // Turbo injects one immutable stylesheet for its navigation progress bar.
+    // Allow only that exact stylesheet instead of opening style elements to unsafe-inline.
+    public array|string $styleSrcElem = [
+        'self',
+        'sha256-WAyOw4V+FqDc35lQPyRADLBWbuNK8ahvYEaQIYF1+Ps=',
+    ];
 
     /**
      * Specifies valid sources for stylesheets inline

@@ -40,7 +40,7 @@
         <div class="flex flex-wrap gap-3 items-end">
             <div>
                 <label class="label-text font-bold text-xs mb-1 block" for="filter-tahun">Tahun</label>
-                <select class="select select-sm select-bordered" id="filter-tahun" name="tahun" onchange="this.form.submit()">
+                <select class="select select-sm select-bordered" id="filter-tahun" name="tahun" data-auto-submit>
                     <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?>
                         <option value="<?= $y ?>" <?= (int) $filters['tahun'] === $y ? 'selected' : '' ?>><?= $y ?></option>
                     <?php endfor; ?>
@@ -48,7 +48,7 @@
             </div>
             <div>
                 <label class="label-text font-bold text-xs mb-1 block" for="filter-semester">Semester</label>
-                <select class="select select-sm select-bordered" id="filter-semester" name="semester" onchange="this.form.submit()">
+                <select class="select select-sm select-bordered" id="filter-semester" name="semester" data-auto-submit>
                     <option value="all" <?= $filters['semester'] === 'all' ? 'selected' : '' ?>>Semua</option>
                     <option value="1" <?= $filters['semester'] === '1' ? 'selected' : '' ?>>Semester I</option>
                     <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
@@ -140,7 +140,7 @@
                                         <i data-lucide="pencil" class="w-4 h-4"></i>Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/jadwal/{$m['id']}/delete") ?>"
-                                        onsubmit="return confirm('Hapus jadwal ini?')" class="inline-flex m-0">
+                                            data-confirm-message="Hapus jadwal ini?" class="inline-flex m-0">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1" title="Hapus">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>Hapus

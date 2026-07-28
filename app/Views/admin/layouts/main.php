@@ -1,6 +1,8 @@
 <?php
 $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
 $adminJsVersion = is_file(FCPATH . 'assets/js/admin/main.js') ? filemtime(FCPATH . 'assets/js/admin/main.js') : time();
+$adminPagesJsVersion = is_file(FCPATH . 'assets/js/admin/pages.js') ? filemtime(FCPATH . 'assets/js/admin/pages.js') : time();
+$adminThemeJsVersion = is_file(FCPATH . 'assets/js/admin/theme-init.js') ? filemtime(FCPATH . 'assets/js/admin/theme-init.js') : time();
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $turboVersion = is_file(FCPATH . 'assets/vendor/turbo/turbo.es2017-umd.js') ? filemtime(FCPATH . 'assets/vendor/turbo/turbo.es2017-umd.js') : time();
 $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
@@ -16,24 +18,8 @@ $flashError = session()->getFlashdata('error');
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script {csp-script-nonce}>
-        (() => {
-            const stored = localStorage.getItem('dprd-admin-theme');
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = stored === 'dark' || stored === 'light'
-                ? stored
-                : (prefersDark ? 'dark' : 'light');
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-            document.documentElement.setAttribute('data-theme', theme);
-            if (localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed') {
-                document.documentElement.classList.add('sidebar-collapsed');
-            }
-        })();
-    </script>
+    <script src="<?= base_url('assets/js/admin/theme-init.js?v=' . $adminThemeJsVersion) ?>"
+        data-turbo-track="reload"></script>
 
     <title>
         <?= esc($pageTitle ?? 'Admin') ?> - Panel Admin Signage DPRD Sulawesi Tengah
@@ -42,8 +28,6 @@ $flashError = session()->getFlashdata('error');
         content="Panel manajemen sistem informasi jadwal rapat dan digital signage DPRD Provinsi Sulawesi Tengah." />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="turbo-cache-control" content="no-preview" />
-    <!-- A full reload keeps response-specific CSP nonces in sync for page sections. -->
-    <meta name="turbo-visit-control" content="reload" />
 
     <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font"
@@ -65,6 +49,8 @@ $flashError = session()->getFlashdata('error');
     <script src="<?= base_url('assets/vendor/datatables/dataTables.min.js?v=' . $dataTablesJsVersion) ?>" defer
         data-turbo-track="reload"></script>
     <script src="<?= base_url('assets/js/admin/main.js?v=' . $adminJsVersion) ?>" defer
+        data-turbo-track="reload"></script>
+    <script src="<?= base_url('assets/js/admin/pages.js?v=' . $adminPagesJsVersion) ?>" defer
         data-turbo-track="reload"></script>
     <?= $this->renderSection('styles') ?>
 </head>

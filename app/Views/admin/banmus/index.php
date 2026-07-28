@@ -78,7 +78,7 @@
                                             Edit
                                         </a>
                                         <form method="post" action="<?= base_url("admin/jadwal-banmus/{$document['id']}/delete") ?>"
-                                            class="m-0 inline-flex" onsubmit="return confirm('Hapus SK Banmus beserta seluruh baris kegiatannya?')">
+                                            class="m-0 inline-flex" data-confirm-message="Hapus SK Banmus beserta seluruh baris kegiatannya?">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-outline btn-error btn-sm gap-1">
                                                 <i data-lucide="trash-2" class="h-4 w-4"></i>

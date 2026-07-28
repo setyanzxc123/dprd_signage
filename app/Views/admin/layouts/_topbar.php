@@ -43,7 +43,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         <?php endif; ?>
     </nav>
 
-    <div id="topbar-actions" class="topbar-actions" data-turbo-permanent>
+    <div id="topbar-actions" class="topbar-actions">
 
         <label class="btn btn-ghost btn-circle swap swap-rotate admin-theme-toggle" title="Gunakan tema gelap"
                aria-label="Gunakan tema gelap" data-theme-toggle>
@@ -61,7 +61,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
         </div>
 
         <form class="topbar-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
-              onsubmit="return confirm('Yakin ingin keluar?')">
+              data-confirm-message="Yakin ingin keluar?">
             <?= csrf_field() ?>
             <button class="btn btn-ghost btn-circle hover:text-error" type="submit" title="Logout" aria-label="Logout">
                 <i data-lucide="log-out"></i>
