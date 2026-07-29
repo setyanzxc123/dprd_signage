@@ -3,6 +3,7 @@
 namespace App\Controllers\Member;
 
 use App\Controllers\BaseController;
+use App\Models\JadwalBanmusModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
 class ScheduleLinkController extends BaseController
@@ -61,7 +62,7 @@ class ScheduleLinkController extends BaseController
             ->table('jadwal_banmus')
             ->select($column)
             ->where('id', $id)
-            ->whereIn('status', ['fixed', 'selesai'])
+            ->whereIn('status', JadwalBanmusModel::SCHEDULED_STATUSES)
             ->where('deleted_at', null)
             ->where($column . ' !=', '')
             ->where($column . ' IS NOT NULL', null, false)

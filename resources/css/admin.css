@@ -1598,6 +1598,7 @@
     .responsive-card-table tbody td[data-label="Nama Ruangan"],
     .responsive-card-table tbody td[data-label="Nama Lengkap"],
     .responsive-card-table tbody td[data-label="Judul Rapat"],
+    .responsive-card-table tbody td[data-label="Agenda"],
     .responsive-card-table tbody td[data-label="Target"] {
         display: block !important;
         text-align: left !important;
@@ -1610,6 +1611,7 @@
     .responsive-card-table tbody td[data-label="Nama Ruangan"]::before,
     .responsive-card-table tbody td[data-label="Nama Lengkap"]::before,
     .responsive-card-table tbody td[data-label="Judul Rapat"]::before,
+    .responsive-card-table tbody td[data-label="Agenda"]::before,
     .responsive-card-table tbody td[data-label="Target"]::before {
         content: none !important;
     }

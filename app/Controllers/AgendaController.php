@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\BanmusDocumentModel;
+use App\Models\JadwalBanmusModel;
 use App\Models\MemberAccountModel;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -34,6 +35,9 @@ class AgendaController extends BaseController
         $member = $this->activeMember();
         $includeInternal = $member !== null;
         $model = $this->databaseDriverAvailable() ? new BanmusDocumentModel() : null;
+        if ($model !== null) {
+            (new JadwalBanmusModel())->autoUpdateStatuses();
+        }
         $availableYears = $model?->availableYears($includeInternal) ?? [];
 
         $requestedYear = trim((string) $this->request->getGet('tahun'));

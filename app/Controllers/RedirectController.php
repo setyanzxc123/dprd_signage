@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\JadwalBanmusModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
 class RedirectController extends BaseController
@@ -97,7 +98,7 @@ class RedirectController extends BaseController
             ->select($column)
             ->where('id', $id)
             ->where('publikasi', 'publik')
-            ->whereIn('status', ['fixed', 'selesai'])
+            ->whereIn('status', JadwalBanmusModel::SCHEDULED_STATUSES)
             ->where('deleted_at', null)
             ->where($column . ' !=', '')
             ->where($column . ' IS NOT NULL', null, false)

@@ -663,8 +663,6 @@
         const roomField = dialog.querySelector('#field_ruangan_id');
         const locationField = dialog.querySelector('#field_lokasi_lainnya');
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
-        const draftButton = dialog.querySelector('[data-banmus-save-draft]');
-        const fixedButton = dialog.querySelector('[data-banmus-set-fixed]');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
 
         if (!(form instanceof HTMLFormElement)
@@ -684,21 +682,10 @@
             if (!dialog.open) dialog.showModal();
         };
 
-        const configureActions = (status = 'proyeksi') => {
-            const fixed = status !== 'proyeksi';
-            if (draftButton instanceof HTMLButtonElement) {
-                draftButton.value = fixed ? 'save_fixed' : 'save_projection';
-                const label = draftButton.querySelector('span');
-                if (label) label.textContent = fixed ? 'Simpan Perubahan Fixed' : 'Simpan Proyeksi';
-            }
-            fixedButton?.classList.toggle('hidden', fixed);
-        };
-
         const openCreateDialog = () => {
             form.reset();
             form.action = dialog.dataset.storeUrl || '';
             if (title) title.textContent = 'Tambah Item Agenda Banmus';
-            configureActions();
             showDialog();
         };
 
@@ -744,7 +731,6 @@
                 checkbox.checked = unitIds.includes(Number(checkbox.value));
             });
 
-            configureActions(item.status || 'proyeksi');
             showDialog();
         };
 

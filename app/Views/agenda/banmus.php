@@ -141,14 +141,38 @@ $isMember = is_array($member ?? null);
 
                                     <ul class="list rounded-box border border-base-300 bg-base-100">
                                         <?php foreach ($document['items'] as $item): ?>
+                                            <?php
+                                            $statusLabel = match ($item['status']) {
+                                                'proyeksi'    => 'Proyeksi',
+                                                'menunggu'    => 'Terjadwal',
+                                                'persiapan'   => 'Segera Dimulai',
+                                                'berlangsung' => 'Berlangsung',
+                                                'selesai'     => 'Selesai',
+                                                'ditunda'     => 'Ditunda',
+                                                'dibatalkan'  => 'Dibatalkan',
+                                                default       => ucfirst((string) $item['status']),
+                                            };
+                                            $statusClass = match ($item['status']) {
+                                                'proyeksi'    => 'badge-warning badge-soft',
+                                                'persiapan'   => 'badge-warning badge-soft',
+                                                'berlangsung' => 'badge-success badge-soft',
+                                                'selesai'     => 'badge-info badge-soft',
+                                                'ditunda'     => 'badge-warning badge-outline',
+                                                'dibatalkan'  => 'badge-error badge-soft',
+                                                default       => 'badge-ghost',
+                                            };
+                                            ?>
                                             <li class="list-row gap-3 border-b border-base-200 p-4 last:border-b-0">
                                                 <div class="grid h-9 w-9 shrink-0 place-items-center rounded-box bg-base-200 text-sm font-black">
                                                     <?= (int) $item['urutan'] ?>
                                                 </div>
                                                 <div class="list-col-grow min-w-0">
-                                                    <p class="text-xs font-extrabold uppercase tracking-wide text-base-content/45">
-                                                        Tanggal Pelaksanaan
-                                                    </p>
+                                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                                        <p class="text-xs font-extrabold uppercase tracking-wide text-base-content/45">
+                                                            Tanggal Pelaksanaan
+                                                        </p>
+                                                        <span class="badge <?= $statusClass ?> badge-sm"><?= esc($statusLabel) ?></span>
+                                                    </div>
                                                     <?php if (! empty($item['tanggal'])): ?>
                                                         <p class="mt-1 text-sm font-bold">
                                                             <?= date('d/m/Y', strtotime($item['tanggal'])) ?>

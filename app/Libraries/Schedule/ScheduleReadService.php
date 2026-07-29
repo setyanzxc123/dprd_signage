@@ -165,11 +165,16 @@ final class ScheduleReadService
 
     private function currentStatus(array $row): string
     {
+        $storedStatus = (string) ($row['status'] ?? 'menunggu');
+        if (in_array($storedStatus, ['proyeksi', 'selesai', 'ditunda', 'dibatalkan'], true)) {
+            return $storedStatus;
+        }
+
         $start = strtotime((string) $row['tanggal'] . ' ' . (string) $row['waktu_mulai']);
         $end = strtotime((string) $row['tanggal'] . ' ' . (string) $row['waktu_selesai']);
         $now = ($this->clock)();
         if ($start === false || $end === false) {
-            return (string) ($row['status'] ?? 'menunggu');
+            return $storedStatus;
         }
         if ($end <= $now) {
             return 'selesai';

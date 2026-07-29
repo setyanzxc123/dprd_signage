@@ -3,6 +3,7 @@
 namespace App\Libraries\Schedule\Persistence;
 
 use App\Libraries\Schedule\Contracts\ScheduleReadRepositoryInterface;
+use App\Models\JadwalBanmusModel;
 use CodeIgniter\Database\BaseConnection;
 
 final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
@@ -37,7 +38,7 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
 
         if ($this->db->tableExists('jadwal_banmus')) {
             $builder = $this->baseBanmusQuery()
-                ->whereIn('jb.status', ['fixed', 'selesai'])
+                ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
                 ->where('jb.deleted_at', null)
                 ->where('jb.tanggal IS NOT NULL', null, false)
                 ->where('jb.jam_mulai IS NOT NULL', null, false)
@@ -102,7 +103,7 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
             $banmusRows = $this->baseBanmusQuery()
                 ->where('jb.publikasi', 'publik')
                 ->where('db.is_publik', 1)
-                ->whereIn('jb.status', ['fixed', 'selesai'])
+                ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
                 ->where('jb.deleted_at', null)
                 ->where('jb.tanggal >', $afterDate)
                 ->where('jb.jam_mulai IS NOT NULL', null, false)

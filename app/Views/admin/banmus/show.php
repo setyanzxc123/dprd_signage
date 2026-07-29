@@ -65,171 +65,244 @@
             </button>
         </div>
     <?php else: ?>
-        <div class="overflow-x-auto">
-            <table class="table table-zebra w-full">
-                <thead>
-                    <tr class="bg-base-200/50">
-                        <th class="w-12 text-center">No</th>
-                        <th>Uraian Agenda SK</th>
-                        <th class="w-44 text-center">Periode / Tanggal</th>
-                        <th class="w-48">Ruangan & Peserta</th>
-                        <th class="w-28 text-center">Status</th>
-                        <th class="w-36 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($items as $index => $item): ?>
-                        <?php
-                        $hasDate = ! empty($item['tanggal']);
-                        $statusClass = match ($item['status']) {
-                            'fixed'      => 'badge-success text-white',
-                            'proyeksi'   => 'badge-warning',
-                            'selesai'    => 'badge-info',
-                            'ditunda'    => 'badge-error',
-                            'dibatalkan' => 'badge-ghost line-through',
-                            default      => 'badge-ghost',
-                        };
-                        $statusLabel = match ($item['status']) {
-                            'fixed'      => 'Fixed',
-                            'proyeksi'   => 'Proyeksi',
-                            'selesai'    => 'Selesai',
-                            'ditunda'    => 'Ditunda',
-                            'dibatalkan' => 'Dibatalkan',
-                            default      => ucfirst($item['status']),
-                        };
+        <?php
+        $roomNames = [];
+        foreach ($rooms as $room) {
+            $roomNames[(int) $room['id']] = $room['name'];
+        }
 
-                        $roomName = '';
-                        if (! empty($item['ruangan_id'])) {
-                            foreach ($rooms as $r) {
-                                if ((int) $r['id'] === (int) $item['ruangan_id']) {
-                                    $roomName = $r['name'];
-                                    break;
+        $unitNamesById = [];
+        foreach ($units as $unit) {
+            $unitNamesById[(int) $unit['id']] = $unit['nama'];
+        }
+        ?>
+        <div class="min-w-0">
+            <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
+                <table
+                    id="table-jadwal-banmus"
+                    class="table table-zebra table-md w-full admin-data-table responsive-card-table"
+                    data-admin-datatable
+                    data-dt-page-length="10"
+                    data-dt-col-filters='[{"col":4,"label":"Publikasi","all":"Semua Publikasi"},{"col":5,"label":"Status","all":"Semua Status"}]'>
+                    <thead>
+                        <tr class="bg-base-200">
+                            <th class="dt-row-number no-sort">No</th>
+                            <th>Agenda</th>
+                            <th>Jadwal</th>
+                            <th>Lokasi & Peserta</th>
+                            <th class="mobile-hidden">Publikasi</th>
+                            <th>Status</th>
+                            <th class="text-right no-sort">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($items as $item): ?>
+                            <?php
+                            $hasDate = ! empty($item['tanggal']);
+                            $hasFixedSchedule = $item['status'] !== 'proyeksi' && $hasDate;
+                            $statusClass = match ($item['status']) {
+                                'proyeksi'   => 'badge-warning badge-soft',
+                                'menunggu'   => 'badge-ghost',
+                                'persiapan'  => 'badge-warning badge-soft',
+                                'berlangsung' => 'badge-success badge-soft',
+                                'selesai'    => 'badge-info badge-soft',
+                                'ditunda'    => 'badge-warning badge-outline',
+                                'dibatalkan' => 'badge-error badge-soft line-through',
+                                default      => 'badge-ghost',
+                            };
+                            $statusLabel = match ($item['status']) {
+                                'proyeksi'   => 'Proyeksi',
+                                'menunggu'   => 'Menunggu',
+                                'persiapan'  => 'Persiapan',
+                                'berlangsung' => 'Berlangsung',
+                                'selesai'    => 'Selesai',
+                                'ditunda'    => 'Ditunda',
+                                'dibatalkan' => 'Dibatalkan',
+                                default      => ucfirst($item['status']),
+                            };
+
+                            $roomName = '';
+                            if (! empty($item['ruangan_id'])) {
+                                $roomName = $roomNames[(int) $item['ruangan_id']] ?? '';
+                            }
+                            if ($roomName === '' && ! empty($item['lokasi_lainnya'])) {
+                                $roomName = $item['lokasi_lainnya'];
+                            }
+
+                            $unitNames = [];
+                            foreach (array_map('intval', $item['unit_ids'] ?? []) as $unitId) {
+                                if (isset($unitNamesById[$unitId])) {
+                                    $unitNames[] = $unitNamesById[$unitId];
                                 }
                             }
-                        }
-                        if ($roomName === '' && ! empty($item['lokasi_lainnya'])) {
-                            $roomName = $item['lokasi_lainnya'];
-                        }
 
-                        $unitIds = array_map('intval', $item['unit_ids'] ?? []);
-                        $unitNames = [];
-                        if ($unitIds !== []) {
-                            foreach ($units as $u) {
-                                if (in_array((int) $u['id'], array_map('intval', $unitIds), true)) {
-                                    $unitNames[] = $u['nama'];
+                            $projectionLabel = trim((string) ($item['periode_label'] ?? ''));
+                            if ($projectionLabel === '') {
+                                $projectionLabel = trim((string) ($item['teks_tanggal_asli'] ?? ''));
+                            }
+                            if ($projectionLabel === '' && ! empty($item['tanggal_mulai'])) {
+                                $projectionLabel = date('d/m/Y', strtotime($item['tanggal_mulai']));
+                                if (! empty($item['tanggal_selesai']) && $item['tanggal_selesai'] !== $item['tanggal_mulai']) {
+                                    $projectionLabel .= '–' . date('d/m/Y', strtotime($item['tanggal_selesai']));
                                 }
                             }
-                        }
-                        ?>
-                        <tr class="hover align-top">
-                            <td class="text-center font-medium text-base-content/50 pt-4"><?= $index + 1 ?></td>
-                            <td class="pt-4">
-                                <div class="font-bold text-base-content text-sm leading-snug">
-                                    <?= nl2br(esc($item['agenda'])) ?>
-                                </div>
-                                <?php if (! empty($item['catatan'])): ?>
-                                    <div class="mt-1 text-xs text-base-content/60">
-                                        <i data-lucide="info" class="inline h-3 w-3 mr-0.5"></i> <?= esc($item['catatan']) ?>
+
+                            $missingFields = [];
+                            if (! $hasDate) {
+                                $missingFields[] = 'tanggal';
+                            }
+                            if (empty($item['jam_mulai']) || empty($item['jam_selesai'])) {
+                                $missingFields[] = 'waktu';
+                            }
+                            if ($roomName === '') {
+                                $missingFields[] = 'lokasi';
+                            }
+                            if ($unitNames === []) {
+                                $missingFields[] = 'peserta';
+                            }
+                            $projectionWarning = 'Belum siap ditetapkan sebagai jadwal: '
+                                . implode(', ', $missingFields)
+                                . ' belum diisi.';
+                            $scheduleOrder = $hasFixedSchedule
+                                ? $item['tanggal'] . ' ' . ($item['jam_mulai'] ?? '00:00:00')
+                                : '9999-12-31 ' . str_pad((string) ($item['urutan'] ?? 0), 6, '0', STR_PAD_LEFT);
+                            ?>
+                            <tr class="align-top transition-colors hover:bg-base-200/40">
+                                <td class="dt-row-number" data-label="No"></td>
+                                <td data-label="Agenda">
+                                    <div class="max-w-xl text-sm font-bold leading-snug text-base-content">
+                                        <?= nl2br(esc($item['agenda'])) ?>
                                     </div>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-center pt-4">
-                                <?php if ($hasDate): ?>
-                                    <div class="font-bold text-sm text-primary">
-                                        <?= date('d/m/Y', strtotime($item['tanggal'])) ?>
-                                    </div>
-                                    <?php if (! empty($item['jam_mulai'])): ?>
-                                        <div class="text-xs text-base-content/60 font-mono">
-                                            <?= substr($item['jam_mulai'], 0, 5) ?> - <?= ! empty($item['jam_selesai']) ? substr($item['jam_selesai'], 0, 5) : 'Selesai' ?> WITA
+
+                                    <?php if (! empty($item['catatan'])): ?>
+                                        <div class="mt-1 max-w-xl truncate text-xs text-base-content/60" title="<?= esc($item['catatan']) ?>">
+                                            <?= esc($item['catatan']) ?>
                                         </div>
                                     <?php endif; ?>
-                                <?php else: ?>
-                                    <div class="text-xs font-semibold text-base-content/70">
-                                        <?= esc($item['periode_label'] ?: 'Belum diisi') ?>
-                                    </div>
-                                    <div class="text-[10px] text-base-content/40 italic">Rentang SK</div>
-                                <?php endif; ?>
-                            </td>
-                            <td class="pt-4 text-xs">
-                                <?php if ($roomName !== ''): ?>
-                                    <div class="font-medium text-base-content">
-                                        <i data-lucide="door-open" class="inline h-3.5 w-3.5 text-primary mr-1"></i><?= esc($roomName) ?>
-                                    </div>
-                                <?php else: ?>
-                                    <span class="text-base-content/40 italic">- Ruangan belum set -</span>
-                                <?php endif; ?>
 
-                                <?php if ($unitNames !== []): ?>
-                                    <div class="mt-1 flex flex-wrap gap-1">
-                                        <?php foreach ($unitNames as $uName): ?>
-                                            <span class="badge badge-ghost badge-xs"><?= esc($uName) ?></span>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-center pt-4">
-                                <span class="badge <?= $statusClass ?> badge-sm font-semibold">
-                                    <?= $statusLabel ?>
-                                </span>
-                            </td>
-                            <td class="text-right pt-4">
-                                <div class="flex items-center justify-end gap-1">
-                                    <button
-                                        type="button"
-                                        data-banmus-item-edit
-                                        data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
-                                        class="btn btn-ghost btn-xs btn-square"
-                                        title="Edit Jadwal Banmus">
-                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
-                                    </button>
-
-                                    <!-- Quick Status Toggle -->
-                                    <div class="dropdown dropdown-end">
-                                        <div tabindex="0" role="button" class="btn btn-ghost btn-xs btn-square" title="Ubah Status">
-                                            <i data-lucide="ellipsis-vertical" class="h-3.5 w-3.5"></i>
+                                    <?php if (! empty($item['materi_url']) || ! empty($item['stream_url'])): ?>
+                                        <div class="mt-2 flex flex-wrap gap-1.5">
+                                            <?php if (! empty($item['materi_url'])): ?>
+                                                <a
+                                                    href="<?= esc($item['materi_url'], 'attr') ?>"
+                                                    target="_blank"
+                                                    rel="noopener"
+                                                    class="btn btn-ghost btn-xs gap-1"
+                                                    title="Buka materi atau dokumen">
+                                                    <i data-lucide="paperclip" class="h-3.5 w-3.5"></i>
+                                                    Materi
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if (! empty($item['stream_url'])): ?>
+                                                <a
+                                                    href="<?= esc($item['stream_url'], 'attr') ?>"
+                                                    target="_blank"
+                                                    rel="noopener"
+                                                    class="btn btn-ghost btn-xs gap-1"
+                                                    title="Buka tautan live streaming">
+                                                    <i data-lucide="radio" class="h-3.5 w-3.5"></i>
+                                                    Live
+                                                </a>
+                                            <?php endif; ?>
                                         </div>
-                                        <ul tabindex="0" class="dropdown-content menu z-[10] p-1 shadow bg-base-100 rounded-box w-36 text-xs">
-                                            <li>
-                                                <form action="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/{$item['id']}/status") ?>" method="post">
-                                                    <?= csrf_field() ?>
-                                                    <input type="hidden" name="status" value="selesai">
-                                                    <button type="submit" class="text-info w-full text-left">Tandai Selesai</button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form action="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/{$item['id']}/status") ?>" method="post">
-                                                    <?= csrf_field() ?>
-                                                    <input type="hidden" name="status" value="ditunda">
-                                                    <button type="submit" class="text-warning w-full text-left">Ditunda</button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form action="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/{$item['id']}/status") ?>" method="post">
-                                                    <?= csrf_field() ?>
-                                                    <input type="hidden" name="status" value="dibatalkan">
-                                                    <button type="submit" class="text-error w-full text-left">Dibatalkan</button>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Jadwal" data-order="<?= esc($scheduleOrder, 'attr') ?>">
+                                    <?php if ($hasFixedSchedule): ?>
+                                        <div class="whitespace-nowrap text-sm font-bold text-base-content">
+                                            <?= esc(date('d/m/Y', strtotime($item['tanggal']))) ?>
+                                        </div>
+                                        <div class="mt-0.5 whitespace-nowrap font-mono text-xs text-base-content/60">
+                                            <?php if (! empty($item['jam_mulai'])): ?>
+                                                <?= esc(substr($item['jam_mulai'], 0, 5)) ?>
+                                                <?php if (! empty($item['jam_selesai'])): ?>
+                                                    –<?= esc(substr($item['jam_selesai'], 0, 5)) ?>
+                                                <?php endif; ?>
+                                                WITA
+                                            <?php else: ?>
+                                                Waktu belum diisi
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="max-w-48 text-xs font-semibold text-base-content/70">
+                                            <?= esc($projectionLabel !== '' ? $projectionLabel : 'Periode belum diisi') ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Lokasi & Peserta">
+                                    <?php if ($roomName !== ''): ?>
+                                        <div class="flex items-start gap-1.5 text-sm font-semibold text-base-content">
+                                            <i data-lucide="map-pin" class="mt-0.5 h-3.5 w-3.5 text-primary"></i>
+                                            <span><?= esc($roomName) ?></span>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-xs italic text-base-content/45">Lokasi belum diisi</span>
+                                    <?php endif; ?>
 
-                                    <form action="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/{$item['id']}/delete") ?>" method="post" class="inline" data-confirm-message="Hapus item agenda ini?">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-ghost btn-xs btn-square text-error" title="Hapus Item">
-                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                    <?php if ($unitNames !== []): ?>
+                                        <div class="mt-2 flex max-w-xs flex-wrap gap-1">
+                                            <?php foreach ($unitNames as $unitName): ?>
+                                                <span class="badge badge-ghost badge-xs h-auto py-1"><?= esc($unitName) ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="mt-1 text-xs italic text-base-content/45">Peserta belum dipilih</div>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Publikasi" class="mobile-hidden">
+                                    <?php if (($item['publikasi'] ?? 'internal') === 'publik'): ?>
+                                        <span class="badge badge-success badge-soft badge-sm whitespace-nowrap">Publik</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-ghost badge-sm whitespace-nowrap">Internal</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Status">
+                                    <span class="badge <?= $statusClass ?> badge-sm whitespace-nowrap font-semibold">
+                                        <?= $statusLabel ?>
+                                    </span>
+                                </td>
+                                <td data-label="Aksi">
+                                    <div class="flex flex-wrap items-center justify-end gap-1">
+                                        <?php if ($item['status'] === 'proyeksi' && $missingFields !== []): ?>
+                                            <span
+                                                class="tooltip tooltip-left inline-flex"
+                                                data-tip="<?= esc($projectionWarning, 'attr') ?>"
+                                                aria-label="<?= esc($projectionWarning, 'attr') ?>">
+                                                <i data-lucide="triangle-alert" class="h-4 w-4 text-warning"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                        <button
+                                            type="button"
+                                            data-banmus-item-edit
+                                            data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
+                                            class="btn btn-outline btn-primary btn-xs gap-1"
+                                            title="Edit item agenda">
+                                            <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                            Edit
                                         </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+
+                                        <form
+                                            action="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/{$item['id']}/delete") ?>"
+                                            method="post"
+                                            class="m-0 inline-flex"
+                                            data-confirm-message="Hapus item agenda ini?">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-ghost btn-error btn-xs btn-square" title="Hapus item">
+                                                <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     <?php endif; ?>
 </section>
 
-<!-- Modal editor satu-record: Proyeksi dan Fixed memakai jadwal_banmus yang sama. -->
+<!-- Modal editor satu-record: proyeksi dan jadwal terkonfirmasi memakai record yang sama. -->
 <dialog
     id="item_modal"
     class="modal"
@@ -245,7 +318,7 @@
             <i data-lucide="calendar-plus" class="h-5 w-5 text-primary"></i>
             <span>Tambah Item Agenda Banmus</span>
         </h3>
-        <p class="mt-1 text-sm text-base-content/60">Satu item yang sama dapat dilengkapi bertahap sampai siap ditetapkan sebagai fixed.</p>
+        <p class="mt-1 text-sm text-base-content/60">Simpan item kapan saja; status jadwal ditentukan otomatis dari kelengkapan data pelaksanaan.</p>
 
         <form id="item_form" action="" method="post" class="mt-4 flex flex-col gap-4" data-turbo="false">
             <?= csrf_field() ?>
@@ -267,13 +340,13 @@
                 <fieldset class="fieldset col-span-12 sm:col-span-6">
                     <legend class="fieldset-legend">Tanggal Pasti (Opsional)</legend>
                     <input class="input w-full font-semibold" id="field_tanggal" name="tanggal" type="date" />
-                    <p class="label block text-[11px] text-base-content/50">Tanggal dapat disimpan tanpa otomatis mengubah status menjadi fixed.</p>
+                    <p class="label block text-[11px] text-base-content/50">Item tetap dapat disimpan meskipun tanggal belum diketahui.</p>
                 </fieldset>
             </div>
 
             <div role="alert" class="alert alert-info alert-soft text-sm">
                 <i data-lucide="info" class="h-5 w-5 shrink-0"></i>
-                <span><strong>Simpan Proyeksi</strong> menerima data yang belum lengkap. Validasi lengkap baru dijalankan saat <strong>Tetapkan Fixed</strong>.</span>
+                <span>Jika tanggal, jam, lokasi, dan kelompok peserta sudah lengkap, status otomatis menjadi <strong>Menunggu</strong>. Jika belum, item tetap tersimpan sebagai <strong>Proyeksi</strong>.</span>
             </div>
 
             <div class="space-y-4 border-t border-base-200 pt-4">
@@ -349,13 +422,9 @@
 
             <div class="modal-action flex-wrap">
                 <button type="button" data-banmus-item-close class="btn btn-ghost">Batal</button>
-                <button type="submit" name="action" value="save_projection" class="btn btn-neutral gap-1" data-banmus-save-draft>
+                <button type="submit" class="btn btn-primary gap-1">
                     <i data-lucide="save" class="h-4 w-4"></i>
-                    <span>Simpan Proyeksi</span>
-                </button>
-                <button type="submit" name="action" value="set_fixed" class="btn btn-primary gap-1" data-banmus-set-fixed>
-                    <i data-lucide="badge-check" class="h-4 w-4"></i>
-                    Tetapkan Fixed
+                    <span>Simpan Item Agenda</span>
                 </button>
             </div>
         </form>

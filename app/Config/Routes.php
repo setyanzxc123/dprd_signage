@@ -96,7 +96,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('jadwal-banmus/(:num)/item/store',               'Admin\JadwalBanmusController::storeItem/$1');
     $routes->post('jadwal-banmus/(:num)/item/(:num)/update',       'Admin\JadwalBanmusController::updateItem/$1/$2');
     $routes->post('jadwal-banmus/(:num)/item/(:num)/delete',       'Admin\JadwalBanmusController::deleteItem/$1/$2');
-    $routes->post('jadwal-banmus/(:num)/item/(:num)/status',       'Admin\JadwalBanmusController::updateItemStatus/$1/$2');
 
     // Agenda Internal: Insidental Internal (dahulu Jadwal Rapat)
     $routes->get( 'jadwal',                      'Admin\MeetingController::index');

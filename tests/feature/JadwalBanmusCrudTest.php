@@ -41,7 +41,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testEditorExposesProgressiveAndFixedActions(): void
+    public function testEditorExposesSingleAutomaticSaveAction(): void
     {
         $response = $this
             ->withSession(['auth_user' => $this->adminSession()])
@@ -53,22 +53,23 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertStringContainsString('name="jam_mulai"', $body);
         $this->assertStringContainsString('name="unit_ids[]"', $body);
         $this->assertStringContainsString('name="materi_url"', $body);
-        $this->assertStringContainsString('value="save_projection"', $body);
-        $this->assertStringContainsString('value="set_fixed"', $body);
+        $this->assertStringContainsString('Simpan Item Agenda', $body);
+        $this->assertStringNotContainsString('value="save_projection"', $body);
+        $this->assertStringNotContainsString('value="set_schedule"', $body);
         $this->assertStringNotContainsString('name="target_unit_ids[]"', $body);
     }
 
     public function testDateCanBeSavedWhileItemRemainsProjection(): void
     {
         $response = $this->postItem([
-            'action'       => 'save_projection',
-            'agenda'       => 'Pembahasan agenda semester',
-            'tanggal'      => '2026-08-12',
-            'jam_mulai'    => '',
-            'jam_selesai'  => '',
-            'ruangan_id'   => '',
-            'publikasi'    => 'internal',
-            'unit_ids'     => ['1'],
+            'agenda'        => 'Pembahasan agenda semester',
+            'periode_label' => 'Agustus 2026',
+            'tanggal'       => '2026-08-12',
+            'jam_mulai'     => '',
+            'jam_selesai'   => '',
+            'ruangan_id'    => '',
+            'publikasi'     => 'internal',
+            'unit_ids'      => ['1'],
         ]);
 
         $response->assertStatus(303);
@@ -77,12 +78,20 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertSame('2026-08-12', $row['tanggal']);
         $this->assertSame('proyeksi', $row['status']);
         $this->assertSame(1, $this->banmusDb->table('jadwal_banmus_unit_rapat')->countAllResults());
+
+        $body = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->get("/admin/jadwal-banmus/{$this->documentId}")
+            ->response()
+            ->getBody();
+        $this->assertStringNotContainsString('Belum pasti', $body);
+        $this->assertStringContainsString('Agustus 2026', $body);
+        $this->assertStringNotContainsString('12/08/2026', $body);
     }
 
-    public function testFixedActionRejectsIncompleteOperationalData(): void
+    public function testIncompleteOperationalDataIsStoredAsProjection(): void
     {
         $response = $this->postItem([
-            'action'      => 'set_fixed',
             'agenda'      => 'Rapat yang belum lengkap',
             'tanggal'     => '2026-08-12',
             'jam_mulai'   => '',
@@ -91,15 +100,16 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'publikasi'   => 'internal',
         ]);
 
-        $response->assertStatus(302);
-        $this->assertSame(0, $this->banmusDb->table('jadwal_banmus')->countAllResults());
+        $response->assertStatus(303);
+        $row = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($row);
+        $this->assertSame('proyeksi', $row['status']);
     }
 
-    public function testFixedActionStoresSameBanmusRecordAndNormalizedParticipants(): void
+    public function testCompleteOperationalDataAutomaticallyBecomesSchedule(): void
     {
         $response = $this->postItem([
-            'action'        => 'set_fixed',
-            'agenda'        => 'Rapat Banmus fixed',
+            'agenda'        => 'Rapat Banmus terjadwal',
             'periode_label' => 'Agustus 2026',
             'tanggal'       => '2026-08-12',
             'jam_mulai'     => '09:00',
@@ -113,14 +123,60 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
 
         $response->assertStatus(303);
         $row = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
-        $this->assertSame('fixed', $row['status']);
+        $this->assertSame('menunggu', $row['status']);
         $this->assertSame('publik', $row['publikasi']);
         $this->assertSame('https://example.com/live', $row['stream_url']);
         $this->assertSame(2, $this->banmusDb->table('jadwal_banmus_unit_rapat')->countAllResults());
         $this->assertSame(0, $this->banmusDb->table('jadwal')->countAllResults());
+
+        $body = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->get("/admin/jadwal-banmus/{$this->documentId}")
+            ->response()
+            ->getBody();
+        $this->assertStringNotContainsString('Periode SK: Agustus 2026', $body);
+        $this->assertStringContainsString('12/08/2026', $body);
+        $this->assertStringNotContainsString('Ubah status pelaksanaan', $body);
+        $this->assertStringNotContainsString("/item/{$row['id']}/status", $body);
     }
 
-    public function testFixedActionRejectsRoomConflictWithNonBanmusSchedule(): void
+    public function testEditingScheduleToIncompleteDataAutomaticallyReturnsToProjection(): void
+    {
+        $this->postItem([
+            'agenda'       => 'Rapat Banmus terjadwal',
+            'tanggal'      => '2026-08-12',
+            'jam_mulai'    => '09:00',
+            'jam_selesai'  => '11:00',
+            'ruangan_id'   => '1',
+            'publikasi'    => 'internal',
+            'unit_ids'     => ['1'],
+        ])->assertStatus(303);
+
+        $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($item);
+        $this->assertSame('menunggu', $item['status']);
+
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->post("/admin/jadwal-banmus/{$this->documentId}/item/{$item['id']}/update", [
+                csrf_token()  => csrf_hash(),
+                'agenda'      => 'Rapat Banmus yang dijadwalkan ulang',
+                'tanggal'     => '',
+                'jam_mulai'   => '',
+                'jam_selesai' => '',
+                'ruangan_id'  => '',
+                'publikasi'   => 'internal',
+            ]);
+
+        $response->assertStatus(303);
+        $updatedItem = $this->banmusDb->table('jadwal_banmus')
+            ->where('id', $item['id'])
+            ->get()
+            ->getRowArray();
+        $this->assertSame('proyeksi', $updatedItem['status']);
+    }
+
+    public function testAutomaticScheduleRejectsRoomConflictWithNonBanmusSchedule(): void
     {
         $this->banmusDb->table('jadwal')->insert([
             'judul'         => 'Rapat insidental pada ruangan yang sama',
@@ -132,7 +188,6 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         ]);
 
         $response = $this->postItem([
-            'action'       => 'set_fixed',
             'agenda'       => 'Rapat Banmus bentrok',
             'tanggal'      => '2026-08-12',
             'jam_mulai'    => '09:00',

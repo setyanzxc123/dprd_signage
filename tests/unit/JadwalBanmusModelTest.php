@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\BanmusDocumentModel;
+use App\Models\JadwalBanmusModel;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Forge;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -77,6 +78,45 @@ final class JadwalBanmusModelTest extends CIUnitTestCase
 
         $this->assertSame([2027, 2025], $model->availableYears(false));
         $this->assertSame([2027, 2026, 2025], $model->availableYears(true));
+    }
+
+    public function testAutoUpdateStatusesOnlyAdvancesScheduledAgenda(): void
+    {
+        $documentId = $this->insertDocument('SK Lifecycle', 1);
+        $now = strtotime('2026-07-29 10:00:00');
+        $rows = [
+            ['agenda' => 'Sudah selesai', 'status' => 'menunggu', 'jam_mulai' => '08:00:00', 'jam_selesai' => '09:00:00'],
+            ['agenda' => 'Sedang berlangsung', 'status' => 'menunggu', 'jam_mulai' => '09:30:00', 'jam_selesai' => '10:30:00'],
+            ['agenda' => 'Segera dimulai', 'status' => 'menunggu', 'jam_mulai' => '10:15:00', 'jam_selesai' => '11:00:00'],
+            ['agenda' => 'Masih menunggu', 'status' => 'persiapan', 'jam_mulai' => '11:00:00', 'jam_selesai' => '12:00:00'],
+            ['agenda' => 'Tetap proyeksi', 'status' => 'proyeksi', 'jam_mulai' => '08:00:00', 'jam_selesai' => '09:00:00'],
+            ['agenda' => 'Tetap ditunda', 'status' => 'ditunda', 'jam_mulai' => '08:00:00', 'jam_selesai' => '09:00:00'],
+        ];
+
+        foreach ($rows as $order => &$row) {
+            $row += [
+                'dokumen_banmus_id' => $documentId,
+                'periode_label'     => 'Juli 2026',
+                'tanggal'           => '2026-07-29',
+                'urutan'            => $order + 1,
+                'publikasi'         => 'publik',
+                'created_at'        => '2026-07-29 07:00:00',
+                'updated_at'        => '2026-07-29 07:00:00',
+            ];
+        }
+        unset($row);
+        $this->banmusDb->table('jadwal_banmus')->insertBatch($rows);
+
+        (new JadwalBanmusModel())->autoUpdateStatuses($documentId, $now);
+
+        $statuses = array_column(
+            $this->banmusDb->table('jadwal_banmus')->orderBy('urutan', 'ASC')->get()->getResultArray(),
+            'status',
+        );
+        $this->assertSame(
+            ['selesai', 'berlangsung', 'persiapan', 'menunggu', 'proyeksi', 'ditunda'],
+            $statuses,
+        );
     }
 
     private function createTables(): void

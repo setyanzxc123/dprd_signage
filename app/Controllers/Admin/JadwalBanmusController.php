@@ -78,6 +78,7 @@ class JadwalBanmusController extends BaseController
         }
 
         $itemModel = new JadwalBanmusModel();
+        $itemModel->autoUpdateStatuses($id);
         $items = $itemModel
             ->where('dokumen_banmus_id', $id)
             ->orderBy('urutan', 'ASC')
@@ -180,8 +181,7 @@ class JadwalBanmusController extends BaseController
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
-        $action = $this->itemAction();
-        $input = $this->validatedItemPayload($action === 'set_fixed');
+        $input = $this->validatedItemPayload();
         if (isset($input['error'])) {
             session()->setFlashdata('error', $input['error']);
 
@@ -194,7 +194,7 @@ class JadwalBanmusController extends BaseController
         $payload = array_merge($input['payload'], [
             'dokumen_banmus_id' => $documentId,
             'urutan'            => $nextUrutan,
-            'status'            => $action === 'set_fixed' ? 'fixed' : 'proyeksi',
+            'status'            => $input['is_schedule_complete'] ? 'menunggu' : 'proyeksi',
         ]);
 
         $db = Database::connect();
@@ -212,9 +212,9 @@ class JadwalBanmusController extends BaseController
         }
 
         return $this->formSuccessResponse(
-            $payload['status'] === 'fixed'
-                ? 'Item agenda berhasil ditambahkan dan ditetapkan sebagai fixed.'
-                : 'Proyeksi agenda berhasil disimpan. Data pelaksanaan dapat dilengkapi kemudian.',
+            $payload['status'] === 'menunggu'
+                ? 'Item agenda berhasil disimpan sebagai jadwal.'
+                : 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
             base_url("admin/jadwal-banmus/{$documentId}"),
         );
     }
@@ -229,11 +229,7 @@ class JadwalBanmusController extends BaseController
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
-        $action = $this->itemAction($item);
-        $input = $this->validatedItemPayload(
-            in_array($action, ['set_fixed', 'save_fixed'], true),
-            $item,
-        );
+        $input = $this->validatedItemPayload($item);
         if (isset($input['error'])) {
             session()->setFlashdata('error', $input['error']);
 
@@ -241,9 +237,10 @@ class JadwalBanmusController extends BaseController
         }
 
         $payload = $input['payload'];
-        $payload['status'] = in_array($action, ['set_fixed', 'save_fixed'], true)
-            ? 'fixed'
-            : 'proyeksi';
+        $payload['status'] = $this->resolvedItemStatus(
+            $input['is_schedule_complete'],
+            (string) $item['status'],
+        );
 
         $db = Database::connect();
         $db->transStart();
@@ -260,9 +257,9 @@ class JadwalBanmusController extends BaseController
         }
 
         return $this->formSuccessResponse(
-            $payload['status'] === 'fixed'
-                ? 'Jadwal Banmus fixed berhasil diperbarui.'
-                : 'Proyeksi agenda berhasil disimpan. Data pelaksanaan dapat dilengkapi kemudian.',
+            $payload['status'] !== 'proyeksi'
+                ? 'Item agenda dan jadwal Banmus berhasil diperbarui.'
+                : 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
             base_url("admin/jadwal-banmus/{$documentId}"),
         );
     }
@@ -285,44 +282,9 @@ class JadwalBanmusController extends BaseController
         );
     }
 
-    public function updateItemStatus(int $documentId, int $itemId)
-    {
-        $model = new JadwalBanmusModel();
-        $item = $model->where('dokumen_banmus_id', $documentId)->find($itemId);
-        if ($item === null) {
-            session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
-
-            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
-        }
-
-        $status = trim((string) $this->request->getPost('status'));
-        if (! in_array($status, ['proyeksi', 'selesai', 'ditunda', 'dibatalkan'], true)) {
-            session()->setFlashdata('error', 'Status tidak valid.');
-
-            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
-        }
-
-        if ($status !== 'proyeksi' && $item['status'] === 'proyeksi') {
-            session()->setFlashdata('error', 'Agenda harus ditetapkan sebagai fixed sebelum status pelaksanaannya diubah.');
-
-            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
-        }
-
-        if (! $model->update($itemId, ['status' => $status])) {
-            session()->setFlashdata('error', 'Status item agenda gagal diubah.');
-
-            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
-        }
-
-        return $this->formSuccessResponse(
-            'Status item agenda berhasil diubah.',
-            base_url("admin/jadwal-banmus/{$documentId}"),
-        );
-    }
-
     // ── PRIVATE HELPERS ──────────────────────────────────────────────
 
-    private function validatedItemPayload(bool $requireFixed, ?array $existingItem = null): array
+    private function validatedItemPayload(?array $existingItem = null): array
     {
         $agenda = trim((string) $this->request->getPost('agenda'));
         if ($agenda === '') {
@@ -402,28 +364,20 @@ class JadwalBanmusController extends BaseController
             return ['error' => $streamUrl['error']];
         }
 
-        if ($requireFixed) {
-            if ($tanggal === '') {
-                return ['error' => 'Tanggal wajib diisi sebelum agenda ditetapkan sebagai fixed.'];
-            }
-            if ($jamMulai === '' || $jamSelesai === '') {
-                return ['error' => 'Jam mulai dan selesai wajib diisi sebelum agenda ditetapkan sebagai fixed.'];
-            }
-            if ($ruanganId === null && $lokasiLainnya === '') {
-                return ['error' => 'Ruangan atau lokasi lainnya wajib diisi sebelum agenda ditetapkan sebagai fixed.'];
-            }
-            if ($unitIds === []) {
-                return ['error' => 'Pilih minimal satu kelompok peserta sebelum agenda ditetapkan sebagai fixed.'];
-            }
-            if ($ruanganId !== null && $this->hasRoomConflict(
-                (int) $ruanganId,
-                $tanggal,
-                $jamMulai,
-                $jamSelesai,
-                isset($existingItem['id']) ? (int) $existingItem['id'] : null,
-            )) {
-                return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
-            }
+        $isScheduleComplete = $tanggal !== ''
+            && $jamMulai !== ''
+            && $jamSelesai !== ''
+            && ($ruanganId !== null || $lokasiLainnya !== '')
+            && $unitIds !== [];
+
+        if ($isScheduleComplete && $ruanganId !== null && $this->hasRoomConflict(
+            (int) $ruanganId,
+            $tanggal,
+            $jamMulai,
+            $jamSelesai,
+            isset($existingItem['id']) ? (int) $existingItem['id'] : null,
+        )) {
+            return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
         }
 
         return [
@@ -440,18 +394,21 @@ class JadwalBanmusController extends BaseController
                 'materi_url'      => $materiUrl['url'],
                 'stream_url'      => $streamUrl['url'],
             ],
-            'unit_ids' => $unitIds,
+            'unit_ids'             => $unitIds,
+            'is_schedule_complete' => $isScheduleComplete,
         ];
     }
 
-    private function itemAction(?array $existingItem = null): string
+    private function resolvedItemStatus(bool $isScheduleComplete, string $currentStatus): string
     {
-        $action = trim((string) $this->request->getPost('action'));
-        if (in_array($action, ['save_projection', 'set_fixed', 'save_fixed'], true)) {
-            return $action;
+        if (! $isScheduleComplete) {
+            return 'proyeksi';
         }
 
-        return ($existingItem['status'] ?? null) === 'fixed' ? 'save_fixed' : 'save_projection';
+        return in_array($currentStatus, JadwalBanmusModel::SCHEDULED_STATUSES, true)
+            || in_array($currentStatus, ['ditunda', 'dibatalkan'], true)
+                ? $currentStatus
+                : 'menunggu';
     }
 
     /**
@@ -541,7 +498,7 @@ class JadwalBanmusController extends BaseController
             ->select('id')
             ->where('tanggal', $date)
             ->where('ruangan_id', $roomId)
-            ->whereIn('status', ['fixed', 'selesai'])
+            ->whereIn('status', JadwalBanmusModel::SCHEDULED_STATUSES)
             ->where('jam_mulai <', $endTime)
             ->where('jam_selesai >', $startTime)
             ->where('deleted_at', null);

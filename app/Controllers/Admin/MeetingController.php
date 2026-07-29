@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\JadwalBanmusModel;
 use App\Models\JadwalModel;
 use App\Models\RuanganModel;
 use App\Models\UnitRapatModel;
@@ -479,7 +480,7 @@ class MeetingController extends BaseController
             ->select('id')
             ->where('tanggal', $tanggal)
             ->where('ruangan_id', $ruanganId)
-            ->whereIn('status', ['fixed', 'selesai'])
+            ->whereIn('status', JadwalBanmusModel::SCHEDULED_STATUSES)
             ->where('jam_mulai <', $waktuSelesai)
             ->where('jam_selesai >', $waktuMulai)
             ->where('deleted_at', null)
