@@ -256,7 +256,8 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
             ->select('
                 j.id,
                 j.id AS source_id,
-                "jadwal" AS source,
+                "insidental_internal" AS source,
+                "internal" AS lingkup,
                 NULL AS dokumen_banmus_id,
                 j.judul,
                 j.keterangan,
@@ -282,6 +283,7 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
                 -jb.id AS id,
                 jb.id AS source_id,
                 "banmus" AS source,
+                "internal" AS lingkup,
                 jb.dokumen_banmus_id,
                 jb.agenda AS judul,
                 jb.catatan AS keterangan,

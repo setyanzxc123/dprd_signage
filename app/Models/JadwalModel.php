@@ -6,6 +6,9 @@ use CodeIgniter\Model;
 
 class JadwalModel extends Model
 {
+    public const SOURCE = 'insidental_internal';
+    public const SCOPE = 'internal';
+
     protected $table         = 'jadwal';
     protected $primaryKey    = 'id';
     protected $allowedFields = [
@@ -26,6 +29,21 @@ class JadwalModel extends Model
      */
     public function autoUpdateStatuses(): void
     {
+        if (str_contains(strtolower((string) $this->db->DBDriver), 'sqlite')) {
+            foreach ($this->select('id, tanggal, waktu_mulai, waktu_selesai, status')->findAll() as $row) {
+                $status = self::resolveLifecycleStatus(
+                    (string) $row['tanggal'],
+                    (string) $row['waktu_mulai'],
+                    (string) $row['waktu_selesai'],
+                );
+                if ($status !== $row['status']) {
+                    $this->update((int) $row['id'], ['status' => $status]);
+                }
+            }
+
+            return;
+        }
+
         $today = date('Y-m-d');
         $nowTime = date('H:i:s');
 
@@ -64,5 +82,31 @@ class JadwalModel extends Model
             WHERE (tanggal > ? OR (tanggal = ? AND waktu_mulai - INTERVAL 30 MINUTE > ?))
               AND status != 'menunggu'
         ", [$today, $today, $nowTime]);
+    }
+
+    public static function resolveLifecycleStatus(
+        string $tanggal,
+        string $waktuMulai,
+        string $waktuSelesai,
+        ?int $now = null,
+    ): string {
+        $start = strtotime($tanggal . ' ' . $waktuMulai);
+        $end = strtotime($tanggal . ' ' . $waktuSelesai);
+        $now ??= time();
+
+        if ($start === false || $end === false || $end <= $start) {
+            return 'menunggu';
+        }
+        if ($end <= $now) {
+            return 'selesai';
+        }
+        if ($start <= $now) {
+            return 'berlangsung';
+        }
+        if ($start - $now <= 1800) {
+            return 'persiapan';
+        }
+
+        return 'menunggu';
     }
 }

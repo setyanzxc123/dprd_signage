@@ -1,283 +1,179 @@
 <?= $this->extend('admin/layouts/main') ?>
 
-
 <?= $this->section('content') ?>
 
 <?php
-    $lokasiLainnya = trim((string) ($meeting['lokasi_lainnya'] ?? ''));
-    $lokasiMode = $lokasiLainnya !== '' ? 'lainnya' : 'ruangan';
+$isEdit = is_array($meeting);
+$lokasiLainnya = trim((string) ($meeting['lokasi_lainnya'] ?? ''));
+$lokasiMode = $lokasiLainnya !== '' ? 'lainnya' : 'ruangan';
+$targetUnitIds = array_map('intval', $meeting['target_unit_ids'] ?? []);
 ?>
 
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
+    <p class="page-subtitle">
+        <?= $isEdit ? 'Perbarui data agenda insidental internal.' : 'Tambahkan agenda internal di luar SK Banmus.' ?>
+    </p>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" class="schedule-form" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="post" class="schedule-form" data-turbo="true">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>
-        <div class="alert alert-error shadow-sm mb-3" role="alert">
-            <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+        <div role="alert" class="alert alert-error mb-3 shadow-sm">
+            <i data-lucide="triangle-alert" class="h-4 w-4"></i>
             <span><?= esc($form_error) ?></span>
         </div>
     <?php endif; ?>
 
-    <div class="grid grid-cols-12 gap-3">
-        <div class="col-span-12 lg:col-span-8">
-            <section class="card card-border bg-base-100 shadow-sm">
-                <div class="card-body gap-5 p-4 sm:p-5">
-                    <h2 class="card-title text-base">
-                        <i data-lucide="calendar-days" class="h-5 w-5 text-primary"></i>
-                        Detail Rapat
-                    </h2>
+    <div class="form-card max-w-5xl p-[18px]">
+        <div class="form-section-title mb-3 pb-2">Data Agenda</div>
 
-                    <fieldset class="fieldset gap-3">
-                        <div class="grid grid-cols-12 gap-3">
-                            <div class="col-span-12">
-                                <label class="label py-1 font-semibold" for="judul">
-                                    Judul Rapat <span class="text-error">*</span>
-                                </label>
-                                <div class="join w-full">
-                                    <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="file-text" class="w-4 h-4"></i></span>
-                                    <input type="text" class="input join-item flex-1 w-full" id="judul" name="judul"
-                                        value="<?= esc($meeting['judul'] ?? '') ?>"
-                                        placeholder="Masukkan judul rapat" required />
-                                </div>
-                            </div>
+        <div class="grid grid-cols-12 gap-3">
+            <div class="col-span-12">
+                <label class="label-text mb-1 block text-sm font-bold" for="judul">
+                    Judul <span class="text-error">*</span>
+                </label>
+                <input class="input w-full" id="judul" name="judul" type="text" maxlength="255" required
+                    value="<?= esc($meeting['judul'] ?? '') ?>"
+                    placeholder="Contoh: Rapat koordinasi pimpinan" />
+            </div>
 
-                            <div class="col-span-12">
-                                <div class="label py-1 font-semibold">
-                                    Lokasi Rapat <span class="text-error">*</span>
-                                </div>
+            <div class="col-span-12 sm:col-span-4">
+                <label class="label-text mb-1 block text-sm font-bold" for="tanggal">
+                    Tanggal <span class="text-error">*</span>
+                </label>
+                <input class="input w-full" id="tanggal" name="tanggal" type="date" required
+                    value="<?= esc($meeting['tanggal'] ?? date('Y-m-d')) ?>" />
+            </div>
 
-                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                    <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-base-300 px-3 py-2 has-checked:border-primary has-checked:bg-primary/10" for="lokasi-ruangan">
-                                        <input type="radio" name="lokasi_mode" id="lokasi-ruangan" value="ruangan"
-                                            class="radio radio-primary radio-sm"
-                                            <?= $lokasiMode === 'ruangan' ? 'checked' : '' ?> />
-                                        <span class="font-semibold">Ruangan DPRD</span>
-                                    </label>
+            <div class="col-span-6 sm:col-span-4">
+                <label class="label-text mb-1 block text-sm font-bold" for="waktu_mulai">
+                    Jam mulai <span class="text-error">*</span>
+                </label>
+                <input class="input w-full" id="waktu_mulai" name="waktu_mulai" type="time" step="60" required
+                    value="<?= esc(substr((string) ($meeting['waktu_mulai'] ?? ''), 0, 5)) ?>" />
+            </div>
 
-                                    <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-base-300 px-3 py-2 has-checked:border-primary has-checked:bg-primary/10" for="lokasi-lainnya">
-                                        <input type="radio" name="lokasi_mode" id="lokasi-lainnya" value="lainnya"
-                                            class="radio radio-primary radio-sm"
-                                            <?= $lokasiMode === 'lainnya' ? 'checked' : '' ?> />
-                                        <span class="font-semibold">Lokasi Lainnya</span>
-                                    </label>
-                                </div>
+            <div class="col-span-6 sm:col-span-4">
+                <label class="label-text mb-1 block text-sm font-bold" for="waktu_selesai">
+                    Jam selesai <span class="text-error">*</span>
+                </label>
+                <input class="input w-full" id="waktu_selesai" name="waktu_selesai" type="time" step="60" required
+                    value="<?= esc(substr((string) ($meeting['waktu_selesai'] ?? ''), 0, 5)) ?>" />
+            </div>
 
-                                <div class="mt-2.5">
-                                    <div id="ruangan-panel">
-                                        <div class="join w-full">
-                                            <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="map-pin" class="w-4 h-4"></i></span>
-                                            <select class="select join-item flex-1 w-full" id="ruangan_id" name="ruangan_id">
-                                                <option value="">-- Pilih Ruangan --</option>
-                                                <?php if (empty($rooms)): ?>
-                                                    <option disabled>Belum ada ruangan - tambah di Master Data dulu</option>
-                                                <?php else: ?>
-                                                    <?php foreach ($rooms as $r):
-                                                        $selected = ($meeting['ruangan_id'] ?? '') == $r['id'] ? 'selected' : '';
-                                                    ?>
-                                                        <option value="<?= $r['id'] ?>" <?= $selected ?>>
-                                                            <?= esc($r['name'] ?? '') ?><?= isset($r['kapasitas']) ? ' (Kap. ' . $r['kapasitas'] . ' orang)' : '' ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
-                                            </select>
-                                        </div>
-                                    </div>
+            <div class="col-span-12">
+                <p class="hidden text-xs text-error" id="waktu-rapat-error">
+                    Jam selesai harus setelah jam mulai.
+                </p>
+            </div>
 
-                                    <div id="lokasi-lainnya-panel" hidden>
-                                        <div class="join w-full">
-                                            <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="map-pinned" class="w-4 h-4"></i></span>
-                                            <input type="text" class="input join-item flex-1 w-full" id="lokasi_lainnya" name="lokasi_lainnya"
-                                                value="<?= esc($lokasiLainnya) ?>"
-                                                placeholder="Masukkan lokasi rapat" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            <fieldset class="fieldset col-span-12">
+                <legend class="fieldset-legend">
+                    Lokasi <span class="text-error">*</span>
+                </legend>
 
-                            <div class="col-span-12 md:col-span-6">
-                                <label class="label py-1 font-semibold" for="waktu_mulai">
-                                    Waktu Mulai <span class="text-error">*</span>
-                                </label>
-                                <div class="join w-full">
-                                    <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="calendar-clock" class="w-4 h-4"></i></span>
-                                    <input type="datetime-local" class="input join-item flex-1 w-full" id="waktu_mulai" name="waktu_mulai"
-                                        value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_mulai'])
-                                            ? $meeting['tanggal'] . 'T' . $meeting['waktu_mulai']
-                                            : '') ?>" step="60" required />
-                                </div>
-                            </div>
-
-                            <div class="col-span-12 md:col-span-6">
-                                <label class="label py-1 font-semibold" for="waktu_selesai">
-                                    Waktu Selesai <span class="text-error">*</span>
-                                </label>
-                                <div class="join w-full">
-                                    <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="calendar-check" class="w-4 h-4"></i></span>
-                                    <input type="datetime-local" class="input join-item flex-1 w-full" id="waktu_selesai" name="waktu_selesai"
-                                        value="<?= esc(isset($meeting['tanggal'], $meeting['waktu_selesai'])
-                                            ? $meeting['tanggal'] . 'T' . $meeting['waktu_selesai']
-                                            : '') ?>" step="60" required />
-                                </div>
-                            </div>
-
-                            <div class="col-span-12">
-                                <div class="text-error text-xs hidden" id="waktu-rapat-error">
-                                    Waktu selesai harus setelah waktu mulai pada tanggal yang sama.
-                                </div>
-                            </div>
-
-                            <div class="col-span-12">
-                                <label class="label py-1 font-semibold" for="keterangan">Keterangan / Agenda</label>
-                                <textarea class="textarea w-full" id="keterangan" name="keterangan" rows="4"
-                                    placeholder="Masukkan agenda atau keterangan"><?= esc($meeting['keterangan'] ?? '') ?></textarea>
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <fieldset class="fieldset gap-3 border-t border-base-300 pt-4">
-                        <legend class="fieldset-legend text-sm">Publikasi & Materi</legend>
-
-                        <div class="grid grid-cols-12 gap-3">
-                            <div class="col-span-12">
-                                <label class="label py-1 font-semibold" for="materi_url">
-                                    Link Materi (QR)
-                                </label>
-                                <div class="join w-full">
-                                    <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="qr-code" class="w-4 h-4"></i></span>
-                                    <input type="url" class="input join-item flex-1 w-full" id="materi_url" name="materi_url"
-                                        value="<?= esc($meeting['materi_url'] ?? '') ?>"
-                                        placeholder="https://..." />
-                                </div>
-                            </div>
-
-                            <div class="col-span-12">
-                                <label class="label py-1 font-semibold" for="stream_url">
-                                    Link Streaming / Video
-                                </label>
-                                <div class="join w-full">
-                                    <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold"><i data-lucide="square-play" class="w-4 h-4"></i></span>
-                                    <input type="url" class="input join-item flex-1 w-full" id="stream_url" name="stream_url"
-                                        value="<?= esc($meeting['stream_url'] ?? '') ?>"
-                                        placeholder="https://..." />
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
+                <div class="flex flex-wrap gap-4">
+                    <label class="label cursor-pointer gap-2" for="lokasi-ruangan">
+                        <input class="radio radio-sm" id="lokasi-ruangan" name="lokasi_mode" type="radio"
+                            value="ruangan" <?= $lokasiMode === 'ruangan' ? 'checked' : '' ?> />
+                        <span>Ruangan DPRD</span>
+                    </label>
+                    <label class="label cursor-pointer gap-2" for="lokasi-lainnya">
+                        <input class="radio radio-sm" id="lokasi-lainnya" name="lokasi_mode" type="radio"
+                            value="lainnya" <?= $lokasiMode === 'lainnya' ? 'checked' : '' ?> />
+                        <span>Lokasi lainnya</span>
+                    </label>
                 </div>
-            </section>
-        </div>
 
-        <div class="col-span-12 lg:col-span-4">
-            <div class="lg:sticky lg:top-[88px]">
-                <section class="card card-border bg-base-100 shadow-sm">
-                    <div class="card-body gap-5 p-4 sm:p-5">
-                        <h2 class="card-title text-base">
-                            <i data-lucide="sliders-horizontal" class="h-5 w-5 text-primary"></i>
-                            Pengaturan
-                        </h2>
+                <div id="ruangan-panel">
+                    <select class="select w-full" id="ruangan_id" name="ruangan_id">
+                        <option value="">Pilih ruangan</option>
+                        <?php foreach ($rooms as $room): ?>
+                            <option value="<?= (int) $room['id'] ?>"
+                                <?= (int) ($meeting['ruangan_id'] ?? 0) === (int) $room['id'] ? 'selected' : '' ?>>
+                                <?= esc($room['name']) ?>
+                                <?= isset($room['kapasitas']) ? ' (kapasitas ' . (int) $room['kapasitas'] . ')' : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-                        <fieldset class="fieldset gap-3">
-                            <legend class="fieldset-legend">Jenis Rapat</legend>
-                            <?php $jenis = $meeting['jenis'] ?? 'insidental'; ?>
+                <div id="lokasi-lainnya-panel" hidden>
+                    <input class="input w-full" id="lokasi_lainnya" name="lokasi_lainnya" type="text" maxlength="255"
+                        value="<?= esc($lokasiLainnya) ?>" placeholder="Masukkan nama lokasi" />
+                </div>
+            </fieldset>
 
-                            <div class="grid grid-cols-2 gap-2">
-                                    <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-base-300 px-3 py-2 has-checked:border-primary has-checked:bg-primary/10" for="jenis-reguler">
-                                        <input type="radio" name="jenis" id="jenis-reguler" value="reguler"
-                                            class="radio radio-primary radio-xs"
-                                            <?= $jenis === 'reguler' ? 'checked' : '' ?> />
-                                        <span class="font-semibold">Reguler</span>
-                                    </label>
+            <fieldset class="fieldset col-span-12">
+                <legend class="fieldset-legend">
+                    Unit/Peserta <span class="text-error">*</span>
+                </legend>
 
-                                    <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-base-300 px-3 py-2 has-checked:border-primary has-checked:bg-primary/10" for="jenis-insidental">
-                                        <input type="radio" name="jenis" id="jenis-insidental" value="insidental"
-                                            class="radio radio-primary radio-xs"
-                                            <?= $jenis === 'insidental' ? 'checked' : '' ?> />
-                                        <span class="font-semibold">Insidental</span>
-                                    </label>
-                            </div>
+                <input class="input input-sm w-full" id="target-search" type="search"
+                    placeholder="Cari kelompok peserta..." autocomplete="off" />
 
-                            <label class="label cursor-pointer justify-between rounded-lg border border-base-300 px-3 py-2" for="is_publik">
-                                    <span class="font-semibold">Publikasi</span>
-                                    <span class="flex items-center gap-2">
-                                        <input class="toggle toggle-primary" type="checkbox" role="switch"
-                                            id="is_publik" name="is_publik" value="1"
-                                            <?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'checked' : '' ?> />
-                                        <span id="publik-label"><?= ($meeting === null || ($meeting['is_publik'] ?? 1)) ? 'Publik' : 'Internal' ?></span>
-                                    </span>
-                            </label>
-                        </fieldset>
-
-                        <fieldset class="fieldset gap-2 border-t border-base-300 pt-4">
-                            <legend class="fieldset-legend flex w-full items-center justify-between gap-2 p-0">
-                                <span>Peserta Rapat</span>
-                                <span class="badge badge-primary badge-sm" id="target-selected-count">0 dipilih</span>
-                            </legend>
-
-                             <div class="overflow-hidden rounded-lg border border-base-300 bg-base-100">
-                                 <div class="border-b border-base-300 bg-base-100 p-2">
-                                     <div class="relative">
-                                         <span class="absolute left-0 top-1/2 -translate-y-1/2 pl-3 text-base-content/40">
-                                             <i data-lucide="search" class="w-4 h-4"></i>
-                                         </span>
-                                         <input type="text" class="input input-sm w-full pl-10"
-                                             id="target-search" placeholder="Cari kelompok peserta..." autocomplete="off" />
-                                     </div>
-                                 </div>
-                                 <div class="max-h-48 overflow-y-auto" id="target-list">
-                                 <?php
-                                 $targetUnitIds = $meeting['target_unit_ids'] ?? [];
-                                 foreach ($unit_rapat_list as $unit):
-                                     $unitId = (int) $unit['id'];
-                                     $unitName = $unit['nama'];
-                                     $activeMemberCount = (int) ($unit['active_member_count'] ?? 0);
-                                     $isUnavailable = $activeMemberCount <= 0;
-                                     $checked = (!$isUnavailable && in_array($unitId, $targetUnitIds, true)) ? 'checked' : '';
-                                     $selectedClass = $checked ? ' is-selected bg-primary/10 text-primary font-semibold' : ' hover:bg-base-200';
-                                     $disabledClass = $isUnavailable ? ' is-disabled opacity-60' : '';
-                                     $targetId = 'unit-rapat-' . $unitId;
-                                 ?>
-                                     <label class="target-option mb-0 flex min-h-9 cursor-pointer select-none items-center gap-2 border-b border-base-300 bg-base-100 px-3 py-1.5 text-sm text-base-content/80<?= $selectedClass ?><?= $disabledClass ?>" for="<?= esc($targetId, 'attr') ?>"
-                                         data-name="<?= esc(strtolower($unitName), 'attr') ?>"
-                                         data-member-count="<?= $activeMemberCount ?>">
-                                         <input class="checkbox checkbox-primary checkbox-xs" type="checkbox" name="target_unit_rapat[]"
-                                             value="<?= $unitId ?>" data-name="<?= esc($unitName, 'attr') ?>"
-                                             id="<?= esc($targetId, 'attr') ?>" <?= $checked ?> <?= $isUnavailable ? 'disabled' : '' ?> />
-                                         <span class="flex-1 min-w-0 truncate"><?= esc($unitName) ?></span>
-                                         <?php if ($isUnavailable): ?>
-                                             <span class="badge badge-warning badge-xs">0 anggota</span>
-                                         <?php endif; ?>
-                                     </label>
-                                 <?php endforeach; ?>
-                                     <div class="text-base-content/50 text-center py-3 hidden" id="target-empty">
-                                         <small>Kelompok peserta tidak ditemukan.</small>
-                                     </div>
-                                 </div>
-                             </div>
-                             <div class="text-error text-xs mt-2 hidden" id="target-peserta-error">
-                                 Pilih minimal satu kelompok peserta yang memiliki anggota aktif.
-                             </div>
-
-                        </fieldset>
+                <div class="grid max-h-64 grid-cols-1 overflow-y-auto rounded-box border border-base-300 sm:grid-cols-2"
+                    id="target-list">
+                    <?php foreach ($unit_rapat_list as $unit):
+                        $unitId = (int) $unit['id'];
+                        $activeMemberCount = (int) ($unit['active_member_count'] ?? 0);
+                        $isUnavailable = $activeMemberCount <= 0;
+                        $checked = ! $isUnavailable && in_array($unitId, $targetUnitIds, true);
+                        $targetId = 'unit-rapat-' . $unitId;
+                    ?>
+                        <label class="target-option flex cursor-pointer items-center gap-2 border-b border-base-300 px-3 py-2 text-sm sm:border-r"
+                            for="<?= esc($targetId, 'attr') ?>"
+                            data-name="<?= esc(strtolower((string) $unit['nama']), 'attr') ?>">
+                            <input class="checkbox checkbox-sm" id="<?= esc($targetId, 'attr') ?>"
+                                name="target_unit_rapat[]" type="checkbox" value="<?= $unitId ?>"
+                                <?= $checked ? 'checked' : '' ?> <?= $isUnavailable ? 'disabled' : '' ?> />
+                            <span class="min-w-0 flex-1 truncate"><?= esc($unit['nama']) ?></span>
+                            <?php if ($isUnavailable): ?>
+                                <span class="badge badge-warning badge-sm">0 anggota</span>
+                            <?php endif; ?>
+                        </label>
+                    <?php endforeach; ?>
+                    <div class="col-span-full hidden py-3 text-center text-sm text-base-content/55" id="target-empty">
+                        Kelompok peserta tidak ditemukan.
                     </div>
-                </section>
+                </div>
+                <p class="hidden text-xs text-error" id="target-peserta-error">
+                    Pilih minimal satu kelompok peserta yang memiliki anggota aktif.
+                </p>
+            </fieldset>
+
+            <div class="col-span-12">
+                <label class="label-text mb-1 block text-sm font-bold" for="keterangan">Keterangan</label>
+                <textarea class="textarea w-full" id="keterangan" name="keterangan" rows="4"
+                    placeholder="Tambahkan keterangan bila diperlukan."><?= esc($meeting['keterangan'] ?? '') ?></textarea>
+            </div>
+
+            <div class="col-span-12">
+                <label class="flex cursor-pointer items-start gap-3 rounded-box border border-base-300 bg-base-200 p-3"
+                    for="is_publik">
+                    <input class="checkbox checkbox-sm mt-0.5" id="is_publik" name="is_publik" type="checkbox"
+                        value="1" <?= ($meeting['is_publik'] ?? 0) ? 'checked' : '' ?> />
+                    <span>
+                        <span class="block text-sm font-bold">Publikasikan agenda</span>
+                        <span class="mt-1 block text-xs text-base-content/55" id="publik-label">
+                            <?= ($meeting['is_publik'] ?? 0) ? 'Agenda dapat tampil pada kanal publik.' : 'Default internal, hanya terlihat oleh pengguna berwenang.' ?>
+                        </span>
+                    </span>
+                </label>
             </div>
         </div>
     </div>
 
-    <div class="form-actions-sticky">
-        <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-outline sm:btn-sm">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
+    <div class="mt-4 flex gap-2">
+        <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-outline flex-1 sm:btn-sm sm:flex-none">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i>
+            Batal
         </a>
-        <button type="submit" class="btn btn-primary sm:btn-sm">
-            <i data-lucide="calendar-check" class="w-4 h-4"></i>
-            <span class="sm:hidden">Simpan</span>
-            <span class="hidden sm:inline">
-                <?= $meeting ? 'Simpan Perubahan' : 'Simpan Jadwal' ?>
-            </span>
+        <button type="submit" class="btn btn-primary flex-1 sm:btn-sm sm:flex-none">
+            <i data-lucide="check" class="h-4 w-4"></i>
+            <?= $isEdit ? 'Simpan Perubahan' : 'Simpan Agenda' ?>
         </button>
     </div>
 </form>

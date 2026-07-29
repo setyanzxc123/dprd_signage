@@ -12,45 +12,15 @@ class MeetingController extends BaseController
 {
     public function index(): string
     {
-        // Otomatis perbarui status semua rapat berdasarkan waktu saat ini
         (new JadwalModel())->autoUpdateStatuses();
 
-        $tahun    = (int) ($this->request->getGet('tahun') ?? date('Y'));
-        $semester = $this->request->getGet('semester') ?? 'all';
-        $jenis    = $this->request->getGet('jenis') ?? 'all';
-        $status   = $this->request->getGet('status') ?? 'all';
-
-        $db      = \Config\Database::connect();
-        $applyFilters = static function ($builder) use ($tahun, $semester, $jenis, $status) {
-            $builder->where('j.tanggal >=', "{$tahun}-01-01");
-            $builder->where('j.tanggal <=', "{$tahun}-12-31");
-
-            if ($semester === '1') {
-                $builder->where('j.tanggal <=', "{$tahun}-06-30");
-            } elseif ($semester === '2') {
-                $builder->where('j.tanggal >=', "{$tahun}-07-01");
-            }
-
-            if ($jenis === 'reguler') {
-                $builder->whereIn('j.jenis', ['reguler', 'bamus']);
-            } elseif ($jenis !== 'all') {
-                $builder->where('j.jenis', $jenis);
-            }
-
-            if ($status !== 'all') {
-                $builder->where('j.status', $status);
-            }
-
-            return $builder;
-        };
-
-        $jadwals = $applyFilters(
-            $db->table('jadwal j')
-                ->select('j.id, j.judul, j.keterangan, j.tanggal,
-                          j.waktu_mulai, j.waktu_selesai, j.status,
-                          j.jenis, j.is_publik, j.lokasi_lainnya, r.name AS nama_ruangan')
-                ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
-        )
+        $db = \Config\Database::connect();
+        $jadwals = $db->table('jadwal j')
+            ->select('j.id, j.judul, j.keterangan, j.tanggal,
+                      j.waktu_mulai, j.waktu_selesai, j.status,
+                      j.jenis, j.is_publik, j.lokasi_lainnya, r.name AS nama_ruangan')
+            ->join('ruangan r', 'r.id = j.ruangan_id', 'left')
+            ->where('j.jenis', 'insidental')
             ->orderBy('j.tanggal', 'DESC')
             ->orderBy('j.waktu_mulai', 'ASC')
             ->get()
@@ -69,23 +39,15 @@ class MeetingController extends BaseController
                 'ruangan'       => $this->displayLocation($j),
                 'target_peserta' => $targetMap[$j['id']] ?? '-',
                 'status'        => $j['status'],
-                'jenis'         => $this->normalizeJenis($j['jenis'] ?? null),
+                'sumber'        => JadwalModel::SOURCE,
+                'lingkup'       => JadwalModel::SCOPE,
                 'is_publik'     => (int) ($j['is_publik'] ?? 0),
             ];
         }
 
         return view('admin/jadwal/index', [
-            'pageTitle'   => 'Insidental Internal',
-            'meetings'    => $meetings,
-            'filters'     => [
-                'tahun'    => $tahun,
-                'semester' => $semester,
-                'jenis'    => $jenis,
-                'status'   => $status,
-            ],
-            'data_scope'  => [
-                'label' => $this->scheduleScopeLabel($tahun, $semester, $jenis, $status),
-            ],
+            'pageTitle' => 'Insidental Internal',
+            'meetings'  => $meetings,
         ]);
     }
 
@@ -107,12 +69,21 @@ class MeetingController extends BaseController
             return $this->failForm($input['error']);
         }
 
-        $jadwalModel = new JadwalModel();
-        $jadwalId    = $jadwalModel->insert(array_merge($input['payload'], [
-            'status'        => 'menunggu',
-        ]), true); // true = return insert ID
+        $db = \Config\Database::connect();
+        $db->transStart();
 
+        $jadwalModel = new JadwalModel();
+        $jadwalId = $jadwalModel->insert($input['payload'], true);
+        if ($jadwalId === false) {
+            $db->transRollback();
+
+            return $this->failForm('Jadwal gagal disimpan. Silakan coba kembali.');
+        }
         $this->syncJadwalUnits((int) $jadwalId, $input['unit_ids']);
+        $db->transComplete();
+        if (! $db->transStatus()) {
+            return $this->failForm('Jadwal gagal disimpan. Silakan coba kembali.');
+        }
 
         return $this->formSuccessResponse('Jadwal berhasil disimpan.', base_url('admin/jadwal'));
     }
@@ -122,13 +93,12 @@ class MeetingController extends BaseController
         $jadwalModel  = new JadwalModel();
         $jadwal       = $jadwalModel->find($id);
 
-        if (!$jadwal) {
+        if (! $this->isInsidental($jadwal)) {
             session()->setFlashdata('error', 'Jadwal tidak ditemukan.');
             return redirect()->to(base_url('admin/jadwal'));
         }
 
         $jadwal['target_unit_ids'] = $this->jadwalUnitIds($id);
-        $jadwal['jenis'] = $this->normalizeJenis($jadwal['jenis'] ?? null);
 
         return view('admin/jadwal/form', [
             'pageTitle'   => 'Edit Jadwal Insidental',
@@ -142,7 +112,7 @@ class MeetingController extends BaseController
     public function update(int $id)
     {
         $jadwalModel = new JadwalModel();
-        if (! $jadwalModel->find($id)) {
+        if (! $this->isInsidental($jadwalModel->find($id))) {
             session()->setFlashdata('error', 'Jadwal tidak ditemukan.');
             return redirect()->to(base_url('admin/jadwal'));
         }
@@ -152,9 +122,19 @@ class MeetingController extends BaseController
             return $this->failForm($input['error'], $id);
         }
 
-        $jadwalModel->update($id, $input['payload']);
+        $db = \Config\Database::connect();
+        $db->transStart();
 
+        if (! $jadwalModel->update($id, $input['payload'])) {
+            $db->transRollback();
+
+            return $this->failForm('Jadwal gagal diperbarui. Silakan coba kembali.', $id);
+        }
         $this->syncJadwalUnits($id, $input['unit_ids']);
+        $db->transComplete();
+        if (! $db->transStatus()) {
+            return $this->failForm('Jadwal gagal diperbarui. Silakan coba kembali.', $id);
+        }
 
         return $this->formSuccessResponse('Jadwal berhasil diperbarui.', base_url('admin/jadwal'));
     }
@@ -162,6 +142,11 @@ class MeetingController extends BaseController
     public function delete(int $id)
     {
         $jadwalModel = new JadwalModel();
+        if (! $this->isInsidental($jadwalModel->find($id))) {
+            session()->setFlashdata('error', 'Jadwal tidak ditemukan.');
+            return redirect()->to(base_url('admin/jadwal'));
+        }
+
         $jadwalModel->delete($id);
 
         session()->setFlashdata('success', 'Jadwal berhasil dihapus.');
@@ -222,16 +207,14 @@ class MeetingController extends BaseController
         return array_values(array_unique($ids));
     }
 
-    private function postedJenis(): string
-    {
-        return $this->normalizeJenis($this->request->getPost('jenis'));
-    }
-
     private function validatedScheduleInput(?int $jadwalId = null): array
     {
         $judul = trim((string) $this->request->getPost('judul'));
         if ($judul === '') {
             return ['error' => 'Judul rapat wajib diisi.'];
+        }
+        if (mb_strlen($judul) > 255) {
+            return ['error' => 'Judul rapat maksimal 255 karakter.'];
         }
 
         [$tanggal, $waktuMulai, $waktuSelesai] = $this->validatedTimes();
@@ -261,16 +244,6 @@ class MeetingController extends BaseController
             return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
         }
 
-        $materiUrl = $this->validatedOptionalUrl((string) $this->request->getPost('materi_url'), 'Link materi rapat tidak valid.');
-        if (isset($materiUrl['error'])) {
-            return ['error' => $materiUrl['error']];
-        }
-
-        $streamUrl = $this->validatedOptionalUrl((string) $this->request->getPost('stream_url'), 'Link live streaming tidak valid.');
-        if (isset($streamUrl['error'])) {
-            return ['error' => $streamUrl['error']];
-        }
-
         return [
             'payload' => [
                 'judul'          => $judul,
@@ -280,10 +253,13 @@ class MeetingController extends BaseController
                 'waktu_selesai'  => $waktuSelesai,
                 'ruangan_id'     => $locationData['ruangan_id'],
                 'lokasi_lainnya' => $locationData['lokasi_lainnya'],
-                'materi_url'     => $materiUrl['url'],
-                'stream_url'     => $streamUrl['url'],
                 'is_publik'      => $this->request->getPost('is_publik') ? 1 : 0,
-                'jenis'          => $this->postedJenis(),
+                'jenis'          => 'insidental',
+                'status'         => JadwalModel::resolveLifecycleStatus(
+                    $tanggal,
+                    $waktuMulai,
+                    $waktuSelesai,
+                ),
             ],
             'unit_ids' => $unitIds,
         ];
@@ -291,11 +267,25 @@ class MeetingController extends BaseController
 
     private function validatedTimes(): array
     {
+        $tanggalRaw      = trim((string) $this->request->getPost('tanggal'));
         $waktuMulaiRaw   = trim((string) $this->request->getPost('waktu_mulai'));
         $waktuSelesaiRaw = trim((string) $this->request->getPost('waktu_selesai'));
 
-        $startTs = $waktuMulaiRaw !== '' ? strtotime($waktuMulaiRaw) : false;
-        $endTs   = $waktuSelesaiRaw !== '' ? strtotime($waktuSelesaiRaw) : false;
+        if ($tanggalRaw !== '') {
+            $tanggal = $this->validDateFilter($tanggalRaw);
+            if ($tanggal === null
+                || ! $this->isValidTimeValue($waktuMulaiRaw)
+                || ! $this->isValidTimeValue($waktuSelesaiRaw)) {
+                return [null, null, null, null];
+            }
+
+            $startTs = strtotime($tanggal . ' ' . $waktuMulaiRaw);
+            $endTs   = strtotime($tanggal . ' ' . $waktuSelesaiRaw);
+        } else {
+            // Kompatibilitas untuk payload lama yang memakai datetime-local.
+            $startTs = $waktuMulaiRaw !== '' ? strtotime($waktuMulaiRaw) : false;
+            $endTs   = $waktuSelesaiRaw !== '' ? strtotime($waktuSelesaiRaw) : false;
+        }
 
         if ($startTs === false || $endTs === false) {
             return [null, null, null, null];
@@ -315,6 +305,11 @@ class MeetingController extends BaseController
             date('H:i:s', $endTs),
             $startTs,
         ];
+    }
+
+    private function isValidTimeValue(string $value): bool
+    {
+        return preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $value) === 1;
     }
 
     private function validatedLocationData(?int $jadwalId = null): array
@@ -361,20 +356,6 @@ class MeetingController extends BaseController
             'ruangan_id'     => $ruanganId,
             'lokasi_lainnya' => null,
         ];
-    }
-
-    private function validatedOptionalUrl(string $url, string $message): array
-    {
-        $url = trim($url);
-        if ($url === '') {
-            return ['url' => null];
-        }
-
-        if (! filter_var($url, FILTER_VALIDATE_URL)) {
-            return ['error' => $message];
-        }
-
-        return ['url' => $url];
     }
 
     private function invalidSelectableUnitIds(array $unitIds, ?int $jadwalId): array
@@ -505,10 +486,17 @@ class MeetingController extends BaseController
 
     private function postedMeeting(?int $id = null): array
     {
+        $tanggalRaw = trim((string) $this->request->getPost('tanggal'));
         $waktuMulaiRaw = trim((string) $this->request->getPost('waktu_mulai'));
         $waktuSelesaiRaw = trim((string) $this->request->getPost('waktu_selesai'));
-        [$tanggal, $waktuMulai] = $this->splitDateTimeLocal($waktuMulaiRaw);
-        [, $waktuSelesai] = $this->splitDateTimeLocal($waktuSelesaiRaw);
+        if ($tanggalRaw !== '') {
+            $tanggal = $tanggalRaw;
+            $waktuMulai = $waktuMulaiRaw;
+            $waktuSelesai = $waktuSelesaiRaw;
+        } else {
+            [$tanggal, $waktuMulai] = $this->splitDateTimeLocal($waktuMulaiRaw);
+            [, $waktuSelesai] = $this->splitDateTimeLocal($waktuSelesaiRaw);
+        }
 
         return [
             'id'              => $id,
@@ -519,10 +507,8 @@ class MeetingController extends BaseController
             'waktu_selesai'   => $waktuSelesai,
             'ruangan_id'      => (int) $this->request->getPost('ruangan_id'),
             'lokasi_lainnya'  => trim((string) $this->request->getPost('lokasi_lainnya')),
-            'materi_url'      => trim((string) $this->request->getPost('materi_url')),
-            'stream_url'      => trim((string) $this->request->getPost('stream_url')),
             'is_publik'       => $this->request->getPost('is_publik') ? 1 : 0,
-            'jenis'           => $this->postedJenis(),
+            'jenis'           => 'insidental',
             'target_unit_ids' => $this->postedUnitIds(),
         ];
     }
@@ -548,47 +534,21 @@ class MeetingController extends BaseController
         return $row['nama_ruangan'] ?? '-';
     }
 
-    private function normalizeJenis(?string $jenis): string
+    private function isInsidental(?array $jadwal): bool
     {
-        if ($jenis === 'bamus' || $jenis === 'reguler') {
-            return 'reguler';
-        }
-
-        return 'insidental';
+        return $jadwal !== null && ($jadwal['jenis'] ?? 'insidental') === 'insidental';
     }
 
-    private function scheduleScopeLabel(int $tahun, string $semester, string $jenis, string $status): string
+    private function validDateFilter(string $value): ?string
     {
-        $parts = ["tahun {$tahun}"];
-
-        if ($semester === '1') {
-            $parts[] = 'semester I';
-        } elseif ($semester === '2') {
-            $parts[] = 'semester II';
+        $value = trim($value);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return null;
         }
 
-        if ($jenis !== 'all') {
-            $parts[] = 'jenis ' . $this->filterLabel($jenis);
-        }
+        [$year, $month, $day] = array_map('intval', explode('-', $value));
 
-        if ($status !== 'all') {
-            $parts[] = 'status ' . $this->filterLabel($status);
-        }
-
-        return implode(', ', $parts);
-    }
-
-    private function filterLabel(string $value): string
-    {
-        return match ($value) {
-            'reguler'     => 'reguler',
-            'insidental'  => 'insidental',
-            'menunggu'    => 'menunggu',
-            'persiapan'   => 'persiapan',
-            'berlangsung' => 'berlangsung',
-            'selesai'     => 'selesai',
-            default       => $value,
-        };
+        return checkdate($month, $day, $year) ? $value : null;
     }
 
     private function jadwalUnitIds(int $jadwalId): array

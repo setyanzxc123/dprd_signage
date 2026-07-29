@@ -145,7 +145,9 @@
         const label = document.getElementById('publik-label');
         if (toggle && label) {
             toggle.addEventListener('change', function() {
-                label.textContent = this.checked ? 'Publik' : 'Internal';
+                label.textContent = this.checked
+                    ? 'Agenda dapat tampil pada kanal publik.'
+                    : 'Default internal, hanya terlihat oleh pengguna berwenang.';
             });
         }
 
@@ -181,6 +183,7 @@
         });
         syncLocationMode();
 
+        const tanggalInput = document.getElementById('tanggal');
         const waktuMulaiInput = document.getElementById('waktu_mulai');
         const waktuSelesaiInput = document.getElementById('waktu_selesai');
         const waktuError = document.getElementById('waktu-rapat-error');
@@ -188,8 +191,17 @@
         const syncTimeValidity = function() {
             if (!waktuMulaiInput || !waktuSelesaiInput) return true;
 
-            const start = waktuMulaiInput.value ? new Date(waktuMulaiInput.value) : null;
-            const end = waktuSelesaiInput.value ? new Date(waktuSelesaiInput.value) : null;
+            const hasSeparateDate = tanggalInput?.value
+                && waktuMulaiInput.type === 'time'
+                && waktuSelesaiInput.type === 'time';
+            const startValue = hasSeparateDate
+                ? `${tanggalInput.value}T${waktuMulaiInput.value}`
+                : waktuMulaiInput.value;
+            const endValue = hasSeparateDate
+                ? `${tanggalInput.value}T${waktuSelesaiInput.value}`
+                : waktuSelesaiInput.value;
+            const start = startValue ? new Date(startValue) : null;
+            const end = endValue ? new Date(endValue) : null;
             if (!start || !end) {
                 waktuMulaiInput.classList.remove('input-error');
                 waktuSelesaiInput.classList.remove('input-error');
@@ -198,7 +210,9 @@
                 return true;
             }
 
-            const valid = !!(start && end && end > start && waktuMulaiInput.value.slice(0, 10) === waktuSelesaiInput.value.slice(0, 10));
+            const sameDate = hasSeparateDate
+                || waktuMulaiInput.value.slice(0, 10) === waktuSelesaiInput.value.slice(0, 10);
+            const valid = !!(start && end && end > start && sameDate);
 
             waktuMulaiInput.classList.toggle('input-error', !valid && !!waktuMulaiInput.value);
             waktuSelesaiInput.classList.toggle('input-error', !valid && !!waktuSelesaiInput.value);
@@ -209,6 +223,7 @@
             return valid;
         };
 
+        tanggalInput?.addEventListener('change', syncTimeValidity);
         waktuMulaiInput?.addEventListener('change', syncTimeValidity);
         waktuSelesaiInput?.addEventListener('change', syncTimeValidity);
 

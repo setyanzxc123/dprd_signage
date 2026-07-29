@@ -14,15 +14,6 @@
     </a>
 </div>
 
-<?php
-    $filters = $filters ?? [
-        'tahun'    => date('Y'),
-        'semester' => 'all',
-        'jenis'    => 'all',
-        'status'   => 'all',
-    ];
-?>
-
 <section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
     <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
         <h2 class="card-title text-base">
@@ -32,35 +23,11 @@
         <span class="badge badge-ghost whitespace-nowrap"><?= count($meetings) ?> jadwal</span>
     </div>
 
-    <form method="get" class="grid grid-cols-12 items-end gap-3 border-b border-base-300 px-4 py-3 sm:px-5">
-        <fieldset class="fieldset col-span-6 min-w-0 sm:col-span-3 lg:col-span-2">
-            <legend class="fieldset-legend">Tahun</legend>
-            <select class="select select-sm w-full min-w-0" id="filter-tahun" name="tahun" data-auto-submit>
-                <?php for ($y = date('Y') + 1; $y >= date('Y') - 3; $y--): ?>
-                    <option value="<?= $y ?>" <?= (int) $filters['tahun'] === $y ? 'selected' : '' ?>><?= $y ?></option>
-                <?php endfor; ?>
-            </select>
-        </fieldset>
-        <fieldset class="fieldset col-span-6 min-w-0 sm:col-span-3 lg:col-span-2">
-            <legend class="fieldset-legend">Semester</legend>
-            <select class="select select-sm w-full min-w-0" id="filter-semester" name="semester" data-auto-submit>
-                <option value="all" <?= $filters['semester'] === 'all' ? 'selected' : '' ?>>Semua</option>
-                <option value="1" <?= $filters['semester'] === '1' ? 'selected' : '' ?>>Semester I</option>
-                <option value="2" <?= $filters['semester'] === '2' ? 'selected' : '' ?>>Semester II</option>
-            </select>
-        </fieldset>
-        <div class="col-span-12 sm:col-span-3 lg:col-span-2">
-            <a href="<?= base_url('admin/jadwal') ?>" class="btn btn-ghost btn-sm w-full gap-1 sm:w-auto">
-                <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
-                Reset
-            </a>
-        </div>
-    </form>
-
     <div class="min-w-0">
         <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
-            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-jadwal" data-admin-datatable data-dt-order='[[1,"desc"]]'
-                data-dt-col-filters='[{"col":5,"label":"Jenis","all":"Semua Jenis"},{"col":7,"label":"Status","all":"Semua Status"}]'>
+            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-jadwal"
+                data-admin-datatable data-dt-order='[[1,"desc"]]'
+                data-dt-col-filters='[{"col":6,"label":"Status","all":"Semua Status"}]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
@@ -68,8 +35,7 @@
                         <th>Judul Rapat</th>
                         <th>Ruangan</th>
                         <th class="mobile-hidden">Peserta</th>
-                        <th class="mobile-hidden">Jenis</th>
-                        <th class="mobile-hidden">Publik</th>
+                        <th class="mobile-hidden">Publikasi</th>
                         <th>Status</th>
                         <th class="text-right no-sort">Aksi</th>
                     </tr>
@@ -105,14 +71,7 @@
                                     <?= esc($m['target_peserta']) ?>
                                 </span>
                             </td>
-                            <td data-label="Jenis" class="mobile-hidden">
-                                <?php if (($m['jenis'] ?? 'insidental') === 'reguler'): ?>
-                                    <span class="badge badge-primary h-auto whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold">Reguler</span>
-                                <?php else: ?>
-                                    <span class="badge badge-ghost h-auto whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold text-base-content/60">Insidental</span>
-                                <?php endif; ?>
-                            </td>
-                            <td data-label="Publik" class="mobile-hidden">
+                            <td data-label="Publikasi" class="mobile-hidden">
                                 <?php if ($m['is_publik'] ?? 0): ?>
                                     <span class="badge badge-success h-auto whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold" title="Ubah publikasi melalui halaman edit">Publik</span>
                                 <?php else: ?>
