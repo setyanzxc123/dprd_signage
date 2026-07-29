@@ -184,17 +184,21 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     <div class="grid gap-2">
                         <details
                             v-for="item in paginatedAgendas"
-                            :key="item.id"
+                            :key="item.key"
                             class="collapse collapse-arrow border border-base-300 bg-base-100"
-                            :class="{ 'outline outline-2 outline-base-content': expandedAgendaId === Number(item.id) }"
-                            :open="expandedAgendaId === Number(item.id)"
-                            @toggle="handleAgendaToggle($event, item.id)"
+                            :class="{ 'outline outline-2 outline-base-content': expandedAgendaKey === item.key }"
+                            :open="expandedAgendaKey === item.key"
+                            @toggle="handleAgendaToggle($event, item.key)"
                         >
                             <summary class="collapse-title grid min-h-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3 pr-12">
                                 <span class="grid h-12 w-12 shrink-0 place-items-center rounded-box bg-base-200 text-center">
-                                    <span>
+                                    <span v-if="item.tanggal">
                                         <span class="block text-[10px] font-extrabold uppercase text-base-content/45">{{ shortMonth(item.tanggal) }}</span>
                                         <strong class="block text-lg leading-none">{{ dayNumber(item.tanggal) }}</strong>
+                                    </span>
+                                    <span v-else>
+                                        <span class="block text-[10px] font-extrabold uppercase text-base-content/45">SK</span>
+                                        <strong class="block text-sm leading-none">{{ item.document_year }}</strong>
                                     </span>
                                 </span>
                                 <span class="min-w-0">
@@ -203,7 +207,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                         <span v-if="item.source === 'insidental_internal'" class="badge badge-secondary badge-soft badge-sm">
                                             Insidental Internal
                                         </span>
-                                        <span class="truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.ruangan || '-' }}</span>
+                                        <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-semibold text-base-content/50">
+                                            {{ item.periode_label || 'Periode belum ditentukan' }}
+                                        </span>
+                                        <span v-else class="truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.ruangan || '-' }}</span>
                                         <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">{{ statusLabel(item.status) }}</span>
                                     </span>
                                 </span>
@@ -221,7 +228,19 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 
                                 <p v-if="item.keterangan" class="mt-3 text-sm font-medium leading-6 text-base-content/60">{{ item.keterangan }}</p>
 
-                                <dl class="mt-4 grid gap-3 rounded-box bg-base-200 p-4 sm:grid-cols-2">
+                                <dl v-if="item.status === 'proyeksi'" class="mt-4 grid gap-3 rounded-box bg-base-200 p-4 sm:grid-cols-2">
+                                    <div>
+                                        <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Periode proyeksi</dt>
+                                        <dd class="mt-1 text-sm font-bold">{{ item.periode_label || 'Belum ditentukan' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Dokumen Banmus</dt>
+                                        <dd class="mt-1 text-sm font-bold">{{ item.document_title }}</dd>
+                                        <dd class="mt-0.5 text-xs font-semibold text-base-content/55">Nomor SK: {{ item.document_number }}</dd>
+                                    </div>
+                                </dl>
+
+                                <dl v-else class="mt-4 grid gap-3 rounded-box bg-base-200 p-4 sm:grid-cols-2">
                                     <div>
                                         <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Tanggal dan waktu</dt>
                                         <dd class="mt-1 text-sm font-bold">{{ fullDate(item.tanggal) }} · {{ item.waktu_mulai }}–{{ item.waktu_selesai }} WITA</dd>
@@ -237,9 +256,14 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                 </dl>
 
                                 <div class="mt-4 flex flex-wrap items-center gap-2">
-                                    <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">Bahan Rapat</a>
-                                    <a v-if="item.has_stream" class="btn btn-outline btn-sm" :href="item.stream_url" target="_blank" rel="noopener noreferrer">Live / Video</a>
-                                    <span v-if="!item.has_materi && !item.has_stream" class="text-xs font-semibold text-base-content/45">Belum ada bahan atau tautan video.</span>
+                                    <a v-if="item.status === 'proyeksi'" class="btn btn-outline btn-sm" :href="item.projection_url">
+                                        Lihat Proyeksi &amp; SK
+                                    </a>
+                                    <template v-else>
+                                        <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">Bahan Rapat</a>
+                                        <a v-if="item.has_stream" class="btn btn-outline btn-sm" :href="item.stream_url" target="_blank" rel="noopener noreferrer">Live / Video</a>
+                                        <span v-if="!item.has_materi && !item.has_stream" class="text-xs font-semibold text-base-content/45">Belum ada bahan atau tautan video.</span>
+                                    </template>
                                 </div>
                             </div>
                         </details>
@@ -313,7 +337,15 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             const WEATHER_URL = <?= json_encode(base_url('api/signage/cuaca'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
             const LOGIN_URL = <?= json_encode(base_url('login?akses=anggota'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
             const IS_MEMBER = <?= $isMember ? 'true' : 'false' ?>;
+            const BANMUS_PROJECTIONS = <?= json_encode(
+                $banmusProjections ?? [],
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+            ) ?>;
             const agendas = ref([]);
+            const banmusProjections = ref(BANMUS_PROJECTIONS.map((item) => ({
+                ...item,
+                key: `banmus_projection:${item.id}`,
+            })));
             const generalAgendas = ref([]);
             const units = ref([]);
             const weather = ref(null);
@@ -323,7 +355,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             const periodMode = ref('month');
             const pageSize = ref(10);
             const currentPage = ref(1);
-            const expandedAgendaId = ref(null);
+            const expandedAgendaKey = ref(null);
             const initialLoading = ref(true);
             const refreshing = ref(false);
             const loadError = ref(false);
@@ -358,25 +390,37 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 return temperature ? `${temperature} · ${condition}` : condition;
             });
             const filteredAgendas = computed(() => {
+                let visibleProjections = IS_MEMBER && memberScope.value === 'saya'
+                    ? banmusProjections.value.filter((item) => item.is_participant)
+                    : banmusProjections.value;
+                const selectedMonths = new Set(periodMonths());
+                visibleProjections = visibleProjections.filter((item) => {
+                    const month = projectionMonth(item);
+
+                    return month === null || selectedMonths.has(month);
+                });
+                const rows = [...agendas.value, ...visibleProjections];
                 if (activeNavigation.value.startsWith('unit:')) {
                     const unitId = Number(activeNavigation.value.slice(5));
-                    return agendas.value.filter((item) => (item.unit_ids || []).map(Number).includes(unitId));
+                    return rows.filter((item) => (item.unit_ids || []).map(Number).includes(unitId));
                 }
 
-                return agendas.value;
+                return rows;
             });
             const orderedAgendas = computed(() => {
                 const today = dateKey(new Date());
                 const active = filteredAgendas.value.filter((item) => item.status === 'berlangsung');
-                const activeIds = new Set(active.map((item) => Number(item.id)));
+                const activeKeys = new Set(active.map((item) => item.key));
                 const upcoming = filteredAgendas.value.filter((item) =>
-                    !activeIds.has(Number(item.id))
+                    item.status !== 'proyeksi'
+                    && !activeKeys.has(item.key)
                     && item.tanggal >= today
                     && item.status !== 'selesai');
-                const prioritizedIds = new Set([...active, ...upcoming].map((item) => Number(item.id)));
+                const projections = filteredAgendas.value.filter((item) => item.status === 'proyeksi');
+                const prioritizedKeys = new Set([...active, ...upcoming, ...projections].map((item) => item.key));
                 const remaining = filteredAgendas.value.filter((item) =>
-                    !prioritizedIds.has(Number(item.id))).reverse();
-                return [...active, ...upcoming, ...remaining];
+                    !prioritizedKeys.has(item.key)).reverse();
+                return [...active, ...upcoming, ...projections, ...remaining];
             });
             const totalPages = computed(() =>
                 Math.max(1, Math.ceil(orderedAgendas.value.length / pageSize.value)));
@@ -419,6 +463,27 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     monthKey(new Date(current.getFullYear(), firstMonth + offset, 1)));
             }
 
+            function projectionMonth(item) {
+                if (/^\d{4}-\d{2}/.test(item.tanggal || '')) {
+                    return item.tanggal.slice(0, 7);
+                }
+
+                const label = String(item.periode_label || '').toLowerCase();
+                const monthIndex = monthNames.findIndex((month) =>
+                    label.includes(month.toLowerCase()));
+                if (monthIndex < 0) {
+                    return null;
+                }
+
+                const yearMatch = label.match(/\b(20\d{2})\b/);
+                const year = yearMatch ? Number(yearMatch[1]) : Number(item.document_year);
+                if (!Number.isInteger(year) || year < 2000) {
+                    return null;
+                }
+
+                return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+            }
+
             function requestUrl(month) {
                 const url = new URL(API_URL, window.location.origin);
                 url.searchParams.set('month', month);
@@ -454,7 +519,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     }
                     const unique = new Map();
                     payloads.flatMap((payload) => payload.data || [])
-                        .forEach((item) => unique.set(Number(item.id), item));
+                        .map((item) => ({
+                            ...item,
+                            key: `${item.source || 'insidental_internal'}:${item.source_id ?? item.id}`,
+                        }))
+                        .forEach((item) => unique.set(item.key, item));
                     agendas.value = Array.from(unique.values()).sort((a, b) =>
                         `${a.tanggal} ${a.waktu_mulai}`.localeCompare(`${b.tanggal} ${b.waktu_mulai}`));
                     units.value = payloads[0]?.units || [];
@@ -536,30 +605,29 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 loadAgenda();
             }
 
-            function handleAgendaToggle(event, id) {
-                const agendaId = Number(id);
+            function handleAgendaToggle(event, key) {
                 if (event.currentTarget.open) {
-                    expandedAgendaId.value = agendaId;
-                } else if (expandedAgendaId.value === agendaId) {
-                    expandedAgendaId.value = null;
+                    expandedAgendaKey.value = key;
+                } else if (expandedAgendaKey.value === key) {
+                    expandedAgendaKey.value = null;
                 }
             }
 
             function changePageSize() {
                 currentPage.value = 1;
-                expandedAgendaId.value = null;
+                expandedAgendaKey.value = null;
                 updateUrl();
             }
 
             function goToPage(page) {
                 currentPage.value = Math.min(Math.max(1, Number(page)), totalPages.value);
-                expandedAgendaId.value = null;
+                expandedAgendaKey.value = null;
                 updateUrl();
             }
 
             function resetAgendaSelection() {
                 currentPage.value = 1;
-                expandedAgendaId.value = null;
+                expandedAgendaKey.value = null;
             }
 
             function updateUrl() {
@@ -598,6 +666,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     berlangsung: 'Berlangsung',
                     persiapan: 'Persiapan',
                     menunggu: 'Menunggu',
+                    proyeksi: 'Proyeksi',
                     selesai: 'Selesai',
                 }[status] || status || '-';
             }
@@ -607,6 +676,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     berlangsung: 'badge badge-success badge-soft badge-sm',
                     persiapan: 'badge badge-warning badge-soft badge-sm',
                     menunggu: 'badge badge-ghost badge-sm',
+                    proyeksi: 'badge badge-warning badge-soft badge-sm',
                     selesai: 'badge badge-info badge-soft badge-sm',
                 }[status] || 'badge badge-ghost badge-sm';
             }
@@ -707,7 +777,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 totalPages,
                 pageStart,
                 pageEnd,
-                expandedAgendaId,
+                expandedAgendaKey,
                 generalAgendas,
                 scopeButtonClass,
                 isDark,

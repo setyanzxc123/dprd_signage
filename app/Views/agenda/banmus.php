@@ -116,9 +116,9 @@ $isMember = is_array($member ?? null);
                                 <div class="card-body gap-4 p-4 sm:p-5">
                                     <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                                         <div class="min-w-0">
-                                            <span class="badge badge-neutral badge-outline badge-sm">
+                                            <p class="text-xs font-bold uppercase tracking-wider text-base-content/50">
                                                 Semester <?= (int) $document['semester'] ?> · <?= (int) $document['tahun'] ?>
-                                            </span>
+                                            </p>
                                             <h2 class="mt-3 text-lg font-black leading-snug sm:text-xl">
                                                 <?= esc($document['judul'] ?: 'Proyeksi Banmus Semester ' . (int) $document['semester'] . ' Tahun ' . (int) $document['tahun']) ?>
                                             </h2>
@@ -141,38 +141,14 @@ $isMember = is_array($member ?? null);
 
                                     <ul class="list rounded-box border border-base-300 bg-base-100">
                                         <?php foreach ($document['items'] as $item): ?>
-                                            <?php
-                                            $statusLabel = match ($item['status']) {
-                                                'proyeksi'    => 'Proyeksi',
-                                                'menunggu'    => 'Terjadwal',
-                                                'persiapan'   => 'Segera Dimulai',
-                                                'berlangsung' => 'Berlangsung',
-                                                'selesai'     => 'Selesai',
-                                                'ditunda'     => 'Ditunda',
-                                                'dibatalkan'  => 'Dibatalkan',
-                                                default       => ucfirst((string) $item['status']),
-                                            };
-                                            $statusClass = match ($item['status']) {
-                                                'proyeksi'    => 'badge-warning badge-soft',
-                                                'persiapan'   => 'badge-warning badge-soft',
-                                                'berlangsung' => 'badge-success badge-soft',
-                                                'selesai'     => 'badge-info badge-soft',
-                                                'ditunda'     => 'badge-warning badge-outline',
-                                                'dibatalkan'  => 'badge-error badge-soft',
-                                                default       => 'badge-ghost',
-                                            };
-                                            ?>
                                             <li class="list-row gap-3 border-b border-base-200 p-4 last:border-b-0">
                                                 <div class="grid h-9 w-9 shrink-0 place-items-center rounded-box bg-base-200 text-sm font-black">
                                                     <?= (int) $item['urutan'] ?>
                                                 </div>
                                                 <div class="list-col-grow min-w-0">
-                                                    <div class="flex flex-wrap items-center justify-between gap-2">
-                                                        <p class="text-xs font-extrabold uppercase tracking-wide text-base-content/45">
-                                                            <?= $item['status'] === 'proyeksi' ? 'Periode Proyeksi' : 'Jadwal Pelaksanaan' ?>
-                                                        </p>
-                                                        <span class="badge <?= $statusClass ?> badge-sm"><?= esc($statusLabel) ?></span>
-                                                    </div>
+                                                    <p class="text-xs font-extrabold uppercase tracking-wide text-base-content/45">
+                                                        <?= $item['status'] === 'proyeksi' ? 'Periode Proyeksi' : 'Jadwal Pelaksanaan' ?>
+                                                    </p>
                                                     <?php if (! empty($item['tanggal'])): ?>
                                                         <p class="mt-1 text-sm font-bold">
                                                             <?= date('d/m/Y', strtotime($item['tanggal'])) ?>

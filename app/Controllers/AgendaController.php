@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Schedule\Persistence\DatabaseScheduleReadRepository;
 use App\Models\BanmusDocumentModel;
 use App\Models\JadwalBanmusModel;
 use App\Models\MemberAccountModel;
@@ -19,6 +20,9 @@ class AgendaController extends BaseController
     {
         $member = $this->activeMember();
         $isMember = $member !== null;
+        $banmusProjections = $this->databaseDriverAvailable()
+            ? $this->portalBanmusProjections($member)
+            : [];
 
         return $this->privateResponse()->setBody(view('agenda/index', [
             'namaInstansi' => 'DPRD Provinsi Sulawesi Tengah',
@@ -27,6 +31,7 @@ class AgendaController extends BaseController
             'apiUrl'       => base_url($isMember ? 'api/v1/anggota/jadwal' : 'api/v1/publik/jadwal'),
             'generalApiUrl' => base_url('api/v1/publik/agenda-umum'),
             'member'       => $member,
+            'banmusProjections' => $banmusProjections,
         ]));
     }
 
@@ -155,6 +160,97 @@ class AgendaController extends BaseController
         ]);
 
         return $account;
+    }
+
+    /**
+     * Proyeksi hanya ditambahkan ke shell portal. API jadwal dan signage tetap
+     * membaca agenda Banmus yang sudah terjadwal.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function portalBanmusProjections(?array $member): array
+    {
+        $includeInternal = $member !== null;
+        $documentModel = new BanmusDocumentModel();
+        $currentYear = (int) date('Y');
+        $displayYears = array_values(array_filter(
+            $documentModel->availableYears($includeInternal),
+            static fn (int $year): bool => $year >= $currentYear && $year <= $currentYear + 1,
+        ));
+        if ($displayYears === []) {
+            return [];
+        }
+        sort($displayYears);
+
+        $projections = [];
+        foreach ($displayYears as $year) {
+            foreach ($documentModel->findForPortal($includeInternal, $year) as $document) {
+                foreach ($document['items'] as $item) {
+                    if (($item['status'] ?? null) !== 'proyeksi') {
+                        continue;
+                    }
+
+                    $item['document'] = $document;
+                    $projections[] = $item;
+                }
+            }
+        }
+        usort($projections, static fn (array $left, array $right): int => [
+            (int) $left['document']['tahun'],
+            (int) $left['document']['semester'],
+            (int) $left['urutan'],
+            (int) $left['id'],
+        ] <=> [
+            (int) $right['document']['tahun'],
+            (int) $right['document']['semester'],
+            (int) $right['urutan'],
+            (int) $right['id'],
+        ]);
+
+        $banmusModel = new JadwalBanmusModel();
+        $projections = $banmusModel->attachUnitIds($projections);
+        $memberUnitIds = $member === null
+            ? []
+            : (new DatabaseScheduleReadRepository())->findMemberUnitIds((int) ($member['anggota_id'] ?? 0));
+
+        return array_map(static function (array $item) use ($memberUnitIds): array {
+            $document = $item['document'];
+            $unitIds = array_map('intval', $item['unit_ids'] ?? []);
+            $date = trim((string) ($item['tanggal'] ?? ''));
+
+            return [
+                'id'               => (int) $item['id'],
+                'source_id'        => (int) $item['id'],
+                'source'           => 'banmus_projection',
+                'judul'            => (string) $item['agenda'],
+                'keterangan'       => $item['catatan'],
+                'tanggal'          => $date !== '' ? $date : null,
+                'waktu_mulai'      => ! empty($item['jam_mulai'])
+                    ? substr((string) $item['jam_mulai'], 0, 5)
+                    : '',
+                'waktu_selesai'    => ! empty($item['jam_selesai'])
+                    ? substr((string) $item['jam_selesai'], 0, 5)
+                    : '',
+                'status'           => 'proyeksi',
+                'periode_label'    => (string) ($item['periode_label'] ?? ''),
+                'ruangan'          => trim((string) ($item['lokasi_lainnya'] ?? '')),
+                'unit_ids'         => $unitIds,
+                'komisi'           => '',
+                'is_public'        => ($item['publikasi'] ?? 'internal') === 'publik'
+                    && (int) ($document['is_publik'] ?? 0) === 1,
+                'is_participant'   => $memberUnitIds !== []
+                    && array_intersect($unitIds, $memberUnitIds) !== [],
+                'has_materi'       => false,
+                'has_stream'       => false,
+                'document_title'   => (string) ($document['judul'] ?? 'SK Banmus'),
+                'document_number'  => (string) ($document['nomor_sk'] ?? '-'),
+                'document_year'    => (int) $document['tahun'],
+                'projection_url'   => base_url('agenda/jadwal-banmus?' . http_build_query([
+                    'tahun'    => (int) $document['tahun'],
+                    'semester' => (int) $document['semester'],
+                ])),
+            ];
+        }, $projections);
     }
 
     private function databaseDriverAvailable(): bool

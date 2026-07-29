@@ -131,6 +131,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertStringContainsString('Proyeksi pembahasan rancangan peraturan', $body);
         $this->assertStringContainsString('Agustus 2026', $body);
         $this->assertStringContainsString('Periode Proyeksi', $body);
+        $this->assertStringNotContainsString('class="badge', $body);
         $this->assertStringContainsString('Lihat SK Asli', $body);
         $this->assertStringContainsString(
             base_url("agenda/jadwal-banmus/{$this->documentId}/dokumen"),
@@ -139,6 +140,13 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
 
         $this->get("/agenda/jadwal-banmus/{$this->documentId}/dokumen")
             ->assertRedirectTo('https://example.com/sk-banmus.pdf');
+
+        $agendaResponse = $this->get('agenda');
+        $agendaResponse->assertOK();
+        $agendaBody = $agendaResponse->getBody();
+        $this->assertStringContainsString('banmus_projection', $agendaBody);
+        $this->assertStringContainsString('Proyeksi pembahasan rancangan peraturan', $agendaBody);
+        $this->assertStringContainsString('Lihat Proyeksi &amp; SK', $agendaBody);
     }
 
     public function testCompleteOperationalDataAutomaticallyBecomesSchedule(): void

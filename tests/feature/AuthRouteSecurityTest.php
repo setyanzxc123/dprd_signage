@@ -123,7 +123,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('Semester ini', $body);
         $this->assertStringContainsString('Jumlah agenda per halaman', $body);
         $this->assertStringContainsString('collapse collapse-arrow', $body);
-        $this->assertStringContainsString('handleAgendaToggle($event, item.id)', $body);
+        $this->assertStringContainsString('handleAgendaToggle($event, item.key)', $body);
     }
 
     public function testMemberScheduleApiRejectsAnonymousRequestWithJson(): void
