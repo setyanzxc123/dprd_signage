@@ -8,8 +8,8 @@ $isMember = is_array($member ?? null);
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jadwal Banmus - DPRD Provinsi Sulawesi Tengah</title>
-    <meta name="description" content="Jadwal kegiatan berdasarkan SK Badan Musyawarah DPRD Provinsi Sulawesi Tengah." />
+    <title>Proyeksi Banmus - DPRD Provinsi Sulawesi Tengah</title>
+    <meta name="description" content="Proyeksi kegiatan dan PDF SK Badan Musyawarah DPRD Provinsi Sulawesi Tengah." />
     <link rel="icon" type="image/jpeg" href="<?= esc($logoUrl) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
@@ -63,16 +63,16 @@ $isMember = is_array($member ?? null);
                 <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
                         <p class="text-xs font-extrabold uppercase tracking-widest text-base-content/45">Hasil SK Banmus</p>
-                        <h1 class="card-title mt-1 text-2xl font-black uppercase sm:text-3xl">Jadwal Banmus</h1>
+                        <h1 class="card-title mt-1 text-2xl font-black uppercase sm:text-3xl">Proyeksi Banmus</h1>
                         <p class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-base-content/60">
-                            Agenda kegiatan per semester sebagaimana ditetapkan dalam SK Badan Musyawarah.
+                            Proyeksi dan perkembangan jadwal kegiatan per semester sebagaimana ditetapkan dalam SK Badan Musyawarah.
                         </p>
                     </div>
 
                     <form class="grid min-w-0 grid-cols-1 gap-2 sm:flex" action="<?= base_url('agenda/jadwal-banmus') ?>" method="get">
                         <fieldset class="fieldset min-w-0 sm:min-w-28">
                             <legend class="fieldset-legend">Tahun</legend>
-                            <select class="select select-sm w-full max-w-full" name="tahun" aria-label="Pilih tahun Jadwal Banmus">
+                            <select class="select select-sm w-full max-w-full" name="tahun" aria-label="Pilih tahun Proyeksi Banmus">
                                 <?php if ($availableYears === []): ?>
                                     <option value="<?= (int) $selectedYear ?>"><?= (int) $selectedYear ?></option>
                                 <?php else: ?>
@@ -86,7 +86,7 @@ $isMember = is_array($member ?? null);
                         </fieldset>
                         <fieldset class="fieldset min-w-0 sm:min-w-36">
                             <legend class="fieldset-legend">Semester</legend>
-                            <select class="select select-sm w-full max-w-full" name="semester" aria-label="Pilih semester Jadwal Banmus">
+                            <select class="select select-sm w-full max-w-full" name="semester" aria-label="Pilih semester Proyeksi Banmus">
                                 <option value="" <?= $selectedSemester === null ? 'selected' : '' ?>>Semua semester</option>
                                 <option value="1" <?= $selectedSemester === 1 ? 'selected' : '' ?>>Semester 1</option>
                                 <option value="2" <?= $selectedSemester === 2 ? 'selected' : '' ?>>Semester 2</option>
@@ -103,7 +103,7 @@ $isMember = is_array($member ?? null);
                                 fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
                                 <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/>
                             </svg>
-                            <h2 class="mt-4 text-lg font-extrabold">Belum ada Jadwal Banmus</h2>
+                            <h2 class="mt-4 text-lg font-extrabold">Belum ada Proyeksi Banmus</h2>
                             <p class="mt-1 max-w-md text-sm font-semibold leading-6 text-base-content/55">
                                 Belum ada SK Banmus yang dapat ditampilkan untuk periode pilihan ini.
                             </p>
@@ -120,7 +120,7 @@ $isMember = is_array($member ?? null);
                                                 Semester <?= (int) $document['semester'] ?> · <?= (int) $document['tahun'] ?>
                                             </span>
                                             <h2 class="mt-3 text-lg font-black leading-snug sm:text-xl">
-                                                Jadwal Banmus Semester <?= (int) $document['semester'] ?> Tahun <?= (int) $document['tahun'] ?>
+                                                <?= esc($document['judul'] ?: 'Proyeksi Banmus Semester ' . (int) $document['semester'] . ' Tahun ' . (int) $document['tahun']) ?>
                                             </h2>
                                             <p class="mt-1 text-sm font-semibold text-base-content/60">
                                                 Nomor SK: <?= esc($document['nomor_sk']) ?>
@@ -169,7 +169,7 @@ $isMember = is_array($member ?? null);
                                                 <div class="list-col-grow min-w-0">
                                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                                         <p class="text-xs font-extrabold uppercase tracking-wide text-base-content/45">
-                                                            Tanggal Pelaksanaan
+                                                            <?= $item['status'] === 'proyeksi' ? 'Periode Proyeksi' : 'Jadwal Pelaksanaan' ?>
                                                         </p>
                                                         <span class="badge <?= $statusClass ?> badge-sm"><?= esc($statusLabel) ?></span>
                                                     </div>

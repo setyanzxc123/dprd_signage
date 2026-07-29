@@ -97,8 +97,8 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response = $this->get('/agenda/jadwal-banmus');
 
         $response->assertOK();
-        $this->assertStringContainsString('Jadwal Banmus', $response->response()->getBody());
-        $this->assertStringContainsString('Belum ada Jadwal Banmus', $response->response()->getBody());
+        $this->assertStringContainsString('Proyeksi Banmus', $response->response()->getBody());
+        $this->assertStringContainsString('Belum ada Proyeksi Banmus', $response->response()->getBody());
         $this->assertStringNotContainsString('Jadwal Sidang', $response->response()->getBody());
         $this->assertStringContainsString('name="tahun"', $response->response()->getBody());
         $this->assertStringContainsString('name="semester"', $response->response()->getBody());
@@ -112,7 +112,11 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
 
         $response->assertOK();
         $this->assertStringContainsString(base_url('agenda/jadwal-banmus'), $body);
-        $this->assertStringContainsString('Jadwal Banmus', $body);
+        $this->assertStringContainsString('Proyeksi Banmus', $body);
+        $this->assertStringContainsString('Jadwal Umum', $body);
+        $this->assertStringContainsString("item.source === 'insidental_internal'", $body);
+        $this->assertStringContainsString('Insidental Internal', $body);
+        $this->assertStringContainsString('v-for="item in generalAgendas"', $body);
         $this->assertStringNotContainsString("navButtonClass('bamus')", $body);
         $this->assertStringNotContainsString('Jadwal Sidang', $body);
         $this->assertStringContainsString('Filter periode agenda rapat', $body);

@@ -106,6 +106,41 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertSame('proyeksi', $row['status']);
     }
 
+    public function testPublicProjectionPortalShowsProjectionAndOriginalSkLink(): void
+    {
+        $this->banmusDb->table('dokumen_banmus')
+            ->where('id', $this->documentId)
+            ->update(['dokumen_url' => 'https://example.com/sk-banmus.pdf']);
+
+        $this->postItem([
+            'agenda'        => 'Proyeksi pembahasan rancangan peraturan',
+            'periode_label' => 'Agustus 2026',
+            'tanggal'       => '',
+            'jam_mulai'     => '',
+            'jam_selesai'   => '',
+            'ruangan_id'    => '',
+            'publikasi'     => 'publik',
+        ])->assertStatus(303);
+
+        $response = $this->get('/agenda/jadwal-banmus?tahun=2026');
+
+        $response->assertOK();
+        $body = $response->response()->getBody();
+        $this->assertStringContainsString('Proyeksi Banmus', $body);
+        $this->assertStringContainsString('SK Banmus Pengujian', $body);
+        $this->assertStringContainsString('Proyeksi pembahasan rancangan peraturan', $body);
+        $this->assertStringContainsString('Agustus 2026', $body);
+        $this->assertStringContainsString('Periode Proyeksi', $body);
+        $this->assertStringContainsString('Lihat SK Asli', $body);
+        $this->assertStringContainsString(
+            base_url("agenda/jadwal-banmus/{$this->documentId}/dokumen"),
+            $body,
+        );
+
+        $this->get("/agenda/jadwal-banmus/{$this->documentId}/dokumen")
+            ->assertRedirectTo('https://example.com/sk-banmus.pdf');
+    }
+
     public function testCompleteOperationalDataAutomaticallyBecomesSchedule(): void
     {
         $response = $this->postItem([

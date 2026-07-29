@@ -112,7 +112,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 </div>
                 <a class="btn btn-outline btn-sm w-full shrink-0 sm:w-auto" href="<?= base_url('agenda/jadwal-banmus') ?>">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/></svg>
-                    Jadwal Banmus
+                    Proyeksi Banmus
                 </a>
             </div>
         </nav>
@@ -199,7 +199,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                 </span>
                                 <span class="min-w-0">
                                     <span class="line-clamp-2 text-sm font-extrabold leading-5 sm:text-base">{{ item.judul }}</span>
-                                    <span class="mt-1 flex min-w-0 items-center gap-2">
+                                    <span class="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+                                        <span v-if="item.source === 'insidental_internal'" class="badge badge-secondary badge-soft badge-sm">
+                                            Insidental Internal
+                                        </span>
                                         <span class="truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.ruangan || '-' }}</span>
                                         <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">{{ statusLabel(item.status) }}</span>
                                     </span>
@@ -210,10 +213,9 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                             <div class="collapse-content border-t border-base-300">
                                 <div class="flex flex-wrap gap-2 pt-4">
                                     <span :class="statusBadgeClass(item.status)">{{ statusLabel(item.status) }}</span>
-                                    <span v-if="item.jenis" class="badge badge-neutral badge-sm">{{ typeLabel(item.jenis) }}</span>
                                     <?php if ($isMember): ?>
-                                        <span v-if="item.is_participant" class="badge badge-primary badge-sm">Anda Peserta</span>
-                                        <span v-if="!item.is_public" class="badge badge-warning badge-sm">Internal</span>
+                                        <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm">Anda Peserta</span>
+                                        <span v-if="!item.is_public" class="badge badge-ghost badge-sm">Internal</span>
                                     <?php endif; ?>
                                 </div>
 
@@ -259,7 +261,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             <section class="card card-border bg-base-100 shadow-sm">
                 <div class="card-body gap-4">
                     <div>
-                        <h2 class="card-title text-xl font-black uppercase">Agenda Eksternal</h2>
+                        <h2 class="card-title text-xl font-black uppercase">Jadwal Umum</h2>
                     </div>
 
                     <div v-if="generalLoading" class="grid gap-2">
@@ -267,7 +269,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     </div>
 
                     <div v-else-if="generalLoadError" role="alert" class="alert alert-error alert-soft text-sm">
-                        <span>Agenda eksternal gagal dimuat.</span>
+                        <span>Jadwal umum gagal dimuat.</span>
                     </div>
 
                     <ul v-else-if="generalAgendas.length" class="list rounded-box border border-base-300 bg-base-100">
@@ -287,7 +289,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                         </li>
                     </ul>
 
-                    <p v-else class="rounded-box border border-dashed border-base-300 p-6 text-center text-sm font-semibold text-base-content/50">Belum ada agenda eksternal yang dipublikasikan.</p>
+                    <p v-else class="rounded-box border border-dashed border-base-300 p-6 text-center text-sm font-semibold text-base-content/50">Belum ada jadwal umum yang dipublikasikan.</p>
                 </div>
             </section>
         </aside>
@@ -602,19 +604,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 
             function statusBadgeClass(status) {
                 return {
-                    berlangsung: 'badge badge-success badge-sm',
-                    persiapan: 'badge badge-warning badge-sm',
-                    menunggu: 'badge badge-neutral badge-sm',
-                    selesai: 'badge badge-info badge-sm',
-                }[status] || 'badge badge-neutral badge-sm';
-            }
-
-            function typeLabel(type) {
-                return {
-                    bamus: 'Banmus',
-                    reguler: 'Reguler',
-                    insidental: 'Insidental',
-                }[String(type || '').toLowerCase()] || type;
+                    berlangsung: 'badge badge-success badge-soft badge-sm',
+                    persiapan: 'badge badge-warning badge-soft badge-sm',
+                    menunggu: 'badge badge-ghost badge-sm',
+                    selesai: 'badge badge-info badge-soft badge-sm',
+                }[status] || 'badge badge-ghost badge-sm';
             }
 
             function generalCategoryLabel(category) {
@@ -728,7 +722,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 compactUnitName,
                 statusLabel,
                 statusBadgeClass,
-                typeLabel,
                 generalCategoryLabel,
                 fullDate,
                 shortMonth,
