@@ -66,7 +66,16 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             }
         }
 
-        foreach (['judul', 'kategori', 'tanggal', 'waktu_mulai', 'lokasi', 'keterangan', 'status', 'is_publik'] as $field) {
+        foreach ([
+            'judul',
+            'kategori',
+            'pihak_eksternal',
+            'tanggal',
+            'waktu_mulai',
+            'lokasi',
+            'keterangan',
+            'is_publik',
+        ] as $field) {
             if (! $this->db->fieldExists($field, 'agenda_umum')) {
                 throw new RuntimeException("Kolom agenda_umum.{$field} belum tersedia.");
             }
@@ -361,6 +370,7 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
         foreach ($this->generalAgendaRows() as $item) {
             $rows[] = [
                 ...$item,
+                'pihak_eksternal' => $item['pihak_eksternal'] ?? 'Masyarakat dan instansi terkait',
                 'keterangan' => self::GENERAL_DUMMY_NOTE . ' ' . $item['keterangan'],
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -376,12 +386,12 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
     private function generalAgendaRows(): array
     {
         return [
-            ['judul' => 'Aksi Penyampaian Aspirasi Layanan Publik', 'kategori' => 'demonstrasi', 'tanggal' => '2026-07-27', 'waktu_mulai' => '09:00:00', 'waktu_selesai' => '11:00:00', 'lokasi' => 'Halaman Gedung DPRD', 'sumber_informasi' => 'Contoh agenda publik', 'perkiraan_peserta' => 120, 'keterangan' => 'Simulasi kegiatan insidental yang ditampilkan pada panel Jadwal Umum.', 'status' => 'terkonfirmasi', 'is_publik' => 1],
-            ['judul' => 'Audiensi Publik Kelompok Masyarakat', 'kategori' => 'audiensi_publik', 'tanggal' => '2026-07-28', 'waktu_mulai' => '10:00:00', 'waktu_selesai' => '12:00:00', 'lokasi' => 'Ruang Rapat Utama', 'sumber_informasi' => 'Contoh agenda publik', 'perkiraan_peserta' => 35, 'keterangan' => 'Simulasi audiensi publik dengan pimpinan DPRD.', 'status' => 'tentatif', 'is_publik' => 1],
-            ['judul' => 'Kunjungan Edukasi Siswa ke Gedung DPRD', 'kategori' => 'kunjungan', 'tanggal' => '2026-07-29', 'waktu_mulai' => '08:30:00', 'waktu_selesai' => '11:30:00', 'lokasi' => 'Gedung DPRD Provinsi Sulawesi Tengah', 'sumber_informasi' => 'Contoh agenda publik', 'perkiraan_peserta' => 80, 'keterangan' => 'Simulasi kunjungan edukasi masyarakat.', 'status' => 'terkonfirmasi', 'is_publik' => 1],
-            ['judul' => 'Bakti Sosial dan Donor Darah DPRD', 'kategori' => 'kegiatan_sosial', 'tanggal' => '2026-07-30', 'waktu_mulai' => '08:00:00', 'waktu_selesai' => '13:00:00', 'lokasi' => 'Selasar Gedung DPRD', 'sumber_informasi' => 'Contoh agenda publik', 'perkiraan_peserta' => 150, 'keterangan' => 'Simulasi kegiatan sosial nonrapat.', 'status' => 'tentatif', 'is_publik' => 1],
-            ['judul' => 'Pameran Informasi Program DPRD', 'kategori' => 'lainnya', 'tanggal' => '2026-07-31', 'waktu_mulai' => '09:00:00', 'waktu_selesai' => '15:00:00', 'lokasi' => 'Ruang Publik Gedung DPRD', 'sumber_informasi' => 'Contoh agenda publik', 'perkiraan_peserta' => 200, 'keterangan' => 'Simulasi kegiatan informasi publik untuk panel Jadwal Umum.', 'status' => 'tentatif', 'is_publik' => 1],
-            ['judul' => 'Audiensi Komunitas dan Organisasi Kepemudaan', 'kategori' => 'audiensi_publik', 'tanggal' => '2026-08-03', 'waktu_mulai' => '13:00:00', 'waktu_selesai' => '15:00:00', 'lokasi' => 'Ruang Badan Musyawarah', 'sumber_informasi' => 'Contoh agenda publik', 'perkiraan_peserta' => 45, 'keterangan' => 'Simulasi agenda publik bulan berikutnya.', 'status' => 'tentatif', 'is_publik' => 1],
+            ['judul' => 'Aksi Penyampaian Aspirasi Layanan Publik', 'kategori' => 'demonstrasi', 'tanggal' => '2026-07-27', 'waktu_mulai' => '09:00:00', 'waktu_selesai' => '11:00:00', 'lokasi' => 'Halaman Gedung DPRD', 'sumber_informasi' => 'Contoh agenda publik', 'keterangan' => 'Simulasi kegiatan insidental yang ditampilkan pada panel Jadwal Umum.', 'is_publik' => 1],
+            ['judul' => 'Audiensi Publik Kelompok Masyarakat', 'kategori' => 'audiensi', 'tanggal' => '2026-07-28', 'waktu_mulai' => '10:00:00', 'waktu_selesai' => '12:00:00', 'lokasi' => 'Ruang Rapat Utama', 'sumber_informasi' => 'Contoh agenda publik', 'keterangan' => 'Simulasi audiensi publik dengan pimpinan DPRD.', 'is_publik' => 1],
+            ['judul' => 'Kunjungan Edukasi Siswa ke Gedung DPRD', 'kategori' => 'kunjungan', 'tanggal' => '2026-07-29', 'waktu_mulai' => '08:30:00', 'waktu_selesai' => '11:30:00', 'lokasi' => 'Gedung DPRD Provinsi Sulawesi Tengah', 'sumber_informasi' => 'Contoh agenda publik', 'keterangan' => 'Simulasi kunjungan edukasi masyarakat.', 'is_publik' => 1],
+            ['judul' => 'Bakti Sosial dan Donor Darah DPRD', 'kategori' => 'kegiatan_sosial', 'tanggal' => '2026-07-30', 'waktu_mulai' => '08:00:00', 'waktu_selesai' => '13:00:00', 'lokasi' => 'Selasar Gedung DPRD', 'sumber_informasi' => 'Contoh agenda publik', 'keterangan' => 'Simulasi kegiatan sosial nonrapat.', 'is_publik' => 1],
+            ['judul' => 'Pameran Informasi Program DPRD', 'kategori' => 'lainnya', 'tanggal' => '2026-07-31', 'waktu_mulai' => '09:00:00', 'waktu_selesai' => '15:00:00', 'lokasi' => 'Ruang Publik Gedung DPRD', 'sumber_informasi' => 'Contoh agenda publik', 'keterangan' => 'Simulasi kegiatan informasi publik untuk panel Jadwal Umum.', 'is_publik' => 1],
+            ['judul' => 'Audiensi Komunitas dan Organisasi Kepemudaan', 'kategori' => 'audiensi', 'tanggal' => '2026-08-03', 'waktu_mulai' => '13:00:00', 'waktu_selesai' => '15:00:00', 'lokasi' => 'Ruang Badan Musyawarah', 'sumber_informasi' => 'Contoh agenda publik', 'keterangan' => 'Simulasi agenda publik bulan berikutnya.', 'is_publik' => 1],
         ];
     }
 

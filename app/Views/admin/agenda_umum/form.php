@@ -3,27 +3,13 @@
 <?= $this->section('content') ?>
 
 <?php
-$categoryLabels = [
-    'demonstrasi'     => 'Demonstrasi',
-    'audiensi_publik' => 'Audiensi Publik',
-    'kunjungan'       => 'Kunjungan',
-    'kegiatan_sosial' => 'Kegiatan Sosial',
-    'lainnya'         => 'Lainnya',
-];
-$statusLabels = [
-    'tentatif'      => 'Tentatif',
-    'terkonfirmasi' => 'Terkonfirmasi',
-    'selesai'       => 'Selesai',
-    'dibatalkan'    => 'Dibatalkan',
-];
 $isEdit = is_array($agenda);
-$selectedCategory = (string) ($agenda['kategori'] ?? 'demonstrasi');
-$selectedStatus = (string) ($agenda['status'] ?? 'tentatif');
+$selectedCategory = (string) ($agenda['kategori'] ?? 'audiensi');
 ?>
 
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
-    <p class="page-subtitle"><?= $isEdit ? 'Perbarui kegiatan publik nonrapat' : 'Tambahkan kegiatan publik nonrapat' ?></p>
+    <p class="page-subtitle"><?= $isEdit ? 'Perbarui kegiatan eksternal atau layanan publik.' : 'Tambahkan kegiatan yang melibatkan pihak luar.' ?></p>
 </div>
 
 <form action="<?= esc($action_url) ?>" method="post" data-turbo="true">
@@ -53,18 +39,27 @@ $selectedStatus = (string) ($agenda['status'] ?? 'tentatif');
 
                     <div class="col-span-12 sm:col-span-6">
                         <label class="label-text mb-1 block text-sm font-bold" for="kategori">
-                            Kategori <span class="text-error">*</span>
+                            Jenis kegiatan <span class="text-error">*</span>
                         </label>
                         <select class="select w-full" id="kategori" name="kategori" required>
                             <?php foreach ($categories as $category): ?>
                                 <option value="<?= esc($category) ?>" <?= $selectedCategory === $category ? 'selected' : '' ?>>
-                                    <?= esc($categoryLabels[$category] ?? $category) ?>
+                                    <?= esc($category_labels[$category] ?? $category) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
                     <div class="col-span-12 sm:col-span-6">
+                        <label class="label-text mb-1 block text-sm font-bold" for="pihak_eksternal">
+                            Pihak atau instansi eksternal <span class="text-error">*</span>
+                        </label>
+                        <input class="input w-full" id="pihak_eksternal" name="pihak_eksternal" type="text" maxlength="255" required
+                            value="<?= esc($agenda['pihak_eksternal'] ?? '') ?>"
+                            placeholder="Contoh: Forum Masyarakat Peduli Pendidikan" />
+                    </div>
+
+                    <div class="col-span-12 sm:col-span-4">
                         <label class="label-text mb-1 block text-sm font-bold" for="tanggal">
                             Tanggal <span class="text-error">*</span>
                         </label>
@@ -72,7 +67,7 @@ $selectedStatus = (string) ($agenda['status'] ?? 'tentatif');
                             value="<?= esc($agenda['tanggal'] ?? date('Y-m-d')) ?>" />
                     </div>
 
-                    <div class="col-span-12 sm:col-span-6">
+                    <div class="col-span-6 sm:col-span-4">
                         <label class="label-text mb-1 block text-sm font-bold" for="waktu_mulai">
                             Waktu mulai <span class="text-error">*</span>
                         </label>
@@ -80,7 +75,7 @@ $selectedStatus = (string) ($agenda['status'] ?? 'tentatif');
                             value="<?= esc(substr((string) ($agenda['waktu_mulai'] ?? '08:00'), 0, 5)) ?>" />
                     </div>
 
-                    <div class="col-span-12 sm:col-span-6">
+                    <div class="col-span-6 sm:col-span-4">
                         <label class="label-text mb-1 block text-sm font-bold" for="waktu_selesai">Waktu selesai</label>
                         <input class="input w-full" id="waktu_selesai" name="waktu_selesai" type="time"
                             value="<?= esc(substr((string) ($agenda['waktu_selesai'] ?? ''), 0, 5)) ?>" />
@@ -96,18 +91,11 @@ $selectedStatus = (string) ($agenda['status'] ?? 'tentatif');
                             placeholder="Contoh: Halaman Gedung DPRD" />
                     </div>
 
-                    <div class="col-span-12 sm:col-span-7">
-                        <label class="label-text mb-1 block text-sm font-bold" for="sumber_informasi">Sumber informasi</label>
+                    <div class="col-span-12">
+                        <label class="label-text mb-1 block text-sm font-bold" for="sumber_informasi">Sumber informasi / nomor surat</label>
                         <input class="input w-full" id="sumber_informasi" name="sumber_informasi" type="text" maxlength="200"
                             value="<?= esc($agenda['sumber_informasi'] ?? '') ?>"
-                            placeholder="Contoh: Surat pemberitahuan koordinator lapangan" />
-                    </div>
-
-                    <div class="col-span-12 sm:col-span-5">
-                        <label class="label-text mb-1 block text-sm font-bold" for="perkiraan_peserta">Perkiraan peserta</label>
-                        <input class="input w-full" id="perkiraan_peserta" name="perkiraan_peserta" type="number" min="0" max="1000000"
-                            value="<?= esc($agenda['perkiraan_peserta'] ?? '') ?>"
-                            placeholder="Contoh: 100" />
+                            placeholder="Contoh: Surat Nomor 123/ORG/VII/2026" />
                     </div>
 
                     <div class="col-span-12">
@@ -121,25 +109,14 @@ $selectedStatus = (string) ($agenda['status'] ?? 'tentatif');
 
         <div class="col-span-12 lg:col-span-4">
             <div class="form-card p-[18px]">
-                <div class="form-section-title mb-3 pb-2">Status dan Publikasi</div>
+                <div class="form-section-title mb-3 pb-2">Publikasi</div>
 
-                <div>
-                    <label class="label-text mb-1 block text-sm font-bold" for="status">Status kegiatan</label>
-                    <select class="select w-full" id="status" name="status" required>
-                        <?php foreach ($statuses as $status): ?>
-                            <option value="<?= esc($status) ?>" <?= $selectedStatus === $status ? 'selected' : '' ?>>
-                                <?= esc($statusLabels[$status] ?? $status) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <label class="mt-4 flex cursor-pointer items-start gap-3 rounded-box border border-base-300 bg-base-200 p-3" for="is_publik">
-                    <input class="checkbox checkbox-primary checkbox-sm mt-0.5" id="is_publik" name="is_publik" type="checkbox" value="1"
-                        <?= (int) ($agenda['is_publik'] ?? 1) === 1 ? 'checked' : '' ?> />
+                <label class="flex cursor-pointer items-start gap-3 rounded-box border border-base-300 bg-base-200 p-3" for="is_publik">
+                    <input class="checkbox checkbox-sm mt-0.5" id="is_publik" name="is_publik" type="checkbox" value="1"
+                        <?= (int) ($agenda['is_publik'] ?? 0) === 1 ? 'checked' : '' ?> />
                     <span>
                         <span class="block text-sm font-bold">Tampilkan kepada publik</span>
-                        <span class="mt-1 block text-xs leading-5 text-base-content/55">Jika dinonaktifkan, data hanya tersimpan sebagai draf pada panel admin.</span>
+                        <span class="mt-1 block text-xs leading-5 text-base-content/55">Kegiatan eksternal tidak otomatis dipublikasikan. Aktifkan hanya jika informasinya boleh tampil pada portal publik.</span>
                     </span>
                 </label>
             </div>
@@ -153,7 +130,7 @@ $selectedStatus = (string) ($agenda['status'] ?? 'tentatif');
         </a>
         <button type="submit" class="btn btn-primary btn-md flex-1 sm:btn-sm sm:flex-none">
             <i data-lucide="check" class="h-4 w-4"></i>
-            <?= $isEdit ? 'Simpan Perubahan' : 'Tambah Jadwal Umum' ?>
+            <?= $isEdit ? 'Simpan Perubahan' : 'Simpan Agenda' ?>
         </button>
     </div>
 </form>

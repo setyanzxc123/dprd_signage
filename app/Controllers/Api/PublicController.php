@@ -71,21 +71,19 @@ class PublicController extends BaseController
             ->findAll(100);
 
         $data = array_map(static fn (array $row): array => [
-            'id'                => (int) $row['id'],
-            'judul'             => (string) $row['judul'],
-            'kategori'          => (string) $row['kategori'],
-            'tanggal'           => (string) $row['tanggal'],
-            'waktu_mulai'       => substr((string) $row['waktu_mulai'], 0, 5),
-            'waktu_selesai'     => $row['waktu_selesai'] !== null
+            'id'                          => (int) $row['id'],
+            'source'                      => AgendaUmumModel::SOURCE,
+            'judul'                       => (string) $row['judul'],
+            'kategori'                    => (string) $row['kategori'],
+            'pihak_eksternal'             => $row['pihak_eksternal'],
+            'tanggal'                     => (string) $row['tanggal'],
+            'waktu_mulai'                 => substr((string) $row['waktu_mulai'], 0, 5),
+            'waktu_selesai'               => $row['waktu_selesai'] !== null
                 ? substr((string) $row['waktu_selesai'], 0, 5)
                 : null,
-            'lokasi'            => (string) $row['lokasi'],
-            'sumber_informasi'  => $row['sumber_informasi'],
-            'perkiraan_peserta' => $row['perkiraan_peserta'] !== null
-                ? (int) $row['perkiraan_peserta']
-                : null,
-            'keterangan'        => $row['keterangan'],
-            'status'            => (string) $row['status'],
+            'lokasi'                      => (string) $row['lokasi'],
+            'sumber_informasi'            => $row['sumber_informasi'],
+            'keterangan'                  => $row['keterangan'],
         ], $rows);
 
         return $this->response

@@ -2,28 +2,6 @@
 
 <?= $this->section('content') ?>
 
-<?php
-$categoryLabels = [
-    'demonstrasi'     => 'Demonstrasi',
-    'audiensi_publik' => 'Audiensi Publik',
-    'kunjungan'       => 'Kunjungan',
-    'kegiatan_sosial' => 'Kegiatan Sosial',
-    'lainnya'         => 'Lainnya',
-];
-$statusLabels = [
-    'tentatif'       => 'Tentatif',
-    'terkonfirmasi'  => 'Terkonfirmasi',
-    'selesai'        => 'Selesai',
-    'dibatalkan'     => 'Dibatalkan',
-];
-$statusClasses = [
-    'tentatif'       => 'badge badge-warning',
-    'terkonfirmasi'  => 'badge badge-success',
-    'selesai'        => 'badge badge-info',
-    'dibatalkan'     => 'badge badge-error',
-];
-?>
-
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
         <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Layanan Publik</p>
@@ -40,7 +18,7 @@ $statusClasses = [
     <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
         <h2 class="card-title text-base">
             <i data-lucide="calendar-range" class="h-5 w-5 text-primary"></i>
-            Daftar Jadwal
+            Daftar Agenda Eksternal
         </h2>
         <span class="badge badge-ghost whitespace-nowrap"><?= count($agendas) ?> kegiatan</span>
     </div>
@@ -52,14 +30,17 @@ $statusClasses = [
 
     <div class="min-w-0">
         <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
-            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"desc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table"
+                data-admin-datatable
+                data-dt-order='[[1,"desc"]]'
+                data-dt-col-filters='[{"column":2,"label":"Jenis"},{"column":5,"label":"Publikasi"}]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
                         <th>Tanggal</th>
+                        <th>Jenis</th>
                         <th>Kegiatan</th>
                         <th>Lokasi</th>
-                        <th>Status</th>
                         <th>Publikasi</th>
                         <th class="text-right no-sort">Aksi</th>
                     </tr>
@@ -81,30 +62,25 @@ $statusClasses = [
                                     <?php endif; ?>
                                 </div>
                             </td>
+                            <td data-label="Jenis">
+                                <span class="badge badge-ghost badge-sm whitespace-nowrap">
+                                    <?= esc($category_labels[$agenda['kategori']] ?? $agenda['kategori']) ?>
+                                </span>
+                            </td>
                             <td data-label="Kegiatan">
                                 <div class="max-w-md text-sm font-bold"><?= esc($agenda['judul']) ?></div>
-                                <span class="badge badge-ghost badge-sm mt-1">
-                                    <?= esc($categoryLabels[$agenda['kategori']] ?? $agenda['kategori']) ?>
-                                </span>
+                                <div class="mt-1 max-w-md text-xs text-base-content/55">
+                                    <?= esc($agenda['pihak_eksternal'] ?: 'Pihak eksternal belum dicatat') ?>
+                                </div>
                             </td>
                             <td data-label="Lokasi">
                                 <div class="max-w-xs text-sm font-semibold"><?= esc($agenda['lokasi']) ?></div>
-                                <?php if (! empty($agenda['perkiraan_peserta'])): ?>
-                                    <div class="mt-0.5 text-xs text-base-content/55">
-                                        ±<?= number_format((int) $agenda['perkiraan_peserta'], 0, ',', '.') ?> peserta
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                            <td data-label="Status">
-                                <span class="<?= esc($statusClasses[$agenda['status']] ?? 'badge badge-neutral') ?> badge-sm whitespace-nowrap">
-                                    <?= esc($statusLabels[$agenda['status']] ?? $agenda['status']) ?>
-                                </span>
                             </td>
                             <td data-label="Publikasi">
                                 <?php if ((int) $agenda['is_publik'] === 1): ?>
-                                    <span class="badge badge-success badge-sm">Dipublikasikan</span>
+                                    <span class="badge badge-success badge-sm">Publik</span>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost badge-sm">Draf internal</span>
+                                    <span class="badge badge-ghost badge-sm">Internal</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
@@ -114,7 +90,7 @@ $statusClasses = [
                                         Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/agenda-umum/{$agenda['id']}/delete") ?>" class="m-0 inline-flex"
-                                                data-confirm-message="Hapus jadwal umum ini?">
+                                                data-confirm-message="Hapus agenda eksternal ini?">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline btn-error gap-1">
                                             <i data-lucide="trash-2" class="h-4 w-4"></i>

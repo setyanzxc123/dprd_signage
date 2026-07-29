@@ -259,7 +259,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             <section class="card card-border bg-base-100 shadow-sm">
                 <div class="card-body gap-4">
                     <div>
-                        <h2 class="card-title text-xl font-black uppercase">Jadwal Umum</h2>
+                        <h2 class="card-title text-xl font-black uppercase">Agenda Eksternal</h2>
                     </div>
 
                     <div v-if="generalLoading" class="grid gap-2">
@@ -267,7 +267,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     </div>
 
                     <div v-else-if="generalLoadError" role="alert" class="alert alert-error alert-soft text-sm">
-                        <span>Jadwal umum gagal dimuat.</span>
+                        <span>Agenda eksternal gagal dimuat.</span>
                     </div>
 
                     <ul v-else-if="generalAgendas.length" class="list rounded-box border border-base-300 bg-base-100">
@@ -279,15 +279,15 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                             <div class="list-col-grow min-w-0">
                                 <p class="line-clamp-2 text-sm font-extrabold leading-5">{{ item.judul }}</p>
                                 <p class="mt-1 truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.lokasi }}</p>
+                                <p v-if="item.pihak_eksternal" class="mt-1 truncate text-xs text-base-content/50">{{ item.pihak_eksternal }}</p>
                                 <span class="mt-1 flex flex-wrap gap-1">
                                     <span class="badge badge-ghost badge-sm">{{ generalCategoryLabel(item.kategori) }}</span>
-                                    <span :class="generalStatusBadgeClass(item.status)" class="badge-sm">{{ generalStatusLabel(item.status) }}</span>
                                 </span>
                             </div>
                         </li>
                     </ul>
 
-                    <p v-else class="rounded-box border border-dashed border-base-300 p-6 text-center text-sm font-semibold text-base-content/50">Belum ada jadwal umum yang dipublikasikan.</p>
+                    <p v-else class="rounded-box border border-dashed border-base-300 p-6 text-center text-sm font-semibold text-base-content/50">Belum ada agenda eksternal yang dipublikasikan.</p>
                 </div>
             </section>
         </aside>
@@ -617,32 +617,16 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 }[String(type || '').toLowerCase()] || type;
             }
 
-            function generalStatusLabel(status) {
-                return {
-                    tentatif: 'Tentatif',
-                    terkonfirmasi: 'Terkonfirmasi',
-                    selesai: 'Selesai',
-                    dibatalkan: 'Dibatalkan',
-                }[status] || status || '-';
-            }
-
             function generalCategoryLabel(category) {
                 return {
-                    demonstrasi: 'Demonstrasi',
-                    audiensi_publik: 'Audiensi Publik',
-                    kunjungan: 'Kunjungan',
-                    kegiatan_sosial: 'Kegiatan Sosial',
+                    audiensi: 'Audiensi / Aspirasi',
+                    audiensi_publik: 'Audiensi / Aspirasi',
+                    demonstrasi: 'Unjuk Rasa / Demonstrasi',
+                    kunjungan: 'Kunjungan Tamu',
+                    undangan: 'Undangan / Luar Gedung',
+                    kegiatan_sosial: 'Kegiatan Sosial / Publik',
                     lainnya: 'Lainnya',
                 }[category] || category || 'Lainnya';
-            }
-
-            function generalStatusBadgeClass(status) {
-                return {
-                    tentatif: 'badge badge-warning',
-                    terkonfirmasi: 'badge badge-success',
-                    selesai: 'badge badge-info',
-                    dibatalkan: 'badge badge-error',
-                }[status] || 'badge badge-neutral';
             }
 
             function parseDate(value) {
@@ -745,9 +729,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 statusLabel,
                 statusBadgeClass,
                 typeLabel,
-                generalStatusLabel,
                 generalCategoryLabel,
-                generalStatusBadgeClass,
                 fullDate,
                 shortMonth,
                 dayNumber,

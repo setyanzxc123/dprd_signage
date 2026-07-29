@@ -7,19 +7,14 @@ use App\Models\AgendaUmumModel;
 
 class GeneralAgendaController extends BaseController
 {
-    private const CATEGORIES = [
-        'demonstrasi',
-        'audiensi_publik',
-        'kunjungan',
-        'kegiatan_sosial',
-        'lainnya',
-    ];
-
-    private const STATUSES = [
-        'tentatif',
-        'terkonfirmasi',
-        'selesai',
-        'dibatalkan',
+    private const CATEGORY_LABELS = [
+        'audiensi'         => 'Audiensi / Penerimaan Aspirasi',
+        'audiensi_publik'  => 'Audiensi / Penerimaan Aspirasi',
+        'demonstrasi'      => 'Aksi Unjuk Rasa / Demonstrasi',
+        'kunjungan'        => 'Kunjungan Tamu atau Instansi',
+        'undangan'         => 'Undangan / Agenda Luar Gedung',
+        'kegiatan_sosial'  => 'Kegiatan Sosial dan Publik',
+        'lainnya'          => 'Lainnya',
     ];
 
     public function index(): string
@@ -30,15 +25,16 @@ class GeneralAgendaController extends BaseController
             ->findAll();
 
         return view('admin/agenda_umum/index', [
-            'pageTitle' => 'Agenda Eksternal & Layanan Publik',
-            'agendas'   => $agendas,
+            'pageTitle'       => 'Agenda Eksternal & Layanan Publik',
+            'agendas'         => $agendas,
+            'category_labels' => self::CATEGORY_LABELS,
         ]);
     }
 
     public function create(): string
     {
         return view('admin/agenda_umum/form', $this->formData(
-            'Tambah Jadwal Umum',
+            'Tambah Agenda Eksternal',
             null,
             base_url('admin/agenda-umum/store'),
         ));
@@ -51,10 +47,12 @@ class GeneralAgendaController extends BaseController
             return $this->failForm($input['error']);
         }
 
-        (new AgendaUmumModel())->insert($input);
+        if ((new AgendaUmumModel())->insert($input) === false) {
+            return $this->failForm('Agenda eksternal gagal disimpan. Silakan coba kembali.');
+        }
 
         return $this->formSuccessResponse(
-            'Jadwal umum berhasil ditambahkan.',
+            'Agenda eksternal berhasil ditambahkan.',
             base_url('admin/agenda-umum'),
         );
     }
@@ -63,13 +61,13 @@ class GeneralAgendaController extends BaseController
     {
         $agenda = (new AgendaUmumModel())->find($id);
         if ($agenda === null) {
-            session()->setFlashdata('error', 'Jadwal umum tidak ditemukan.');
+            session()->setFlashdata('error', 'Agenda eksternal tidak ditemukan.');
 
             return redirect()->to(base_url('admin/agenda-umum'));
         }
 
         return view('admin/agenda_umum/form', $this->formData(
-            'Edit Jadwal Umum',
+            'Edit Agenda Eksternal',
             $agenda,
             base_url("admin/agenda-umum/{$id}/update"),
         ));
@@ -79,7 +77,7 @@ class GeneralAgendaController extends BaseController
     {
         $model = new AgendaUmumModel();
         if ($model->find($id) === null) {
-            session()->setFlashdata('error', 'Jadwal umum tidak ditemukan.');
+            session()->setFlashdata('error', 'Agenda eksternal tidak ditemukan.');
 
             return redirect()->to(base_url('admin/agenda-umum'));
         }
@@ -89,10 +87,12 @@ class GeneralAgendaController extends BaseController
             return $this->failForm($input['error'], $id);
         }
 
-        $model->update($id, $input);
+        if (! $model->update($id, $input)) {
+            return $this->failForm('Agenda eksternal gagal diperbarui. Silakan coba kembali.', $id);
+        }
 
         return $this->formSuccessResponse(
-            'Jadwal umum berhasil diperbarui.',
+            'Agenda eksternal berhasil diperbarui.',
             base_url('admin/agenda-umum'),
         );
     }
@@ -101,7 +101,7 @@ class GeneralAgendaController extends BaseController
     {
         $model = new AgendaUmumModel();
         if ($model->find($id) === null) {
-            session()->setFlashdata('error', 'Jadwal umum tidak ditemukan.');
+            session()->setFlashdata('error', 'Agenda eksternal tidak ditemukan.');
 
             return redirect()->to(base_url('admin/agenda-umum'));
         }
@@ -109,7 +109,7 @@ class GeneralAgendaController extends BaseController
         $model->delete($id);
 
         return $this->formSuccessResponse(
-            'Jadwal umum berhasil dihapus.',
+            'Agenda eksternal berhasil dihapus.',
             base_url('admin/agenda-umum'),
         );
     }
@@ -122,8 +122,13 @@ class GeneralAgendaController extends BaseController
         }
 
         $kategori = trim((string) $this->request->getPost('kategori'));
-        if (! in_array($kategori, self::CATEGORIES, true)) {
-            return ['error' => 'Kategori jadwal umum tidak valid.'];
+        if (! in_array($kategori, AgendaUmumModel::CATEGORIES, true)) {
+            return ['error' => 'Jenis kegiatan tidak valid.'];
+        }
+
+        $pihakEksternal = trim((string) $this->request->getPost('pihak_eksternal'));
+        if ($pihakEksternal === '' || mb_strlen($pihakEksternal) > 255) {
+            return ['error' => 'Pihak atau instansi eksternal wajib diisi dan maksimal 255 karakter.'];
         }
 
         $tanggal = trim((string) $this->request->getPost('tanggal'));
@@ -153,32 +158,21 @@ class GeneralAgendaController extends BaseController
             return ['error' => 'Sumber informasi maksimal 200 karakter.'];
         }
 
-        $pesertaRaw = trim((string) $this->request->getPost('perkiraan_peserta'));
-        if ($pesertaRaw !== '' && (! ctype_digit($pesertaRaw) || (int) $pesertaRaw > 1000000)) {
-            return ['error' => 'Perkiraan peserta harus berupa angka maksimal 1.000.000.'];
-        }
-
         $keterangan = trim((string) $this->request->getPost('keterangan'));
         if (mb_strlen($keterangan) > 5000) {
             return ['error' => 'Keterangan maksimal 5.000 karakter.'];
         }
 
-        $status = trim((string) $this->request->getPost('status'));
-        if (! in_array($status, self::STATUSES, true)) {
-            return ['error' => 'Status jadwal umum tidak valid.'];
-        }
-
         return [
             'judul'             => $judul,
             'kategori'          => $kategori,
+            'pihak_eksternal'   => $pihakEksternal,
             'tanggal'           => $tanggal,
             'waktu_mulai'       => $waktuMulai,
             'waktu_selesai'     => $waktuSelesai ?: null,
             'lokasi'            => $lokasi,
             'sumber_informasi'  => $sumber !== '' ? $sumber : null,
-            'perkiraan_peserta' => $pesertaRaw !== '' ? (int) $pesertaRaw : null,
             'keterangan'        => $keterangan !== '' ? $keterangan : null,
-            'status'            => $status,
             'is_publik'         => $this->request->getPost('is_publik') === '1' ? 1 : 0,
         ];
     }
@@ -186,7 +180,7 @@ class GeneralAgendaController extends BaseController
     private function failForm(string $message, ?int $id = null)
     {
         return $this->formViewErrorResponse('admin/agenda_umum/form', $this->formData(
-            $id === null ? 'Tambah Jadwal Umum' : 'Edit Jadwal Umum',
+            $id === null ? 'Tambah Agenda Eksternal' : 'Edit Agenda Eksternal',
             $this->postedAgenda($id),
             $id === null
                 ? base_url('admin/agenda-umum/store')
@@ -197,11 +191,11 @@ class GeneralAgendaController extends BaseController
     private function formData(string $title, ?array $agenda, string $actionUrl): array
     {
         return [
-            'pageTitle'  => $title,
-            'agenda'     => $agenda,
-            'action_url' => $actionUrl,
-            'categories' => self::CATEGORIES,
-            'statuses'   => self::STATUSES,
+            'pageTitle'       => $title,
+            'agenda'          => $agenda,
+            'action_url'      => $actionUrl,
+            'categories'      => AgendaUmumModel::CATEGORIES,
+            'category_labels' => self::CATEGORY_LABELS,
         ];
     }
 
@@ -211,14 +205,13 @@ class GeneralAgendaController extends BaseController
             'id'                => $id,
             'judul'             => trim((string) $this->request->getPost('judul')),
             'kategori'          => trim((string) $this->request->getPost('kategori')),
+            'pihak_eksternal'   => trim((string) $this->request->getPost('pihak_eksternal')),
             'tanggal'           => trim((string) $this->request->getPost('tanggal')),
             'waktu_mulai'       => trim((string) $this->request->getPost('waktu_mulai')),
             'waktu_selesai'     => trim((string) $this->request->getPost('waktu_selesai')),
             'lokasi'            => trim((string) $this->request->getPost('lokasi')),
             'sumber_informasi'  => trim((string) $this->request->getPost('sumber_informasi')),
-            'perkiraan_peserta' => trim((string) $this->request->getPost('perkiraan_peserta')),
             'keterangan'        => trim((string) $this->request->getPost('keterangan')),
-            'status'            => trim((string) $this->request->getPost('status')),
             'is_publik'         => $this->request->getPost('is_publik') === '1' ? 1 : 0,
         ];
     }
