@@ -40,7 +40,7 @@
             </div>
         </header>
 
-        <div class="dashboard-calendar-wrap">
+        <div class="dashboard-calendar-wrap dashboard-home-calendar">
             <div class="dashboard-weekday-grid" aria-hidden="true">
                 <?php foreach ($weekdayLabels as $label): ?>
                     <span><?= esc($label) ?></span>

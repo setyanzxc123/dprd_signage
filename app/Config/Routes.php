@@ -113,7 +113,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('agenda-umum/(:num)/update',        'Admin\GeneralAgendaController::update/$1');
     $routes->post('agenda-umum/(:num)/delete',        'Admin\GeneralAgendaController::delete/$1');
 
-    // Kalender Seluruh Agenda — placeholder (Fase 5)
+    // Workspace Seluruh Agenda (Fase 5)
     $routes->get('kalender', 'Admin\AgendaWorkspaceController::kalender');
 
     // Laporan Agenda — placeholder (Fase 6)

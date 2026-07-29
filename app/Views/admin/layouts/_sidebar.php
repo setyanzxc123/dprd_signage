@@ -79,8 +79,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender">
                     <i data-lucide="layout-dashboard" class="nav-icon"></i>
-                    <span class="nav-text">Kalender Seluruh Agenda</span>
-                    <span class="badge badge-ghost badge-xs ml-auto">segera</span>
+                    <span class="nav-text">Seluruh Agenda</span>
                 </a>
             </li>
             <li class="nav-item-custom">
