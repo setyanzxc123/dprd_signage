@@ -30,32 +30,49 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 <body class="min-h-screen overflow-x-hidden bg-base-200 text-base-content antialiased">
 <div id="agenda-app" v-cloak>
     <header class="sticky top-0 z-50 border-b border-base-300 bg-base-100/95 backdrop-blur-xl">
-        <div class="navbar mx-auto min-h-20 w-[min(1180px,calc(100%-20px))] gap-2 px-0 py-2 sm:w-[min(1180px,calc(100%-32px))] lg:min-h-28">
-            <a class="navbar-start min-w-0 flex-1 gap-3" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
-                <img class="h-12 w-12 shrink-0 rounded-lg border border-base-300 bg-white object-contain sm:h-16 sm:w-16" src="<?= esc($logoUrl) ?>" alt="Logo DPRD" />
-                <span class="min-w-0">
-                    <span class="block truncate text-base font-black leading-tight sm:text-xl">DPRD Provinsi Sulawesi Tengah</span>
+        <div class="navbar min-h-20 w-full gap-2 px-[2.5vw] py-[0.8vh]">
+            <a class="navbar-start min-w-0 flex-1 gap-[1vw]" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
+                <img class="h-11 w-11 shrink-0 rounded-box object-contain sm:h-14 sm:w-14" src="<?= esc($logoUrl) ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+                <span class="min-w-0 leading-tight">
+                    <span class="block truncate text-[clamp(17px,1.08vw,24px)] font-bold uppercase tracking-[0.08em]">
+                        DPRD Provinsi
+                    </span>
+                    <span class="block truncate text-[clamp(13px,0.82vw,18px)] uppercase tracking-[0.08em] text-base-content/70">
+                        Sulawesi Tengah
+                    </span>
                 </span>
             </a>
 
-            <div class="navbar-center hidden lg:flex">
-                <div class="join">
-                    <div class="join-item min-w-36 border border-base-300 bg-base-200 px-4 py-3 text-center">
-                        <span class="block text-[10px] font-extrabold uppercase tracking-widest text-base-content/50">Cuaca · BMKG</span>
-                        <span class="mt-1 block text-sm font-black">{{ weatherLabel }}</span>
+            <div class="navbar-end w-auto shrink-0 gap-1.5">
+                <div class="stats stats-horizontal hidden border border-base-300 bg-base-200 shadow-sm xl:inline-grid">
+                    <div class="stat place-items-center px-3 py-2">
+                        <div class="stat-value flex items-center gap-2 text-xl">
+                            <img v-if="weather.icon_url" :src="weather.icon_url" class="h-7 w-7 object-contain" alt="Ikon cuaca" />
+                            <span v-else class="status status-info status-lg"></span>
+                            <span>{{ weather.suhu }}</span>
+                        </div>
+                        <div class="stat-desc max-w-28 truncate text-xs font-semibold">{{ weather.kondisi }}</div>
                     </div>
-                    <div class="join-item min-w-40 border-y border-r border-base-300 bg-base-200 px-4 py-3 text-center">
-                        <span class="block text-[10px] font-extrabold uppercase tracking-widest text-base-content/50">Tanggal</span>
-                        <span class="mt-1 block text-sm font-black">{{ headerDate }}</span>
+
+                    <div class="stat hidden px-3 py-2 2xl:inline-grid">
+                        <div class="stat-title max-w-48 truncate text-xs font-bold">{{ weatherLocation }}</div>
+                        <div class="stat-value mt-0.5 text-xs font-medium">
+                            Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}
+                        </div>
+                        <div class="stat-desc text-[10px] italic">Sumber: BMKG</div>
                     </div>
-                    <div class="join-item min-w-32 border-y border-r border-base-300 bg-base-200 px-4 py-3 text-center">
-                        <span class="block text-[10px] font-extrabold uppercase tracking-widest text-base-content/50">Jam</span>
-                        <span class="mt-1 block text-sm font-black tabular-nums">{{ headerTime }} WITA</span>
+
+                    <div class="stat place-items-center px-4 py-2 text-center">
+                        <div class="stat-title text-xs font-bold uppercase tracking-[0.12em]">{{ headerDay }}</div>
+                        <div class="stat-value text-sm">{{ headerDate }}</div>
+                    </div>
+
+                    <div class="stat place-items-center px-4 py-2 text-center">
+                        <div class="stat-value font-mono text-3xl tabular-nums leading-none">{{ headerTime }}</div>
+                        <div class="stat-desc mt-0.5 uppercase tracking-[0.18em]">WITA</div>
                     </div>
                 </div>
-            </div>
 
-            <div class="navbar-end w-auto shrink-0 gap-1.5">
                 <button class="btn btn-ghost btn-circle btn-sm" type="button" @click="toggleTheme" :aria-label="isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap'">
                     <svg v-if="!isDark" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a7 7 0 1 0 11.5 11.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v2m0 14v2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M3 12h2m14 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" stroke-linecap="round"/></svg>
@@ -85,13 +102,13 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             </div>
         </div>
 
-        <div class="grid grid-cols-3 border-t border-base-300 lg:hidden">
+        <div class="grid grid-cols-3 border-t border-base-300 xl:hidden">
             <div class="min-w-0 p-2 text-center">
                 <span class="block text-[9px] font-extrabold uppercase tracking-wider text-base-content/45">Cuaca · BMKG</span>
                 <span class="mt-0.5 block truncate text-xs font-black">{{ weatherLabel }}</span>
             </div>
             <div class="min-w-0 border-x border-base-300 p-2 text-center">
-                <span class="block text-[9px] font-extrabold uppercase tracking-wider text-base-content/45">Tanggal</span>
+                <span class="block truncate text-[9px] font-extrabold uppercase tracking-wider text-base-content/45">{{ headerDay }}</span>
                 <span class="mt-0.5 block truncate text-xs font-black">{{ headerDate }}</span>
             </div>
             <div class="min-w-0 p-2 text-center">
@@ -102,13 +119,46 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 
         <nav class="border-t border-base-300 bg-base-200" aria-label="Navigasi agenda">
             <div class="mx-auto flex w-[min(1180px,calc(100%-20px))] flex-col gap-2 py-2 sm:w-[min(1180px,calc(100%-32px))] sm:flex-row sm:items-center">
-                <div class="carousel carousel-start min-w-0 flex-1 gap-2">
-                    <div class="carousel-item">
-                        <button :class="navButtonClass('all')" type="button" @click="setNavigation('all')">Semua</button>
+                <div class="grid min-w-0 flex-1 grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2">
+                    <button
+                        :class="{ 'invisible pointer-events-none': !canScrollUnitsLeft }"
+                        class="btn btn-outline btn-circle btn-sm bg-base-100 shadow-md"
+                        type="button"
+                        :aria-hidden="!canScrollUnitsLeft"
+                        :tabindex="canScrollUnitsLeft ? 0 : -1"
+                        aria-label="Geser kelompok peserta ke kiri"
+                        title="Geser ke kiri"
+                        @click="scrollUnitFilters(-1)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <div
+                        ref="unitScroller"
+                        class="agenda-unit-scroll carousel carousel-start w-full gap-2 px-1"
+                        @scroll.passive="updateUnitScrollState">
+                        <div class="carousel-item">
+                            <button :class="navButtonClass('all')" type="button" @click="setNavigation('all')">Semua</button>
+                        </div>
+                        <div v-for="unit in units" :key="unit.id" class="carousel-item">
+                            <button :class="navButtonClass('unit:' + unit.id)" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
+                        </div>
                     </div>
-                    <div v-for="unit in units" :key="unit.id" class="carousel-item">
-                        <button :class="navButtonClass('unit:' + unit.id)" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
-                    </div>
+
+                    <button
+                        :class="{ 'invisible pointer-events-none': !canScrollUnitsRight }"
+                        class="btn btn-outline btn-circle btn-sm bg-base-100 shadow-md"
+                        type="button"
+                        :aria-hidden="!canScrollUnitsRight"
+                        :tabindex="canScrollUnitsRight ? 0 : -1"
+                        aria-label="Geser kelompok peserta ke kanan"
+                        title="Geser ke kanan"
+                        @click="scrollUnitFilters(1)">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
                 </div>
                 <a class="btn btn-outline btn-sm w-full shrink-0 sm:w-auto" href="<?= base_url('agenda/jadwal-banmus') ?>">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/></svg>
@@ -307,7 +357,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                 <p class="mt-1 truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.lokasi }}</p>
                                 <p v-if="item.pihak_eksternal" class="mt-1 truncate text-xs text-base-content/50">{{ item.pihak_eksternal }}</p>
                                 <span class="mt-1 flex flex-wrap gap-1">
-                                    <span class="badge badge-ghost badge-sm">{{ generalCategoryLabel(item.kategori) }}</span>
+                                    <span class="badge badge-info badge-sm">{{ generalCategoryLabel(item.kategori) }}</span>
                                 </span>
                             </div>
                         </li>
@@ -328,7 +378,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 </div>
 
 <script {csp-script-nonce}>
-    const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+    const { createApp, ref, computed, nextTick, onMounted, onUnmounted } = Vue;
 
     createApp({
         setup() {
@@ -348,7 +398,18 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             })));
             const generalAgendas = ref([]);
             const units = ref([]);
-            const weather = ref(null);
+            const unitScroller = ref(null);
+            const canScrollUnitsLeft = ref(false);
+            const canScrollUnitsRight = ref(false);
+            const weather = ref({
+                suhu: '--°C',
+                kondisi: 'Memuat...',
+                kelembapan: '--',
+                kec_angin: '--',
+                icon_url: '',
+                desa: '',
+                kecamatan: '',
+            });
             const now = ref(new Date());
             const activeNavigation = ref('all');
             const memberScope = ref('semua');
@@ -371,23 +432,32 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
             const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-            const headerDate = computed(() => {
-                const value = now.value;
-                return `${dayNames[value.getDay()].toUpperCase()}, ${value.getDate()} ${shortMonths[value.getMonth()].toUpperCase()} ${value.getFullYear()}`;
-            });
+            const headerDay = computed(() => new Intl.DateTimeFormat('id-ID', {
+                timeZone: 'Asia/Makassar',
+                weekday: 'long',
+            }).format(now.value).toUpperCase());
+            const headerDate = computed(() => new Intl.DateTimeFormat('id-ID', {
+                timeZone: 'Asia/Makassar',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            }).format(now.value));
             const headerTime = computed(() => now.value.toLocaleTimeString('id-ID', {
                 timeZone: 'Asia/Makassar',
                 hour: '2-digit',
                 minute: '2-digit',
+                second: '2-digit',
                 hour12: false,
             }).replace('.', ':'));
             const weatherLabel = computed(() => {
-                if (!weather.value) {
-                    return 'Memuat...';
-                }
                 const temperature = weather.value.suhu || '';
                 const condition = weather.value.kondisi || 'Tidak tersedia';
                 return temperature ? `${temperature} · ${condition}` : condition;
+            });
+            const weatherLocation = computed(() => {
+                const location = [weather.value.desa, weather.value.kecamatan]
+                    .filter((value) => value && value !== '-');
+                return location.length ? location.join(', ') : 'Sulawesi Tengah';
             });
             const filteredAgendas = computed(() => {
                 let visibleProjections = IS_MEMBER && memberScope.value === 'saya'
@@ -527,6 +597,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     agendas.value = Array.from(unique.values()).sort((a, b) =>
                         `${a.tanggal} ${a.waktu_mulai}`.localeCompare(`${b.tanggal} ${b.waktu_mulai}`));
                     units.value = payloads[0]?.units || [];
+                    await nextTick();
+                    updateUnitScrollState();
                     const validPage = Math.min(currentPage.value, totalPages.value);
                     if (validPage !== currentPage.value) {
                         currentPage.value = validPage;
@@ -550,9 +622,31 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 try {
                     const response = await fetch(WEATHER_URL);
                     const payload = await response.json();
-                    weather.value = payload.status === 'success' ? payload.cuaca : { kondisi: 'Tidak tersedia', suhu: '' };
+                    weather.value = payload.status === 'success'
+                        ? {
+                            ...payload.cuaca,
+                            desa: payload.lokasi?.desa || '',
+                            kecamatan: payload.lokasi?.kecamatan || '',
+                        }
+                        : {
+                            suhu: '--°C',
+                            kondisi: 'Tidak tersedia',
+                            kelembapan: '--',
+                            kec_angin: '--',
+                            icon_url: '',
+                            desa: '',
+                            kecamatan: '',
+                        };
                 } catch {
-                    weather.value = { kondisi: 'Tidak tersedia', suhu: '' };
+                    weather.value = {
+                        suhu: '--°C',
+                        kondisi: 'Tidak tersedia',
+                        kelembapan: '--',
+                        kec_angin: '--',
+                        icon_url: '',
+                        desa: '',
+                        kecamatan: '',
+                    };
                 }
             }
 
@@ -583,6 +677,31 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 activeNavigation.value = value;
                 resetAgendaSelection();
                 updateUrl();
+            }
+
+            function updateUnitScrollState() {
+                const scroller = unitScroller.value;
+                if (!scroller) {
+                    canScrollUnitsLeft.value = false;
+                    canScrollUnitsRight.value = false;
+                    return;
+                }
+
+                const maxScrollLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+                canScrollUnitsLeft.value = scroller.scrollLeft > 2;
+                canScrollUnitsRight.value = scroller.scrollLeft < maxScrollLeft - 2;
+            }
+
+            function scrollUnitFilters(direction) {
+                const scroller = unitScroller.value;
+                if (!scroller) {
+                    return;
+                }
+
+                scroller.scrollBy({
+                    left: direction * Math.max(220, scroller.clientWidth * 0.65),
+                    behavior: 'smooth',
+                });
             }
 
             function setMemberScope(scope) {
@@ -663,20 +782,20 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 
             function statusLabel(status) {
                 return {
+                    proyeksi: 'Proyeksi',
                     berlangsung: 'Berlangsung',
                     persiapan: 'Persiapan',
                     menunggu: 'Menunggu',
-                    proyeksi: 'Proyeksi',
                     selesai: 'Selesai',
                 }[status] || status || '-';
             }
 
             function statusBadgeClass(status) {
                 return {
+                    proyeksi: 'badge badge-warning badge-soft badge-sm',
                     berlangsung: 'badge badge-success badge-soft badge-sm',
                     persiapan: 'badge badge-warning badge-soft badge-sm',
                     menunggu: 'badge badge-ghost badge-sm',
-                    proyeksi: 'badge badge-warning badge-soft badge-sm',
                     selesai: 'badge badge-info badge-soft badge-sm',
                 }[status] || 'badge badge-ghost badge-sm';
             }
@@ -748,12 +867,14 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     now.value = new Date();
                 }, 1000);
                 weatherTimer = setInterval(loadWeather, 1800000);
+                window.addEventListener('resize', updateUnitScrollState);
             });
 
             onUnmounted(() => {
                 clearInterval(agendaTimer);
                 clearInterval(clockTimer);
                 clearInterval(weatherTimer);
+                window.removeEventListener('resize', updateUnitScrollState);
             });
 
             return {
@@ -763,7 +884,13 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 generalLoading,
                 generalLoadError,
                 units,
+                unitScroller,
+                canScrollUnitsLeft,
+                canScrollUnitsRight,
+                weather,
                 weatherLabel,
+                weatherLocation,
+                headerDay,
                 headerDate,
                 headerTime,
                 activeNavigation,
@@ -783,6 +910,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 isDark,
                 loadAgenda,
                 setNavigation,
+                updateUnitScrollState,
+                scrollUnitFilters,
                 setMemberScope,
                 changePeriod,
                 handleAgendaToggle,

@@ -24,3 +24,13 @@
     color-scheme: dark;
   }
 }
+
+@layer components {
+  .agenda-unit-scroll {
+    scrollbar-width: none;
+  }
+
+  .agenda-unit-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
