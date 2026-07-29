@@ -32,7 +32,7 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
     private function assertCurrentSchema(): void
     {
-        foreach (['dokumen_banmus', 'proyeksi_banmus', 'agenda_umum'] as $table) {
+        foreach (['dokumen_banmus', 'jadwal_banmus', 'agenda_umum'] as $table) {
             if (! $this->db->tableExists($table)) {
                 throw new RuntimeException(
                     "Tabel {$table} belum tersedia. Jalankan `php spark migrate` sebelum menjalankan seeder."
@@ -47,7 +47,7 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             'dokumen_file',
             'dokumen_nama_asli',
         ];
-        $requiredProjectionFields = [
+        $requiredScheduleFields = [
             'dokumen_banmus_id',
             'agenda',
             'periode_label',
@@ -60,9 +60,9 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
                 throw new RuntimeException("Kolom dokumen_banmus.{$field} belum tersedia.");
             }
         }
-        foreach ($requiredProjectionFields as $field) {
-            if (! $this->db->fieldExists($field, 'proyeksi_banmus')) {
-                throw new RuntimeException("Kolom proyeksi_banmus.{$field} belum tersedia.");
+        foreach ($requiredScheduleFields as $field) {
+            if (! $this->db->fieldExists($field, 'jadwal_banmus')) {
+                throw new RuntimeException("Kolom jadwal_banmus.{$field} belum tersedia.");
             }
         }
 
@@ -312,7 +312,7 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
                 $this->db->table('dokumen_banmus')
                     ->where('id', $documentId)
                     ->update($document);
-                $this->db->table('proyeksi_banmus')
+                $this->db->table('jadwal_banmus')
                     ->where('dokumen_banmus_id', $documentId)
                     ->delete();
             } else {
@@ -329,16 +329,14 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
                     'periode_label'     => $item['tanggal_pelaksanaan'],
                     'tanggal_mulai'     => null,
                     'tanggal_selesai'   => null,
-                    'unit_rapat_id'     => null,
                     'urutan'            => $index + 1,
                     'status'            => 'proyeksi',
                     'catatan'           => $item['keterangan'],
-                    'jadwal_id'         => null,
                     'created_at'        => $now,
                     'updated_at'        => $now,
                 ];
             }
-            $this->db->table('proyeksi_banmus')->insertBatch($rows);
+            $this->db->table('jadwal_banmus')->insertBatch($rows);
 
             if ($this->db->transStatus() === false) {
                 throw new RuntimeException('Transaksi data contoh Jadwal Banmus gagal.');

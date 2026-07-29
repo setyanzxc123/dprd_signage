@@ -9,7 +9,7 @@ use Config\Database;
 /**
  * @internal
  */
-final class BanmusProjectionModelTest extends CIUnitTestCase
+final class JadwalBanmusModelTest extends CIUnitTestCase
 {
     private BaseConnection $banmusDb;
     private Forge $forge;
@@ -39,8 +39,8 @@ final class BanmusProjectionModelTest extends CIUnitTestCase
     {
         $publicDocumentId = $this->insertDocument('SK Publik', 1);
         $this->insertDocument('SK Internal', 0);
-        $this->insertProjection($publicDocumentId, 2);
-        $this->insertProjection($publicDocumentId, 1);
+        $this->insertBanmusSchedule($publicDocumentId, 2);
+        $this->insertBanmusSchedule($publicDocumentId, 1);
 
         $documents = (new BanmusDocumentModel())->findForPortal(false, 2026);
 
@@ -114,17 +114,25 @@ final class BanmusProjectionModelTest extends CIUnitTestCase
             'urutan'            => ['type' => 'INTEGER'],
             'status'            => ['type' => 'VARCHAR', 'constraint' => 20],
             'catatan'           => ['type' => 'TEXT', 'null' => true],
-            'jadwal_id'         => ['type' => 'INTEGER', 'null' => true],
+            'tanggal'           => ['type' => 'DATE', 'null' => true],
+            'jam_mulai'         => ['type' => 'TIME', 'null' => true],
+            'jam_selesai'       => ['type' => 'TIME', 'null' => true],
+            'ruangan_id'        => ['type' => 'INTEGER', 'null' => true],
+            'lokasi_lainnya'    => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'publikasi'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'internal'],
+            'materi_url'        => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_url'        => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'created_at'        => ['type' => 'DATETIME', 'null' => true],
             'updated_at'        => ['type' => 'DATETIME', 'null' => true],
+            'deleted_at'        => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
-        $this->forge->createTable('proyeksi_banmus');
+        $this->forge->createTable('jadwal_banmus');
     }
 
     private function dropTables(): void
     {
-        foreach (['proyeksi_banmus', 'dokumen_banmus'] as $table) {
+        foreach (['jadwal_banmus', 'dokumen_banmus'] as $table) {
             $this->forge->dropTable($table, true);
         }
     }
@@ -147,14 +155,15 @@ final class BanmusProjectionModelTest extends CIUnitTestCase
         return (int) $this->banmusDb->insertID();
     }
 
-    private function insertProjection(int $documentId, int $order): int
+    private function insertBanmusSchedule(int $documentId, int $order): int
     {
-        $this->banmusDb->table('proyeksi_banmus')->insert([
+        $this->banmusDb->table('jadwal_banmus')->insert([
             'dokumen_banmus_id' => $documentId,
             'agenda'            => 'Uraian kegiatan ' . $order,
             'periode_label'     => 'Juni 2026',
             'urutan'            => $order,
             'status'            => 'proyeksi',
+            'publikasi'         => 'publik',
             'created_at'        => date('Y-m-d H:i:s'),
             'updated_at'        => date('Y-m-d H:i:s'),
         ]);

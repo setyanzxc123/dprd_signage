@@ -23,6 +23,8 @@ $routes->get('jadwal', 'AgendaController::legacy');
 // Redirect QR Code signage — mengarahkan ke URL asli dari jadwal publik tertentu
 $routes->get('go/jadwal/(:num)/live',   'RedirectController::live/$1');
 $routes->get('go/jadwal/(:num)/berkas', 'RedirectController::berkas/$1');
+$routes->get('go/jadwal-banmus/(:num)/live',   'RedirectController::liveBanmus/$1');
+$routes->get('go/jadwal-banmus/(:num)/berkas', 'RedirectController::berkasBanmus/$1');
 
 // Login satu pintu
 $routes->get( 'login',         'LoginController::index');
@@ -47,6 +49,8 @@ $routes->group('anggota', ['filter' => 'memberauth'], function ($routes) {
     $routes->get('', 'Member\PortalController::index');
     $routes->get('jadwal/(:num)/live',   'Member\ScheduleLinkController::live/$1');
     $routes->get('jadwal/(:num)/berkas', 'Member\ScheduleLinkController::berkas/$1');
+    $routes->get('jadwal-banmus/(:num)/live',   'Member\ScheduleLinkController::liveBanmus/$1');
+    $routes->get('jadwal-banmus/(:num)/berkas', 'Member\ScheduleLinkController::berkasBanmus/$1');
 });
 
 // Admin — semua route dilindungi filter auth
@@ -82,17 +86,17 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('unit-rapat/(:num)/delete', 'Admin\UnitRapatController::delete/$1');
 
     // Agenda Internal: Banmus
-    $routes->get( 'jadwal-banmus',                                 'Admin\BanmusProjectionController::index');
-    $routes->get( 'jadwal-banmus/create',                          'Admin\BanmusProjectionController::create');
-    $routes->post('jadwal-banmus/store',                           'Admin\BanmusProjectionController::store');
-    $routes->get( 'jadwal-banmus/(:num)',                          'Admin\BanmusProjectionController::show/$1');
-    $routes->get( 'jadwal-banmus/(:num)/edit',                     'Admin\BanmusProjectionController::edit/$1');
-    $routes->post('jadwal-banmus/(:num)/update',                   'Admin\BanmusProjectionController::update/$1');
-    $routes->post('jadwal-banmus/(:num)/delete',                   'Admin\BanmusProjectionController::delete/$1');
-    $routes->post('jadwal-banmus/(:num)/item/store',               'Admin\BanmusProjectionController::storeItem/$1');
-    $routes->post('jadwal-banmus/(:num)/item/(:num)/update',       'Admin\BanmusProjectionController::updateItem/$1/$2');
-    $routes->post('jadwal-banmus/(:num)/item/(:num)/delete',       'Admin\BanmusProjectionController::deleteItem/$1/$2');
-    $routes->post('jadwal-banmus/(:num)/item/(:num)/status',       'Admin\BanmusProjectionController::updateItemStatus/$1/$2');
+    $routes->get( 'jadwal-banmus',                                 'Admin\JadwalBanmusController::index');
+    $routes->get( 'jadwal-banmus/create',                          'Admin\JadwalBanmusController::create');
+    $routes->post('jadwal-banmus/store',                           'Admin\JadwalBanmusController::store');
+    $routes->get( 'jadwal-banmus/(:num)',                          'Admin\JadwalBanmusController::show/$1');
+    $routes->get( 'jadwal-banmus/(:num)/edit',                     'Admin\JadwalBanmusController::edit/$1');
+    $routes->post('jadwal-banmus/(:num)/update',                   'Admin\JadwalBanmusController::update/$1');
+    $routes->post('jadwal-banmus/(:num)/delete',                   'Admin\JadwalBanmusController::delete/$1');
+    $routes->post('jadwal-banmus/(:num)/item/store',               'Admin\JadwalBanmusController::storeItem/$1');
+    $routes->post('jadwal-banmus/(:num)/item/(:num)/update',       'Admin\JadwalBanmusController::updateItem/$1/$2');
+    $routes->post('jadwal-banmus/(:num)/item/(:num)/delete',       'Admin\JadwalBanmusController::deleteItem/$1/$2');
+    $routes->post('jadwal-banmus/(:num)/item/(:num)/status',       'Admin\JadwalBanmusController::updateItemStatus/$1/$2');
 
     // Agenda Internal: Insidental Internal (dahulu Jadwal Rapat)
     $routes->get( 'jadwal',                      'Admin\MeetingController::index');

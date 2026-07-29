@@ -9,7 +9,7 @@ $isMember = is_array($member ?? null);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jadwal Banmus - DPRD Provinsi Sulawesi Tengah</title>
-    <meta name="description" content="Proyeksi kegiatan berdasarkan SK Badan Musyawarah DPRD Provinsi Sulawesi Tengah." />
+    <meta name="description" content="Jadwal kegiatan berdasarkan SK Badan Musyawarah DPRD Provinsi Sulawesi Tengah." />
     <link rel="icon" type="image/jpeg" href="<?= esc($logoUrl) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
@@ -65,7 +65,7 @@ $isMember = is_array($member ?? null);
                         <p class="text-xs font-extrabold uppercase tracking-widest text-base-content/45">Hasil SK Banmus</p>
                         <h1 class="card-title mt-1 text-2xl font-black uppercase sm:text-3xl">Jadwal Banmus</h1>
                         <p class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-base-content/60">
-                            Rencana kegiatan per semester sebagaimana ditetapkan dalam SK Badan Musyawarah.
+                            Agenda kegiatan per semester sebagaimana ditetapkan dalam SK Badan Musyawarah.
                         </p>
                     </div>
 
@@ -149,7 +149,16 @@ $isMember = is_array($member ?? null);
                                                     <p class="text-xs font-extrabold uppercase tracking-wide text-base-content/45">
                                                         Tanggal Pelaksanaan
                                                     </p>
-                                                    <p class="mt-1 text-sm font-bold"><?= esc($item['periode_label']) ?></p>
+                                                    <?php if (! empty($item['tanggal'])): ?>
+                                                        <p class="mt-1 text-sm font-bold">
+                                                            <?= date('d/m/Y', strtotime($item['tanggal'])) ?>
+                                                            <?php if (! empty($item['jam_mulai']) && ! empty($item['jam_selesai'])): ?>
+                                                                · <?= substr($item['jam_mulai'], 0, 5) ?>–<?= substr($item['jam_selesai'], 0, 5) ?> WITA
+                                                            <?php endif; ?>
+                                                        </p>
+                                                    <?php else: ?>
+                                                        <p class="mt-1 text-sm font-bold"><?= esc($item['periode_label'] ?: 'Belum ditentukan') ?></p>
+                                                    <?php endif; ?>
                                                     <h3 class="mt-3 text-sm font-extrabold leading-6 sm:text-base">
                                                         <?= nl2br(esc($item['agenda'])) ?>
                                                     </h3>

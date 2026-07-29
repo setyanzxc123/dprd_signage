@@ -54,9 +54,10 @@ class BanmusDocumentModel extends Model
             return [];
         }
 
-        $itemsByDocument = (new BanmusProjectionModel())
+        $itemsByDocument = (new JadwalBanmusModel())
             ->findGroupedByDocumentIds(
                 array_map('intval', array_column($documents, 'id')),
+                $includeInternal,
             );
 
         foreach ($documents as &$document) {

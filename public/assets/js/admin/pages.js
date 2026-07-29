@@ -654,6 +654,8 @@
     const initializeBanmusItemWorkspace = () => {
         const dialog = document.querySelector('[data-banmus-item-dialog]');
         if (!(dialog instanceof HTMLDialogElement)) return;
+        if (dialog.dataset.initialized === 'true') return;
+        dialog.dataset.initialized = 'true';
 
         const form = dialog.querySelector('#item_form');
         const title = dialog.querySelector('#modal_title span');
@@ -661,8 +663,8 @@
         const roomField = dialog.querySelector('#field_ruangan_id');
         const locationField = dialog.querySelector('#field_lokasi_lainnya');
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
-        const lockNotice = dialog.querySelector('#locked_notice');
-        const operationalFields = dialog.querySelector('#operational_fields');
+        const draftButton = dialog.querySelector('[data-banmus-save-draft]');
+        const fixedButton = dialog.querySelector('[data-banmus-set-fixed]');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
 
         if (!(form instanceof HTMLFormElement)
@@ -673,26 +675,30 @@
 
         const field = (id) => dialog.querySelector(`#${id}`);
 
-        const syncDateDisclosure = () => {
-            const hasDate = dateField.value.trim() !== '';
-            lockNotice?.classList.toggle('hidden', hasDate);
-            operationalFields?.classList.toggle('hidden', !hasDate);
-        };
-
         const syncLocationDisclosure = () => {
             locationWrapper?.classList.toggle('hidden', roomField.value !== 'other');
         };
 
         const showDialog = () => {
-            syncDateDisclosure();
             syncLocationDisclosure();
             if (!dialog.open) dialog.showModal();
+        };
+
+        const configureActions = (status = 'proyeksi') => {
+            const fixed = status !== 'proyeksi';
+            if (draftButton instanceof HTMLButtonElement) {
+                draftButton.value = fixed ? 'save_fixed' : 'save_projection';
+                const label = draftButton.querySelector('span');
+                if (label) label.textContent = fixed ? 'Simpan Perubahan Fixed' : 'Simpan Proyeksi';
+            }
+            fixedButton?.classList.toggle('hidden', fixed);
         };
 
         const openCreateDialog = () => {
             form.reset();
             form.action = dialog.dataset.storeUrl || '';
             if (title) title.textContent = 'Tambah Item Agenda Banmus';
+            configureActions();
             showDialog();
         };
 
@@ -721,6 +727,8 @@
             field('field_jam_selesai').value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
             field('field_catatan').value = item.catatan || '';
             field('field_publikasi').value = item.publikasi || 'internal';
+            field('field_materi_url').value = item.materi_url || '';
+            field('field_stream_url').value = item.stream_url || '';
 
             if (item.ruangan_id) {
                 roomField.value = String(item.ruangan_id);
@@ -731,11 +739,12 @@
                 roomField.value = '';
             }
 
-            const unitIds = parseUnitIds(item.target_unit_ids);
+            const unitIds = parseUnitIds(item.unit_ids);
             unitCheckboxes.forEach((checkbox) => {
                 checkbox.checked = unitIds.includes(Number(checkbox.value));
             });
 
+            configureActions(item.status || 'proyeksi');
             showDialog();
         };
 
@@ -757,7 +766,6 @@
             button.addEventListener('click', () => dialog.close());
         });
 
-        dateField.addEventListener('change', syncDateDisclosure);
         roomField.addEventListener('change', syncLocationDisclosure);
     };
 

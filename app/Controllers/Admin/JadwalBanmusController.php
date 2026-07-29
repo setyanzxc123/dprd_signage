@@ -4,7 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\BanmusDocumentModel;
-use App\Models\BanmusProjectionModel;
+use App\Models\JadwalBanmusModel;
 use App\Models\RuanganModel;
 use App\Models\UnitRapatModel;
 use CodeIgniter\HTTP\Files\UploadedFile;
@@ -12,7 +12,7 @@ use Config\Database;
 use RuntimeException;
 use Throwable;
 
-class BanmusProjectionController extends BaseController
+class JadwalBanmusController extends BaseController
 {
     private const MAX_PDF_SIZE = 10 * 1024 * 1024;
 
@@ -24,7 +24,7 @@ class BanmusProjectionController extends BaseController
             ->orderBy('id', 'DESC')
             ->findAll();
 
-        $groupedItems = (new BanmusProjectionModel())->findGroupedByDocumentIds(
+        $groupedItems = (new JadwalBanmusModel())->findGroupedByDocumentIds(
             array_map('intval', array_column($documents, 'id')),
         );
 
@@ -77,11 +77,13 @@ class BanmusProjectionController extends BaseController
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
-        $items = (new BanmusProjectionModel())
+        $itemModel = new JadwalBanmusModel();
+        $items = $itemModel
             ->where('dokumen_banmus_id', $id)
             ->orderBy('urutan', 'ASC')
             ->orderBy('id', 'ASC')
             ->findAll();
+        $items = $itemModel->attachUnitIds($items);
 
         $rooms = (new RuanganModel())
             ->where('tersedia', 1)
@@ -178,37 +180,48 @@ class BanmusProjectionController extends BaseController
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
-        $input = $this->validatedItemPayload();
+        $action = $this->itemAction();
+        $input = $this->validatedItemPayload($action === 'set_fixed');
         if (isset($input['error'])) {
             session()->setFlashdata('error', $input['error']);
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
-        $model = new BanmusProjectionModel();
+        $model = new JadwalBanmusModel();
         $nextUrutan = (int) ($model->where('dokumen_banmus_id', $documentId)->selectMax('urutan')->first()['urutan'] ?? 0) + 1;
 
         $payload = array_merge($input['payload'], [
             'dokumen_banmus_id' => $documentId,
             'urutan'            => $nextUrutan,
+            'status'            => $action === 'set_fixed' ? 'fixed' : 'proyeksi',
         ]);
-        $payload['status'] = $model->resolveStatus($payload);
 
-        if (! $model->insert($payload)) {
+        $db = Database::connect();
+        $db->transStart();
+        $itemId = (int) $model->insert($payload, true);
+        if ($itemId > 0) {
+            $this->syncItemUnits($itemId, $input['unit_ids']);
+        }
+        $db->transComplete();
+
+        if ($itemId < 1 || ! $db->transStatus()) {
             session()->setFlashdata('error', 'Gagal menambahkan item agenda.');
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
         return $this->formSuccessResponse(
-            'Item agenda berhasil ditambahkan.',
+            $payload['status'] === 'fixed'
+                ? 'Item agenda berhasil ditambahkan dan ditetapkan sebagai fixed.'
+                : 'Proyeksi agenda berhasil disimpan. Data pelaksanaan dapat dilengkapi kemudian.',
             base_url("admin/jadwal-banmus/{$documentId}"),
         );
     }
 
     public function updateItem(int $documentId, int $itemId)
     {
-        $model = new BanmusProjectionModel();
+        $model = new JadwalBanmusModel();
         $item = $model->where('dokumen_banmus_id', $documentId)->find($itemId);
         if ($item === null) {
             session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
@@ -216,7 +229,11 @@ class BanmusProjectionController extends BaseController
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
-        $input = $this->validatedItemPayload();
+        $action = $this->itemAction($item);
+        $input = $this->validatedItemPayload(
+            in_array($action, ['set_fixed', 'save_fixed'], true),
+            $item,
+        );
         if (isset($input['error'])) {
             session()->setFlashdata('error', $input['error']);
 
@@ -224,23 +241,35 @@ class BanmusProjectionController extends BaseController
         }
 
         $payload = $input['payload'];
-        $payload['status'] = $model->resolveStatus($payload);
+        $payload['status'] = in_array($action, ['set_fixed', 'save_fixed'], true)
+            ? 'fixed'
+            : 'proyeksi';
 
-        if (! $model->update($itemId, $payload)) {
+        $db = Database::connect();
+        $db->transStart();
+        $updated = $model->update($itemId, $payload);
+        if ($updated) {
+            $this->syncItemUnits($itemId, $input['unit_ids']);
+        }
+        $db->transComplete();
+
+        if (! $updated || ! $db->transStatus()) {
             session()->setFlashdata('error', 'Gagal memperbarui item agenda.');
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
         return $this->formSuccessResponse(
-            'Item agenda berhasil diperbarui.',
+            $payload['status'] === 'fixed'
+                ? 'Jadwal Banmus fixed berhasil diperbarui.'
+                : 'Proyeksi agenda berhasil disimpan. Data pelaksanaan dapat dilengkapi kemudian.',
             base_url("admin/jadwal-banmus/{$documentId}"),
         );
     }
 
     public function deleteItem(int $documentId, int $itemId)
     {
-        $model = new BanmusProjectionModel();
+        $model = new JadwalBanmusModel();
         $item = $model->where('dokumen_banmus_id', $documentId)->find($itemId);
         if ($item === null) {
             session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
@@ -258,7 +287,7 @@ class BanmusProjectionController extends BaseController
 
     public function updateItemStatus(int $documentId, int $itemId)
     {
-        $model = new BanmusProjectionModel();
+        $model = new JadwalBanmusModel();
         $item = $model->where('dokumen_banmus_id', $documentId)->find($itemId);
         if ($item === null) {
             session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
@@ -267,13 +296,23 @@ class BanmusProjectionController extends BaseController
         }
 
         $status = trim((string) $this->request->getPost('status'));
-        if (! in_array($status, ['proyeksi', 'fixed', 'selesai', 'ditunda', 'dibatalkan'], true)) {
+        if (! in_array($status, ['proyeksi', 'selesai', 'ditunda', 'dibatalkan'], true)) {
             session()->setFlashdata('error', 'Status tidak valid.');
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
-        $model->update($itemId, ['status' => $status]);
+        if ($status !== 'proyeksi' && $item['status'] === 'proyeksi') {
+            session()->setFlashdata('error', 'Agenda harus ditetapkan sebagai fixed sebelum status pelaksanaannya diubah.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        if (! $model->update($itemId, ['status' => $status])) {
+            session()->setFlashdata('error', 'Status item agenda gagal diubah.');
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
 
         return $this->formSuccessResponse(
             'Status item agenda berhasil diubah.',
@@ -283,7 +322,7 @@ class BanmusProjectionController extends BaseController
 
     // ── PRIVATE HELPERS ──────────────────────────────────────────────
 
-    private function validatedItemPayload(): array
+    private function validatedItemPayload(bool $requireFixed, ?array $existingItem = null): array
     {
         $agenda = trim((string) $this->request->getPost('agenda'));
         if ($agenda === '') {
@@ -293,37 +332,239 @@ class BanmusProjectionController extends BaseController
         $periodeLabel = trim((string) $this->request->getPost('periode_label'));
 
         $tanggal = trim((string) $this->request->getPost('tanggal'));
-        if ($tanggal !== '' && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+        if ($tanggal !== '' && ! $this->validDate($tanggal)) {
             return ['error' => 'Format tanggal pasti tidak valid.'];
         }
 
         $jamMulai = trim((string) $this->request->getPost('jam_mulai'));
         $jamSelesai = trim((string) $this->request->getPost('jam_selesai'));
-        $ruanganId = $this->request->getPost('ruangan_id');
+        if ($jamMulai !== '' && ! $this->validTime($jamMulai)) {
+            return ['error' => 'Format jam mulai tidak valid.'];
+        }
+        if ($jamSelesai !== '' && ! $this->validTime($jamSelesai)) {
+            return ['error' => 'Format jam selesai tidak valid.'];
+        }
+        if ($jamMulai !== '' && $jamSelesai !== '' && strtotime($jamSelesai) <= strtotime($jamMulai)) {
+            return ['error' => 'Jam selesai harus lebih besar daripada jam mulai.'];
+        }
+
+        $roomValue = trim((string) $this->request->getPost('ruangan_id'));
         $lokasiLainnya = trim((string) $this->request->getPost('lokasi_lainnya'));
-        $targetUnitIds = $this->request->getPost('target_unit_ids');
+        $ruanganId = null;
+        if ($roomValue !== '' && $roomValue !== 'other') {
+            $ruanganId = filter_var($roomValue, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($ruanganId === false) {
+                return ['error' => 'Ruangan rapat tidak valid.'];
+            }
+
+            $room = (new RuanganModel())->find((int) $ruanganId);
+            $existingRoomId = (int) ($existingItem['ruangan_id'] ?? 0);
+            if ($room === null
+                || ((int) ($room['tersedia'] ?? 0) !== 1 && (int) $ruanganId !== $existingRoomId)) {
+                return ['error' => 'Ruangan rapat tidak ditemukan atau sedang tidak tersedia.'];
+            }
+            $lokasiLainnya = '';
+        } elseif ($roomValue !== 'other') {
+            $lokasiLainnya = '';
+        }
+
+        if (mb_strlen($lokasiLainnya) > 255) {
+            return ['error' => 'Lokasi lainnya maksimal 255 karakter.'];
+        }
+
+        $unitIds = $this->postedUnitIds();
+        if ($unitIds !== []) {
+            $validUnits = (new UnitRapatModel())
+                ->select('id')
+                ->where('aktif', 1)
+                ->whereIn('id', $unitIds)
+                ->findAll();
+            $validUnitIds = array_map('intval', array_column($validUnits, 'id'));
+            if (array_values(array_diff($unitIds, $validUnitIds)) !== []) {
+                return ['error' => 'Kelompok peserta yang dipilih tidak valid atau sudah nonaktif.'];
+            }
+        }
+
         $publikasi = trim((string) $this->request->getPost('publikasi'));
         $catatan = trim((string) $this->request->getPost('catatan'));
+        $materiUrl = $this->validatedOptionalUrl(
+            (string) $this->request->getPost('materi_url'),
+            'Tautan materi atau dokumen tidak valid.',
+        );
+        if (isset($materiUrl['error'])) {
+            return ['error' => $materiUrl['error']];
+        }
+        $streamUrl = $this->validatedOptionalUrl(
+            (string) $this->request->getPost('stream_url'),
+            'Tautan live streaming tidak valid.',
+        );
+        if (isset($streamUrl['error'])) {
+            return ['error' => $streamUrl['error']];
+        }
 
-        $targetUnitIdsJson = is_array($targetUnitIds) && $targetUnitIds !== []
-            ? json_encode(array_values(array_map('intval', $targetUnitIds)))
-            : null;
+        if ($requireFixed) {
+            if ($tanggal === '') {
+                return ['error' => 'Tanggal wajib diisi sebelum agenda ditetapkan sebagai fixed.'];
+            }
+            if ($jamMulai === '' || $jamSelesai === '') {
+                return ['error' => 'Jam mulai dan selesai wajib diisi sebelum agenda ditetapkan sebagai fixed.'];
+            }
+            if ($ruanganId === null && $lokasiLainnya === '') {
+                return ['error' => 'Ruangan atau lokasi lainnya wajib diisi sebelum agenda ditetapkan sebagai fixed.'];
+            }
+            if ($unitIds === []) {
+                return ['error' => 'Pilih minimal satu kelompok peserta sebelum agenda ditetapkan sebagai fixed.'];
+            }
+            if ($ruanganId !== null && $this->hasRoomConflict(
+                (int) $ruanganId,
+                $tanggal,
+                $jamMulai,
+                $jamSelesai,
+                isset($existingItem['id']) ? (int) $existingItem['id'] : null,
+            )) {
+                return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
+            }
+        }
 
         return [
             'payload' => [
-                'agenda'            => $agenda,
-                'periode_label'     => $periodeLabel !== '' ? $periodeLabel : null,
-                'tanggal'           => $tanggal !== '' ? $tanggal : null,
-                'jam_mulai'         => $jamMulai !== '' ? $jamMulai : null,
-                'jam_selesai'       => $jamSelesai !== '' ? $jamSelesai : null,
-                'ruangan_id'        => ! empty($ruanganId) ? (int) $ruanganId : null,
-                'lokasi_lainnya'    => $lokasiLainnya !== '' ? $lokasiLainnya : null,
-                'target_unit_ids'   => $targetUnitIdsJson,
-                'catatan'           => $catatan !== '' ? $catatan : null,
-                'publikasi'         => in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'internal',
-                'kepastian_tanggal' => $tanggal !== '' ? 'tanggal_pasti' : 'bulan',
+                'agenda'          => $agenda,
+                'periode_label'   => $periodeLabel !== '' ? $periodeLabel : null,
+                'tanggal'         => $tanggal !== '' ? $tanggal : null,
+                'jam_mulai'       => $jamMulai !== '' ? $jamMulai : null,
+                'jam_selesai'     => $jamSelesai !== '' ? $jamSelesai : null,
+                'ruangan_id'      => $ruanganId !== null ? (int) $ruanganId : null,
+                'lokasi_lainnya'  => $lokasiLainnya !== '' ? $lokasiLainnya : null,
+                'catatan'         => $catatan !== '' ? $catatan : null,
+                'publikasi'       => in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'internal',
+                'materi_url'      => $materiUrl['url'],
+                'stream_url'      => $streamUrl['url'],
             ],
+            'unit_ids' => $unitIds,
         ];
+    }
+
+    private function itemAction(?array $existingItem = null): string
+    {
+        $action = trim((string) $this->request->getPost('action'));
+        if (in_array($action, ['save_projection', 'set_fixed', 'save_fixed'], true)) {
+            return $action;
+        }
+
+        return ($existingItem['status'] ?? null) === 'fixed' ? 'save_fixed' : 'save_projection';
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function postedUnitIds(): array
+    {
+        $values = $this->request->getPost('unit_ids');
+        if (! is_array($values)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(
+            static fn (mixed $value): int => max(0, (int) $value),
+            $values,
+        ))));
+    }
+
+    /**
+     * @param list<int> $unitIds
+     */
+    private function syncItemUnits(int $itemId, array $unitIds): void
+    {
+        $db = Database::connect();
+        $db->table('jadwal_banmus_unit_rapat')
+            ->where('jadwal_banmus_id', $itemId)
+            ->delete();
+
+        if ($unitIds === []) {
+            return;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $rows = array_map(static fn (int $unitId): array => [
+            'jadwal_banmus_id' => $itemId,
+            'unit_rapat_id'    => $unitId,
+            'created_at'       => $now,
+        ], $unitIds);
+        $db->table('jadwal_banmus_unit_rapat')->insertBatch($rows);
+    }
+
+    private function validDate(string $value): bool
+    {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
+            return false;
+        }
+
+        [$year, $month, $day] = array_map('intval', explode('-', $value));
+
+        return checkdate($month, $day, $year);
+    }
+
+    private function validTime(string $value): bool
+    {
+        return preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $value) === 1;
+    }
+
+    /**
+     * @return array{url?: ?string, error?: string}
+     */
+    private function validatedOptionalUrl(string $url, string $message): array
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return ['url' => null];
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        if (filter_var($url, FILTER_VALIDATE_URL) === false
+            || ! in_array($scheme, ['http', 'https'], true)) {
+            return ['error' => $message];
+        }
+
+        return ['url' => $url];
+    }
+
+    private function hasRoomConflict(
+        int $roomId,
+        string $date,
+        string $startTime,
+        string $endTime,
+        ?int $ignoreBanmusId,
+    ): bool {
+        $db = Database::connect();
+
+        $banmus = $db->table('jadwal_banmus')
+            ->select('id')
+            ->where('tanggal', $date)
+            ->where('ruangan_id', $roomId)
+            ->whereIn('status', ['fixed', 'selesai'])
+            ->where('jam_mulai <', $endTime)
+            ->where('jam_selesai >', $startTime)
+            ->where('deleted_at', null);
+        if ($ignoreBanmusId !== null) {
+            $banmus->where('id !=', $ignoreBanmusId);
+        }
+        if ($banmus->get(1)->getRowArray() !== null) {
+            return true;
+        }
+
+        if (! $db->tableExists('jadwal')) {
+            return false;
+        }
+
+        return $db->table('jadwal')
+            ->select('id')
+            ->where('tanggal', $date)
+            ->where('ruangan_id', $roomId)
+            ->whereNotIn('status', ['ditunda', 'dibatalkan'])
+            ->where('waktu_mulai <', $endTime)
+            ->where('waktu_selesai >', $startTime)
+            ->get(1)
+            ->getRowArray() !== null;
     }
 
     private function validatedSkForm(?array $existingDocument = null): array

@@ -21,12 +21,15 @@ class PublicController extends BaseController
             'unit'  => $this->request->getGet('unit'),
         ]);
         $result['data'] = array_map(static function (array $schedule): array {
-            $id = (int) $schedule['id'];
+            $id = (int) ($schedule['source_id'] ?? $schedule['id']);
+            $path = ($schedule['source'] ?? 'jadwal') === 'banmus'
+                ? 'go/jadwal-banmus'
+                : 'go/jadwal';
             if ($schedule['has_materi']) {
-                $schedule['materi_url'] = base_url("go/jadwal/{$id}/berkas");
+                $schedule['materi_url'] = base_url("{$path}/{$id}/berkas");
             }
             if ($schedule['has_stream']) {
-                $schedule['stream_url'] = base_url("go/jadwal/{$id}/live");
+                $schedule['stream_url'] = base_url("{$path}/{$id}/live");
             }
 
             return $schedule;

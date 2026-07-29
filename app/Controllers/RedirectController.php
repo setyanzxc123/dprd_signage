@@ -39,6 +39,24 @@ class RedirectController extends BaseController
         return $this->_noActive('Berkas Rapat', 'Berkas untuk rapat ini belum tersedia.');
     }
 
+    public function liveBanmus(int $id): RedirectResponse|string
+    {
+        $url = $this->getBanmusUrl($id, 'stream_url');
+
+        return $url
+            ? redirect()->to($url)
+            : $this->_noActive('Siaran Langsung', 'Siaran langsung untuk rapat ini belum tersedia.');
+    }
+
+    public function berkasBanmus(int $id): RedirectResponse|string
+    {
+        $url = $this->getBanmusUrl($id, 'materi_url');
+
+        return $url
+            ? redirect()->to($url)
+            : $this->_noActive('Berkas Rapat', 'Berkas untuk rapat ini belum tersedia.');
+    }
+
     // ── Private Helpers ──────────────────────────────────────────────────
 
     /**
@@ -60,7 +78,29 @@ class RedirectController extends BaseController
             ->where('id', $id)
             ->where('is_publik', 1)
             ->where($column . ' !=', '')
-            ->whereNotNull($column)
+            ->where($column . ' IS NOT NULL', null, false)
+            ->limit(1)
+            ->get()
+            ->getRowArray();
+
+        return $row[$column] ?? null;
+    }
+
+    private function getBanmusUrl(int $id, string $column): ?string
+    {
+        if ($id < 1 || ! in_array($column, ['stream_url', 'materi_url'], true)) {
+            return null;
+        }
+
+        $row = \Config\Database::connect()
+            ->table('jadwal_banmus')
+            ->select($column)
+            ->where('id', $id)
+            ->where('publikasi', 'publik')
+            ->whereIn('status', ['fixed', 'selesai'])
+            ->where('deleted_at', null)
+            ->where($column . ' !=', '')
+            ->where($column . ' IS NOT NULL', null, false)
             ->limit(1)
             ->get()
             ->getRowArray();

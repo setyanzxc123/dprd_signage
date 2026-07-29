@@ -454,7 +454,8 @@ class MeetingController extends BaseController
 
     private function hasRoomConflict(int $ruanganId, string $tanggal, string $waktuMulai, string $waktuSelesai, ?int $ignoreJadwalId): bool
     {
-        $builder = \Config\Database::connect()
+        $db = \Config\Database::connect();
+        $builder = $db
             ->table('jadwal')
             ->select('id')
             ->where('tanggal', $tanggal)
@@ -466,7 +467,24 @@ class MeetingController extends BaseController
             $builder->where('id !=', $ignoreJadwalId);
         }
 
-        return $builder->get(1)->getRowArray() !== null;
+        if ($builder->get(1)->getRowArray() !== null) {
+            return true;
+        }
+
+        if (! $db->tableExists('jadwal_banmus')) {
+            return false;
+        }
+
+        return $db->table('jadwal_banmus')
+            ->select('id')
+            ->where('tanggal', $tanggal)
+            ->where('ruangan_id', $ruanganId)
+            ->whereIn('status', ['fixed', 'selesai'])
+            ->where('jam_mulai <', $waktuSelesai)
+            ->where('jam_selesai >', $waktuMulai)
+            ->where('deleted_at', null)
+            ->get(1)
+            ->getRowArray() !== null;
     }
 
     private function failForm(string $message, ?int $id = null)

@@ -111,7 +111,7 @@
                             $roomName = $item['lokasi_lainnya'];
                         }
 
-                        $unitIds = json_decode($item['target_unit_ids'] ?? '[]', true) ?: [];
+                        $unitIds = array_map('intval', $item['unit_ids'] ?? []);
                         $unitNames = [];
                         if ($unitIds !== []) {
                             foreach ($units as $u) {
@@ -179,7 +179,7 @@
                                         data-banmus-item-edit
                                         data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
                                         class="btn btn-ghost btn-xs btn-square"
-                                        title="Edit Item / Tetapkan Tanggal">
+                                        title="Edit Jadwal Banmus">
                                         <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                     </button>
 
@@ -229,7 +229,7 @@
     <?php endif; ?>
 </section>
 
-<!-- Modal Form Item Agenda dengan Conditional Disclosure -->
+<!-- Modal editor satu-record: Proyeksi dan Fixed memakai jadwal_banmus yang sama. -->
 <dialog
     id="item_modal"
     class="modal"
@@ -237,7 +237,7 @@
     data-banmus-item-dialog
     data-store-url="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/store") ?>"
     data-update-url-template="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/__ITEM_ID__/update") ?>">
-    <div class="modal-box">
+    <div class="modal-box max-w-4xl">
         <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
@@ -245,7 +245,7 @@
             <i data-lucide="calendar-plus" class="h-5 w-5 text-primary"></i>
             <span>Tambah Item Agenda Banmus</span>
         </h3>
-        <p class="text-xs text-base-content/60 mt-0.5">Lengkapi data agenda dari SK Banmus.</p>
+        <p class="mt-1 text-sm text-base-content/60">Satu item yang sama dapat dilengkapi bertahap sampai siap ditetapkan sebagai fixed.</p>
 
         <form id="item_form" action="" method="post" class="mt-4 flex flex-col gap-4" data-turbo="false">
             <?= csrf_field() ?>
@@ -267,21 +267,19 @@
                 <fieldset class="fieldset col-span-12 sm:col-span-6">
                     <legend class="fieldset-legend">Tanggal Pasti (Opsional)</legend>
                     <input class="input w-full font-semibold" id="field_tanggal" name="tanggal" type="date" />
-                    <p class="label block text-[11px] text-base-content/50">Kosongkan jika masih Proyeksi.</p>
+                    <p class="label block text-[11px] text-base-content/50">Tanggal dapat disimpan tanpa otomatis mengubah status menjadi fixed.</p>
                 </fieldset>
             </div>
 
-            <!-- Lock Box saat tanggal kosong -->
-            <div id="locked_notice" class="alert alert-info shadow-xs py-2.5 px-3 text-xs">
-                <i data-lucide="lock" class="h-4 w-4 shrink-0"></i>
-                <span>Status otomatis: <strong>Proyeksi</strong>. Pengaturan jam, ruangan, dan peserta terkunci sampai <strong>Tanggal Pasti</strong> diisi.</span>
+            <div role="alert" class="alert alert-info alert-soft text-sm">
+                <i data-lucide="info" class="h-5 w-5 shrink-0"></i>
+                <span><strong>Simpan Proyeksi</strong> menerima data yang belum lengkap. Validasi lengkap baru dijalankan saat <strong>Tetapkan Fixed</strong>.</span>
             </div>
 
-            <!-- Operational Fields (Conditional Disclosure) -->
-            <div id="operational_fields" class="space-y-4 border-t border-base-200 pt-4 hidden">
+            <div class="space-y-4 border-t border-base-200 pt-4">
                 <div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
-                    <i data-lucide="unlock" class="h-4 w-4"></i>
-                    <span>Pengaturan Operasional Agenda (Fixed)</span>
+                    <i data-lucide="calendar-cog" class="h-4 w-4"></i>
+                    <span>Rencana Pelaksanaan</span>
                 </div>
 
                 <div class="grid grid-cols-12 gap-3">
@@ -317,7 +315,7 @@
                     <div class="grid grid-cols-2 gap-2 rounded-box border border-base-300 p-3 max-h-36 overflow-y-auto">
                         <?php foreach ($units as $unit): ?>
                             <label class="cursor-pointer label justify-start gap-2 py-1">
-                                <input type="checkbox" name="target_unit_ids[]" value="<?= $unit['id'] ?>" class="checkbox checkbox-xs checkbox-primary unit-checkbox" />
+                                <input type="checkbox" name="unit_ids[]" value="<?= $unit['id'] ?>" class="checkbox checkbox-xs unit-checkbox" />
                                 <span class="label-text text-xs"><?= esc($unit['nama']) ?></span>
                             </label>
                         <?php endforeach; ?>
@@ -331,6 +329,17 @@
                         <option value="publik">Publik</option>
                     </select>
                 </fieldset>
+
+                <div class="grid grid-cols-12 gap-3">
+                    <fieldset class="fieldset col-span-12 sm:col-span-6">
+                        <legend class="fieldset-legend">Tautan Materi / Dokumen</legend>
+                        <input class="input w-full" id="field_materi_url" name="materi_url" type="url" placeholder="https://..." />
+                    </fieldset>
+                    <fieldset class="fieldset col-span-12 sm:col-span-6">
+                        <legend class="fieldset-legend">Tautan Live Streaming</legend>
+                        <input class="input w-full" id="field_stream_url" name="stream_url" type="url" placeholder="https://..." />
+                    </fieldset>
+                </div>
             </div>
 
             <fieldset class="fieldset">
@@ -338,11 +347,15 @@
                 <input class="input w-full" id="field_catatan" name="catatan" type="text" placeholder="Catatan tambahan untuk item ini..." />
             </fieldset>
 
-            <div class="modal-action">
+            <div class="modal-action flex-wrap">
                 <button type="button" data-banmus-item-close class="btn btn-ghost">Batal</button>
-                <button type="submit" class="btn btn-primary gap-1">
-                    <i data-lucide="check" class="h-4 w-4"></i>
-                    Simpan Item Agenda
+                <button type="submit" name="action" value="save_projection" class="btn btn-neutral gap-1" data-banmus-save-draft>
+                    <i data-lucide="save" class="h-4 w-4"></i>
+                    <span>Simpan Proyeksi</span>
+                </button>
+                <button type="submit" name="action" value="set_fixed" class="btn btn-primary gap-1" data-banmus-set-fixed>
+                    <i data-lucide="badge-check" class="h-4 w-4"></i>
+                    Tetapkan Fixed
                 </button>
             </div>
         </form>

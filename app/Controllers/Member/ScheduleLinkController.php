@@ -17,6 +17,16 @@ class ScheduleLinkController extends BaseController
         return $this->redirectToScheduleUrl($id, 'materi_url');
     }
 
+    public function liveBanmus(int $id): RedirectResponse
+    {
+        return $this->redirectToBanmusUrl($id, 'stream_url');
+    }
+
+    public function berkasBanmus(int $id): RedirectResponse
+    {
+        return $this->redirectToBanmusUrl($id, 'materi_url');
+    }
+
     private function redirectToScheduleUrl(int $id, string $column): RedirectResponse
     {
         if ($id < 1 || ! in_array($column, ['stream_url', 'materi_url'], true)) {
@@ -28,7 +38,7 @@ class ScheduleLinkController extends BaseController
             ->select($column)
             ->where('id', $id)
             ->where($column . ' !=', '')
-            ->whereNotNull($column)
+            ->where($column . ' IS NOT NULL', null, false)
             ->limit(1)
             ->get()
             ->getRowArray();
@@ -39,5 +49,29 @@ class ScheduleLinkController extends BaseController
         }
 
         return redirect()->to($url);
+    }
+
+    private function redirectToBanmusUrl(int $id, string $column): RedirectResponse
+    {
+        if ($id < 1 || ! in_array($column, ['stream_url', 'materi_url'], true)) {
+            return redirect()->to(base_url('agenda'), 303);
+        }
+
+        $row = db_connect()
+            ->table('jadwal_banmus')
+            ->select($column)
+            ->where('id', $id)
+            ->whereIn('status', ['fixed', 'selesai'])
+            ->where('deleted_at', null)
+            ->where($column . ' !=', '')
+            ->where($column . ' IS NOT NULL', null, false)
+            ->limit(1)
+            ->get()
+            ->getRowArray();
+        $url = trim((string) ($row[$column] ?? ''));
+
+        return $url === ''
+            ? redirect()->to(base_url('agenda'), 303)
+            : redirect()->to($url);
     }
 }
