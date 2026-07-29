@@ -5,7 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\BanmusDocumentModel;
 use App\Models\BanmusProjectionModel;
-use App\Models\RoomModel;
+use App\Models\RuanganModel;
 use App\Models\UnitRapatModel;
 use CodeIgniter\HTTP\Files\UploadedFile;
 use Config\Database;
@@ -83,14 +83,15 @@ class BanmusProjectionController extends BaseController
             ->orderBy('id', 'ASC')
             ->findAll();
 
-        $rooms = (new RoomModel())
-            ->where('is_active', 1)
-            ->orderBy('nama_ruangan', 'ASC')
+        $rooms = (new RuanganModel())
+            ->where('tersedia', 1)
+            ->orderBy('name', 'ASC')
             ->findAll();
 
         $units = (new UnitRapatModel())
-            ->where('is_active', 1)
-            ->orderBy('nama_unit', 'ASC')
+            ->where('aktif', 1)
+            ->orderBy('urutan', 'ASC')
+            ->orderBy('nama', 'ASC')
             ->findAll();
 
         return view('admin/banmus/show', [

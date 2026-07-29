@@ -37,7 +37,7 @@
                 <p class="mt-1 text-xs text-base-content/60"><?= esc($document['catatan']) ?></p>
             <?php endif; ?>
         </div>
-        <button type="button" onclick="openItemModal()" class="btn btn-primary btn-sm gap-1 shrink-0">
+        <button type="button" data-banmus-item-open class="btn btn-primary btn-sm gap-1 shrink-0">
             <i data-lucide="plus" class="h-4 w-4"></i>
             Tambah Item Agenda
         </button>
@@ -59,7 +59,7 @@
             <i data-lucide="calendar-plus" class="mx-auto h-12 w-12 text-base-content/30"></i>
             <p class="mt-3 font-semibold">Belum ada item agenda dalam SK ini.</p>
             <p class="mt-1 text-sm text-base-content/50">Klik tombol di bawah untuk menambahkan item agenda dari SK Banmus.</p>
-            <button type="button" onclick="openItemModal()" class="btn btn-primary btn-sm mt-4 gap-1">
+            <button type="button" data-banmus-item-open class="btn btn-primary btn-sm mt-4 gap-1">
                 <i data-lucide="plus" class="h-4 w-4"></i>
                 Tambah Item Agenda Pertama
             </button>
@@ -102,7 +102,7 @@
                         if (! empty($item['ruangan_id'])) {
                             foreach ($rooms as $r) {
                                 if ((int) $r['id'] === (int) $item['ruangan_id']) {
-                                    $roomName = $r['nama_ruangan'];
+                                    $roomName = $r['name'];
                                     break;
                                 }
                             }
@@ -116,7 +116,7 @@
                         if ($unitIds !== []) {
                             foreach ($units as $u) {
                                 if (in_array((int) $u['id'], array_map('intval', $unitIds), true)) {
-                                    $unitNames[] = $u['nama_unit'];
+                                    $unitNames[] = $u['nama'];
                                 }
                             }
                         }
@@ -174,7 +174,12 @@
                             </td>
                             <td class="text-right pt-4">
                                 <div class="flex items-center justify-end gap-1">
-                                    <button type="button" onclick='editItemModal(<?= json_encode($item, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' class="btn btn-ghost btn-xs btn-square" title="Edit Item / Tetapkan Tanggal">
+                                    <button
+                                        type="button"
+                                        data-banmus-item-edit
+                                        data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
+                                        class="btn btn-ghost btn-xs btn-square"
+                                        title="Edit Item / Tetapkan Tanggal">
                                         <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                     </button>
 
@@ -225,8 +230,14 @@
 </section>
 
 <!-- Modal Form Item Agenda dengan Conditional Disclosure -->
-<dialog id="item_modal" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box max-w-2xl">
+<dialog
+    id="item_modal"
+    class="modal"
+    tabindex="0"
+    data-banmus-item-dialog
+    data-store-url="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/store") ?>"
+    data-update-url-template="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/__ITEM_ID__/update") ?>">
+    <div class="modal-box">
         <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
@@ -236,7 +247,7 @@
         </h3>
         <p class="text-xs text-base-content/60 mt-0.5">Lengkapi data agenda dari SK Banmus.</p>
 
-        <form id="item_form" action="" method="post" class="mt-4 flex flex-col gap-4">
+        <form id="item_form" action="" method="post" class="mt-4 flex flex-col gap-4" data-turbo="false">
             <?= csrf_field() ?>
 
             <fieldset class="fieldset">
@@ -255,7 +266,7 @@
 
                 <fieldset class="fieldset col-span-12 sm:col-span-6">
                     <legend class="fieldset-legend">Tanggal Pasti (Opsional)</legend>
-                    <input class="input w-full font-semibold" id="field_tanggal" name="tanggal" type="date" onchange="onDateChanged()" />
+                    <input class="input w-full font-semibold" id="field_tanggal" name="tanggal" type="date" />
                     <p class="label block text-[11px] text-base-content/50">Kosongkan jika masih Proyeksi.</p>
                 </fieldset>
             </div>
@@ -287,10 +298,10 @@
 
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Ruangan Rapat</legend>
-                    <select class="select w-full" id="field_ruangan_id" name="ruangan_id" onchange="onRoomChanged()">
+                    <select class="select w-full" id="field_ruangan_id" name="ruangan_id">
                         <option value="">-- Pilih Ruangan --</option>
                         <?php foreach ($rooms as $room): ?>
-                            <option value="<?= $room['id'] ?>"><?= esc($room['nama_ruangan']) ?></option>
+                            <option value="<?= $room['id'] ?>"><?= esc($room['name']) ?></option>
                         <?php endforeach; ?>
                         <option value="other">-- Lokasi Lainnya --</option>
                     </select>
@@ -307,7 +318,7 @@
                         <?php foreach ($units as $unit): ?>
                             <label class="cursor-pointer label justify-start gap-2 py-1">
                                 <input type="checkbox" name="target_unit_ids[]" value="<?= $unit['id'] ?>" class="checkbox checkbox-xs checkbox-primary unit-checkbox" />
-                                <span class="label-text text-xs"><?= esc($unit['nama_unit']) ?></span>
+                                <span class="label-text text-xs"><?= esc($unit['nama']) ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -328,7 +339,7 @@
             </fieldset>
 
             <div class="modal-action">
-                <button type="button" onclick="document.getElementById('item_modal').close()" class="btn btn-ghost">Batal</button>
+                <button type="button" data-banmus-item-close class="btn btn-ghost">Batal</button>
                 <button type="submit" class="btn btn-primary gap-1">
                     <i data-lucide="check" class="h-4 w-4"></i>
                     Simpan Item Agenda
@@ -336,84 +347,9 @@
             </div>
         </form>
     </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>Tutup dialog</button>
+    </form>
 </dialog>
-
-<script>
-const documentId = <?= json_encode($document['id']) ?>;
-
-function onDateChanged() {
-    const dateVal = document.getElementById('field_tanggal').value.trim();
-    const lockNotice = document.getElementById('locked_notice');
-    const opFields = document.getElementById('operational_fields');
-
-    if (dateVal !== '') {
-        lockNotice.classList.add('hidden');
-        opFields.classList.remove('hidden');
-    } else {
-        lockNotice.classList.remove('hidden');
-        opFields.classList.add('hidden');
-    }
-}
-
-function onRoomChanged() {
-    const roomVal = document.getElementById('field_ruangan_id').value;
-    const otherWrapper = document.getElementById('field_lokasi_lainnya_wrapper');
-    if (roomVal === 'other') {
-        otherWrapper.classList.remove('hidden');
-    } else {
-        otherWrapper.classList.add('hidden');
-    }
-}
-
-function openItemModal() {
-    document.getElementById('modal_title').querySelector('span').innerText = 'Tambah Item Agenda Banmus';
-    document.getElementById('item_form').action = `<?= base_url('admin/jadwal-banmus/') ?>/${documentId}/item/store`;
-    document.getElementById('field_agenda').value = '';
-    document.getElementById('field_periode_label').value = '';
-    document.getElementById('field_tanggal').value = '';
-    document.getElementById('field_jam_mulai').value = '';
-    document.getElementById('field_jam_selesai').value = '';
-    document.getElementById('field_ruangan_id').value = '';
-    document.getElementById('field_lokasi_lainnya').value = '';
-    document.getElementById('field_publikasi').value = 'internal';
-    document.getElementById('field_catatan').value = '';
-    
-    document.querySelectorAll('.unit-checkbox').forEach(cb => cb.checked = false);
-
-    onDateChanged();
-    onRoomChanged();
-    document.getElementById('item_modal').showModal();
-}
-
-function editItemModal(item) {
-    document.getElementById('modal_title').querySelector('span').innerText = 'Edit Item Agenda Banmus';
-    document.getElementById('item_form').action = `<?= base_url('admin/jadwal-banmus/') ?>/${documentId}/item/${item.id}/update`;
-    document.getElementById('field_agenda').value = item.agenda || '';
-    document.getElementById('field_periode_label').value = item.periode_label || '';
-    document.getElementById('field_tanggal').value = item.tanggal || '';
-    document.getElementById('field_jam_mulai').value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
-    document.getElementById('field_jam_selesai').value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
-    document.getElementById('field_catatan').value = item.catatan || '';
-    document.getElementById('field_publikasi').value = item.publikasi || 'internal';
-
-    if (item.ruangan_id) {
-        document.getElementById('field_ruangan_id').value = item.ruangan_id;
-    } else if (item.lokasi_lainnya) {
-        document.getElementById('field_ruangan_id').value = 'other';
-        document.getElementById('field_lokasi_lainnya').value = item.lokasi_lainnya;
-    } else {
-        document.getElementById('field_ruangan_id').value = '';
-    }
-
-    const unitIds = item.target_unit_ids ? JSON.parse(item.target_unit_ids) : [];
-    document.querySelectorAll('.unit-checkbox').forEach(cb => {
-        cb.checked = unitIds.includes(parseInt(cb.value));
-    });
-
-    onDateChanged();
-    onRoomChanged();
-    document.getElementById('item_modal').showModal();
-}
-</script>
 
 <?= $this->endSection() ?>

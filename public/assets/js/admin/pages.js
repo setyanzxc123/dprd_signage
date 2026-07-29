@@ -649,3 +649,121 @@
 
         document.addEventListener('turbo:load', initializeBanmusForm);
     })();
+
+(() => {
+    const initializeBanmusItemWorkspace = () => {
+        const dialog = document.querySelector('[data-banmus-item-dialog]');
+        if (!(dialog instanceof HTMLDialogElement)) return;
+
+        const form = dialog.querySelector('#item_form');
+        const title = dialog.querySelector('#modal_title span');
+        const dateField = dialog.querySelector('#field_tanggal');
+        const roomField = dialog.querySelector('#field_ruangan_id');
+        const locationField = dialog.querySelector('#field_lokasi_lainnya');
+        const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
+        const lockNotice = dialog.querySelector('#locked_notice');
+        const operationalFields = dialog.querySelector('#operational_fields');
+        const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
+
+        if (!(form instanceof HTMLFormElement)
+            || !(dateField instanceof HTMLInputElement)
+            || !(roomField instanceof HTMLSelectElement)) {
+            return;
+        }
+
+        const field = (id) => dialog.querySelector(`#${id}`);
+
+        const syncDateDisclosure = () => {
+            const hasDate = dateField.value.trim() !== '';
+            lockNotice?.classList.toggle('hidden', hasDate);
+            operationalFields?.classList.toggle('hidden', !hasDate);
+        };
+
+        const syncLocationDisclosure = () => {
+            locationWrapper?.classList.toggle('hidden', roomField.value !== 'other');
+        };
+
+        const showDialog = () => {
+            syncDateDisclosure();
+            syncLocationDisclosure();
+            if (!dialog.open) dialog.showModal();
+        };
+
+        const openCreateDialog = () => {
+            form.reset();
+            form.action = dialog.dataset.storeUrl || '';
+            if (title) title.textContent = 'Tambah Item Agenda Banmus';
+            showDialog();
+        };
+
+        const parseUnitIds = (value) => {
+            if (Array.isArray(value)) return value.map(Number);
+            if (typeof value !== 'string' || value.trim() === '') return [];
+
+            try {
+                const parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed.map(Number) : [];
+            } catch {
+                return [];
+            }
+        };
+
+        const openEditDialog = (item) => {
+            form.reset();
+            form.action = (dialog.dataset.updateUrlTemplate || '')
+                .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
+
+            if (title) title.textContent = 'Edit Item Agenda Banmus';
+            field('field_agenda').value = item.agenda || '';
+            field('field_periode_label').value = item.periode_label || '';
+            dateField.value = item.tanggal || '';
+            field('field_jam_mulai').value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
+            field('field_jam_selesai').value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
+            field('field_catatan').value = item.catatan || '';
+            field('field_publikasi').value = item.publikasi || 'internal';
+
+            if (item.ruangan_id) {
+                roomField.value = String(item.ruangan_id);
+            } else if (item.lokasi_lainnya) {
+                roomField.value = 'other';
+                if (locationField) locationField.value = item.lokasi_lainnya;
+            } else {
+                roomField.value = '';
+            }
+
+            const unitIds = parseUnitIds(item.target_unit_ids);
+            unitCheckboxes.forEach((checkbox) => {
+                checkbox.checked = unitIds.includes(Number(checkbox.value));
+            });
+
+            showDialog();
+        };
+
+        document.querySelectorAll('[data-banmus-item-open]').forEach((button) => {
+            button.addEventListener('click', openCreateDialog);
+        });
+
+        document.querySelectorAll('[data-banmus-item-edit]').forEach((button) => {
+            button.addEventListener('click', () => {
+                try {
+                    openEditDialog(JSON.parse(button.dataset.item || '{}'));
+                } catch {
+                    // Payload edit invalid: biarkan dialog tetap tertutup.
+                }
+            });
+        });
+
+        dialog.querySelectorAll('[data-banmus-item-close]').forEach((button) => {
+            button.addEventListener('click', () => dialog.close());
+        });
+
+        dateField.addEventListener('change', syncDateDisclosure);
+        roomField.addEventListener('change', syncLocationDisclosure);
+    };
+
+    document.addEventListener('turbo:load', initializeBanmusItemWorkspace);
+    document.addEventListener('turbo:before-cache', () => {
+        const dialog = document.querySelector('[data-banmus-item-dialog]');
+        if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close();
+    });
+})();
