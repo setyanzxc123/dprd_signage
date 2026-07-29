@@ -89,6 +89,7 @@ final class JadwalBanmusModelTest extends CIUnitTestCase
             ['agenda' => 'Sedang berlangsung', 'status' => 'menunggu', 'jam_mulai' => '09:30:00', 'jam_selesai' => '10:30:00'],
             ['agenda' => 'Segera dimulai', 'status' => 'menunggu', 'jam_mulai' => '10:15:00', 'jam_selesai' => '11:00:00'],
             ['agenda' => 'Masih menunggu', 'status' => 'persiapan', 'jam_mulai' => '11:00:00', 'jam_selesai' => '12:00:00'],
+            ['agenda' => 'Selesai dijadwalkan ulang', 'status' => 'selesai', 'jam_mulai' => '11:30:00', 'jam_selesai' => '12:30:00'],
             ['agenda' => 'Tetap proyeksi', 'status' => 'proyeksi', 'jam_mulai' => '08:00:00', 'jam_selesai' => '09:00:00'],
             ['agenda' => 'Tetap ditunda', 'status' => 'ditunda', 'jam_mulai' => '08:00:00', 'jam_selesai' => '09:00:00'],
         ];
@@ -114,7 +115,7 @@ final class JadwalBanmusModelTest extends CIUnitTestCase
             'status',
         );
         $this->assertSame(
-            ['selesai', 'berlangsung', 'persiapan', 'menunggu', 'proyeksi', 'ditunda'],
+            ['selesai', 'berlangsung', 'persiapan', 'menunggu', 'menunggu', 'proyeksi', 'ditunda'],
             $statuses,
         );
     }

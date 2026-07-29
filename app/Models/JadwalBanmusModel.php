@@ -38,8 +38,8 @@ class JadwalBanmusModel extends Model
     ];
 
     /**
-     * Perbarui status waktu hanya untuk agenda yang sudah ditetapkan.
-     * Status manual proyeksi, ditunda, dibatalkan, dan selesai tidak ditimpa.
+     * Perbarui status waktu untuk agenda dengan data pelaksanaan lengkap.
+     * Proyeksi serta status pengecualian ditunda dan dibatalkan tidak ditimpa.
      */
     public function autoUpdateStatuses(?int $documentId = null, ?int $now = null): void
     {
@@ -49,7 +49,7 @@ class JadwalBanmusModel extends Model
 
         $builder = $this->db->table($this->table)
             ->select('id, tanggal, jam_mulai, jam_selesai, status')
-            ->whereIn('status', ['menunggu', 'persiapan', 'berlangsung'])
+            ->whereIn('status', self::SCHEDULED_STATUSES)
             ->where('tanggal IS NOT NULL', null, false)
             ->where('jam_mulai IS NOT NULL', null, false)
             ->where('jam_selesai IS NOT NULL', null, false)
@@ -60,22 +60,44 @@ class JadwalBanmusModel extends Model
 
         $now ??= time();
         foreach ($builder->get()->getResultArray() as $item) {
-            $start = strtotime($item['tanggal'] . ' ' . $item['jam_mulai']);
-            $end = strtotime($item['tanggal'] . ' ' . $item['jam_selesai']);
-            if ($start === false || $end === false) {
-                continue;
-            }
-
-            $status = match (true) {
-                $end <= $now          => 'selesai',
-                $start <= $now        => 'berlangsung',
-                $start - $now <= 1800 => 'persiapan',
-                default              => 'menunggu',
-            };
+            $status = self::resolveLifecycleStatus(
+                true,
+                (string) $item['tanggal'],
+                (string) $item['jam_mulai'],
+                (string) $item['jam_selesai'],
+                $now,
+            );
             if ($status !== $item['status']) {
                 $this->update((int) $item['id'], ['status' => $status]);
             }
         }
+    }
+
+    public static function resolveLifecycleStatus(
+        bool $isScheduleComplete,
+        ?string $date,
+        ?string $startTime,
+        ?string $endTime,
+        ?int $now = null,
+    ): string {
+        if (! $isScheduleComplete) {
+            return 'proyeksi';
+        }
+
+        $start = strtotime((string) $date . ' ' . (string) $startTime);
+        $end = strtotime((string) $date . ' ' . (string) $endTime);
+        if ($start === false || $end === false) {
+            return 'proyeksi';
+        }
+
+        $now ??= time();
+
+        return match (true) {
+            $end <= $now          => 'selesai',
+            $start <= $now        => 'berlangsung',
+            $start - $now <= 1800 => 'persiapan',
+            default              => 'menunggu',
+        };
     }
 
     /**

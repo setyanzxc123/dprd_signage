@@ -166,7 +166,7 @@ final class ScheduleReadService
     private function currentStatus(array $row): string
     {
         $storedStatus = (string) ($row['status'] ?? 'menunggu');
-        if (in_array($storedStatus, ['proyeksi', 'selesai', 'ditunda', 'dibatalkan'], true)) {
+        if (in_array($storedStatus, ['proyeksi', 'ditunda', 'dibatalkan'], true)) {
             return $storedStatus;
         }
 

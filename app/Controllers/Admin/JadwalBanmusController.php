@@ -194,7 +194,12 @@ class JadwalBanmusController extends BaseController
         $payload = array_merge($input['payload'], [
             'dokumen_banmus_id' => $documentId,
             'urutan'            => $nextUrutan,
-            'status'            => $input['is_schedule_complete'] ? 'menunggu' : 'proyeksi',
+            'status'            => JadwalBanmusModel::resolveLifecycleStatus(
+                $input['is_schedule_complete'],
+                $input['payload']['tanggal'],
+                $input['payload']['jam_mulai'],
+                $input['payload']['jam_selesai'],
+            ),
         ]);
 
         $db = Database::connect();
@@ -212,7 +217,7 @@ class JadwalBanmusController extends BaseController
         }
 
         return $this->formSuccessResponse(
-            $payload['status'] === 'menunggu'
+            $payload['status'] !== 'proyeksi'
                 ? 'Item agenda berhasil disimpan sebagai jadwal.'
                 : 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
             base_url("admin/jadwal-banmus/{$documentId}"),
@@ -237,9 +242,11 @@ class JadwalBanmusController extends BaseController
         }
 
         $payload = $input['payload'];
-        $payload['status'] = $this->resolvedItemStatus(
+        $payload['status'] = JadwalBanmusModel::resolveLifecycleStatus(
             $input['is_schedule_complete'],
-            (string) $item['status'],
+            $payload['tanggal'],
+            $payload['jam_mulai'],
+            $payload['jam_selesai'],
         );
 
         $db = Database::connect();
@@ -397,18 +404,6 @@ class JadwalBanmusController extends BaseController
             'unit_ids'             => $unitIds,
             'is_schedule_complete' => $isScheduleComplete,
         ];
-    }
-
-    private function resolvedItemStatus(bool $isScheduleComplete, string $currentStatus): string
-    {
-        if (! $isScheduleComplete) {
-            return 'proyeksi';
-        }
-
-        return in_array($currentStatus, JadwalBanmusModel::SCHEDULED_STATUSES, true)
-            || in_array($currentStatus, ['ditunda', 'dibatalkan'], true)
-                ? $currentStatus
-                : 'menunggu';
     }
 
     /**

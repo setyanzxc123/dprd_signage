@@ -102,6 +102,20 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
         $this->assertSame('berlangsung', $result['jadwal'][0]['status']);
     }
 
+    public function testFinishedScheduleMovedToFutureIsReportedAsWaiting(): void
+    {
+        $this->repository->schedules = [$this->schedule([
+            'tanggal' => '2026-07-28',
+            'status'  => 'selesai',
+        ])];
+
+        $result = $this->service()->publicAgenda([
+            'date' => '2026-07-28',
+        ]);
+
+        $this->assertSame('menunggu', $result['data'][0]['status']);
+    }
+
     private function service(): ScheduleReadService
     {
         return new ScheduleReadService(

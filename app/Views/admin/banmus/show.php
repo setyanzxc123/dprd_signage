@@ -346,7 +346,7 @@
 
             <div role="alert" class="alert alert-info alert-soft text-sm">
                 <i data-lucide="info" class="h-5 w-5 shrink-0"></i>
-                <span>Jika tanggal, jam, lokasi, dan kelompok peserta sudah lengkap, status otomatis menjadi <strong>Menunggu</strong>. Jika belum, item tetap tersimpan sebagai <strong>Proyeksi</strong>.</span>
+                <span>Jika tanggal, jam, lokasi, dan kelompok peserta belum lengkap, item tersimpan sebagai <strong>Proyeksi</strong>. Setelah lengkap, status jadwal mengikuti waktu pelaksanaan secara otomatis.</span>
             </div>
 
             <div class="space-y-4 border-t border-base-200 pt-4">

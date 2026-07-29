@@ -176,6 +176,84 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertSame('proyeksi', $updatedItem['status']);
     }
 
+    public function testReschedulingCompletedItemRecalculatesLifecycleStatus(): void
+    {
+        $this->postItem([
+            'agenda'      => 'Rapat Banmus selesai',
+            'tanggal'     => '2026-08-12',
+            'jam_mulai'   => '09:00',
+            'jam_selesai' => '11:00',
+            'ruangan_id'  => '1',
+            'publikasi'   => 'internal',
+            'unit_ids'    => ['1'],
+        ])->assertStatus(303);
+
+        $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($item);
+        $this->banmusDb->table('jadwal_banmus')
+            ->where('id', $item['id'])
+            ->update(['status' => 'selesai']);
+
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->post("/admin/jadwal-banmus/{$this->documentId}/item/{$item['id']}/update", [
+                csrf_token()    => csrf_hash(),
+                'agenda'        => 'Rapat Banmus dijadwalkan ulang',
+                'periode_label' => 'Agustus 2026',
+                'tanggal'       => '2026-08-13',
+                'jam_mulai'     => '09:00',
+                'jam_selesai'   => '11:00',
+                'ruangan_id'    => '1',
+                'publikasi'     => 'internal',
+                'unit_ids'      => ['1'],
+            ]);
+
+        $response->assertStatus(303);
+        $updatedItem = $this->banmusDb->table('jadwal_banmus')
+            ->where('id', $item['id'])
+            ->get()
+            ->getRowArray();
+        $this->assertSame('menunggu', $updatedItem['status']);
+    }
+
+    public function testPublicBanmusLinksRequirePublicParentDocument(): void
+    {
+        $this->postItem([
+            'agenda'       => 'Rapat Banmus publik',
+            'tanggal'      => '2026-08-12',
+            'jam_mulai'    => '09:00',
+            'jam_selesai'  => '11:00',
+            'ruangan_id'   => '1',
+            'publikasi'    => 'publik',
+            'unit_ids'     => ['1'],
+            'materi_url'   => 'https://example.com/materi.pdf',
+            'stream_url'   => 'https://example.com/live',
+        ])->assertStatus(303);
+
+        $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($item);
+        $this->get("/go/jadwal-banmus/{$item['id']}/live")
+            ->assertRedirectTo('https://example.com/live');
+
+        $this->banmusDb->table('dokumen_banmus')
+            ->where('id', $this->documentId)
+            ->update(['is_publik' => 0]);
+
+        $liveResponse = $this->get("/go/jadwal-banmus/{$item['id']}/live");
+        $liveResponse->assertOK();
+        $this->assertStringContainsString(
+            'Siaran langsung untuk rapat ini belum tersedia.',
+            $liveResponse->response()->getBody(),
+        );
+
+        $documentResponse = $this->get("/go/jadwal-banmus/{$item['id']}/berkas");
+        $documentResponse->assertOK();
+        $this->assertStringContainsString(
+            'Berkas untuk rapat ini belum tersedia.',
+            $documentResponse->response()->getBody(),
+        );
+    }
+
     public function testAutomaticScheduleRejectsRoomConflictWithNonBanmusSchedule(): void
     {
         $this->banmusDb->table('jadwal')->insert([
