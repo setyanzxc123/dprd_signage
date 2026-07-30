@@ -22,9 +22,8 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
     </div>
 
     <div class="sidebar-menu-wrapper">
-        <ul class="sidebar-nav menu menu-md p-0 gap-1 bg-base-100">
+        <ul class="sidebar-nav menu menu-md w-full! p-0 gap-1 bg-base-100">
 
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Utama</li>
             <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
                     <i data-lucide="layout-dashboard" class="nav-icon"></i>
@@ -32,82 +31,98 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                 </a>
             </li>
 
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Master Data</li>
             <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
-                    <i data-lucide="users" class="nav-icon"></i>
-                    <span class="nav-text">Anggota DPRD</span>
-                </a>
-            </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
-                    <i data-lucide="workflow" class="nav-icon"></i>
-                    <span class="nav-text">Kelompok Peserta</span>
-                </a>
-            </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
-                    <i data-lucide="door-open" class="nav-icon"></i>
-                    <span class="nav-text">Ruangan Rapat</span>
-                </a>
-            </li>
-
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Agenda Internal DPRD</li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/jadwal-banmus') ?>" data-path="/admin/jadwal-banmus">
-                    <i data-lucide="file-stack" class="nav-icon"></i>
-                    <span class="nav-text">Agenda Banmus</span>
-                </a>
-            </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
-                    <i data-lucide="calendar-days" class="nav-icon"></i>
-                    <span class="nav-text">Agenda Insidental</span>
-                    <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
-                </a>
+                <details class="nav-group">
+                    <summary class="nav-link-custom nav-group-toggle" title="Master Data">
+                        <i data-lucide="database" class="nav-icon"></i>
+                        <span class="nav-text">Master Data</span>
+                    </summary>
+                    <ul>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota">
+                                <span class="nav-text">Anggota DPRD</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat">
+                                <span class="nav-text">Kelompok Peserta</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan">
+                                <span class="nav-text">Ruangan Rapat</span>
+                            </a>
+                        </li>
+                    </ul>
+                </details>
             </li>
 
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Layanan Publik</li>
             <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/agenda-umum') ?>" data-path="/admin/agenda-umum">
-                    <i data-lucide="calendar-range" class="nav-icon"></i>
-                    <span class="nav-text">Agenda Eksternal</span>
-                </a>
+                <details class="nav-group">
+                    <summary class="nav-link-custom nav-group-toggle" title="Agenda">
+                        <i data-lucide="calendar-days" class="nav-icon"></i>
+                        <span class="nav-text">Agenda</span>
+                    </summary>
+                    <ul>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/jadwal-banmus') ?>" data-path="/admin/jadwal-banmus">
+                                <span class="nav-text">Agenda Banmus</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
+                                <span class="nav-text">Agenda Insidental</span>
+                                <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/agenda-umum') ?>" data-path="/admin/agenda-umum">
+                                <span class="nav-text">Agenda Eksternal</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender">
+                                <span class="nav-text">Seluruh Agenda</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/laporan') ?>" data-path="/admin/laporan">
+                                <span class="nav-text">Laporan Agenda</span>
+                                <span class="badge badge-ghost badge-xs ml-auto">segera</span>
+                            </a>
+                        </li>
+                    </ul>
+                </details>
             </li>
 
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Operasional</li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender">
-                    <i data-lucide="layout-dashboard" class="nav-icon"></i>
-                    <span class="nav-text">Seluruh Agenda</span>
-                </a>
-            </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('admin/laporan') ?>" data-path="/admin/laporan">
-                    <i data-lucide="chart-bar" class="nav-icon"></i>
-                    <span class="nav-text">Laporan Agenda</span>
-                    <span class="badge badge-ghost badge-xs ml-auto">segera</span>
-                </a>
-            </li>
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Sistem</li>
             <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/pengaturan') ?>" data-path="/admin/pengaturan">
                     <i data-lucide="settings" class="nav-icon"></i>
-                    <span class="nav-text">Pengaturan Sistem</span>
+                    <span class="nav-text">Pengaturan</span>
                 </a>
             </li>
-            <li class="nav-section-label menu-title text-xs font-bold uppercase tracking-wider text-base-content/40 mt-4 mb-1 p-0">Tampilan Publik</li>
+
             <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('signage') ?>" target="_blank" title="Buka di tab baru">
-                    <i data-lucide="monitor" class="nav-icon"></i>
-                    <span class="nav-text">Pratinjau Layar TV</span>
-                </a>
-            </li>
-            <li class="nav-item-custom">
-                <a class="nav-link-custom" href="<?= base_url('agenda') ?>" target="_blank" title="Buka di tab baru">
-                    <i data-lucide="calendar-check" class="nav-icon"></i>
-                    <span class="nav-text">Pratinjau Jadwal Publik</span>
-                </a>
+                <details class="nav-group">
+                    <summary class="nav-link-custom nav-group-toggle" title="Tampilan Publik">
+                        <i data-lucide="monitor" class="nav-icon"></i>
+                        <span class="nav-text">Tampilan Publik</span>
+                    </summary>
+                    <ul>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('signage') ?>" target="_blank" rel="noopener" title="Buka di tab baru">
+                                <span class="nav-text">Layar TV</span>
+                                <i data-lucide="external-link" class="nav-external-icon" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('agenda') ?>" target="_blank" rel="noopener" title="Buka di tab baru">
+                                <span class="nav-text">Jadwal Publik</span>
+                                <i data-lucide="external-link" class="nav-external-icon" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </details>
             </li>
 
             <li class="nav-mobile-logout-divider" aria-hidden="true"></li>

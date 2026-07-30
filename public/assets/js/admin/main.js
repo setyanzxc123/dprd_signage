@@ -204,6 +204,16 @@
         document.addEventListener('click', function (e) {
             const sidebar = document.getElementById('sidebar');
 
+            const collapsedGroupToggle = e.target.closest('.nav-group-toggle');
+            if (collapsedGroupToggle && document.documentElement.classList.contains('sidebar-collapsed')) {
+                e.preventDefault();
+                document.documentElement.classList.remove('sidebar-collapsed');
+                localStorage.setItem('dprd-sidebar-collapsed', 'expanded');
+                setSidebarToggleLabel(false);
+                collapsedGroupToggle.closest('.nav-group').open = true;
+                return;
+            }
+
             if (e.target.closest('.topbar-toggle, [data-mobile-menu-toggle]')) {
                 setMobileSidebarOpen(!sidebar?.classList.contains('mobile-open'));
                 return;
@@ -242,6 +252,11 @@
             const active = isMobilePrimaryPath(current, path);
             link.classList.toggle('active', active);
             link.classList.toggle('menu-active', active && link.classList.contains('nav-link-custom'));
+        });
+        document.querySelectorAll('#sidebar .nav-group').forEach(function (group) {
+            const hasActiveChild = Boolean(group.querySelector('.nav-child-link.active'));
+            group.classList.toggle('nav-group-current', hasActiveChild);
+            group.open = hasActiveChild;
         });
         syncMobileMenuButton(document.getElementById('sidebar')?.classList.contains('mobile-open'));
     }

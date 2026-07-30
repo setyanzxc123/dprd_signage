@@ -259,6 +259,7 @@
         padding: 0;
         margin: 0;
         flex: 1;
+        width: 100%;
         --menu-active-bg: var(--od-accent);
         --menu-active-fg: var(--od-accent-on);
     }
@@ -273,7 +274,10 @@
         list-style: none;
     }
 
-    .nav-item-custom { list-style: none; }
+    .nav-item-custom {
+        width: 100%;
+        list-style: none;
+    }
 
     .nav-link-custom {
         min-height: 40px;
@@ -324,26 +328,43 @@
         border-radius: var(--od-radius-pill);
     }
 
-    .nav-arrow {
-        margin-left: auto;
-        font-size: 0.7rem;
-        color: var(--od-muted);
-        transition: transform 0.2s ease;
-    }
-    .nav-arrow.rotated { transform: rotate(90deg); }
-    .nav-sub {
+    .nav-group > summary {
+        width: 100%;
+        min-width: 100%;
+        box-sizing: border-box;
         list-style: none;
-        padding: 0;
-        margin: 0;
-        overflow: hidden;
-        max-height: 0;
-        transition: max-height 0.3s ease;
+        cursor: pointer;
     }
-    .nav-sub.open { max-height: 300px; }
-    .nav-sub .nav-item-custom { margin-left: 20px; }
-    .nav-sub .nav-link-custom {
+    .nav-group > summary::-webkit-details-marker {
+        display: none;
+    }
+    .nav-group {
+        width: 100%;
+        min-width: 100%;
+        align-self: stretch;
+    }
+    .nav-group > ul {
+        margin: 4px 0 6px 20px;
+        padding: 2px 0 2px 12px;
+    }
+    .nav-group-current > summary {
+        background: var(--od-border-soft);
+        color: var(--od-fg);
+        font-weight: 700;
+    }
+    .nav-group-current > summary .nav-icon {
+        color: var(--od-fg);
+    }
+    .nav-child-link {
+        min-height: 34px;
         font-size: var(--od-text-xs);
-        padding: 6px 12px;
+        padding: 6px 10px;
+        color: var(--od-muted);
+    }
+    .nav-external-icon {
+        width: 14px;
+        height: 14px;
+        flex: none;
         color: var(--od-muted);
     }
     .sidebar-divider {
@@ -409,8 +430,14 @@
         .sidebar-collapsed .nav-section-label,
         .sidebar-collapsed .nav-text,
         .sidebar-collapsed .nav-badge,
+        .sidebar-collapsed .nav-external-icon,
         .sidebar-collapsed .sidebar-note {
             display: none !important;
+        }
+
+        .sidebar-collapsed .nav-group > summary::after,
+        .sidebar-collapsed .nav-group > ul {
+            display: none;
         }
 
         .sidebar-collapsed .nav-link-custom {
