@@ -98,6 +98,31 @@ final class SettingMediaUploadTest extends CIUnitTestCase
         $this->assertSame('1.0.0', $response->response()->getHeaderLine('Tus-Resumable'));
     }
 
+    public function testTusLocationUsesSameHttpsOriginBehindProxy(): void
+    {
+        $controller = new ReflectionClass(App\Controllers\Admin\SettingController::class);
+        $method = $controller->getMethod('sameOriginTusLocation');
+        $instance = $controller->newInstanceWithoutConstructor();
+
+        $request = service('request');
+        $request->setHeader('Host', 'jadwaldprd.aicepalu.com');
+        $request->setHeader('Origin', 'https://jadwaldprd.aicepalu.com');
+
+        $requestProperty = $controller->getParentClass()?->getProperty('request');
+        $this->assertNotNull($requestProperty);
+        $requestProperty->setValue($instance, $request);
+
+        $location = $method->invoke(
+            $instance,
+            'http://jadwaldprd.aicepalu.com/admin/pengaturan/media/tus/upload-id',
+        );
+
+        $this->assertSame(
+            'https://jadwaldprd.aicepalu.com/admin/pengaturan/media/tus/upload-id',
+            $location,
+        );
+    }
+
     public function testCompletedResumableUploadCanBeSavedAsActiveMedia(): void
     {
         $service = new ResumableMediaUpload();

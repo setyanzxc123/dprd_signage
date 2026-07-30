@@ -307,6 +307,12 @@ class SettingController extends BaseController
     {
         $this->response->setStatusCode($source->getStatusCode());
         foreach ($source->headers->allPreserveCaseWithoutCookies() as $name => $values) {
+            if (strcasecmp($name, 'Location') === 0) {
+                $values = array_map(
+                    fn (string $location): string => $this->sameOriginTusLocation($location),
+                    $values,
+                );
+            }
             $this->response->setHeader($name, implode(', ', $values));
         }
 
@@ -314,5 +320,33 @@ class SettingController extends BaseController
         $this->response->setBody(is_string($body) ? $body : '');
 
         return $this->response;
+    }
+
+    private function sameOriginTusLocation(string $location): string
+    {
+        $path = parse_url($location, PHP_URL_PATH);
+        if (! is_string($path)
+            || ! str_starts_with($path, ResumableMediaUpload::API_PATH . '/')) {
+            return $location;
+        }
+
+        $origin = rtrim($this->request->getHeaderLine('Origin'), '/');
+        $originScheme = strtolower((string) parse_url($origin, PHP_URL_SCHEME));
+        $originHost = strtolower((string) parse_url($origin, PHP_URL_HOST));
+        $requestHost = strtolower((string) parse_url(
+            'http://' . $this->request->getHeaderLine('Host'),
+            PHP_URL_HOST,
+        ));
+
+        if (in_array($originScheme, ['http', 'https'], true)
+            && $originHost !== ''
+            && hash_equals($requestHost, $originHost)) {
+            $query = parse_url($location, PHP_URL_QUERY);
+
+            return $origin . $path
+                . (is_string($query) && $query !== '' ? '?' . $query : '');
+        }
+
+        return $location;
     }
 }
