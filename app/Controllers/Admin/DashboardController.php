@@ -24,6 +24,18 @@ class DashboardController extends BaseController
         $rapatHariIni = count($repository->findSchedules(false, $today, null, null));
         $jadwals = $repository->findSchedules(false, null, $activeMonth, null);
         $unitMap = $repository->findUnitsByScheduleIds(array_column($jadwals, 'id'));
+        $sedangBerlangsung = count(array_filter(
+            $jadwals,
+            static fn (array $jadwal): bool => ($jadwal['status'] ?? '') === 'berlangsung'
+        ));
+        $agendaMendatang = count(array_filter(
+            $jadwals,
+            static fn (array $jadwal): bool => in_array(
+                $jadwal['status'] ?? '',
+                ['menunggu', 'persiapan'],
+                true
+            )
+        ));
 
         $meetingsByDate = [];
         foreach ($jadwals as $j) {
@@ -82,7 +94,10 @@ class DashboardController extends BaseController
             'pageTitle'     => 'Dashboard',
             'breadcrumbs'   => [],
             'stats'         => [
-                'rapat_hari_ini' => $rapatHariIni,
+                'rapat_hari_ini'    => $rapatHariIni,
+                'agenda_bulan_ini'  => count($jadwals),
+                'berlangsung'       => $sedangBerlangsung,
+                'mendatang'         => $agendaMendatang,
             ],
             'meetings'      => $meetingsByDate[$selectedDate] ?? [],
             'calendarDays'  => $calendarDays,

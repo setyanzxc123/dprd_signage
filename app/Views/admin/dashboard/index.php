@@ -2,25 +2,45 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header">
+<div class="page-header dashboard-page-header">
     <h1 class="page-title">Dashboard</h1>
     <p class="page-subtitle">
         <span id="page-date">-</span> &bull; Ringkasan aktivitas rapat
     </p>
 </div>
 
-<div class="stats stats-vertical sm:stats-horizontal shadow bg-base-100 border border-base-300 w-full mb-6">
-    <div class="stat">
+<div class="dashboard-preview-stats stats stats-horizontal shadow bg-base-100 border border-base-300 w-full mb-4">
+    <div class="stat min-h-0! px-4! py-3!">
         <div class="stat-figure text-primary">
-            <i data-lucide="calendar-check" class="w-8 h-8"></i>
+            <i data-lucide="calendar-check" class="w-5 h-5"></i>
         </div>
         <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Rapat Hari Ini</div>
-        <div class="stat-value text-3xl font-extrabold text-primary"><?= $stats['rapat_hari_ini'] ?></div>
+        <div class="stat-value text-2xl font-extrabold text-primary"><?= $stats['rapat_hari_ini'] ?></div>
     </div>
-
+    <div class="stat min-h-0! px-4! py-3!">
+        <div class="stat-figure text-info">
+            <i data-lucide="calendar-range" class="w-5 h-5"></i>
+        </div>
+        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Agenda Bulan Ini</div>
+        <div class="stat-value text-2xl font-extrabold text-info"><?= $stats['agenda_bulan_ini'] ?></div>
+    </div>
+    <div class="stat min-h-0! px-4! py-3!">
+        <div class="stat-figure text-success">
+            <i data-lucide="radio" class="w-5 h-5"></i>
+        </div>
+        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Berlangsung</div>
+        <div class="stat-value text-2xl font-extrabold text-success"><?= $stats['berlangsung'] ?></div>
+    </div>
+    <div class="stat min-h-0! px-4! py-3!">
+        <div class="stat-figure text-warning">
+            <i data-lucide="clock-3" class="w-5 h-5"></i>
+        </div>
+        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Mendatang</div>
+        <div class="stat-value text-2xl font-extrabold text-warning"><?= $stats['mendatang'] ?></div>
+    </div>
 </div>
 
-<section class="dashboard-calendar-workspace">
+<section class="dashboard-calendar-workspace dashboard-home-workspace">
     <article class="dashboard-panel dashboard-calendar-panel" aria-labelledby="dashboard-calendar-title">
         <header class="dashboard-panel-head">
             <div class="dashboard-panel-title">
@@ -134,6 +154,10 @@
                 <section class="dashboard-agenda-panel <?= $isActive ? 'active' : '' ?>"
                          data-dashboard-panel="<?= esc($day['date']) ?>"
                          <?= $isActive ? '' : 'hidden' ?>>
+                    <?php
+                        $meetingPreview = array_slice($day['meetings'], 0, 5);
+                        $remainingMeetings = max(0, count($day['meetings']) - count($meetingPreview));
+                    ?>
                     <div class="selected-date-card">
                         <div class="selected-date-number"><?= esc((int) $day['date_num']) ?></div>
                         <div>
@@ -142,26 +166,37 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-agenda-list" aria-live="polite">
-                        <?php foreach ($day['meetings'] as $m): ?>
+                    <ul class="dashboard-agenda-list list <?= empty($meetingPreview) ? 'hidden' : '' ?>" aria-live="polite">
+                        <?php foreach ($meetingPreview as $m): ?>
                             <?php $badge = status_badge($m['status']); ?>
-                            <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item">
-                                <div class="agenda-time-block">
-                                    <?= esc($m['start']) ?>
-                                    <span><?= esc($m['end']) ?></span>
-                                </div>
-                                <div class="agenda-content">
-                                    <div class="agenda-title-row">
-                                        <h3><?= esc($m['title']) ?></h3>
+                            <li>
+                                <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item list-row block! px-3! py-1.5!">
+                                    <div class="agenda-row-head">
+                                        <div class="agenda-time-block">
+                                            <strong><?= esc($m['start']) ?></strong>
+                                            <span aria-hidden="true">&ndash;</span>
+                                            <span><?= esc($m['end']) ?></span>
+                                        </div>
                                         <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2 text-xs shrink-0 whitespace-nowrap font-semibold">
                                             <span class="w-1.5 h-1.5 rounded-full bg-current <?= $m['status'] === 'berlangsung' ? 'animate-pulse' : '' ?>"></span>
                                             <?= $badge['label'] ?>
                                         </span>
                                     </div>
-                                </div>
-                            </a>
+                                    <div class="agenda-content">
+                                        <h3><?= esc($m['title']) ?></h3>
+                                    </div>
+                                </a>
+                            </li>
                         <?php endforeach; ?>
-                    </div>
+                    </ul>
+
+                    <?php if ($remainingMeetings > 0): ?>
+                        <a href="<?= esc(base_url('admin/kalender?month=' . substr($day['date'], 0, 7))) ?>"
+                           class="btn btn-ghost btn-sm dashboard-agenda-more">
+                            Lihat <?= $remainingMeetings ?> agenda lainnya
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    <?php endif; ?>
 
                     <div class="dashboard-agenda-empty <?= empty($day['meetings']) ? 'is-visible' : '' ?>">
                         <i data-lucide="calendar-check"></i>
