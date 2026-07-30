@@ -84,27 +84,27 @@
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex flex-wrap items-center justify-end gap-2">
+                                <div class="flex flex-wrap items-center justify-end gap-1.5">
                                     <?php if (! empty($m['aktif'])): ?>
                                         <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/otp-darurat") ?>"
                                             class="m-0 inline-flex"
                                             data-confirm-message="Buat OTP darurat untuk anggota ini? Pastikan identitas anggota sudah diverifikasi.">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-outline btn-warning btn-sm gap-1" title="Buat OTP darurat">
-                                                <i data-lucide="key-round" class="h-4 w-4"></i>
+                                            <button type="submit" class="btn btn-outline btn-warning btn-xs w-20 gap-1" title="Buat OTP darurat">
+                                                <i data-lucide="key-round" class="h-3.5 w-3.5"></i>
                                                 OTP
                                             </button>
                                         </form>
                                     <?php endif; ?>
-                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn btn-outline btn-primary btn-sm gap-1">
-                                        <i data-lucide="pencil" class="h-4 w-4"></i>
+                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn btn-xs w-20 gap-1">
+                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                         Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
                                         data-confirm-message="Hapus anggota ini?" class="m-0 inline-flex">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-outline btn-error btn-sm gap-1">
-                                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                        <button type="submit" class="btn btn-ghost btn-error btn-xs w-20 gap-1">
+                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
                                             Hapus
                                         </button>
                                     </form>

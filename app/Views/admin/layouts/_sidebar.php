@@ -86,10 +86,15 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                             </a>
                         </li>
                         <li>
-                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/laporan') ?>" data-path="/admin/laporan">
+                            <button
+                                type="button"
+                                class="nav-link-custom nav-child-link menu-disabled"
+                                disabled
+                                aria-disabled="true"
+                                title="Segera hadir">
                                 <span class="nav-text">Laporan Agenda</span>
                                 <span class="badge badge-ghost badge-xs ml-auto">segera</span>
-                            </a>
+                            </button>
                         </li>
                     </ul>
                 </details>

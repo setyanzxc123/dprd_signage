@@ -58,10 +58,26 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertStringContainsString('name="materi_url"', $body);
         $this->assertStringContainsString('name="materi_akses"', $body);
         $this->assertStringContainsString('name="stream_akses"', $body);
+        $this->assertSame(3, substr_count($body, '<option value="publik" selected>Publik</option>'));
         $this->assertStringContainsString('Simpan Item Agenda', $body);
         $this->assertStringNotContainsString('value="save_projection"', $body);
         $this->assertStringNotContainsString('value="set_schedule"', $body);
         $this->assertStringNotContainsString('name="target_unit_ids[]"', $body);
+    }
+
+    public function testStoreDefaultsPublicationAndResourceAccessToPublic(): void
+    {
+        $this->postItem([
+            'agenda'         => 'Rapat Banmus dengan akses bawaan',
+            'jenis_agenda'   => 'rapat',
+            'periode_label'  => 'Agustus 2026',
+        ])->assertStatus(303);
+
+        $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($item);
+        $this->assertSame('publik', $item['publikasi']);
+        $this->assertSame('publik', $item['materi_akses']);
+        $this->assertSame('publik', $item['stream_akses']);
     }
 
     public function testStoreRejectsDuplicateYearAndSemesterFromDifferentSk(): void
@@ -131,7 +147,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
 
         $this->assertStringContainsString('<th>Jenis</th>', $body);
         $this->assertStringContainsString('"col":2,"label":"Jenis"', $body);
-        $this->assertStringContainsString('Kegiatan non-rapat', $body);
+        $this->assertStringContainsString('Non-rapat', $body);
     }
 
     public function testDateCanBeSavedWhileItemRemainsProjection(): void

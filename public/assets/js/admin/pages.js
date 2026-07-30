@@ -735,11 +735,11 @@
             field('field_jam_mulai').value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
             field('field_jam_selesai').value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
             field('field_catatan').value = item.catatan || '';
-            field('field_publikasi').value = item.publikasi || 'internal';
+            field('field_publikasi').value = item.publikasi || 'publik';
             field('field_materi_url').value = item.materi_url || '';
-            field('field_materi_akses').value = item.materi_akses || 'peserta';
+            field('field_materi_akses').value = item.materi_akses || 'publik';
             field('field_stream_url').value = item.stream_url || '';
-            field('field_stream_akses').value = item.stream_akses || 'anggota';
+            field('field_stream_akses').value = item.stream_akses || 'publik';
 
             if (item.ruangan_id) {
                 roomField.value = String(item.ruangan_id);

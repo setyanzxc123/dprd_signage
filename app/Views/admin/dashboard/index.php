@@ -154,10 +154,6 @@
                 <section class="dashboard-agenda-panel <?= $isActive ? 'active' : '' ?>"
                          data-dashboard-panel="<?= esc($day['date']) ?>"
                          <?= $isActive ? '' : 'hidden' ?>>
-                    <?php
-                        $meetingPreview = array_slice($day['meetings'], 0, 5);
-                        $remainingMeetings = max(0, count($day['meetings']) - count($meetingPreview));
-                    ?>
                     <div class="selected-date-card">
                         <div class="selected-date-number"><?= esc((int) $day['date_num']) ?></div>
                         <div>
@@ -166,8 +162,8 @@
                         </div>
                     </div>
 
-                    <ul class="dashboard-agenda-list list <?= empty($meetingPreview) ? 'hidden' : '' ?>" aria-live="polite">
-                        <?php foreach ($meetingPreview as $m): ?>
+                    <ul class="dashboard-agenda-list list <?= empty($day['meetings']) ? 'hidden' : '' ?>" aria-live="polite">
+                        <?php foreach ($day['meetings'] as $m): ?>
                             <?php $badge = status_badge($m['status']); ?>
                             <li>
                                 <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item list-row block! px-3! py-1.5!">
@@ -189,14 +185,6 @@
                             </li>
                         <?php endforeach; ?>
                     </ul>
-
-                    <?php if ($remainingMeetings > 0): ?>
-                        <a href="<?= esc(base_url('admin/kalender?month=' . substr($day['date'], 0, 7))) ?>"
-                           class="btn btn-ghost btn-sm dashboard-agenda-more">
-                            Lihat <?= $remainingMeetings ?> agenda lainnya
-                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                        </a>
-                    <?php endif; ?>
 
                     <div class="dashboard-agenda-empty <?= empty($day['meetings']) ? 'is-visible' : '' ?>">
                         <i data-lucide="calendar-check"></i>

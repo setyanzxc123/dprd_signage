@@ -8,68 +8,77 @@ $resourceAccessLabels = [
     'anggota' => 'Anggota DPRD',
     'peserta' => 'Peserta',
 ];
+
+$projectionCount = count(array_filter(
+    $items,
+    static fn (array $item): bool => ($item['status'] ?? 'proyeksi') === 'proyeksi',
+));
+$scheduledCount = count($items) - $projectionCount;
 ?>
 
-<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Agenda Internal DPRD</p>
-        <h1 class="page-title"><?= esc($pageTitle) ?></h1>
-    </div>
-    <div class="flex flex-wrap items-center gap-2">
-        <a href="<?= base_url('admin/jadwal-banmus') ?>" class="btn btn-ghost btn-sm gap-1">
+<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex min-w-0 items-start gap-2">
+        <a href="<?= base_url('admin/jadwal-banmus') ?>" class="btn btn-ghost btn-sm btn-square shrink-0" title="Kembali ke daftar SK">
             <i data-lucide="arrow-left" class="h-4 w-4"></i>
-            Daftar SK
         </a>
-        <?php if (! empty($document['dokumen_file'])): ?>
-            <a href="<?= base_url('uploads/sk-banmus/' . $document['dokumen_file']) ?>" target="_blank" class="btn btn-outline btn-sm gap-1">
-                <i data-lucide="file-pdf" class="h-4 w-4 text-error"></i>
-                Buka PDF SK
-            </a>
-        <?php endif; ?>
-        <a href="<?= base_url('admin/jadwal-banmus/' . $document['id'] . '/edit') ?>" class="btn btn-ghost btn-sm btn-square" title="Edit Metadata SK">
-            <i data-lucide="pencil" class="h-4 w-4"></i>
-        </a>
+        <div class="min-w-0">
+            <h1 class="page-title">SK No. <?= esc($document['nomor_sk']) ?></h1>
+            <p class="mt-1 max-w-3xl text-sm leading-relaxed text-base-content/60"><?= esc($document['judul']) ?></p>
+        </div>
     </div>
+    <button type="button" data-banmus-item-open class="btn btn-primary btn-sm w-full gap-1.5 sm:w-auto">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        Tambah Item Agenda
+    </button>
 </div>
 
-<!-- Header Info SK -->
-<div class="card card-border bg-base-100 shadow-sm mb-6">
-    <div class="card-body p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2 flex-wrap">
-                <span class="badge badge-primary font-bold">SK No. <?= esc($document['nomor_sk']) ?></span>
-                <span class="badge badge-outline">Semester <?= (int) $document['semester'] ?> / <?= (int) $document['tahun'] ?></span>
-            </div>
-            <h2 class="mt-2 text-base font-semibold text-base-content"><?= esc($document['judul']) ?></h2>
-            <?php if (! empty($document['catatan'])): ?>
-                <p class="mt-1 text-xs text-base-content/60"><?= esc($document['catatan']) ?></p>
-            <?php endif; ?>
+<div class="card card-sm card-border mb-4 bg-base-100 shadow-sm">
+    <div class="card-body flex-row flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="badge badge-outline badge-sm">Semester <?= (int) $document['semester'] ?> · <?= (int) $document['tahun'] ?></span>
+            <span class="badge badge-ghost badge-sm"><?= ! empty($document['is_publik']) ? 'Dokumen publik' : 'Dokumen internal' ?></span>
+            <span class="badge badge-ghost badge-sm"><?= $projectionCount ?> proyeksi</span>
+            <span class="badge badge-ghost badge-sm"><?= $scheduledCount ?> terjadwal</span>
         </div>
-        <button type="button" data-banmus-item-open class="btn btn-primary btn-sm gap-1 shrink-0">
-            <i data-lucide="plus" class="h-4 w-4"></i>
-            Tambah Item Agenda
-        </button>
+        <div class="flex items-center gap-1">
+            <?php if (! empty($document['dokumen_file'])): ?>
+                <a
+                    href="<?= base_url('uploads/sk-banmus/' . $document['dokumen_file']) ?>"
+                    target="_blank"
+                    rel="noopener"
+                    class="btn btn-ghost btn-xs gap-1"
+                    title="Buka PDF SK">
+                    <i data-lucide="file-text" class="h-3.5 w-3.5"></i>
+                    PDF SK
+                </a>
+            <?php endif; ?>
+            <a href="<?= base_url('admin/jadwal-banmus/' . $document['id'] . '/edit') ?>" class="btn btn-ghost btn-xs gap-1" title="Edit Metadata SK">
+                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                Edit SK
+            </a>
+        </div>
     </div>
 </div>
 
 <!-- DataTable Item Agenda Banmus -->
-<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
-    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
-        <h2 class="card-title text-base">
-            <i data-lucide="list-todo" class="h-5 w-5 text-primary"></i>
-            Daftar Item Agenda Banmus
-        </h2>
-        <span class="badge badge-ghost font-semibold"><?= count($items) ?> Item Total</span>
+<section class="card card-sm card-border banmus-item-card min-w-0 overflow-hidden bg-base-100 shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-3 sm:px-5">
+        <div class="flex min-w-0 items-center gap-3">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-base-200 text-base-content/70">
+                <i data-lucide="list-todo" class="h-4.5 w-4.5"></i>
+            </span>
+            <h2 class="card-title text-sm sm:text-base">Item Agenda</h2>
+        </div>
+        <span class="badge badge-ghost badge-sm whitespace-nowrap"><?= count($items) ?> item</span>
     </div>
 
     <?php if ($items === []): ?>
         <div class="p-8 text-center text-base-content/60">
             <i data-lucide="calendar-plus" class="mx-auto h-12 w-12 text-base-content/30"></i>
             <p class="mt-3 font-semibold">Belum ada item agenda dalam SK ini.</p>
-            <p class="mt-1 text-sm text-base-content/50">Klik tombol di bawah untuk menambahkan item agenda dari SK Banmus.</p>
             <button type="button" data-banmus-item-open class="btn btn-primary btn-sm mt-4 gap-1">
                 <i data-lucide="plus" class="h-4 w-4"></i>
-                Tambah Item Agenda Pertama
+                Tambah Item Agenda
             </button>
         </div>
     <?php else: ?>
@@ -88,7 +97,7 @@ $resourceAccessLabels = [
             <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
                 <table
                     id="table-jadwal-banmus"
-                    class="table table-zebra table-md w-full admin-data-table responsive-card-table"
+                    class="table table-zebra table-sm w-full admin-data-table responsive-card-table"
                     data-admin-datatable
                     data-dt-page-length="10"
                     data-dt-col-filters='[{"col":2,"label":"Jenis","all":"Semua Jenis"},{"col":5,"label":"Publikasi","all":"Semua Publikasi"},{"col":6,"label":"Status","all":"Semua Status"}]'>
@@ -224,9 +233,9 @@ $resourceAccessLabels = [
                                 </td>
                                 <td data-label="Jenis">
                                     <?php if (($item['jenis_agenda'] ?? 'rapat') === 'non_rapat'): ?>
-                                        <span class="badge badge-ghost badge-sm whitespace-nowrap">Kegiatan non-rapat</span>
+                                        <span class="badge badge-outline badge-sm whitespace-nowrap font-semibold">Non-rapat</span>
                                     <?php else: ?>
-                                        <span class="badge badge-neutral badge-soft badge-sm whitespace-nowrap">Rapat</span>
+                                        <span class="badge badge-outline badge-sm whitespace-nowrap font-semibold">Rapat</span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Jadwal" data-order="<?= esc($scheduleOrder, 'attr') ?>">
@@ -262,10 +271,20 @@ $resourceAccessLabels = [
                                     <?php endif; ?>
 
                                     <?php if ($unitNames !== []): ?>
-                                        <div class="mt-2 flex max-w-xs flex-wrap gap-1">
-                                            <?php foreach ($unitNames as $unitName): ?>
-                                                <span class="badge badge-ghost badge-xs h-auto py-1"><?= esc($unitName) ?></span>
-                                            <?php endforeach; ?>
+                                        <?php
+                                        $visibleUnitNames = array_slice($unitNames, 0, 2);
+                                        $remainingUnitCount = count($unitNames) - count($visibleUnitNames);
+                                        ?>
+                                        <div
+                                            class="mt-1.5 flex max-w-xs items-start gap-1.5 text-xs leading-relaxed text-base-content/60"
+                                            title="<?= esc(implode(', ', $unitNames), 'attr') ?>">
+                                            <i data-lucide="users" class="mt-0.5 h-3.5 w-3.5 shrink-0"></i>
+                                            <span>
+                                                <?= esc(implode(', ', $visibleUnitNames)) ?>
+                                                <?php if ($remainingUnitCount > 0): ?>
+                                                    <span class="font-semibold">+<?= $remainingUnitCount ?></span>
+                                                <?php endif; ?>
+                                            </span>
                                         </div>
                                     <?php else: ?>
                                         <div class="mt-1 text-xs italic text-base-content/45">Peserta belum dipilih</div>
@@ -279,25 +298,30 @@ $resourceAccessLabels = [
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Status">
-                                    <span class="badge <?= $statusClass ?> badge-sm whitespace-nowrap font-semibold">
-                                        <?= $statusLabel ?>
-                                    </span>
-                                </td>
-                                <td data-label="Aksi">
-                                    <div class="flex flex-wrap items-center justify-end gap-1">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="badge <?= $statusClass ?> badge-sm whitespace-nowrap font-semibold">
+                                            <?= $statusLabel ?>
+                                        </span>
                                         <?php if ($item['status'] === 'proyeksi' && $missingFields !== []): ?>
                                             <span
                                                 class="tooltip tooltip-left inline-flex"
                                                 data-tip="<?= esc($projectionWarning, 'attr') ?>"
                                                 aria-label="<?= esc($projectionWarning, 'attr') ?>">
-                                                <i data-lucide="triangle-alert" class="h-4 w-4 text-warning"></i>
+                                                <span class="badge badge-warning badge-soft badge-xs gap-1 whitespace-nowrap">
+                                                    <i data-lucide="triangle-alert" class="h-3 w-3"></i>
+                                                    Belum lengkap
+                                                </span>
                                             </span>
                                         <?php endif; ?>
+                                    </div>
+                                </td>
+                                <td data-label="Aksi">
+                                    <div class="flex flex-wrap items-center justify-end gap-1.5">
                                         <button
                                             type="button"
                                             data-banmus-item-edit
                                             data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
-                                            class="btn btn-outline btn-primary btn-xs gap-1"
+                                            class="btn btn-xs w-20 gap-1"
                                             title="Edit item agenda">
                                             <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                             Edit
@@ -309,8 +333,9 @@ $resourceAccessLabels = [
                                             class="m-0 inline-flex"
                                             data-confirm-message="Hapus item agenda ini?">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-ghost btn-error btn-xs btn-square" title="Hapus item">
+                                            <button type="submit" class="btn btn-ghost btn-error btn-xs w-20 gap-1" title="Hapus item agenda">
                                                 <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                                Hapus
                                             </button>
                                         </form>
                                     </div>
@@ -332,164 +357,195 @@ $resourceAccessLabels = [
     data-banmus-item-dialog
     data-store-url="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/store") ?>"
     data-update-url-template="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/__ITEM_ID__/update") ?>">
-    <div class="modal-box max-w-4xl">
-        <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-        </form>
-        <h3 class="font-bold text-lg flex items-center gap-2" id="modal_title">
-            <i data-lucide="calendar-plus" class="h-5 w-5 text-primary"></i>
-            <span>Tambah Item Agenda Banmus</span>
-        </h3>
-        <p class="mt-1 text-sm text-base-content/60">Simpan item kapan saja; status jadwal ditentukan otomatis dari kelengkapan data pelaksanaan.</p>
+    <div class="modal-box flex max-h-[calc(100dvh-2rem)] max-w-5xl flex-col overflow-hidden p-0">
+        <div class="flex shrink-0 items-center justify-between gap-3 border-b border-base-300 px-4 py-3 sm:px-6">
+            <h3 class="flex items-center gap-2 text-base font-bold sm:text-lg" id="modal_title">
+                <i data-lucide="calendar-plus" class="h-5 w-5 text-primary"></i>
+                <span>Tambah Item Agenda Banmus</span>
+            </h3>
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost" aria-label="Tutup dialog">
+                    <i data-lucide="x" class="h-4 w-4"></i>
+                </button>
+            </form>
+        </div>
 
-        <form id="item_form" action="" method="post" class="mt-4 flex flex-col gap-4" data-turbo="false">
+        <form id="item_form" action="" method="post" class="flex min-h-0 flex-1 flex-col" data-turbo="false">
             <?= csrf_field() ?>
 
-            <fieldset class="fieldset">
-                <legend class="fieldset-legend">Uraian Agenda SK <span class="text-error">*</span></legend>
-                <textarea class="textarea min-h-20 w-full resize-none" id="field_agenda" name="agenda" rows="3" required
-                    placeholder="Contoh: Rapat Paripurna Penjelasan Kepala Daerah Mengenai Ranperda..."></textarea>
-            </fieldset>
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+                <div class="grid gap-4 lg:grid-cols-2">
+                    <section class="card card-sm card-border border-base-300 bg-base-200 shadow-sm">
+                        <div class="card-body gap-0 p-3 sm:p-4">
+                            <div class="mb-3 flex items-center gap-2 text-sm font-bold">
+                                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-base-300">
+                                    <i data-lucide="file-text" class="h-4 w-4 text-base-content/70"></i>
+                                </span>
+                                Informasi Agenda
+                            </div>
 
-            <fieldset class="fieldset">
-                <legend class="fieldset-legend">Jenis Item Banmus <span class="text-error">*</span></legend>
-                <div class="grid gap-2 sm:grid-cols-2">
-                    <label class="label cursor-pointer items-start justify-start gap-3 rounded-box border border-base-300 bg-base-100 p-3">
-                        <input
-                            class="radio radio-sm mt-0.5"
-                            id="field_jenis_agenda_rapat"
-                            name="jenis_agenda"
-                            type="radio"
-                            value="rapat"
-                            checked
-                            required />
-                        <span>
-                            <span class="block text-sm font-bold text-base-content">Rapat</span>
-                            <span class="mt-0.5 block text-xs leading-relaxed text-base-content/55">Masuk ke daftar Agenda Rapat di portal.</span>
-                        </span>
-                    </label>
-                    <label class="label cursor-pointer items-start justify-start gap-3 rounded-box border border-base-300 bg-base-100 p-3">
-                        <input
-                            class="radio radio-sm mt-0.5"
-                            id="field_jenis_agenda_non_rapat"
-                            name="jenis_agenda"
-                            type="radio"
-                            value="non_rapat"
-                            required />
-                        <span>
-                            <span class="block text-sm font-bold text-base-content">Kegiatan non-rapat</span>
-                            <span class="mt-0.5 block text-xs leading-relaxed text-base-content/55">Reses dan kegiatan lain tetap ada di Proyeksi Banmus, tetapi tidak masuk Agenda Rapat.</span>
-                        </span>
-                    </label>
+                            <div class="space-y-3">
+                                <fieldset class="fieldset">
+                                    <legend class="fieldset-legend">Uraian Agenda SK <span class="text-error">*</span></legend>
+                                    <textarea class="textarea textarea-sm min-h-24 w-full resize-none" id="field_agenda" name="agenda" rows="4" required
+                                        placeholder="Tuliskan uraian agenda sesuai SK Banmus"></textarea>
+                                </fieldset>
+
+                                <fieldset class="fieldset">
+                                    <legend class="fieldset-legend">Jenis Item <span class="text-error">*</span></legend>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="label cursor-pointer items-start justify-start gap-2 rounded-box border border-base-300 bg-base-100 p-3">
+                                            <input
+                                                class="radio radio-sm mt-0.5"
+                                                id="field_jenis_agenda_rapat"
+                                                name="jenis_agenda"
+                                                type="radio"
+                                                value="rapat"
+                                                checked
+                                                required />
+                                            <span>
+                                                <span class="block text-sm font-bold text-base-content">Rapat</span>
+                                                <span class="mt-0.5 hidden text-xs leading-relaxed text-base-content/55 sm:block">Masuk Agenda Rapat.</span>
+                                            </span>
+                                        </label>
+                                        <label class="label cursor-pointer items-start justify-start gap-2 rounded-box border border-base-300 bg-base-100 p-3">
+                                            <input
+                                                class="radio radio-sm mt-0.5"
+                                                id="field_jenis_agenda_non_rapat"
+                                                name="jenis_agenda"
+                                                type="radio"
+                                                value="non_rapat"
+                                                required />
+                                            <span>
+                                                <span class="block text-sm font-bold text-base-content">Non-rapat</span>
+                                                <span class="mt-0.5 hidden text-xs leading-relaxed text-base-content/55 sm:block">Tidak masuk Agenda Rapat.</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="fieldset">
+                                    <legend class="fieldset-legend">Periode SK</legend>
+                                    <input class="input input-sm w-full" id="field_periode_label" name="periode_label" type="text"
+                                        placeholder="Contoh: Juni–Juli 2026 atau Minggu ke-2 Juli" />
+                                </fieldset>
+
+                                <fieldset class="fieldset">
+                                    <legend class="fieldset-legend">Catatan</legend>
+                                    <input class="input input-sm w-full" id="field_catatan" name="catatan" type="text" placeholder="Catatan tambahan untuk item ini" />
+                                </fieldset>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card card-sm card-border border-base-300 bg-base-200 shadow-sm">
+                        <div class="card-body gap-0 p-3 sm:p-4">
+                            <div class="mb-3 flex items-center gap-2 text-sm font-bold">
+                                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-base-300">
+                                    <i data-lucide="calendar-cog" class="h-4 w-4 text-base-content/70"></i>
+                                </span>
+                                Pelaksanaan &amp; Peserta
+                            </div>
+
+                            <div class="space-y-3">
+                                <div role="alert" class="alert alert-info alert-soft px-3 py-2 text-xs">
+                                    <i data-lucide="info" class="h-4 w-4 shrink-0"></i>
+                                    <span>Status dihitung otomatis. Data yang belum lengkap disimpan sebagai <strong>Proyeksi</strong>.</span>
+                                </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <fieldset class="fieldset col-span-2">
+                                    <legend class="fieldset-legend">Tanggal</legend>
+                                    <input class="input input-sm w-full font-semibold" id="field_tanggal" name="tanggal" type="date" />
+                                </fieldset>
+                                <fieldset class="fieldset">
+                                    <legend class="fieldset-legend">Jam Mulai</legend>
+                                    <input class="input input-sm w-full" id="field_jam_mulai" name="jam_mulai" type="time" />
+                                </fieldset>
+                                <fieldset class="fieldset">
+                                    <legend class="fieldset-legend">Jam Selesai</legend>
+                                    <input class="input input-sm w-full" id="field_jam_selesai" name="jam_selesai" type="time" />
+                                </fieldset>
+                            </div>
+
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend">Ruangan atau Lokasi</legend>
+                                <select class="select select-sm w-full" id="field_ruangan_id" name="ruangan_id">
+                                    <option value="">Pilih ruangan</option>
+                                    <?php foreach ($rooms as $room): ?>
+                                        <option value="<?= $room['id'] ?>"><?= esc($room['name']) ?></option>
+                                    <?php endforeach; ?>
+                                    <option value="other">Lokasi lainnya</option>
+                                </select>
+                            </fieldset>
+
+                            <fieldset class="fieldset hidden" id="field_lokasi_lainnya_wrapper">
+                                <legend class="fieldset-legend">Nama Lokasi Lainnya</legend>
+                                <input class="input input-sm w-full" id="field_lokasi_lainnya" name="lokasi_lainnya" type="text" placeholder="Contoh: Hotel Santika Palu" />
+                            </fieldset>
+
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend">Kelompok Peserta</legend>
+                                <div class="grid max-h-40 grid-cols-2 gap-x-3 gap-y-1 overflow-y-auto rounded-box border border-base-300 p-3">
+                                    <?php foreach ($units as $unit): ?>
+                                        <label class="label cursor-pointer justify-start gap-2 py-1">
+                                            <input type="checkbox" name="unit_ids[]" value="<?= $unit['id'] ?>" class="checkbox checkbox-xs unit-checkbox" />
+                                            <span class="label-text text-xs"><?= esc($unit['nama']) ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </fieldset>
+
+                            </div>
+                        </div>
+                    </section>
                 </div>
-            </fieldset>
 
-            <div class="grid grid-cols-12 gap-3">
-                <fieldset class="fieldset col-span-12 sm:col-span-6">
-                    <legend class="fieldset-legend">Periode SK (Label Teks)</legend>
-                    <input class="input w-full" id="field_periode_label" name="periode_label" type="text"
-                        placeholder="Contoh: Juni–Juli 2026 atau Minggu ke-2 Juli" />
-                    <p class="label block text-[11px] text-base-content/50">Teks periode asli yang tertulis di SK.</p>
-                </fieldset>
+                <section class="card card-sm card-border mt-4 border-base-300 bg-base-200 shadow-sm">
+                    <div class="card-body gap-0 p-3 sm:p-4">
+                        <div class="mb-3 flex items-center gap-2 text-sm font-bold">
+                            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-base-300">
+                                <i data-lucide="eye" class="h-4 w-4 text-base-content/70"></i>
+                            </span>
+                            Publikasi &amp; Tautan
+                        </div>
 
-                <fieldset class="fieldset col-span-12 sm:col-span-6">
-                    <legend class="fieldset-legend">Tanggal Pasti (Opsional)</legend>
-                    <input class="input w-full font-semibold" id="field_tanggal" name="tanggal" type="date" />
-                    <p class="label block text-[11px] text-base-content/50">Item tetap dapat disimpan meskipun tanggal belum diketahui.</p>
-                </fieldset>
-            </div>
-
-            <div role="alert" class="alert alert-info alert-soft text-sm">
-                <i data-lucide="info" class="h-5 w-5 shrink-0"></i>
-                <span>Jika tanggal, jam, lokasi, dan kelompok peserta belum lengkap, item tersimpan sebagai <strong>Proyeksi</strong>. Setelah lengkap, status jadwal mengikuti waktu pelaksanaan secara otomatis.</span>
-            </div>
-
-            <div class="space-y-4 border-t border-base-200 pt-4">
-                <div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
-                    <i data-lucide="calendar-cog" class="h-4 w-4"></i>
-                    <span>Rencana Pelaksanaan</span>
-                </div>
-
-                <div class="grid grid-cols-12 gap-3">
-                    <fieldset class="fieldset col-span-6">
-                        <legend class="fieldset-legend">Jam Mulai</legend>
-                        <input class="input w-full" id="field_jam_mulai" name="jam_mulai" type="time" />
-                    </fieldset>
-
-                    <fieldset class="fieldset col-span-6">
-                        <legend class="fieldset-legend">Jam Selesai</legend>
-                        <input class="input w-full" id="field_jam_selesai" name="jam_selesai" type="time" />
-                    </fieldset>
-                </div>
-
-                <fieldset class="fieldset">
-                    <legend class="fieldset-legend">Ruangan Rapat</legend>
-                    <select class="select w-full" id="field_ruangan_id" name="ruangan_id">
-                        <option value="">-- Pilih Ruangan --</option>
-                        <?php foreach ($rooms as $room): ?>
-                            <option value="<?= $room['id'] ?>"><?= esc($room['name']) ?></option>
-                        <?php endforeach; ?>
-                        <option value="other">-- Lokasi Lainnya --</option>
-                    </select>
-                </fieldset>
-
-                <fieldset class="fieldset hidden" id="field_lokasi_lainnya_wrapper">
-                    <legend class="fieldset-legend">Nama Lokasi Lainnya</legend>
-                    <input class="input w-full" id="field_lokasi_lainnya" name="lokasi_lainnya" type="text" placeholder="Contoh: Hotel Santika Palu" />
-                </fieldset>
-
-                <fieldset class="fieldset">
-                    <legend class="fieldset-legend">Kelompok Peserta (Komisi / Alat Kelengkapan)</legend>
-                    <div class="grid grid-cols-2 gap-2 rounded-box border border-base-300 p-3 max-h-36 overflow-y-auto">
-                        <?php foreach ($units as $unit): ?>
-                            <label class="cursor-pointer label justify-start gap-2 py-1">
-                                <input type="checkbox" name="unit_ids[]" value="<?= $unit['id'] ?>" class="checkbox checkbox-xs unit-checkbox" />
-                                <span class="label-text text-xs"><?= esc($unit['nama']) ?></span>
-                            </label>
-                        <?php endforeach; ?>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <fieldset class="fieldset sm:col-span-2">
+                                <legend class="fieldset-legend">Publikasi Agenda</legend>
+                                <select class="select select-sm w-full sm:max-w-xs" id="field_publikasi" name="publikasi">
+                                    <option value="internal">Internal DPRD</option>
+                                    <option value="publik" selected>Publik</option>
+                                </select>
+                            </fieldset>
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend">Materi / Dokumen</legend>
+                                <input class="input input-sm w-full" id="field_materi_url" name="materi_url" type="url" placeholder="https://..." />
+                                <label class="label text-xs" for="field_materi_akses">Akses bahan</label>
+                                <select class="select select-sm w-full" id="field_materi_akses" name="materi_akses">
+                                    <option value="peserta">Peserta rapat</option>
+                                    <option value="anggota">Seluruh anggota DPRD</option>
+                                    <option value="publik" selected>Publik</option>
+                                </select>
+                            </fieldset>
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend">Live Streaming</legend>
+                                <input class="input input-sm w-full" id="field_stream_url" name="stream_url" type="url" placeholder="https://..." />
+                                <label class="label text-xs" for="field_stream_akses">Akses live/video</label>
+                                <select class="select select-sm w-full" id="field_stream_akses" name="stream_akses">
+                                    <option value="anggota">Seluruh anggota DPRD</option>
+                                    <option value="peserta">Peserta rapat</option>
+                                    <option value="publik" selected>Publik</option>
+                                </select>
+                            </fieldset>
+                        </div>
                     </div>
-                </fieldset>
-
-                <fieldset class="fieldset">
-                    <legend class="fieldset-legend">Visibilitas Publikasi</legend>
-                    <select class="select select-sm w-full" id="field_publikasi" name="publikasi">
-                        <option value="internal">Internal DPRD</option>
-                        <option value="publik">Publik</option>
-                    </select>
-                </fieldset>
-
-                <div class="grid grid-cols-12 gap-3">
-                    <fieldset class="fieldset col-span-12 sm:col-span-6">
-                        <legend class="fieldset-legend">Tautan Materi / Dokumen</legend>
-                        <input class="input w-full" id="field_materi_url" name="materi_url" type="url" placeholder="https://..." />
-                        <label class="label" for="field_materi_akses">Akses bahan</label>
-                        <select class="select select-sm w-full" id="field_materi_akses" name="materi_akses">
-                            <option value="peserta">Peserta rapat</option>
-                            <option value="anggota">Seluruh anggota DPRD</option>
-                            <option value="publik">Publik</option>
-                        </select>
-                    </fieldset>
-                    <fieldset class="fieldset col-span-12 sm:col-span-6">
-                        <legend class="fieldset-legend">Tautan Live Streaming</legend>
-                        <input class="input w-full" id="field_stream_url" name="stream_url" type="url" placeholder="https://..." />
-                        <label class="label" for="field_stream_akses">Akses live/video</label>
-                        <select class="select select-sm w-full" id="field_stream_akses" name="stream_akses">
-                            <option value="anggota">Seluruh anggota DPRD</option>
-                            <option value="peserta">Peserta rapat</option>
-                            <option value="publik">Publik</option>
-                        </select>
-                    </fieldset>
-                </div>
+                </section>
             </div>
 
-            <fieldset class="fieldset">
-                <legend class="fieldset-legend">Catatan Item (Opsional)</legend>
-                <input class="input w-full" id="field_catatan" name="catatan" type="text" placeholder="Catatan tambahan untuk item ini..." />
-            </fieldset>
-
-            <div class="modal-action flex-wrap">
-                <button type="button" data-banmus-item-close class="btn btn-ghost">Batal</button>
-                <button type="submit" class="btn btn-primary gap-1">
+            <div class="modal-action m-0 shrink-0 flex-wrap border-t border-base-300 bg-base-100 px-4 py-3 sm:px-6">
+                <button type="button" data-banmus-item-close class="btn btn-ghost btn-sm">Batal</button>
+                <button type="submit" class="btn btn-primary btn-sm gap-1">
                     <i data-lucide="save" class="h-4 w-4"></i>
                     <span>Simpan Item Agenda</span>
                 </button>

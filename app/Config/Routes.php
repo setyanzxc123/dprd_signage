@@ -116,9 +116,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     // Workspace Seluruh Agenda (Fase 5)
     $routes->get('kalender', 'Admin\AgendaWorkspaceController::kalender');
 
-    // Laporan Agenda — placeholder (Fase 6)
-    $routes->get('laporan', 'Admin\AgendaWorkspaceController::laporan');
-
     // Pengaturan Signage
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');

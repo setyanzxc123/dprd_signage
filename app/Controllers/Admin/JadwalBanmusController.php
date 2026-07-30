@@ -381,11 +381,11 @@ class JadwalBanmusController extends BaseController
         }
         $materiAkses = ScheduleResourceAccess::normalize(
             $this->request->getPost('materi_akses'),
-            ScheduleResourceAccess::PARTICIPANT,
+            ScheduleResourceAccess::PUBLIC,
         );
         $streamAkses = ScheduleResourceAccess::normalize(
             $this->request->getPost('stream_akses'),
-            ScheduleResourceAccess::MEMBER,
+            ScheduleResourceAccess::PUBLIC,
         );
 
         $isScheduleComplete = $tanggal !== ''
@@ -415,7 +415,7 @@ class JadwalBanmusController extends BaseController
                 'ruangan_id'      => $ruanganId !== null ? (int) $ruanganId : null,
                 'lokasi_lainnya'  => $lokasiLainnya !== '' ? $lokasiLainnya : null,
                 'catatan'         => $catatan !== '' ? $catatan : null,
-                'publikasi'       => in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'internal',
+                'publikasi'       => in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'publik',
                 'materi_url'      => $materiUrl['url'],
                 'materi_akses'    => $materiAkses,
                 'stream_url'      => $streamUrl['url'],

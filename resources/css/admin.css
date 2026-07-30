@@ -1043,12 +1043,6 @@
         line-height: 1.3;
         margin: 0;
     }
-    .dashboard-agenda-more {
-        width: 100%;
-        margin-top: 8px;
-        justify-content: center;
-        color: var(--od-accent);
-    }
     .dashboard-agenda-empty {
         display: none;
         place-items: center;
@@ -1747,6 +1741,7 @@
     .responsive-card-table tbody td[data-label="Nama Lengkap"],
     .responsive-card-table tbody td[data-label="Judul Rapat"],
     .responsive-card-table tbody td[data-label="Agenda"],
+    .responsive-card-table tbody td[data-label="Dokumen SK"],
     .responsive-card-table tbody td[data-label="Target"] {
         display: block !important;
         text-align: left !important;
@@ -1760,6 +1755,7 @@
     .responsive-card-table tbody td[data-label="Nama Lengkap"]::before,
     .responsive-card-table tbody td[data-label="Judul Rapat"]::before,
     .responsive-card-table tbody td[data-label="Agenda"]::before,
+    .responsive-card-table tbody td[data-label="Dokumen SK"]::before,
     .responsive-card-table tbody td[data-label="Target"]::before {
         content: none !important;
     }
@@ -1888,6 +1884,25 @@
     .dt-col-filter-bar .dt-col-filter-select {
         flex: 1 !important;
         max-width: 70% !important;
+    }
+    .banmus-item-card .dt-col-filter-bar {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px !important;
+    }
+    .banmus-item-card .dt-col-filter-bar > div {
+        display: block !important;
+        min-width: 0;
+    }
+    .banmus-item-card .dt-col-filter-bar > div:last-child {
+        grid-column: 1 / -1;
+    }
+    .banmus-item-card .dt-col-filter-bar > div > span {
+        display: none;
+    }
+    .banmus-item-card .dt-col-filter-bar .dt-col-filter-select {
+        width: 100% !important;
+        max-width: none !important;
     }
     .mobile-hidden {
         display: none !important;

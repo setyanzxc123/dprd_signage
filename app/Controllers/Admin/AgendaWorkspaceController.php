@@ -60,13 +60,6 @@ class AgendaWorkspaceController extends BaseController
         ]);
     }
 
-    public function laporan(): string
-    {
-        return view('admin/agenda_workspace/laporan', [
-            'pageTitle' => 'Laporan Agenda',
-        ]);
-    }
-
     /**
      * @param array<string, list<array<string, mixed>>> $agendasByDate
      * @return list<array{date: string|null, day: int|null, agendas: list<array<string, mixed>>, is_today: bool}>

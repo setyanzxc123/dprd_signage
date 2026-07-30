@@ -93,16 +93,16 @@
                                 </span>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex flex-wrap items-center justify-end gap-2">
-                                    <a href="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>" class="btn btn-outline btn-primary btn-sm gap-1">
-                                        <i data-lucide="pencil" class="h-4 w-4"></i>
+                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                    <a href="<?= base_url("admin/jadwal/{$m['id']}/edit") ?>" class="btn btn-xs w-20 gap-1">
+                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                         Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/jadwal/{$m['id']}/delete") ?>"
                                         data-confirm-message="Hapus jadwal ini?" class="m-0 inline-flex">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-outline btn-error btn-sm gap-1">
-                                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                        <button type="submit" class="btn btn-ghost btn-error btn-xs w-20 gap-1">
+                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
                                             Hapus
                                         </button>
                                     </form>
