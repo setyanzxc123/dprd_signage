@@ -210,11 +210,11 @@ class BulkMeetingDataSeeder extends Seeder
                         continue;
                     }
 
-                    $this->insertPivotIfMissing('jadwal_unit_rapat', [
-                        'jadwal_id'     => $scheduleId,
+                    $this->insertPivotIfMissing('jadwal_umum_unit_rapat', [
+                        'jadwal_umum_id' => $scheduleId,
                         'unit_rapat_id' => (int) $unitsByName[$unitName],
                         'created_at'    => $created,
-                    ], ['jadwal_id', 'unit_rapat_id']);
+                    ], ['jadwal_umum_id', 'unit_rapat_id']);
                 }
             }
         }
@@ -249,16 +249,6 @@ class BulkMeetingDataSeeder extends Seeder
         ];
         [$start, $end] = $timeSlots[$slot] ?? $timeSlots[0];
 
-        $today = date('Y-m-d');
-        $status = 'menunggu';
-        if ($date < $today) {
-            $status = 'selesai';
-        } elseif ($date === $today && $slot === 0) {
-            $status = 'persiapan';
-        }
-
-        $slug = $this->slug($template['title'] . '-' . $date);
-
         $row = [
             'judul'         => $template['title'],
             'keterangan'    => 'Agenda ' . $template['unit'] . ' untuk pembahasan dan koordinasi tindak lanjut program kerja DPRD.',
@@ -266,19 +256,17 @@ class BulkMeetingDataSeeder extends Seeder
             'waktu_mulai'   => $start,
             'waktu_selesai' => $end,
             'ruangan_id'    => $roomsByName[$template['room']] ?? null,
-            'status'        => $status,
-            'materi_url'    => 'https://example.com/materi/' . $slug . '.pdf',
-            'jenis'         => $template['jenis'],
             'is_publik'     => $template['public'],
-            'stream_url'    => $template['public'] ? 'https://example.com/live/' . $slug : null,
+            'pihak_eksternal' => null,
         ];
 
-        if ($this->db->fieldExists('lokasi_lainnya', 'jadwal')) {
+        if ($this->db->fieldExists('lokasi_lainnya', 'jadwal_umum')) {
             $row['lokasi_lainnya'] = null;
         }
 
-        if ($this->db->fieldExists('created_at', 'jadwal')) {
+        if ($this->db->fieldExists('created_at', 'jadwal_umum')) {
             $row['created_at'] = $created;
+            $row['updated_at'] = $created;
         }
 
         return $row;
@@ -295,7 +283,7 @@ class BulkMeetingDataSeeder extends Seeder
 
     private function insertOrUpdateSchedule(array $row): int
     {
-        $existing = $this->db->table('jadwal')
+        $existing = $this->db->table('jadwal_umum')
             ->select('id')
             ->where('judul', $row['judul'])
             ->where('tanggal', $row['tanggal'])
@@ -304,14 +292,14 @@ class BulkMeetingDataSeeder extends Seeder
             ->getRowArray();
 
         if ($existing) {
-            $this->db->table('jadwal')
+            $this->db->table('jadwal_umum')
                 ->where('id', $existing['id'])
                 ->update($row);
 
             return (int) $existing['id'];
         }
 
-        $this->db->table('jadwal')->insert($row);
+        $this->db->table('jadwal_umum')->insert($row);
 
         return (int) $this->db->insertID();
     }

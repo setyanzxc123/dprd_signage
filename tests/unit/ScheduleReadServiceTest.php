@@ -86,6 +86,80 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
         $this->assertSame([10], $this->repository->lastAllowedScheduleIds);
     }
 
+    public function testMemberPersonalScopeCanReturnRelatedBanmusAndGeneralSchedules(): void
+    {
+        $this->repository->memberScheduleIds = [-20, 10];
+        $this->repository->memberUnitIds = [3];
+        $this->repository->schedules = [
+            $this->schedule([
+                'id'        => -20,
+                'source_id' => 20,
+                'source'    => 'banmus',
+                'judul'     => 'Rapat Banmus anggota',
+            ]),
+            $this->schedule([
+                'id'        => 10,
+                'source_id' => 10,
+                'source'    => 'jadwal_umum',
+                'judul'     => 'Jadwal Umum anggota',
+            ]),
+        ];
+        $this->repository->scheduleUnits = [
+            -20 => [['id' => 3, 'nama' => 'Komisi I']],
+            10  => [['id' => 3, 'nama' => 'Komisi I']],
+        ];
+
+        $result = $this->service()->memberAgenda(9, [
+            'month' => '2026-07',
+            'scope' => 'saya',
+        ]);
+
+        $this->assertSame([-20, 10], $this->repository->lastAllowedScheduleIds);
+        $this->assertSame(
+            ['banmus', 'jadwal_umum'],
+            array_column($result['data'], 'source'),
+        );
+        $this->assertSame([true, true], array_column($result['data'], 'is_participant'));
+    }
+
+    public function testMemberScopeSemuaMergesTargetedAndPublicSchedulesWithoutDuplicates(): void
+    {
+        $this->repository->memberScheduleIds = [10];
+        $this->repository->memberUnitIds = [3];
+        $this->repository->schedules = [$this->schedule(['is_publik' => 0])];
+        $this->repository->publicSchedules = [
+            $this->schedule(['is_publik' => 1]),
+            $this->schedule(['id' => 11, 'judul' => 'Agenda publik lain', 'is_publik' => 1]),
+        ];
+        $this->repository->scheduleUnits = [
+            10 => [['id' => 3, 'nama' => 'Komisi I']],
+        ];
+
+        $result = $this->service()->memberAgenda(9, [
+            'date' => '2026-07-27',
+            'scope' => 'semua',
+        ]);
+
+        $this->assertCount(2, $result['data']);
+        $this->assertSame([10, 11], array_column($result['data'], 'id'));
+        $this->assertTrue($result['data'][0]['is_participant']);
+    }
+
+    public function testGeneralAllDayScheduleUsesGeneralLifecycle(): void
+    {
+        $this->repository->schedules = [$this->schedule([
+            'source' => 'jadwal_umum',
+            'waktu_mulai' => null,
+            'waktu_selesai' => null,
+        ])];
+
+        $result = $this->service()->publicAgenda(['date' => '2026-07-27']);
+
+        $this->assertSame('berlangsung', $result['data'][0]['status']);
+        $this->assertSame('', $result['data'][0]['waktu_mulai']);
+        $this->assertSame('', $result['data'][0]['waktu_selesai']);
+    }
+
     public function testPublicDoesNotReceiveParticipantOnlyResourceUrl(): void
     {
         $this->repository->schedules = [$this->schedule([
@@ -165,6 +239,7 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
     {
         return $overrides + [
             'id'               => 10,
+            'source'           => 'banmus',
             'judul'           => 'Rapat Komisi',
             'keterangan'      => 'Pembahasan agenda',
             'tanggal'         => '2026-07-27',
@@ -187,6 +262,8 @@ final class FakeScheduleReadRepository implements ScheduleReadRepositoryInterfac
 {
     /** @var list<array<string, mixed>> */
     public array $schedules = [];
+    /** @var list<array<string, mixed>> */
+    public array $publicSchedules = [];
     /** @var list<array<string, mixed>> */
     public array $upcoming = [];
     /** @var list<array{id: int, nama: string}> */
@@ -217,7 +294,9 @@ final class FakeScheduleReadRepository implements ScheduleReadRepositoryInterfac
         $this->lastUnitId = $unitId;
         $this->lastAllowedScheduleIds = $allowedScheduleIds;
 
-        return $this->schedules;
+        return $publicOnly && $this->publicSchedules !== []
+            ? $this->publicSchedules
+            : $this->schedules;
     }
 
     public function findUpcomingPublic(string $afterDate, int $limit): array

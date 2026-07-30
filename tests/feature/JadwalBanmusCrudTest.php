@@ -278,7 +278,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertSame('publik', $row['publikasi']);
         $this->assertSame('https://example.com/live', $row['stream_url']);
         $this->assertSame(2, $this->banmusDb->table('jadwal_banmus_unit_rapat')->countAllResults());
-        $this->assertSame(0, $this->banmusDb->table('jadwal')->countAllResults());
+        $this->assertSame(0, $this->banmusDb->table('jadwal_umum')->countAllResults());
 
         $body = $this
             ->withSession(['auth_user' => $this->adminSession()])
@@ -409,7 +409,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
 
     public function testAutomaticScheduleRejectsRoomConflictWithNonBanmusSchedule(): void
     {
-        $this->banmusDb->table('jadwal')->insert([
+        $this->banmusDb->table('jadwal_umum')->insert([
             'judul'         => 'Rapat insidental pada ruangan yang sama',
             'tanggal'       => '2026-08-12',
             'waktu_mulai'   => '09:30',
@@ -559,7 +559,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'is_publik'      => ['type' => 'INTEGER', 'default' => 0],
         ]);
         $this->banmusForge->addPrimaryKey('id');
-        $this->banmusForge->createTable('jadwal');
+        $this->banmusForge->createTable('jadwal_umum');
     }
 
     private function seedOptions(): void
@@ -595,7 +595,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         foreach ([
             'jadwal_banmus_unit_rapat',
             'jadwal_banmus',
-            'jadwal',
+            'jadwal_umum',
             'unit_rapat',
             'ruangan',
             'dokumen_banmus',

@@ -141,6 +141,7 @@
     const initScheduleForm = function() {
         const form = document.querySelector('.schedule-form');
         if (!form) return;
+        const requiresTargets = form.dataset.requireTargets !== 'false';
         const toggle = document.getElementById('is_publik');
         const label = document.getElementById('publik-label');
         if (toggle && label) {
@@ -258,7 +259,7 @@
 
         const syncTargetValidity = function() {
             const count = syncTargetCount();
-            const valid = count > 0;
+            const valid = !requiresTargets || count > 0;
 
             if (targetError) targetError.classList.toggle('hidden', valid);
             targetInputs.forEach(function(input) {

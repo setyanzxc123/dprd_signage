@@ -37,59 +37,11 @@ final class ScheduleResourceLinkServiceTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testParticipantResourceRequiresMemberUnitRelation(): void
-    {
-        $this->resourceDb->table('jadwal')->insert([
-            'jenis'          => 'insidental',
-            'is_publik'      => 1,
-            'materi_url'     => 'https://example.com/bahan',
-            'materi_akses'   => 'peserta',
-            'stream_url'     => 'https://example.com/live',
-            'stream_akses'   => 'publik',
-        ]);
-        $scheduleId = (int) $this->resourceDb->insertID();
-        $this->resourceDb->table('jadwal_unit_rapat')->insert([
-            'jadwal_id'     => $scheduleId,
-            'unit_rapat_id' => 7,
-        ]);
-        $this->resourceDb->table('anggota_unit_rapat')->insert([
-            'anggota_id'    => 10,
-            'unit_rapat_id' => 7,
-        ]);
-
-        $service = new ScheduleResourceLinkService($this->resourceDb);
-
-        $this->assertNull($service->publicUrl('insidental_internal', $scheduleId, 'materi'));
-        $this->assertSame(
-            'https://example.com/live',
-            $service->publicUrl('insidental_internal', $scheduleId, 'stream'),
-        );
-        $this->assertSame(
-            'https://example.com/bahan',
-            $service->memberUrl('insidental_internal', $scheduleId, 'materi', 10),
-        );
-        $this->assertNull(
-            $service->memberUrl('insidental_internal', $scheduleId, 'materi', 11),
-        );
-    }
-
-    public function testBanmusPublicResourceStillRequiresPublicParentDocument(): void
+    public function testBanmusPublicResourceRequiresPublicParentDocument(): void
     {
         $this->resourceDb->table('dokumen_banmus')->insert(['is_publik' => 0]);
         $documentId = (int) $this->resourceDb->insertID();
-        $this->resourceDb->table('jadwal_banmus')->insert([
-            'dokumen_banmus_id' => $documentId,
-            'jenis_agenda'      => 'rapat',
-            'status'            => 'menunggu',
-            'publikasi'         => 'publik',
-            'materi_url'        => 'https://example.com/banmus',
-            'materi_akses'      => 'publik',
-            'stream_url'        => null,
-            'stream_akses'      => 'anggota',
-            'deleted_at'        => null,
-        ]);
-        $scheduleId = (int) $this->resourceDb->insertID();
-
+        $scheduleId = $this->insertBanmus($documentId, 'https://example.com/banmus', 'publik');
         $service = new ScheduleResourceLinkService($this->resourceDb);
 
         $this->assertNull($service->publicUrl('banmus', $scheduleId, 'materi'));
@@ -108,44 +60,66 @@ final class ScheduleResourceLinkServiceTest extends CIUnitTestCase
         );
     }
 
-    public function testUnsafeExternalSchemeIsRejected(): void
+    public function testParticipantResourceRequiresMemberUnitRelation(): void
     {
-        $this->resourceDb->table('jadwal')->insert([
-            'jenis'          => 'insidental',
-            'is_publik'      => 1,
-            'materi_url'     => 'javascript:alert(1)',
-            'materi_akses'   => 'publik',
-            'stream_url'     => null,
-            'stream_akses'   => 'anggota',
+        $this->resourceDb->table('dokumen_banmus')->insert(['is_publik' => 1]);
+        $scheduleId = $this->insertBanmus(
+            (int) $this->resourceDb->insertID(),
+            'https://example.com/bahan',
+            'peserta',
+        );
+        $this->resourceDb->table('jadwal_banmus_unit_rapat')->insert([
+            'jadwal_banmus_id' => $scheduleId,
+            'unit_rapat_id'    => 7,
+        ]);
+        $this->resourceDb->table('anggota_unit_rapat')->insert([
+            'anggota_id'    => 10,
+            'unit_rapat_id' => 7,
         ]);
 
-        $this->assertNull((new ScheduleResourceLinkService($this->resourceDb))->publicUrl(
-            'insidental_internal',
+        $service = new ScheduleResourceLinkService($this->resourceDb);
+
+        $this->assertNull($service->publicUrl('banmus', $scheduleId, 'materi'));
+        $this->assertSame(
+            'https://example.com/bahan',
+            $service->memberUrl('banmus', $scheduleId, 'materi', 10),
+        );
+        $this->assertNull($service->memberUrl('banmus', $scheduleId, 'materi', 11));
+    }
+
+    public function testUnsafeExternalSchemeAndUnknownSourceAreRejected(): void
+    {
+        $this->resourceDb->table('dokumen_banmus')->insert(['is_publik' => 1]);
+        $scheduleId = $this->insertBanmus(
             (int) $this->resourceDb->insertID(),
-            'materi',
-        ));
+            'javascript:alert(1)',
+            'publik',
+        );
+        $service = new ScheduleResourceLinkService($this->resourceDb);
+
+        $this->assertNull($service->publicUrl('banmus', $scheduleId, 'materi'));
+        $this->assertNull($service->publicUrl('jadwal_umum', $scheduleId, 'materi'));
+    }
+
+    private function insertBanmus(int $documentId, string $materialUrl, string $access): int
+    {
+        $this->resourceDb->table('jadwal_banmus')->insert([
+            'dokumen_banmus_id' => $documentId,
+            'jenis_agenda'      => 'rapat',
+            'status'            => 'menunggu',
+            'publikasi'         => 'publik',
+            'materi_url'        => $materialUrl,
+            'materi_akses'      => $access,
+            'stream_url'        => null,
+            'stream_akses'      => 'anggota',
+            'deleted_at'        => null,
+        ]);
+
+        return (int) $this->resourceDb->insertID();
     }
 
     private function createTables(): void
     {
-        $this->resourceForge->addField([
-            'id'            => ['type' => 'INTEGER', 'auto_increment' => true],
-            'jenis'         => ['type' => 'VARCHAR', 'constraint' => 30],
-            'is_publik'     => ['type' => 'INTEGER', 'default' => 0],
-            'materi_url'    => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
-            'materi_akses'  => ['type' => 'VARCHAR', 'constraint' => 20],
-            'stream_url'    => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
-            'stream_akses'  => ['type' => 'VARCHAR', 'constraint' => 20],
-        ]);
-        $this->resourceForge->addPrimaryKey('id');
-        $this->resourceForge->createTable('jadwal');
-
-        $this->resourceForge->addField([
-            'jadwal_id'     => ['type' => 'INTEGER'],
-            'unit_rapat_id' => ['type' => 'INTEGER'],
-        ]);
-        $this->resourceForge->createTable('jadwal_unit_rapat');
-
         $this->resourceForge->addField([
             'anggota_id'    => ['type' => 'INTEGER'],
             'unit_rapat_id' => ['type' => 'INTEGER'],
@@ -188,8 +162,6 @@ final class ScheduleResourceLinkServiceTest extends CIUnitTestCase
             'jadwal_banmus',
             'dokumen_banmus',
             'anggota_unit_rapat',
-            'jadwal_unit_rapat',
-            'jadwal',
         ] as $table) {
             $this->resourceForge->dropTable($table, true);
         }

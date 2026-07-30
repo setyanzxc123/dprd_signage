@@ -21,8 +21,6 @@ $routes->get('signage', 'SignageController::index');
 $routes->get('jadwal', 'AgendaController::legacy');
 
 // Redirect QR Code signage — mengarahkan ke URL asli dari jadwal publik tertentu
-$routes->get('go/jadwal/(:num)/live',   'RedirectController::live/$1');
-$routes->get('go/jadwal/(:num)/berkas', 'RedirectController::berkas/$1');
 $routes->get('go/jadwal-banmus/(:num)/live',   'RedirectController::liveBanmus/$1');
 $routes->get('go/jadwal-banmus/(:num)/berkas', 'RedirectController::berkasBanmus/$1');
 
@@ -47,8 +45,6 @@ $routes->post('anggota/logout', 'Member\AuthController::logout');
 // Portal anggota DPRD
 $routes->group('anggota', ['filter' => 'memberauth'], function ($routes) {
     $routes->get('', 'Member\PortalController::index');
-    $routes->get('jadwal/(:num)/live',   'Member\ScheduleLinkController::live/$1');
-    $routes->get('jadwal/(:num)/berkas', 'Member\ScheduleLinkController::berkas/$1');
     $routes->get('jadwal-banmus/(:num)/live',   'Member\ScheduleLinkController::liveBanmus/$1');
     $routes->get('jadwal-banmus/(:num)/berkas', 'Member\ScheduleLinkController::berkasBanmus/$1');
 });
@@ -97,21 +93,13 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('jadwal-banmus/(:num)/item/(:num)/update',       'Admin\JadwalBanmusController::updateItem/$1/$2');
     $routes->post('jadwal-banmus/(:num)/item/(:num)/delete',       'Admin\JadwalBanmusController::deleteItem/$1/$2');
 
-    // Agenda Internal: Insidental Internal (dahulu Jadwal Rapat)
-    $routes->get( 'jadwal',                      'Admin\MeetingController::index');
-    $routes->get( 'jadwal/create',               'Admin\MeetingController::create');
-    $routes->post('jadwal/store',                'Admin\MeetingController::store');
-    $routes->get( 'jadwal/(:num)/edit',          'Admin\MeetingController::edit/$1');
-    $routes->post('jadwal/(:num)/update',        'Admin\MeetingController::update/$1');
-    $routes->post('jadwal/(:num)/delete',        'Admin\MeetingController::delete/$1');
-
-    // Agenda Eksternal & Layanan Publik (dahulu Jadwal Umum)
-    $routes->get( 'agenda-umum',                      'Admin\GeneralAgendaController::index');
-    $routes->get( 'agenda-umum/create',               'Admin\GeneralAgendaController::create');
-    $routes->post('agenda-umum/store',                'Admin\GeneralAgendaController::store');
-    $routes->get( 'agenda-umum/(:num)/edit',          'Admin\GeneralAgendaController::edit/$1');
-    $routes->post('agenda-umum/(:num)/update',        'Admin\GeneralAgendaController::update/$1');
-    $routes->post('agenda-umum/(:num)/delete',        'Admin\GeneralAgendaController::delete/$1');
+    // Jadwal Umum — target tunggal seluruh kegiatan non-Banmus
+    $routes->get( 'jadwal-umum',                      'Admin\GeneralScheduleController::index');
+    $routes->get( 'jadwal-umum/create',               'Admin\GeneralScheduleController::create');
+    $routes->post('jadwal-umum/store',                'Admin\GeneralScheduleController::store');
+    $routes->get( 'jadwal-umum/(:num)/edit',          'Admin\GeneralScheduleController::edit/$1');
+    $routes->post('jadwal-umum/(:num)/update',        'Admin\GeneralScheduleController::update/$1');
+    $routes->post('jadwal-umum/(:num)/delete',        'Admin\GeneralScheduleController::delete/$1');
 
     // Workspace Seluruh Agenda (Fase 5)
     $routes->get('kalender', 'Admin\AgendaWorkspaceController::kalender');
@@ -129,12 +117,10 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────
 $routes->group('api/v1/publik', function ($routes) {
     $routes->get('jadwal', 'Api\PublicController::jadwal');
-    $routes->get('agenda-umum', 'Api\PublicController::agendaUmum');
 });
 
 $routes->group('api/v1/anggota', ['filter' => 'memberapi'], function ($routes) {
     $routes->get('jadwal', 'Api\MemberScheduleController::jadwal');
-    $routes->get('agenda-umum', 'Api\MemberGeneralAgendaController::index');
 });
 
 // ── API Signage (backward compatible) ────────────────────────────────

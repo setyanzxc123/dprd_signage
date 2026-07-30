@@ -524,15 +524,14 @@ class JadwalBanmusController extends BaseController
             return true;
         }
 
-        if (! $db->tableExists('jadwal')) {
+        if (! $db->tableExists('jadwal_umum')) {
             return false;
         }
 
-        return $db->table('jadwal')
+        return $db->table('jadwal_umum')
             ->select('id')
             ->where('tanggal', $date)
             ->where('ruangan_id', $roomId)
-            ->whereNotIn('status', ['ditunda', 'dibatalkan'])
             ->where('waktu_mulai <', $endTime)
             ->where('waktu_selesai >', $startTime)
             ->get(1)

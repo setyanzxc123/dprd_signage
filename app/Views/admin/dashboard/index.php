@@ -14,7 +14,7 @@
         <div class="stat-figure text-primary">
             <i data-lucide="calendar-check" class="w-5 h-5"></i>
         </div>
-        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Rapat Hari Ini</div>
+        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Agenda Hari Ini</div>
         <div class="stat-value text-2xl font-extrabold text-primary"><?= $stats['rapat_hari_ini'] ?></div>
     </div>
     <div class="stat min-h-0! px-4! py-3!">
@@ -44,7 +44,7 @@
     <article class="dashboard-panel dashboard-calendar-panel" aria-labelledby="dashboard-calendar-title">
         <header class="dashboard-panel-head">
             <div class="dashboard-panel-title">
-                <h2 id="dashboard-calendar-title">Kalender Rapat <?= esc($monthLabel ?? '') ?></h2>
+                <h2 id="dashboard-calendar-title">Kalender Agenda <?= esc($monthLabel ?? '') ?></h2>
                 <p>Pilih tanggal untuk melihat agenda detail dan status operasionalnya.</p>
             </div>
             <div class="dashboard-month-controls flex items-center gap-1">
@@ -169,9 +169,15 @@
                                 <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item list-row block! px-3! py-1.5!">
                                     <div class="agenda-row-head">
                                         <div class="agenda-time-block">
-                                            <strong><?= esc($m['start']) ?></strong>
-                                            <span aria-hidden="true">&ndash;</span>
-                                            <span><?= esc($m['end']) ?></span>
+                                            <?php if ($m['start'] === null): ?>
+                                                <strong>Sepanjang hari</strong>
+                                            <?php else: ?>
+                                                <strong><?= esc($m['start']) ?></strong>
+                                                <?php if ($m['end'] !== null): ?>
+                                                    <span aria-hidden="true">&ndash;</span>
+                                                    <span><?= esc($m['end']) ?></span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
                                         </div>
                                         <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2 text-xs shrink-0 whitespace-nowrap font-semibold">
                                             <span class="w-1.5 h-1.5 rounded-full bg-current <?= $m['status'] === 'berlangsung' ? 'animate-pulse' : '' ?>"></span>

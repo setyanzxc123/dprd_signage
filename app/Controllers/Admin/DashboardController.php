@@ -4,6 +4,8 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\Schedule\Persistence\DatabaseScheduleReadRepository;
+use App\Models\JadwalBanmusModel;
+use App\Models\JadwalUmumModel;
 
 class DashboardController extends BaseController
 {
@@ -23,6 +25,10 @@ class DashboardController extends BaseController
         $repository = new DatabaseScheduleReadRepository();
         $rapatHariIni = count($repository->findSchedules(false, $today, null, null));
         $jadwals = $repository->findSchedules(false, null, $activeMonth, null);
+        foreach ($jadwals as &$jadwal) {
+            $jadwal['status'] = $this->resolveStatus($jadwal);
+        }
+        unset($jadwal);
         $unitMap = $repository->findUnitsByScheduleIds(array_column($jadwals, 'id'));
         $sedangBerlangsung = count(array_filter(
             $jadwals,
@@ -41,15 +47,15 @@ class DashboardController extends BaseController
         foreach ($jadwals as $j) {
             $date = $j['tanggal'];
             $sourceId = (int) ($j['source_id'] ?? $j['id']);
-            $isBanmus = ($j['source'] ?? 'jadwal') === 'banmus';
+            $isBanmus = ($j['source'] ?? '') === 'banmus';
             $detailUrl = $isBanmus
                 ? base_url('admin/jadwal-banmus/' . (int) $j['dokumen_banmus_id'])
-                : base_url("admin/jadwal/{$sourceId}/edit");
+                : base_url("admin/jadwal-umum/{$sourceId}/edit");
             $meetingsByDate[$date][] = [
                 'id'         => $j['id'],
                 'date'       => $date,
-                'start'      => substr($j['waktu_mulai'], 0, 5),
-                'end'        => substr($j['waktu_selesai'], 0, 5),
+                'start'      => empty($j['waktu_mulai']) ? null : substr((string) $j['waktu_mulai'], 0, 5),
+                'end'        => empty($j['waktu_selesai']) ? null : substr((string) $j['waktu_selesai'], 0, 5),
                 'title'      => $j['judul'],
                 'subtitle'   => $j['keterangan'] ?? '',
                 'room'       => $this->displayLocation($j),
@@ -119,6 +125,24 @@ class DashboardController extends BaseController
         }
 
         return $row['nama_ruangan'] ?? '-';
+    }
+
+    private function resolveStatus(array $row): string
+    {
+        if (($row['source'] ?? '') === JadwalUmumModel::SOURCE) {
+            return JadwalUmumModel::resolveLifecycleStatus(
+                (string) $row['tanggal'],
+                $row['waktu_mulai'] ?? null,
+                $row['waktu_selesai'] ?? null,
+            );
+        }
+
+        return JadwalBanmusModel::resolveLifecycleStatus(
+            true,
+            (string) $row['tanggal'],
+            $row['waktu_mulai'] ?? null,
+            $row['waktu_selesai'] ?? null,
+        );
     }
 
     private function statusKey(string $status): string

@@ -27,14 +27,11 @@ class MemberScheduleController extends BaseController
 
         $result['data'] = array_map(static function (array $schedule): array {
             $id = (int) ($schedule['source_id'] ?? $schedule['id']);
-            $path = ($schedule['source'] ?? 'jadwal') === 'banmus'
-                ? 'anggota/jadwal-banmus'
-                : 'anggota/jadwal';
-            if ($schedule['has_materi']) {
-                $schedule['materi_url'] = base_url("{$path}/{$id}/berkas");
+            if (($schedule['source'] ?? '') === 'banmus' && $schedule['has_materi']) {
+                $schedule['materi_url'] = base_url("anggota/jadwal-banmus/{$id}/berkas");
             }
-            if ($schedule['has_stream']) {
-                $schedule['stream_url'] = base_url("{$path}/{$id}/live");
+            if (($schedule['source'] ?? '') === 'banmus' && $schedule['has_stream']) {
+                $schedule['stream_url'] = base_url("anggota/jadwal-banmus/{$id}/live");
             }
 
             return $schedule;

@@ -4,9 +4,8 @@
 
 <?php
 $sourceBadgeClasses = [
-    'banmus'              => 'badge badge-info badge-soft',
-    'insidental_internal' => 'badge badge-secondary badge-soft',
-    'agenda_eksternal'    => 'badge badge-warning badge-soft',
+    'banmus'      => 'badge badge-info badge-soft',
+    'jadwal_umum' => 'badge badge-secondary badge-soft',
 ];
 $statusBadgeClasses = [
     'menunggu'     => 'badge badge-ghost',
@@ -20,9 +19,9 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
         <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Operasional</p>
-        <h1 class="page-title">Seluruh Agenda</h1>
+        <h1 class="page-title">Kalender Agenda</h1>
         <p class="mt-1 text-sm text-base-content/60">
-            Daftar operasional Agenda Banmus terjadwal, Agenda Insidental, dan Agenda Eksternal.
+            Agenda Banmus terjadwal dan Jadwal Umum dalam satu ruang kerja operasional.
         </p>
     </div>
     <div class="join w-full sm:w-auto">
@@ -39,7 +38,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     </div>
 </div>
 
-<section class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
+<section class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
     <div class="card card-border bg-base-100 shadow-sm">
         <div class="card-body gap-1 p-4">
             <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Ditampilkan</span>
@@ -54,17 +53,11 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     </div>
     <div class="card card-border bg-base-100 shadow-sm">
         <div class="card-body gap-1 p-4">
-            <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Agenda Insidental</span>
-            <strong class="text-2xl"><?= number_format($counts['insidental_internal'], 0, ',', '.') ?></strong>
+            <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Jadwal Umum</span>
+            <strong class="text-2xl"><?= number_format($counts['jadwal_umum'], 0, ',', '.') ?></strong>
         </div>
     </div>
     <div class="card card-border bg-base-100 shadow-sm">
-        <div class="card-body gap-1 p-4">
-            <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Eksternal</span>
-            <strong class="text-2xl"><?= number_format($counts['agenda_eksternal'], 0, ',', '.') ?></strong>
-        </div>
-    </div>
-    <div class="card card-border col-span-2 bg-base-100 shadow-sm lg:col-span-1">
         <div class="card-body gap-1 p-4">
             <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Berpotensi Konflik</span>
             <strong class="text-2xl <?= $counts['conflicts'] > 0 ? 'text-error' : '' ?>">
@@ -78,7 +71,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     <div class="card-body p-4">
         <form action="<?= base_url('admin/kalender') ?>" method="get" data-turbo="true">
             <input type="hidden" name="view" value="<?= esc($view_mode) ?>" />
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Bulan</legend>
                     <input class="input input-sm w-full" type="month" name="month" value="<?= esc($month) ?>" />
@@ -89,28 +82,6 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                         <option value="">Semua sumber</option>
                         <?php foreach ($filter_options['sources'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['source'] === $value ? 'selected' : '' ?>>
-                                <?= esc($label) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </fieldset>
-                <fieldset class="fieldset">
-                    <legend class="fieldset-legend">Jenis</legend>
-                    <select class="select select-sm w-full" name="jenis">
-                        <option value="">Semua jenis</option>
-                        <?php foreach ($filter_options['types'] as $value => $label): ?>
-                            <option value="<?= esc($value) ?>" <?= $filters['jenis'] === $value ? 'selected' : '' ?>>
-                                <?= esc($label) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </fieldset>
-                <fieldset class="fieldset">
-                    <legend class="fieldset-legend">Lingkup</legend>
-                    <select class="select select-sm w-full" name="lingkup">
-                        <option value="">Semua lingkup</option>
-                        <?php foreach ($filter_options['scopes'] as $value => $label): ?>
-                            <option value="<?= esc($value) ?>" <?= $filters['lingkup'] === $value ? 'selected' : '' ?>>
                                 <?= esc($label) ?>
                             </option>
                         <?php endforeach; ?>
@@ -232,9 +203,8 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                                         default                         => 'next',
                                     };
                                     $sourceShort = match ($agenda['source']) {
-                                        'banmus'              => 'Banmus',
-                                        'insidental_internal' => 'Agenda Insidental',
-                                        default               => 'Eksternal',
+                                        'banmus' => 'Banmus',
+                                        default  => 'Jadwal Umum',
                                     };
                                     ?>
                                     <a href="<?= esc($agenda['edit_url']) ?>"
@@ -273,7 +243,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                     <tr class="bg-base-200">
                         <th>Tanggal dan Waktu</th>
                         <th>Agenda</th>
-                        <th>Sumber / Jenis</th>
+                        <th>Sumber</th>
                         <th>Unit / Peserta</th>
                         <th>Lokasi</th>
                         <th>Status</th>
@@ -288,11 +258,15 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                                     <?= esc(date('d/m/Y', strtotime($agenda['tanggal']))) ?>
                                 </div>
                                 <div class="whitespace-nowrap text-xs text-base-content/55">
-                                    <?= esc($agenda['waktu_mulai']) ?>
-                                    <?php if ($agenda['waktu_selesai'] !== null): ?>
+                                    <?php if ($agenda['waktu_mulai'] === null): ?>
+                                        Sepanjang hari
+                                    <?php else: ?>
+                                        <?= esc($agenda['waktu_mulai']) ?>
+                                    <?php endif; ?>
+                                    <?php if ($agenda['waktu_mulai'] !== null && $agenda['waktu_selesai'] !== null): ?>
                                         &ndash;<?= esc($agenda['waktu_selesai']) ?>
                                     <?php endif; ?>
-                                    WITA
+                                    <?= $agenda['waktu_mulai'] !== null ? ' WITA' : '' ?>
                                 </div>
                             </td>
                             <td>
@@ -312,7 +286,6 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                                 <span class="<?= esc($sourceBadgeClasses[$agenda['source']] ?? 'badge') ?> badge-sm">
                                     <?= esc($agenda['source_label']) ?>
                                 </span>
-                                <p class="mt-1 text-xs text-base-content/55"><?= esc($agenda['jenis_label']) ?></p>
                             </td>
                             <td>
                                 <?php if ($agenda['units'] !== []): ?>

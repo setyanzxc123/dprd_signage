@@ -42,25 +42,29 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testWorkspaceCombinesAllSourcesAndExcludesProjectionAndLegacySchedule(): void
+    public function testWorkspaceCombinesOnlyTheTwoTargetSourcesAndExcludesBanmusProjection(): void
     {
         $result = (new AgendaWorkspaceService($this->testDb))->loadMonth('2099-08');
 
-        $this->assertCount(3, $result['agendas']);
+        $this->assertCount(2, $result['agendas']);
         $this->assertSame(1, $result['counts']['banmus']);
-        $this->assertSame(1, $result['counts']['insidental_internal']);
-        $this->assertSame(1, $result['counts']['agenda_eksternal']);
+        $this->assertSame(1, $result['counts']['jadwal_umum']);
         $this->assertSame(
-            ['agenda_eksternal', 'banmus', 'insidental_internal'],
+            ['banmus', 'jadwal_umum'],
             $this->sortedSources($result['agendas']),
         );
         $this->assertNotContains('Proyeksi Banmus', array_column($result['agendas'], 'judul'));
         $this->assertNotContains('Reses terjadwal', array_column($result['agendas'], 'judul'));
-        $this->assertNotContains('Jadwal reguler lama', array_column($result['agendas'], 'judul'));
 
         $upcoming = (new DatabaseScheduleReadRepository($this->testDb))
             ->findUpcomingPublic('2099-08-01', 10);
         $this->assertNotContains('Reses terjadwal', array_column($upcoming, 'judul'));
+
+        $repository = new DatabaseScheduleReadRepository($this->testDb);
+        $this->assertSame([1], $repository->findMemberUnitIds(9));
+        $memberScheduleIds = $repository->findScheduleIdsForMember(9);
+        sort($memberScheduleIds);
+        $this->assertSame([-1, 1], $memberScheduleIds);
     }
 
     public function testWorkspaceMarksCrossSourceRoomAndTimeConflicts(): void
@@ -74,42 +78,34 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
         $this->assertCount(2, $conflicts);
         $this->assertSame(2, $result['counts']['conflicts']);
         $this->assertSame(
-            ['banmus', 'insidental_internal'],
+            ['banmus', 'jadwal_umum'],
             $this->sortedSources($conflicts),
         );
-        $this->assertStringContainsString('Agenda Banmus', $conflicts[0]['conflicts'][0]['label']);
-        $this->assertStringContainsString('Agenda Insidental', $conflicts[1]['conflicts'][0]['label']);
+        $labels = array_column(array_merge(...array_column($conflicts, 'conflicts')), 'label');
+        $this->assertStringContainsString('Jadwal Umum', implode(' ', $labels));
+        $this->assertStringContainsString('Agenda Banmus', implode(' ', $labels));
     }
 
     public function testWorkspaceFiltersBySourceUnitLocationStatusAndPublication(): void
     {
         $service = new AgendaWorkspaceService($this->testDb);
 
-        $external = $service->loadMonth('2099-08', ['source' => 'agenda_eksternal']);
-        $this->assertCount(1, $external['agendas']);
-        $this->assertSame('Kunjungan eksternal', $external['agendas'][0]['judul']);
-
-        $type = $service->loadMonth('2099-08', ['jenis' => 'kunjungan']);
-        $this->assertCount(1, $type['agendas']);
-        $this->assertSame('agenda_eksternal', $type['agendas'][0]['source']);
-
-        $scope = $service->loadMonth('2099-08', ['lingkup' => 'internal']);
-        $this->assertCount(2, $scope['agendas']);
-        $this->assertNotContains('agenda_eksternal', array_column($scope['agendas'], 'source'));
+        $general = $service->loadMonth('2099-08', ['source' => 'jadwal_umum']);
+        $this->assertCount(1, $general['agendas']);
+        $this->assertSame('Audiensi umum', $general['agendas'][0]['judul']);
 
         $unit = $service->loadMonth('2099-08', ['unit' => '1']);
         $this->assertCount(2, $unit['agendas']);
-        $this->assertNotContains('agenda_eksternal', array_column($unit['agendas'], 'source'));
 
         $location = $service->loadMonth('2099-08', ['lokasi' => 'ruang rapat utama']);
         $this->assertCount(2, $location['agendas']);
 
         $status = $service->loadMonth('2099-08', ['status' => 'menunggu']);
-        $this->assertCount(3, $status['agendas']);
+        $this->assertCount(2, $status['agendas']);
 
         $public = $service->loadMonth('2099-08', ['publikasi' => 'publik']);
-        $this->assertCount(2, $public['agendas']);
-        $this->assertNotContains('Insidental internal', array_column($public['agendas'], 'judul'));
+        $this->assertCount(1, $public['agendas']);
+        $this->assertSame('Banmus terjadwal', $public['agendas'][0]['judul']);
     }
 
     public function testAgendaWorkspaceUsesListByDefaultAndKeepsCompactCalendarAvailable(): void
@@ -120,13 +116,13 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
 
         $response->assertOK();
         $body = $response->response()->getBody();
-        $this->assertStringContainsString('Seluruh Agenda', $body);
-        $this->assertStringContainsString('Daftar operasional Agenda Banmus terjadwal', $body);
+        $this->assertStringContainsString('Kalender Agenda', $body);
+        $this->assertStringContainsString('Agenda Banmus terjadwal dan Jadwal Umum', $body);
         $this->assertStringContainsString('name="source"', $body);
         $this->assertStringContainsString('name="unit"', $body);
         $this->assertStringContainsString('Konflik', $body);
-        $this->assertStringContainsString('Insidental internal', $body);
-        $this->assertStringContainsString('Kunjungan eksternal', $body);
+        $this->assertStringContainsString('Audiensi umum', $body);
+        $this->assertStringContainsString('Banmus terjadwal', $body);
         $this->assertStringContainsString('data-admin-datatable', $body);
         $this->assertStringContainsString('Konflik lintas sumber', $body);
         $this->assertStringNotContainsString('dashboard-calendar-grid', $body);
@@ -180,30 +176,33 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
         $this->forge->createTable('unit_rapat');
 
         $this->forge->addField([
-            'id'               => ['type' => 'INTEGER', 'auto_increment' => true],
-            'judul'            => ['type' => 'VARCHAR', 'constraint' => 255],
-            'keterangan'       => ['type' => 'TEXT', 'null' => true],
-            'tanggal'          => ['type' => 'DATE'],
-            'waktu_mulai'      => ['type' => 'TIME'],
-            'waktu_selesai'    => ['type' => 'TIME'],
-            'ruangan_id'       => ['type' => 'INTEGER', 'null' => true],
-            'lokasi_lainnya'   => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
-            'status'           => ['type' => 'VARCHAR', 'constraint' => 20],
-            'is_publik'        => ['type' => 'INTEGER', 'default' => 0],
-            'jenis'            => ['type' => 'VARCHAR', 'constraint' => 20],
-            'materi_url'       => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
-            'materi_akses'     => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
-            'stream_url'       => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
-            'stream_akses'     => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
-        ]);
-        $this->forge->addPrimaryKey('id');
-        $this->forge->createTable('jadwal');
-
-        $this->forge->addField([
-            'jadwal_id'     => ['type' => 'INTEGER'],
+            'anggota_id'    => ['type' => 'INTEGER'],
             'unit_rapat_id' => ['type' => 'INTEGER'],
         ]);
-        $this->forge->createTable('jadwal_unit_rapat');
+        $this->forge->createTable('anggota_unit_rapat');
+
+        $this->forge->addField([
+            'id'              => ['type' => 'INTEGER', 'auto_increment' => true],
+            'judul'           => ['type' => 'VARCHAR', 'constraint' => 255],
+            'tanggal'         => ['type' => 'DATE'],
+            'waktu_mulai'     => ['type' => 'TIME', 'null' => true],
+            'waktu_selesai'   => ['type' => 'TIME', 'null' => true],
+            'ruangan_id'      => ['type' => 'INTEGER', 'null' => true],
+            'lokasi_lainnya'  => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'pihak_eksternal' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'is_publik'       => ['type' => 'INTEGER', 'default' => 0],
+            'keterangan'      => ['type' => 'TEXT', 'null' => true],
+            'created_at'      => ['type' => 'DATETIME', 'null' => true],
+            'updated_at'      => ['type' => 'DATETIME', 'null' => true],
+        ]);
+        $this->forge->addPrimaryKey('id');
+        $this->forge->createTable('jadwal_umum');
+
+        $this->forge->addField([
+            'jadwal_umum_id' => ['type' => 'INTEGER'],
+            'unit_rapat_id'  => ['type' => 'INTEGER'],
+        ]);
+        $this->forge->createTable('jadwal_umum_unit_rapat');
 
         $this->forge->addField([
             'id'         => ['type' => 'INTEGER', 'auto_increment' => true],
@@ -242,23 +241,6 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
         ]);
         $this->forge->createTable('jadwal_banmus_unit_rapat');
 
-        $this->forge->addField([
-            'id'                 => ['type' => 'INTEGER', 'auto_increment' => true],
-            'judul'              => ['type' => 'VARCHAR', 'constraint' => 200],
-            'kategori'           => ['type' => 'VARCHAR', 'constraint' => 30],
-            'pihak_eksternal'    => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
-            'tanggal'            => ['type' => 'DATE'],
-            'waktu_mulai'        => ['type' => 'TIME'],
-            'waktu_selesai'      => ['type' => 'TIME', 'null' => true],
-            'lokasi'             => ['type' => 'VARCHAR', 'constraint' => 200],
-            'sumber_informasi'   => ['type' => 'VARCHAR', 'constraint' => 200, 'null' => true],
-            'keterangan'         => ['type' => 'TEXT', 'null' => true],
-            'is_publik'          => ['type' => 'INTEGER', 'default' => 0],
-            'created_at'         => ['type' => 'DATETIME', 'null' => true],
-            'updated_at'         => ['type' => 'DATETIME', 'null' => true],
-        ]);
-        $this->forge->addPrimaryKey('id');
-        $this->forge->createTable('agenda_umum');
     }
 
     private function seedSchedules(): void
@@ -269,33 +251,23 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'aktif'  => 1,
             'urutan' => 1,
         ]);
-        $this->testDb->table('jadwal')->insertBatch([
-            [
-                'judul'          => 'Insidental internal',
-                'tanggal'        => '2099-08-12',
-                'waktu_mulai'    => '09:00:00',
-                'waktu_selesai'  => '10:00:00',
-                'ruangan_id'     => 1,
-                'status'         => 'menunggu',
-                'is_publik'      => 0,
-                'jenis'          => 'insidental',
-            ],
-            [
-                'judul'          => 'Jadwal reguler lama',
-                'tanggal'        => '2099-08-12',
-                'waktu_mulai'    => '13:00:00',
-                'waktu_selesai'  => '14:00:00',
-                'ruangan_id'     => 1,
-                'status'         => 'menunggu',
-                'is_publik'      => 1,
-                'jenis'          => 'reguler',
-            ],
-        ]);
-        $this->testDb->table('jadwal_unit_rapat')->insert([
-            'jadwal_id'     => 1,
+        $this->testDb->table('anggota_unit_rapat')->insert([
+            'anggota_id' => 9,
             'unit_rapat_id' => 1,
         ]);
-
+        $this->testDb->table('jadwal_umum')->insert([
+            'judul'           => 'Audiensi umum',
+            'tanggal'         => '2099-08-12',
+            'waktu_mulai'     => '09:00:00',
+            'waktu_selesai'   => '10:00:00',
+            'ruangan_id'      => 1,
+            'pihak_eksternal' => 'Pemerintah Kabupaten',
+            'is_publik'       => 0,
+        ]);
+        $this->testDb->table('jadwal_umum_unit_rapat')->insert([
+            'jadwal_umum_id' => 1,
+            'unit_rapat_id'  => 1,
+        ]);
         $this->testDb->table('dokumen_banmus')->insert(['is_publik' => 1]);
         $this->testDb->table('jadwal_banmus')->insertBatch([
             [
@@ -340,16 +312,6 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'unit_rapat_id'    => 1,
         ]);
 
-        $this->testDb->table('agenda_umum')->insert([
-            'judul'            => 'Kunjungan eksternal',
-            'kategori'         => 'kunjungan',
-            'pihak_eksternal'  => 'Pemerintah Kabupaten',
-            'tanggal'          => '2099-08-12',
-            'waktu_mulai'      => '11:00:00',
-            'waktu_selesai'    => '12:00:00',
-            'lokasi'           => 'Halaman Gedung DPRD',
-            'is_publik'        => 1,
-        ]);
     }
 
     private function dropTables(): void
@@ -358,9 +320,9 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'jadwal_banmus_unit_rapat',
             'jadwal_banmus',
             'dokumen_banmus',
-            'jadwal_unit_rapat',
-            'jadwal',
-            'agenda_umum',
+            'jadwal_umum_unit_rapat',
+            'jadwal_umum',
+            'anggota_unit_rapat',
             'unit_rapat',
             'ruangan',
         ] as $table) {

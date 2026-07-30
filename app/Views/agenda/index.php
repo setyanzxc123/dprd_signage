@@ -4,7 +4,7 @@ $vueVersion = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemti
 $cssVersion = is_file(FCPATH . 'assets/css/agenda.css') ? filemtime(FCPATH . 'assets/css/agenda.css') : time();
 $isMember = is_array($member ?? null);
 $isAdmin = ! $isMember && ! empty($isAdmin);
-$pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
+$pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -189,7 +189,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
         <?php endif; ?>
     </header>
 
-    <main class="mx-auto grid w-[min(1180px,calc(100%-20px))] gap-4 py-4 sm:w-[min(1180px,calc(100%-32px))] sm:py-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,.85fr)] lg:items-start">
+    <main class="mx-auto grid w-[min(1480px,calc(100%-20px))] gap-4 py-4 sm:w-[min(1480px,calc(100%-32px))] sm:py-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
         <section class="card card-border bg-base-100 shadow-sm">
             <div class="card-body gap-0 p-0">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-6">
@@ -267,8 +267,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                         <span v-if="item.source === 'banmus' || item.source === 'banmus_projection'" class="badge badge-info badge-soft badge-sm">
                                             Banmus
                                         </span>
-                                        <span v-if="item.source === 'insidental_internal'" class="badge badge-secondary badge-soft badge-sm">
-                                            Agenda Insidental
+                                        <span v-if="item.source === 'jadwal_umum'" class="badge badge-secondary badge-soft badge-sm">
+                                            Jadwal Umum
                                         </span>
                                         <?php if ($isMember): ?>
                                             <span
@@ -284,7 +284,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                         <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-semibold text-base-content/50">
                                             {{ item.periode_label || 'Periode belum ditentukan' }}
                                         </span>
-                                        <span v-else class="truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.ruangan || '-' }}</span>
+                                        <span v-else class="truncate text-xs font-semibold text-base-content/50">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
                                         <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">{{ statusLabel(item.status) }}</span>
                                     </span>
                                 </span>
@@ -309,7 +309,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                 <dl v-else class="mt-4 grid gap-3 rounded-box bg-base-200 p-4 sm:grid-cols-2">
                                     <div>
                                         <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Tanggal dan waktu</dt>
-                                        <dd class="mt-1 text-sm font-bold">{{ fullDate(item.tanggal) }} · {{ item.waktu_mulai }}–{{ item.waktu_selesai }} WITA</dd>
+                                        <dd class="mt-1 text-sm font-bold">{{ fullDate(item.tanggal) }} · {{ executionTime(item) }}</dd>
                                     </div>
                                     <div>
                                         <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Lokasi</dt>
@@ -318,6 +318,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                     <div v-if="item.komisi" class="sm:col-span-2">
                                         <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Unit rapat</dt>
                                         <dd class="mt-1 text-sm font-bold">{{ item.komisi }}</dd>
+                                    </div>
+                                    <div v-if="item.pihak_eksternal" class="sm:col-span-2">
+                                        <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Pihak eksternal</dt>
+                                        <dd class="mt-1 text-sm font-bold">{{ item.pihak_eksternal }}</dd>
                                     </div>
                                 </dl>
 
@@ -357,53 +361,123 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             </div>
         </section>
 
-        <aside class="grid gap-4">
-            <section class="card card-border bg-base-100 shadow-sm">
-                <div class="card-body gap-4">
-                    <div>
-                        <h2 class="card-title text-xl font-black uppercase">Jadwal Umum</h2>
+        <section class="card card-border bg-base-100 shadow-sm">
+            <div class="card-body gap-0 p-0">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-6">
+                    <h1 class="text-2xl font-black uppercase tracking-tight">Jadwal Umum</h1>
+                    <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <select class="select select-sm w-full font-bold sm:w-44" v-model="generalPeriodMode" @change="changeGeneralPeriod" aria-label="Filter periode jadwal umum">
+                            <option value="month">Bulan ini</option>
+                            <option value="quarter">Triwulan ini</option>
+                            <option value="semester">Semester ini</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" type="button" @click="loadAgenda" :disabled="refreshing">
+                            <span v-if="refreshing" class="loading loading-spinner loading-xs"></span>
+                            <svg v-else viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Perbarui
+                        </button>
                     </div>
-
-                    <div v-if="generalLoading" class="grid gap-2">
-                        <div v-for="item in 2" :key="'general-skeleton-' + item" class="skeleton h-16 w-full"></div>
-                    </div>
-
-                    <div v-else-if="generalLoadError" role="alert" class="alert alert-error alert-soft text-sm">
-                        <span>Jadwal umum gagal dimuat.</span>
-                    </div>
-
-                    <ul v-else-if="generalAgendas.length" class="list rounded-box border border-base-300 bg-base-100">
-                        <li v-for="item in generalAgendas" :key="'general-' + item.id" class="list-row items-center border-b border-base-300 last:border-b-0">
-                            <div class="grid h-12 w-12 shrink-0 place-items-center rounded-box bg-base-200 text-center">
-                                <span class="text-[10px] font-extrabold uppercase text-base-content/45">{{ shortMonth(item.tanggal) }}</span>
-                                <strong class="text-lg leading-none">{{ dayNumber(item.tanggal) }}</strong>
-                            </div>
-                            <div class="list-col-grow min-w-0">
-                                <p class="line-clamp-2 text-sm font-extrabold leading-5">{{ item.judul }}</p>
-                                <?php if ($isMember): ?>
-                                    <div v-if="!item.is_public" class="mt-1 flex flex-wrap gap-1.5">
-                                        <span
-                                            class="tooltip tooltip-bottom cursor-help"
-                                            data-tip="Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
-                                            aria-label="Internal DPRD. Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
-                                        >
-                                            <span class="badge badge-ghost badge-xs">Internal DPRD</span>
-                                        </span>
-                                    </div>
-                                <?php endif; ?>
-                                <p class="mt-1 truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.lokasi }}</p>
-                                <p v-if="item.pihak_eksternal" class="mt-1 truncate text-xs text-base-content/50">{{ item.pihak_eksternal }}</p>
-                                <span class="mt-1 flex flex-wrap gap-1">
-                                    <span class="badge badge-info badge-sm">{{ generalCategoryLabel(item.kategori) }}</span>
-                                </span>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <p v-else class="rounded-box border border-dashed border-base-300 p-6 text-center text-sm font-semibold text-base-content/50">Belum ada jadwal umum yang dipublikasikan.</p>
                 </div>
-            </section>
-        </aside>
+
+                <div v-if="initialLoading" class="grid gap-3 p-4 sm:p-6">
+                    <div v-for="item in 3" :key="'general-skeleton-' + item" class="skeleton h-20 w-full"></div>
+                </div>
+
+                <div v-else-if="loadError" class="p-4 sm:p-6">
+                    <div role="alert" class="alert alert-error alert-soft">
+                        <span>Jadwal umum gagal dimuat. Silakan coba perbarui kembali.</span>
+                    </div>
+                </div>
+
+                <div v-else-if="filteredGeneralAgendas.length === 0" class="grid min-h-80 place-items-center p-8 text-center">
+                    <div>
+                        <svg class="mx-auto text-base-content/30" viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/></svg>
+                        <h2 class="mt-4 text-lg font-extrabold">Belum ada jadwal umum</h2>
+                        <p class="mt-1 text-sm font-semibold text-base-content/55">Tidak ada jadwal untuk kelompok, cakupan, dan periode yang dipilih.</p>
+                    </div>
+                </div>
+
+                <div v-else class="p-4 sm:p-6">
+                    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="text-sm font-semibold text-base-content/55">Menampilkan {{ generalPageStart }}–{{ generalPageEnd }} dari {{ orderedGeneralAgendas.length }} agenda</p>
+                        <label class="flex items-center gap-2 text-sm font-bold">
+                            Tampilkan
+                            <select class="select select-sm w-20" v-model.number="generalPageSize" @change="changeGeneralPageSize" aria-label="Jumlah jadwal umum per halaman">
+                                <option :value="10">10</option>
+                                <option :value="25">25</option>
+                                <option :value="50">50</option>
+                                <option :value="100">100</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <details
+                            v-for="item in paginatedGeneralAgendas"
+                            :key="item.key"
+                            class="collapse collapse-arrow border border-base-300 bg-base-100"
+                            :class="{ 'outline outline-2 outline-base-content': expandedGeneralKey === item.key }"
+                            :open="expandedGeneralKey === item.key"
+                            @toggle="handleGeneralToggle($event, item.key)"
+                        >
+                            <summary class="collapse-title grid min-h-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3 pr-12">
+                                <span class="grid h-12 w-12 shrink-0 place-items-center rounded-box bg-base-200 text-center">
+                                    <span>
+                                        <span class="block text-[10px] font-extrabold uppercase text-base-content/45">{{ shortMonth(item.tanggal) }}</span>
+                                        <strong class="block text-lg leading-none">{{ dayNumber(item.tanggal) }}</strong>
+                                    </span>
+                                </span>
+                                <span class="min-w-0">
+                                    <span class="line-clamp-2 text-sm font-extrabold leading-5 sm:text-base">{{ item.judul }}</span>
+                                    <span class="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+                                        <span class="badge badge-secondary badge-soft badge-sm">Jadwal Umum</span>
+                                        <?php if ($isMember): ?>
+                                            <span v-if="!item.is_public" class="badge badge-ghost badge-sm">Internal DPRD</span>
+                                            <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm">Anda Peserta</span>
+                                        <?php endif; ?>
+                                        <span class="truncate text-xs font-semibold text-base-content/50">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
+                                        <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">{{ statusLabel(item.status) }}</span>
+                                    </span>
+                                </span>
+                                <span :class="statusBadgeClass(item.status)" class="hidden sm:inline-flex">{{ statusLabel(item.status) }}</span>
+                            </summary>
+
+                            <div class="collapse-content border-t border-base-300">
+                                <p v-if="item.keterangan" class="pt-4 text-sm font-medium leading-6 text-base-content/60">{{ item.keterangan }}</p>
+                                <dl class="mt-4 grid gap-3 rounded-box bg-base-200 p-4 sm:grid-cols-2">
+                                    <div>
+                                        <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Tanggal dan waktu</dt>
+                                        <dd class="mt-1 text-sm font-bold">{{ fullDate(item.tanggal) }} · {{ executionTime(item) }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Lokasi</dt>
+                                        <dd class="mt-1 text-sm font-bold">{{ item.ruangan || '-' }}</dd>
+                                    </div>
+                                    <div v-if="item.komisi" class="sm:col-span-2">
+                                        <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Kelompok peserta</dt>
+                                        <dd class="mt-1 text-sm font-bold">{{ item.komisi }}</dd>
+                                    </div>
+                                    <div v-if="item.pihak_eksternal" class="sm:col-span-2">
+                                        <dt class="text-[10px] font-extrabold uppercase tracking-wider text-base-content/45">Pihak eksternal</dt>
+                                        <dd class="mt-1 text-sm font-bold">{{ item.pihak_eksternal }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div v-if="generalTotalPages > 1" class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <span class="text-xs font-semibold text-base-content/50">Halaman {{ currentGeneralPage }} dari {{ generalTotalPages }}</span>
+                        <div class="join">
+                            <button class="btn btn-sm join-item" type="button" @click="goToGeneralPage(currentGeneralPage - 1)" :disabled="currentGeneralPage === 1">Sebelumnya</button>
+                            <button class="btn btn-sm btn-neutral join-item pointer-events-none" type="button" aria-current="page">{{ currentGeneralPage }}</button>
+                            <button class="btn btn-sm join-item" type="button" @click="goToGeneralPage(currentGeneralPage + 1)" :disabled="currentGeneralPage === generalTotalPages">Berikutnya</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <footer class="border-t border-base-300 bg-base-100 py-5">
@@ -420,7 +494,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
     createApp({
         setup() {
             const API_URL = <?= json_encode($apiUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-            const GENERAL_API_URL = <?= json_encode($generalApiUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
             const WEATHER_URL = <?= json_encode(base_url('api/signage/cuaca'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
             const LOGIN_URL = <?= json_encode(base_url('login?akses=anggota'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
             const IS_MEMBER = <?= $isMember ? 'true' : 'false' ?>;
@@ -433,7 +506,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 ...item,
                 key: `banmus_projection:${item.id}`,
             })));
-            const generalAgendas = ref([]);
             const units = ref([]);
             const unitScroller = ref(null);
             const canScrollUnitsLeft = ref(false);
@@ -451,14 +523,16 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             const activeNavigation = ref('all');
             const memberScope = ref(IS_MEMBER ? 'saya' : 'semua');
             const periodMode = ref('month');
+            const generalPeriodMode = ref('month');
             const pageSize = ref(10);
+            const generalPageSize = ref(10);
             const currentPage = ref(1);
+            const currentGeneralPage = ref(1);
             const expandedAgendaKey = ref(null);
+            const expandedGeneralKey = ref(null);
             const initialLoading = ref(true);
             const refreshing = ref(false);
             const loadError = ref(false);
-            const generalLoading = ref(true);
-            const generalLoadError = ref(false);
             const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark');
             let agendaTimer = null;
             let clockTimer = null;
@@ -506,7 +580,12 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 
                     return month === null || selectedMonths.has(month);
                 });
-                const rows = [...agendas.value, ...visibleProjections];
+                const rows = [
+                    ...agendas.value.filter((item) =>
+                        item.source === 'banmus'
+                        && selectedMonths.has(String(item.tanggal || '').slice(0, 7))),
+                    ...visibleProjections,
+                ];
                 if (activeNavigation.value.startsWith('unit:')) {
                     const unitId = Number(activeNavigation.value.slice(5));
                     return rows.filter((item) => (item.unit_ids || []).map(Number).includes(unitId));
@@ -514,21 +593,36 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 
                 return rows;
             });
-            const orderedAgendas = computed(() => {
+            const filteredGeneralAgendas = computed(() => {
+                const selectedMonths = new Set(periodMonths(generalPeriodMode.value));
+                let rows = agendas.value.filter((item) =>
+                    item.source === 'jadwal_umum'
+                    && selectedMonths.has(String(item.tanggal || '').slice(0, 7)));
+                if (activeNavigation.value.startsWith('unit:')) {
+                    const unitId = Number(activeNavigation.value.slice(5));
+                    rows = rows.filter((item) => (item.unit_ids || []).map(Number).includes(unitId));
+                }
+
+                return rows;
+            });
+            function orderAgendaRows(rows) {
                 const today = dateKey(new Date());
-                const active = filteredAgendas.value.filter((item) => item.status === 'berlangsung');
+                const active = rows.filter((item) => item.status === 'berlangsung');
                 const activeKeys = new Set(active.map((item) => item.key));
-                const upcoming = filteredAgendas.value.filter((item) =>
+                const upcoming = rows.filter((item) =>
                     item.status !== 'proyeksi'
                     && !activeKeys.has(item.key)
                     && item.tanggal >= today
                     && item.status !== 'selesai');
-                const projections = filteredAgendas.value.filter((item) => item.status === 'proyeksi');
+                const projections = rows.filter((item) => item.status === 'proyeksi');
                 const prioritizedKeys = new Set([...active, ...upcoming, ...projections].map((item) => item.key));
-                const remaining = filteredAgendas.value.filter((item) =>
+                const remaining = rows.filter((item) =>
                     !prioritizedKeys.has(item.key)).reverse();
+
                 return [...active, ...upcoming, ...projections, ...remaining];
-            });
+            }
+            const orderedAgendas = computed(() => orderAgendaRows(filteredAgendas.value));
+            const orderedGeneralAgendas = computed(() => orderAgendaRows(filteredGeneralAgendas.value));
             const totalPages = computed(() =>
                 Math.max(1, Math.ceil(orderedAgendas.value.length / pageSize.value)));
             const pageStart = computed(() =>
@@ -538,6 +632,18 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             const paginatedAgendas = computed(() => {
                 const offset = (currentPage.value - 1) * pageSize.value;
                 return orderedAgendas.value.slice(offset, offset + pageSize.value);
+            });
+            const generalTotalPages = computed(() =>
+                Math.max(1, Math.ceil(orderedGeneralAgendas.value.length / generalPageSize.value)));
+            const generalPageStart = computed(() =>
+                orderedGeneralAgendas.value.length
+                    ? ((currentGeneralPage.value - 1) * generalPageSize.value) + 1
+                    : 0);
+            const generalPageEnd = computed(() =>
+                Math.min(currentGeneralPage.value * generalPageSize.value, orderedGeneralAgendas.value.length));
+            const paginatedGeneralAgendas = computed(() => {
+                const offset = (currentGeneralPage.value - 1) * generalPageSize.value;
+                return orderedGeneralAgendas.value.slice(offset, offset + generalPageSize.value);
             });
             function scopeButtonClass(scope) {
                 return memberScope.value === scope
@@ -553,15 +659,15 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             }
 
-            function periodMonths() {
+            function periodMonths(mode = periodMode.value) {
                 const current = now.value;
                 let firstMonth = current.getMonth();
                 let count = 1;
 
-                if (periodMode.value === 'quarter') {
+                if (mode === 'quarter') {
                     firstMonth = Math.floor(current.getMonth() / 3) * 3;
                     count = 3;
-                } else if (periodMode.value === 'semester') {
+                } else if (mode === 'semester') {
                     firstMonth = current.getMonth() < 6 ? 0 : 6;
                     count = 6;
                 }
@@ -620,7 +726,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 const requestId = ++requestSequence;
                 refreshing.value = true;
                 try {
-                    const payloads = await Promise.all(periodMonths().map(fetchMonth));
+                    const requestedMonths = Array.from(new Set([
+                        ...periodMonths(periodMode.value),
+                        ...periodMonths(generalPeriodMode.value),
+                    ]));
+                    const payloads = await Promise.all(requestedMonths.map(fetchMonth));
                     if (requestId !== requestSequence) {
                         return;
                     }
@@ -628,7 +738,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     payloads.flatMap((payload) => payload.data || [])
                         .map((item) => ({
                             ...item,
-                            key: `${item.source || 'insidental_internal'}:${item.source_id ?? item.id}`,
+                            key: `${item.source || 'jadwal_umum'}:${item.source_id ?? item.id}`,
                         }))
                         .forEach((item) => unique.set(item.key, item));
                     agendas.value = Array.from(unique.values()).sort((a, b) =>
@@ -639,6 +749,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                     const validPage = Math.min(currentPage.value, totalPages.value);
                     if (validPage !== currentPage.value) {
                         currentPage.value = validPage;
+                        updateUrl();
+                    }
+                    const validGeneralPage = Math.min(currentGeneralPage.value, generalTotalPages.value);
+                    if (validGeneralPage !== currentGeneralPage.value) {
+                        currentGeneralPage.value = validGeneralPage;
                         updateUrl();
                     }
                     loadError.value = false;
@@ -687,32 +802,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 }
             }
 
-            async function loadGeneralAgenda() {
-                generalLoading.value = generalAgendas.value.length === 0;
-                try {
-                    const url = new URL(GENERAL_API_URL, window.location.origin);
-                    url.searchParams.set('month', monthKey(now.value));
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    const payload = await response.json();
-                    if (payload.status !== 'success') {
-                        throw new Error(payload.message || 'Respons jadwal umum tidak valid.');
-                    }
-                    generalAgendas.value = (payload.data || []).slice(0, 5);
-                    generalLoadError.value = false;
-                } catch (error) {
-                    generalLoadError.value = true;
-                    console.error('[Agenda Umum] Gagal mengambil data:', error);
-                } finally {
-                    generalLoading.value = false;
-                }
-            }
-
             function setNavigation(value) {
                 activeNavigation.value = value;
                 resetAgendaSelection();
+                resetGeneralSelection();
                 updateUrl();
             }
 
@@ -751,12 +844,19 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 memberScope.value = scope;
                 activeNavigation.value = 'all';
                 resetAgendaSelection();
+                resetGeneralSelection();
                 updateUrl();
                 loadAgenda();
             }
 
             function changePeriod() {
                 resetAgendaSelection();
+                updateUrl();
+                loadAgenda();
+            }
+
+            function changeGeneralPeriod() {
+                resetGeneralSelection();
                 updateUrl();
                 loadAgenda();
             }
@@ -769,9 +869,23 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 }
             }
 
+            function handleGeneralToggle(event, key) {
+                if (event.currentTarget.open) {
+                    expandedGeneralKey.value = key;
+                } else if (expandedGeneralKey.value === key) {
+                    expandedGeneralKey.value = null;
+                }
+            }
+
             function changePageSize() {
                 currentPage.value = 1;
                 expandedAgendaKey.value = null;
+                updateUrl();
+            }
+
+            function changeGeneralPageSize() {
+                currentGeneralPage.value = 1;
+                expandedGeneralKey.value = null;
                 updateUrl();
             }
 
@@ -781,9 +895,23 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 updateUrl();
             }
 
+            function goToGeneralPage(page) {
+                currentGeneralPage.value = Math.min(
+                    Math.max(1, Number(page)),
+                    generalTotalPages.value,
+                );
+                expandedGeneralKey.value = null;
+                updateUrl();
+            }
+
             function resetAgendaSelection() {
                 currentPage.value = 1;
                 expandedAgendaKey.value = null;
+            }
+
+            function resetGeneralSelection() {
+                currentGeneralPage.value = 1;
+                expandedGeneralKey.value = null;
             }
 
             function updateUrl() {
@@ -791,8 +919,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 setOptionalParam(url, 'menu', activeNavigation.value, 'all');
                 setOptionalParam(url, 'scope', memberScope.value, IS_MEMBER ? 'saya' : 'semua');
                 setOptionalParam(url, 'periode', periodMode.value, 'month');
+                setOptionalParam(url, 'periode_umum', generalPeriodMode.value, 'month');
                 setOptionalParam(url, 'tampil', String(pageSize.value), '10');
+                setOptionalParam(url, 'tampil_umum', String(generalPageSize.value), '10');
                 setOptionalParam(url, 'halaman', String(currentPage.value), '1');
+                setOptionalParam(url, 'halaman_umum', String(currentGeneralPage.value), '1');
                 window.history.replaceState({}, '', url.toString());
             }
 
@@ -837,16 +968,15 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 }[status] || 'badge badge-ghost badge-sm';
             }
 
-            function generalCategoryLabel(category) {
-                return {
-                    audiensi: 'Audiensi / Aspirasi',
-                    audiensi_publik: 'Audiensi / Aspirasi',
-                    demonstrasi: 'Unjuk Rasa / Demonstrasi',
-                    kunjungan: 'Kunjungan Tamu',
-                    undangan: 'Undangan / Luar Gedung',
-                    kegiatan_sosial: 'Kegiatan Sosial / Publik',
-                    lainnya: 'Lainnya',
-                }[category] || category || 'Lainnya';
+            function executionTime(item) {
+                if (!item.waktu_mulai) {
+                    return 'Sepanjang hari';
+                }
+                if (!item.waktu_selesai) {
+                    return `${item.waktu_mulai} WITA`;
+                }
+
+                return `${item.waktu_mulai}–${item.waktu_selesai} WITA`;
             }
 
             function parseDate(value) {
@@ -887,19 +1017,24 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 if (['quarter', 'semester'].includes(params.get('periode'))) {
                     periodMode.value = params.get('periode');
                 }
+                if (['quarter', 'semester'].includes(params.get('periode_umum'))) {
+                    generalPeriodMode.value = params.get('periode_umum');
+                }
                 if ([10, 25, 50, 100].includes(Number(params.get('tampil')))) {
                     pageSize.value = Number(params.get('tampil'));
+                }
+                if ([10, 25, 50, 100].includes(Number(params.get('tampil_umum')))) {
+                    generalPageSize.value = Number(params.get('tampil_umum'));
                 }
                 if (/^[1-9]\d*$/.test(params.get('halaman') || '')) {
                     currentPage.value = Number(params.get('halaman'));
                 }
+                if (/^[1-9]\d*$/.test(params.get('halaman_umum') || '')) {
+                    currentGeneralPage.value = Number(params.get('halaman_umum'));
+                }
                 loadAgenda();
-                loadGeneralAgenda();
                 loadWeather();
-                agendaTimer = setInterval(() => {
-                    loadAgenda();
-                    loadGeneralAgenda();
-                }, 60000);
+                agendaTimer = setInterval(loadAgenda, 60000);
                 clockTimer = setInterval(() => {
                     now.value = new Date();
                 }, 1000);
@@ -918,8 +1053,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 initialLoading,
                 refreshing,
                 loadError,
-                generalLoading,
-                generalLoadError,
                 units,
                 unitScroller,
                 canScrollUnitsLeft,
@@ -933,16 +1066,25 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 activeNavigation,
                 memberScope,
                 periodMode,
+                generalPeriodMode,
                 pageSize,
+                generalPageSize,
                 currentPage,
+                currentGeneralPage,
                 filteredAgendas,
+                filteredGeneralAgendas,
                 orderedAgendas,
+                orderedGeneralAgendas,
                 paginatedAgendas,
+                paginatedGeneralAgendas,
                 totalPages,
+                generalTotalPages,
                 pageStart,
                 pageEnd,
+                generalPageStart,
+                generalPageEnd,
                 expandedAgendaKey,
-                generalAgendas,
+                expandedGeneralKey,
                 scopeButtonClass,
                 isDark,
                 loadAgenda,
@@ -951,14 +1093,18 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 scrollUnitFilters,
                 setMemberScope,
                 changePeriod,
+                changeGeneralPeriod,
                 handleAgendaToggle,
+                handleGeneralToggle,
                 changePageSize,
+                changeGeneralPageSize,
                 goToPage,
+                goToGeneralPage,
                 navButtonClass,
                 compactUnitName,
                 statusLabel,
                 statusBadgeClass,
-                generalCategoryLabel,
+                executionTime,
                 fullDate,
                 shortMonth,
                 dayNumber,

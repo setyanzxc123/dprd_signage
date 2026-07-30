@@ -101,7 +101,7 @@ $flashError = session()->getFlashdata('error');
             <i data-lucide="layout-dashboard"></i>
             <span class="mobile-nav-label">Dashboard</span>
         </a>
-        <a href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
+        <a href="<?= base_url('admin/jadwal-umum') ?>" data-path="/admin/jadwal-umum">
             <i data-lucide="calendar-days"></i>
             <span class="mobile-nav-label">Jadwal</span>
         </a>

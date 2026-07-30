@@ -70,19 +70,14 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
                             </a>
                         </li>
                         <li>
-                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
-                                <span class="nav-text">Agenda Insidental</span>
+                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/jadwal-umum') ?>" data-path="/admin/jadwal-umum">
+                                <span class="nav-text">Jadwal Umum</span>
                                 <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
                             </a>
                         </li>
                         <li>
-                            <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/agenda-umum') ?>" data-path="/admin/agenda-umum">
-                                <span class="nav-text">Agenda Eksternal</span>
-                            </a>
-                        </li>
-                        <li>
                             <a class="nav-link-custom nav-child-link" href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender">
-                                <span class="nav-text">Seluruh Agenda</span>
+                                <span class="nav-text">Kalender Agenda</span>
                             </a>
                         </li>
                         <li>

@@ -33,7 +33,12 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
     private function assertCurrentSchema(): void
     {
-        foreach (['dokumen_banmus', 'jadwal_banmus', 'agenda_umum'] as $table) {
+        foreach ([
+            'dokumen_banmus',
+            'jadwal_banmus',
+            'jadwal_umum',
+            'jadwal_umum_unit_rapat',
+        ] as $table) {
             if (! $this->db->tableExists($table)) {
                 throw new RuntimeException(
                     "Tabel {$table} belum tersedia. Jalankan `php spark migrate` sebelum menjalankan seeder."
@@ -71,16 +76,15 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
         foreach ([
             'judul',
-            'kategori',
             'pihak_eksternal',
             'tanggal',
             'waktu_mulai',
-            'lokasi',
+            'lokasi_lainnya',
             'keterangan',
             'is_publik',
         ] as $field) {
-            if (! $this->db->fieldExists($field, 'agenda_umum')) {
-                throw new RuntimeException("Kolom agenda_umum.{$field} belum tersedia.");
+            if (! $this->db->fieldExists($field, 'jadwal_umum')) {
+                throw new RuntimeException("Kolom jadwal_umum.{$field} belum tersedia.");
             }
         }
     }
@@ -216,7 +220,7 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
     private function seedDefinitiveScheduleExamples(): void
     {
-        if (! $this->db->tableExists('jadwal_unit_rapat')) {
+        if (! $this->db->tableExists('jadwal_umum_unit_rapat')) {
             return;
         }
 
@@ -249,7 +253,7 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
     {
         $ids = [];
         foreach ([self::LEGACY_SOURCE_NOTE, self::DUMMY_SCHEDULE_NOTE] as $note) {
-            $rows = $this->db->table('jadwal')
+            $rows = $this->db->table('jadwal_umum')
                 ->select('id')
                 ->like('keterangan', $note, 'after')
                 ->get()
@@ -262,8 +266,8 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             return;
         }
 
-        $this->db->table('jadwal_unit_rapat')->whereIn('jadwal_id', $ids)->delete();
-        $this->db->table('jadwal')->whereIn('id', $ids)->delete();
+        $this->db->table('jadwal_umum_unit_rapat')->whereIn('jadwal_umum_id', $ids)->delete();
+        $this->db->table('jadwal_umum')->whereIn('id', $ids)->delete();
     }
 
     private function seedBanmusDocument(): void
@@ -392,23 +396,34 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
     private function seedGeneralAgendaExamples(): void
     {
-        $this->db->table('agenda_umum')
+        $this->db->table('jadwal_umum')
             ->like('keterangan', self::GENERAL_DUMMY_NOTE, 'after')
             ->delete();
 
         $now = date('Y-m-d H:i:s');
-        $rows = [];
+        $roomsByName = array_column(
+            $this->db->table('ruangan')->select('id, name')->get()->getResultArray(),
+            'id',
+            'name'
+        );
         foreach ($this->generalAgendaRows() as $item) {
-            $rows[] = [
-                ...$item,
+            $location = (string) $item['lokasi'];
+            $row = [
+                'judul' => $item['judul'],
+                'tanggal' => $item['tanggal'],
+                'waktu_mulai' => $item['waktu_mulai'],
+                'waktu_selesai' => $item['waktu_selesai'],
+                'ruangan_id' => $roomsByName[$location] ?? null,
+                'lokasi_lainnya' => isset($roomsByName[$location]) ? null : $location,
                 'pihak_eksternal' => $item['pihak_eksternal'] ?? 'Masyarakat dan instansi terkait',
-                'keterangan' => self::GENERAL_DUMMY_NOTE . ' ' . $item['keterangan'],
+                'keterangan' => self::GENERAL_DUMMY_NOTE . ' ' . $item['keterangan']
+                    . ' Sumber informasi: ' . ($item['sumber_informasi'] ?? '-'),
+                'is_publik' => (int) $item['is_publik'],
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
+            $this->db->table('jadwal_umum')->insert($row);
         }
-
-        $this->db->table('agenda_umum')->insertBatch($rows);
     }
 
     /**
@@ -778,14 +793,13 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             'waktu_mulai'   => $schedule['start'],
             'waktu_selesai' => $schedule['end'],
             'ruangan_id'    => $schedule['room'] !== null ? ($roomsByName[$schedule['room']] ?? null) : null,
-            'status'        => $this->statusFor($schedule['date'], $schedule['start'], $schedule['end']),
-            'materi_url'    => null,
+            'pihak_eksternal' => null,
+            'is_publik'     => (int) $schedule['public'],
         ];
 
-        $this->putIfFieldExists($row, 'jadwal', 'lokasi_lainnya', $schedule['location']);
-        $this->putIfFieldExists($row, 'jadwal', 'stream_url', null);
-        $this->putIfFieldExists($row, 'jadwal', 'is_publik', (int) $schedule['public']);
-        $this->putIfFieldExists($row, 'jadwal', 'jenis', $schedule['jenis']);
+        $this->putIfFieldExists($row, 'jadwal_umum', 'lokasi_lainnya', $schedule['location']);
+        $this->putIfFieldExists($row, 'jadwal_umum', 'created_at', date('Y-m-d H:i:s'));
+        $this->putIfFieldExists($row, 'jadwal_umum', 'updated_at', date('Y-m-d H:i:s'));
 
         return $row;
     }
@@ -819,7 +833,7 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
     private function insertOrUpdateSchedule(array $row): int
     {
-        $existing = $this->db->table('jadwal')
+        $existing = $this->db->table('jadwal_umum')
             ->select('id')
             ->where('judul', $row['judul'])
             ->where('tanggal', $row['tanggal'])
@@ -828,22 +842,22 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             ->getRowArray();
 
         if ($existing) {
-            $this->db->table('jadwal')
+            $this->db->table('jadwal_umum')
                 ->where('id', $existing['id'])
                 ->update($row);
 
             return (int) $existing['id'];
         }
 
-        $this->db->table('jadwal')->insert($row);
+        $this->db->table('jadwal_umum')->insert($row);
 
         return (int) $this->db->insertID();
     }
 
     private function syncScheduleUnits(int $scheduleId, array $unitNames, array $unitsByName): void
     {
-        $this->db->table('jadwal_unit_rapat')
-            ->where('jadwal_id', $scheduleId)
+        $this->db->table('jadwal_umum_unit_rapat')
+            ->where('jadwal_umum_id', $scheduleId)
             ->delete();
 
         $now = date('Y-m-d H:i:s');
@@ -852,11 +866,11 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
                 continue;
             }
 
-            $this->insertPivotIfMissing('jadwal_unit_rapat', [
-                'jadwal_id'     => $scheduleId,
+            $this->insertPivotIfMissing('jadwal_umum_unit_rapat', [
+                'jadwal_umum_id' => $scheduleId,
                 'unit_rapat_id' => (int) $unitsByName[$unitName],
                 'created_at'    => $now,
-            ], ['jadwal_id', 'unit_rapat_id']);
+            ], ['jadwal_umum_id', 'unit_rapat_id']);
         }
     }
 

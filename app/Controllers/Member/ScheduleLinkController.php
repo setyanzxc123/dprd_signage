@@ -8,24 +8,6 @@ use CodeIgniter\HTTP\RedirectResponse;
 
 class ScheduleLinkController extends BaseController
 {
-    public function live(int $id): RedirectResponse
-    {
-        return $this->redirectToResource(
-            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
-            $id,
-            'stream',
-        );
-    }
-
-    public function berkas(int $id): RedirectResponse
-    {
-        return $this->redirectToResource(
-            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
-            $id,
-            'materi',
-        );
-    }
-
     public function liveBanmus(int $id): RedirectResponse
     {
         return $this->redirectToResource(

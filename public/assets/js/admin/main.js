@@ -163,7 +163,7 @@
 
         return ![
             '/admin/dashboard',
-            '/admin/jadwal',
+            '/admin/jadwal-umum',
         ].some(function (path) {
             return isMobilePrimaryPath(current, path);
         });

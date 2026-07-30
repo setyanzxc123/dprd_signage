@@ -8,46 +8,6 @@ use CodeIgniter\HTTP\RedirectResponse;
 
 class RedirectController extends BaseController
 {
-    /**
-     * GET /go/jadwal/{id}/live
-     * Redirect ke stream_url dari jadwal publik tertentu.
-     * Jika tidak ada → tampilkan halaman info singkat.
-     */
-    public function live(int $id): RedirectResponse|string
-    {
-        $url = (new ScheduleResourceLinkService())->publicUrl(
-            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
-            $id,
-            'stream',
-        );
-
-        if ($url) {
-            return redirect()->to($url);
-        }
-
-        return $this->_noActive('Siaran Langsung', 'Siaran langsung untuk rapat ini belum tersedia.');
-    }
-
-    /**
-     * GET /go/jadwal/{id}/berkas
-     * Redirect ke materi_url dari jadwal publik tertentu.
-     * Jika tidak ada → tampilkan halaman info singkat.
-     */
-    public function berkas(int $id): RedirectResponse|string
-    {
-        $url = (new ScheduleResourceLinkService())->publicUrl(
-            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
-            $id,
-            'materi',
-        );
-
-        if ($url) {
-            return redirect()->to($url);
-        }
-
-        return $this->_noActive('Berkas Rapat', 'Berkas untuk rapat ini belum tersedia.');
-    }
-
     public function liveBanmus(int $id): RedirectResponse|string
     {
         $url = (new ScheduleResourceLinkService())->publicUrl(
@@ -58,7 +18,7 @@ class RedirectController extends BaseController
 
         return $url
             ? redirect()->to($url)
-            : $this->_noActive('Siaran Langsung', 'Siaran langsung untuk rapat ini belum tersedia.');
+            : $this->noActive('Siaran Langsung', 'Siaran langsung untuk rapat ini belum tersedia.');
     }
 
     public function berkasBanmus(int $id): RedirectResponse|string
@@ -71,15 +31,10 @@ class RedirectController extends BaseController
 
         return $url
             ? redirect()->to($url)
-            : $this->_noActive('Berkas Rapat', 'Berkas untuk rapat ini belum tersedia.');
+            : $this->noActive('Berkas Rapat', 'Berkas untuk rapat ini belum tersedia.');
     }
 
-    // ── Private Helpers ──────────────────────────────────────────────────
-
-    /**
-     * Tampilkan halaman sederhana jika URL belum tersedia.
-     */
-    private function _noActive(string $judul, string $pesan): string
+    private function noActive(string $judul, string $pesan): string
     {
         return <<<HTML
         <!DOCTYPE html>

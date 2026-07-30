@@ -4,135 +4,47 @@ namespace App\Libraries\Schedule\Persistence;
 
 use App\Libraries\Schedule\Contracts\ScheduleReadRepositoryInterface;
 use App\Models\JadwalBanmusModel;
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\BaseConnection;
+use Config\Database;
 
-final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
+class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
 {
+    private BaseConnection $db;
+
     public function __construct(?BaseConnection $db = null)
     {
-        $this->db = $db ?? db_connect();
+        $this->db = $db ?? Database::connect();
     }
-
-    private readonly BaseConnection $db;
 
     public function findSchedules(
         bool $publicOnly,
         ?string $date,
         ?string $month,
         ?int $unitId,
-        ?array $allowedScheduleIds = null,
+        ?array $allowedScheduleIds = null
     ): array {
-        if ($allowedScheduleIds === []) {
-            return [];
-        }
+        $general = $this->db->tableExists('jadwal_umum')
+            ? $this->generalScheduleQuery($publicOnly, $date, $month, $unitId, $allowedScheduleIds)->get()->getResultArray()
+            : [];
+        $banmus = $this->db->tableExists('jadwal_banmus') && $this->db->tableExists('dokumen_banmus')
+            ? $this->banmusScheduleQuery($publicOnly, $date, $month, $unitId, $allowedScheduleIds)->get()->getResultArray()
+            : [];
 
-        $rows = [];
-        if ($this->db->tableExists('jadwal')) {
-            $builder = $this->baseScheduleQuery();
-            if ($publicOnly) {
-                $builder->where('j.is_publik', 1);
-            }
-            $this->applyDateFilter($builder, 'j.tanggal', $date, $month);
-            $rows = $builder->get()->getResultArray();
-        }
-
-        if ($this->db->tableExists('jadwal_banmus')) {
-            $builder = $this->baseBanmusQuery()
-                ->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING)
-                ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
-                ->where('jb.deleted_at', null)
-                ->where('jb.tanggal IS NOT NULL', null, false)
-                ->where('jb.jam_mulai IS NOT NULL', null, false)
-                ->where('jb.jam_selesai IS NOT NULL', null, false);
-            if ($publicOnly) {
-                $builder
-                    ->where('jb.publikasi', 'publik')
-                    ->where('db.is_publik', 1);
-            }
-            $this->applyDateFilter($builder, 'jb.tanggal', $date, $month);
-            $rows = array_merge($rows, $builder->get()->getResultArray());
-        }
-
-        if ($allowedScheduleIds !== null) {
-            $allowedMap = array_fill_keys(array_map('intval', $allowedScheduleIds), true);
-            $rows = array_values(array_filter(
-                $rows,
-                static fn (array $row): bool => isset($allowedMap[(int) $row['id']]),
-            ));
-        }
-        if ($unitId !== null) {
-            $unitScheduleIds = $this->findScheduleIdsForUnit($unitId);
-            if ($unitScheduleIds === []) {
-                return [];
-            }
-            $unitMap = array_fill_keys($unitScheduleIds, true);
-            $rows = array_values(array_filter(
-                $rows,
-                static fn (array $row): bool => isset($unitMap[(int) $row['id']]),
-            ));
-        }
-
-        usort($rows, static fn (array $left, array $right): int => [
-            (string) $left['tanggal'],
-            (string) $left['waktu_mulai'],
-            (int) $left['id'],
-        ] <=> [
-            (string) $right['tanggal'],
-            (string) $right['waktu_mulai'],
-            (int) $right['id'],
-        ]);
-
-        return $rows;
+        return $this->sortSchedules(array_merge($general, $banmus));
     }
 
     public function findUpcomingPublic(string $afterDate, int $limit): array
     {
-        $limit = max(1, $limit);
-        $rows = [];
-
-        if ($this->db->tableExists('jadwal')) {
-            $rows = $this->baseScheduleQuery()
-                ->where('j.is_publik', 1)
-                ->where('j.tanggal >', $afterDate)
-                ->orderBy('j.tanggal', 'ASC')
-                ->orderBy('j.waktu_mulai', 'ASC')
-                ->limit($limit)
-                ->get()
-                ->getResultArray();
-        }
-        if ($this->db->tableExists('jadwal_banmus')) {
-            $banmusRows = $this->baseBanmusQuery()
-                ->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING)
-                ->where('jb.publikasi', 'publik')
-                ->where('db.is_publik', 1)
-                ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
-                ->where('jb.deleted_at', null)
-                ->where('jb.tanggal >', $afterDate)
-                ->where('jb.jam_mulai IS NOT NULL', null, false)
-                ->where('jb.jam_selesai IS NOT NULL', null, false)
-                ->orderBy('jb.tanggal', 'ASC')
-                ->orderBy('jb.jam_mulai', 'ASC')
-                ->limit($limit)
-                ->get()
-                ->getResultArray();
-            $rows = array_merge($rows, $banmusRows);
-        }
-
-        usort($rows, static fn (array $left, array $right): int => [
-            (string) $left['tanggal'],
-            (string) $left['waktu_mulai'],
-        ] <=> [
-            (string) $right['tanggal'],
-            (string) $right['waktu_mulai'],
-        ]);
+        $rows = $this->findSchedules(true, null, null, null);
+        $rows = array_values(array_filter($rows, static fn (array $row): bool => ($row['tanggal'] ?? '') > $afterDate));
 
         return array_slice($rows, 0, $limit);
     }
 
     public function findActiveUnits(): array
     {
-        return $this->db
-            ->table('unit_rapat')
+        return $this->db->table('unit_rapat')
             ->select('id, nama')
             ->where('aktif', 1)
             ->orderBy('urutan', 'ASC')
@@ -143,214 +55,210 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
 
     public function findMemberUnitIds(int $memberId): array
     {
-        if ($memberId < 1 || ! $this->db->tableExists('anggota_unit_rapat')) {
+        if (! $this->db->tableExists('anggota_unit_rapat')) {
             return [];
         }
 
-        $rows = $this->db
-            ->table('anggota_unit_rapat aur')
-            ->select('aur.unit_rapat_id')
-            ->join('unit_rapat ur', 'ur.id = aur.unit_rapat_id')
-            ->where('aur.anggota_id', $memberId)
-            ->where('ur.aktif', 1)
-            ->get()
-            ->getResultArray();
-
-        return array_values(array_unique(array_map(
-            static fn (array $row): int => (int) $row['unit_rapat_id'],
-            $rows,
-        )));
+        return array_map(
+            'intval',
+            array_column(
+                $this->db->table('anggota_unit_rapat')
+                    ->select('unit_rapat_id')
+                    ->where('anggota_id', $memberId)
+                    ->get()
+                    ->getResultArray(),
+                'unit_rapat_id'
+            )
+        );
     }
 
     public function findScheduleIdsForMember(int $memberId): array
     {
-        if ($memberId < 1
-            || ! $this->db->tableExists('anggota_unit_rapat')
-            || ! $this->db->tableExists('jadwal_unit_rapat')) {
+        $unitIds = $this->findMemberUnitIds($memberId);
+        if ($unitIds === []) {
             return [];
         }
 
-        $rows = $this->db->table('jadwal_unit_rapat jur')
-            ->distinct()
-            ->select('jur.jadwal_id')
-            ->join('anggota_unit_rapat aur', 'aur.unit_rapat_id = jur.unit_rapat_id')
-            ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
-            ->where('aur.anggota_id', $memberId)
-            ->where('ur.aktif', 1)
-            ->get()->getResultArray();
-        $ids = array_map(
-            static fn (array $row): int => (int) $row['jadwal_id'],
-            $rows,
-        );
+        $generalIds = $this->db->tableExists('jadwal_umum_unit_rapat')
+            ? array_map(
+                'intval',
+                array_column(
+                    $this->db->table('jadwal_umum_unit_rapat')
+                    ->distinct()
+                    ->select('jadwal_umum_id')
+                    ->whereIn('unit_rapat_id', $unitIds)
+                    ->get()
+                    ->getResultArray(),
+                    'jadwal_umum_id'
+                )
+            )
+            : [];
 
-        if ($this->db->tableExists('jadwal_banmus_unit_rapat')) {
-            $banmusRows = $this->db->table('jadwal_banmus_unit_rapat jbur')
-                ->distinct()
-                ->select('jbur.jadwal_banmus_id')
-                ->join('anggota_unit_rapat aur', 'aur.unit_rapat_id = jbur.unit_rapat_id')
-                ->join('unit_rapat ur', 'ur.id = jbur.unit_rapat_id')
-                ->where('aur.anggota_id', $memberId)
-                ->where('ur.aktif', 1)
-                ->get()->getResultArray();
-            $ids = array_merge($ids, array_map(
-                static fn (array $row): int => -(int) $row['jadwal_banmus_id'],
-                $banmusRows,
-            ));
-        }
+        $banmusIds = $this->db->tableExists('jadwal_banmus_unit_rapat')
+            ? array_map(
+                static fn ($id): int => -abs((int) $id),
+                array_column(
+                    $this->db->table('jadwal_banmus_unit_rapat')
+                    ->distinct()
+                    ->select('jadwal_banmus_id')
+                    ->whereIn('unit_rapat_id', $unitIds)
+                    ->get()
+                    ->getResultArray(),
+                    'jadwal_banmus_id'
+                )
+            )
+            : [];
 
-        return array_values(array_unique($ids));
+        return array_values(array_unique(array_merge($generalIds, $banmusIds)));
     }
 
     public function findUnitsByScheduleIds(array $scheduleIds): array
     {
-        $scheduleIds = array_values(array_unique(array_filter(array_map('intval', $scheduleIds))));
         if ($scheduleIds === []) {
             return [];
         }
 
-        $map = [];
-        $regularIds = array_values(array_filter($scheduleIds, static fn (int $id): bool => $id > 0));
-        if ($regularIds !== [] && $this->db->tableExists('jadwal_unit_rapat')) {
-            $rows = $this->db->table('jadwal_unit_rapat jur')
-                ->select('jur.jadwal_id, ur.id, ur.nama')
-                ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
-                ->whereIn('jur.jadwal_id', $regularIds)
-                ->where('ur.aktif', 1)
+        $generalIds = array_values(array_filter(array_map('intval', $scheduleIds), static fn (int $id): bool => $id > 0));
+        $banmusIds = array_values(array_map(
+            static fn (int $id): int => abs($id),
+            array_filter(array_map('intval', $scheduleIds), static fn (int $id): bool => $id < 0)
+        ));
+        $result = [];
+
+        if ($generalIds !== [] && $this->db->tableExists('jadwal_umum_unit_rapat')) {
+            $rows = $this->db->table('jadwal_umum_unit_rapat juur')
+                ->select('juur.jadwal_umum_id AS schedule_id, ur.id, ur.nama')
+                ->join('unit_rapat ur', 'ur.id = juur.unit_rapat_id')
+                ->whereIn('juur.jadwal_umum_id', $generalIds)
                 ->orderBy('ur.urutan', 'ASC')
-                ->orderBy('ur.nama', 'ASC')
-                ->get()->getResultArray();
-            foreach ($rows as $row) {
-                $map[(int) $row['jadwal_id']][] = [
-                    'id' => (int) $row['id'],
-                    'nama' => (string) $row['nama'],
-                ];
-            }
+                ->get()
+                ->getResultArray();
+            $this->groupUnits($result, $rows, false);
         }
 
-        $banmusIds = array_map(
-            static fn (int $id): int => abs($id),
-            array_values(array_filter($scheduleIds, static fn (int $id): bool => $id < 0)),
-        );
         if ($banmusIds !== [] && $this->db->tableExists('jadwal_banmus_unit_rapat')) {
             $rows = $this->db->table('jadwal_banmus_unit_rapat jbur')
-                ->select('jbur.jadwal_banmus_id, ur.id, ur.nama')
+                ->select('jbur.jadwal_banmus_id AS schedule_id, ur.id, ur.nama')
                 ->join('unit_rapat ur', 'ur.id = jbur.unit_rapat_id')
                 ->whereIn('jbur.jadwal_banmus_id', $banmusIds)
-                ->where('ur.aktif', 1)
                 ->orderBy('ur.urutan', 'ASC')
-                ->orderBy('ur.nama', 'ASC')
-                ->get()->getResultArray();
-            foreach ($rows as $row) {
-                $map[-(int) $row['jadwal_banmus_id']][] = [
-                    'id' => (int) $row['id'],
-                    'nama' => (string) $row['nama'],
-                ];
-            }
+                ->get()
+                ->getResultArray();
+            $this->groupUnits($result, $rows, true);
         }
 
-        return $map;
+        return $result;
     }
 
-    private function baseScheduleQuery()
-    {
-        return $this->db
-            ->table('jadwal j')
-            ->select('
-                j.id,
-                j.id AS source_id,
-                "insidental_internal" AS source,
-                "internal" AS lingkup,
-                NULL AS dokumen_banmus_id,
-                j.judul,
-                j.keterangan,
-                j.tanggal,
-                j.waktu_mulai,
-                j.waktu_selesai,
-                j.status,
-                j.materi_url,
-                j.materi_akses,
-                j.stream_url,
-                j.stream_akses,
-                j.jenis,
-                j.is_publik,
-                j.lokasi_lainnya,
-                r.name AS nama_ruangan
-            ', false)
-            ->join('ruangan r', 'r.id = j.ruangan_id', 'left');
+    private function generalScheduleQuery(
+        bool $publicOnly,
+        ?string $date,
+        ?string $month,
+        ?int $unitId,
+        ?array $allowedScheduleIds
+    ): BaseBuilder {
+        $builder = $this->db->table('jadwal_umum ju')
+            ->select(
+                "ju.id, ju.id AS source_id, 'jadwal_umum' AS source, NULL AS lingkup, "
+                . 'NULL AS dokumen_banmus_id, ju.judul, ju.keterangan, ju.tanggal, '
+                . "ju.waktu_mulai, ju.waktu_selesai, 'menunggu' AS status, "
+                . 'NULL AS materi_url, NULL AS materi_akses, NULL AS stream_url, NULL AS stream_akses, '
+                . "'jadwal_umum' AS jenis, ju.is_publik, ju.lokasi_lainnya, "
+                . 'r.name AS nama_ruangan, ju.pihak_eksternal',
+                false,
+            )
+            ->join('ruangan r', 'r.id = ju.ruangan_id', 'left');
+
+        if ($publicOnly) {
+            $builder->where('ju.is_publik', 1);
+        }
+        $this->applyDateFilters($builder, 'ju.tanggal', $date, $month);
+
+        if ($unitId !== null) {
+            $builder->join('jadwal_umum_unit_rapat juur_filter', 'juur_filter.jadwal_umum_id = ju.id')
+                ->where('juur_filter.unit_rapat_id', $unitId);
+        }
+        if ($allowedScheduleIds !== null) {
+            $ids = array_values(array_filter(array_map('intval', $allowedScheduleIds), static fn (int $id): bool => $id > 0));
+            $ids === [] ? $builder->where('1 = 0', null, false) : $builder->whereIn('ju.id', $ids);
+        }
+
+        return $builder->groupBy('ju.id');
     }
 
-    private function baseBanmusQuery()
-    {
-        return $this->db
-            ->table('jadwal_banmus jb')
-            ->select('
-                -jb.id AS id,
-                jb.id AS source_id,
-                "banmus" AS source,
-                "internal" AS lingkup,
-                jb.dokumen_banmus_id,
-                jb.agenda AS judul,
-                jb.catatan AS keterangan,
-                jb.tanggal,
-                jb.jam_mulai AS waktu_mulai,
-                jb.jam_selesai AS waktu_selesai,
-                jb.status,
-                jb.materi_url,
-                jb.materi_akses,
-                jb.stream_url,
-                jb.stream_akses,
-                "reguler" AS jenis,
-                CASE
-                    WHEN jb.publikasi = "publik" AND db.is_publik = 1 THEN 1
-                    ELSE 0
-                END AS is_publik,
-                jb.lokasi_lainnya,
-                r.name AS nama_ruangan
-            ', false)
+    private function banmusScheduleQuery(
+        bool $publicOnly,
+        ?string $date,
+        ?string $month,
+        ?int $unitId,
+        ?array $allowedScheduleIds
+    ): BaseBuilder {
+        $builder = $this->db->table('jadwal_banmus jb')
+            ->select(
+                "-jb.id AS id, jb.id AS source_id, 'banmus' AS source, NULL AS lingkup, "
+                . 'jb.dokumen_banmus_id, jb.agenda AS judul, jb.catatan AS keterangan, '
+                . 'jb.tanggal, jb.jam_mulai AS waktu_mulai, jb.jam_selesai AS waktu_selesai, jb.status, '
+                . 'jb.materi_url, jb.materi_akses, jb.stream_url, jb.stream_akses, '
+                . "'rapat' AS jenis, CASE WHEN jb.publikasi = 'publik' AND db.is_publik = 1 THEN 1 ELSE 0 END AS is_publik, "
+                . 'jb.lokasi_lainnya, r.name AS nama_ruangan, NULL AS pihak_eksternal',
+                false,
+            )
             ->join('dokumen_banmus db', 'db.id = jb.dokumen_banmus_id')
-            ->join('ruangan r', 'r.id = jb.ruangan_id', 'left');
-    }
+            ->join('ruangan r', 'r.id = jb.ruangan_id', 'left')
+            ->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING)
+            ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
+            ->where('jb.deleted_at', null);
 
-    /** @return list<int> */
-    private function findScheduleIdsForUnit(int $unitId): array
-    {
-        if ($unitId < 1) {
-            return [];
+        if ($publicOnly) {
+            $builder->where('jb.publikasi', 'publik')->where('db.is_publik', 1);
         }
+        $this->applyDateFilters($builder, 'jb.tanggal', $date, $month);
 
-        $ids = [];
-        if ($this->db->tableExists('jadwal_unit_rapat')) {
-            $rows = $this->db->table('jadwal_unit_rapat')
-                ->select('jadwal_id')
-                ->where('unit_rapat_id', $unitId)
-                ->get()->getResultArray();
-            $ids = array_map(static fn (array $row): int => (int) $row['jadwal_id'], $rows);
+        if ($unitId !== null) {
+            $builder->join('jadwal_banmus_unit_rapat jbur_filter', 'jbur_filter.jadwal_banmus_id = jb.id')
+                ->where('jbur_filter.unit_rapat_id', $unitId);
         }
-        if ($this->db->tableExists('jadwal_banmus_unit_rapat')) {
-            $rows = $this->db->table('jadwal_banmus_unit_rapat')
-                ->select('jadwal_banmus_id')
-                ->where('unit_rapat_id', $unitId)
-                ->get()->getResultArray();
-            $ids = array_merge($ids, array_map(
-                static fn (array $row): int => -(int) $row['jadwal_banmus_id'],
-                $rows,
+        if ($allowedScheduleIds !== null) {
+            $ids = array_values(array_map(
+                static fn (int $id): int => abs($id),
+                array_filter(array_map('intval', $allowedScheduleIds), static fn (int $id): bool => $id < 0)
             ));
+            $ids === [] ? $builder->where('1 = 0', null, false) : $builder->whereIn('jb.id', $ids);
         }
 
-        return array_values(array_unique($ids));
+        return $builder->groupBy('jb.id');
     }
 
-    private function applyDateFilter($builder, string $column, ?string $date, ?string $month): void
+    private function applyDateFilters(BaseBuilder $builder, string $field, ?string $date, ?string $month): void
     {
-        if ($month !== null) {
-            $start = $month . '-01';
-            $builder
-                ->where($column . ' >=', $start)
-                ->where($column . ' <=', date('Y-m-t', strtotime($start)));
-
-            return;
+        if ($date !== null && $date !== '') {
+            $builder->where($field, $date);
         }
+        if ($month !== null && preg_match('/^\d{4}-\d{2}$/', $month) === 1) {
+            $builder->where($field . ' >=', $month . '-01')
+                ->where($field . ' <', date('Y-m-d', strtotime($month . '-01 +1 month')));
+        }
+    }
 
-        $builder->where($column, $date);
+    private function groupUnits(array &$result, array $rows, bool $negative): void
+    {
+        foreach ($rows as $row) {
+            $scheduleId = (int) $row['schedule_id'];
+            $key = $negative ? -abs($scheduleId) : $scheduleId;
+            unset($row['schedule_id']);
+            $result[$key][] = $row;
+        }
+    }
+
+    private function sortSchedules(array $rows): array
+    {
+        usort($rows, static function (array $left, array $right): int {
+            $leftKey = ($left['tanggal'] ?? '') . ' ' . ($left['waktu_mulai'] ?? '00:00:00');
+            $rightKey = ($right['tanggal'] ?? '') . ' ' . ($right['waktu_mulai'] ?? '00:00:00');
+
+            return $leftKey <=> $rightKey ?: ((int) $left['id'] <=> (int) $right['id']);
+        });
+
+        return $rows;
     }
 }

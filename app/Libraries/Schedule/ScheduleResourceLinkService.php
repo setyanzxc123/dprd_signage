@@ -7,7 +7,6 @@ use CodeIgniter\Database\BaseConnection;
 
 final class ScheduleResourceLinkService
 {
-    public const SOURCE_INSIDENTAL = 'insidental_internal';
     public const SOURCE_BANMUS = 'banmus';
 
     public function __construct(?BaseConnection $db = null)
@@ -83,20 +82,6 @@ final class ScheduleResourceLinkService
         $urlColumn = $resource . '_url';
         $accessColumn = $resource . '_akses';
 
-        if ($source === self::SOURCE_INSIDENTAL) {
-            $builder = $this->db->table('jadwal j')
-                ->select("j.{$urlColumn} AS resource_url, j.{$accessColumn} AS resource_access")
-                ->where('j.id', $id)
-                ->where('j.jenis', 'insidental')
-                ->where("j.{$urlColumn} !=", '')
-                ->where("j.{$urlColumn} IS NOT NULL", null, false);
-            if ($publicOnly) {
-                $builder->where('j.is_publik', 1);
-            }
-
-            return $builder->get(1)->getRowArray();
-        }
-
         if ($source !== self::SOURCE_BANMUS) {
             return null;
         }
@@ -121,14 +106,6 @@ final class ScheduleResourceLinkService
 
     private function memberParticipates(string $source, int $id, int $memberId): bool
     {
-        if ($source === self::SOURCE_INSIDENTAL) {
-            return $this->db->table('jadwal_unit_rapat jur')
-                ->join('anggota_unit_rapat aur', 'aur.unit_rapat_id = jur.unit_rapat_id')
-                ->where('jur.jadwal_id', $id)
-                ->where('aur.anggota_id', $memberId)
-                ->countAllResults() > 0;
-        }
-
         if ($source === self::SOURCE_BANMUS) {
             return $this->db->table('jadwal_banmus_unit_rapat jbur')
                 ->join('anggota_unit_rapat aur', 'aur.unit_rapat_id = jbur.unit_rapat_id')

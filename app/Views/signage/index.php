@@ -129,7 +129,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
         <section id="panel-info" class="card rounded-none bg-base-200">
             <div class="card-body signage-schedule gap-0">
                 <h2 class="card-title border-b border-base-300 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
-                    Agenda Rapat Hari Ini
+                    Agenda Hari Ini
                 </h2>
 
                 <div v-if="jadwal.length === 0 && upcoming.length === 0"
@@ -148,7 +148,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         :class="['list-row grid-cols-[8vw_minmax(0,1fr)_auto] gap-[1.2vw] border border-base-300 bg-base-100 px-[1.4vw] py-[1.2vh] shadow-sm', scheduleItemClasses(item.status)]">
                         <div>
                             <div class="text-[1.1vw] font-bold tabular-nums text-primary">
-                                {{ item.waktu_mulai }} - {{ item.waktu_selesai }}
+                                {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                             </div>
                             <div class="mt-0.5 text-[0.75vw] text-base-content/65">{{ item.ruangan }}</div>
                         </div>
@@ -180,7 +180,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                                     {{ upcomingDateLabel(item.tanggal) }}
                                 </div>
                                 <div class="text-[0.9vw] font-bold tabular-nums text-primary">
-                                    {{ item.waktu_mulai }} - {{ item.waktu_selesai }}
+                                    {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                                 </div>
                                 <div class="text-[0.68vw] text-base-content/65">{{ item.ruangan }}</div>
                             </div>
@@ -461,7 +461,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         return;
                     }
 
-                    const url = `${BASE_URL}/go/jadwal/${activeJadwalId.value}/${activeQR.value}`;
+                    const url = `${BASE_URL}/go/jadwal-banmus/${activeJadwalId.value}/${activeQR.value}`;
                     makeQR('qr-display', url, 110);
                 }
 

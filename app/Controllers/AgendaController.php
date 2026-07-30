@@ -30,9 +30,6 @@ class AgendaController extends BaseController
             'logoUrl'      => base_url('assets/images/logo_dprd.jpg'),
             'portalUrl'    => base_url('agenda'),
             'apiUrl'       => base_url($isMember ? 'api/v1/anggota/jadwal' : 'api/v1/publik/jadwal'),
-            'generalApiUrl' => base_url($isMember
-                ? 'api/v1/anggota/agenda-umum'
-                : 'api/v1/publik/agenda-umum'),
             'member'       => $member,
             'isAdmin'      => $isAdmin,
             'banmusProjections' => $banmusProjections,

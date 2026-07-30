@@ -128,10 +128,15 @@ class RoomController extends BaseController
 
     private function roomHasSchedules(int $id): bool
     {
-        return \Config\Database::connect()
-            ->table('jadwal')
-            ->where('ruangan_id', $id)
-            ->countAllResults() > 0;
+        $db = \Config\Database::connect();
+        foreach (['jadwal_umum', 'jadwal_banmus'] as $table) {
+            if ($db->tableExists($table)
+                && $db->table($table)->where('ruangan_id', $id)->countAllResults() > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function failForm(string $message, ?int $id = null)

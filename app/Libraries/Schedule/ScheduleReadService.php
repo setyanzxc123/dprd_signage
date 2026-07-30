@@ -4,6 +4,7 @@ namespace App\Libraries\Schedule;
 
 use App\Libraries\Schedule\Contracts\ScheduleReadRepositoryInterface;
 use App\Libraries\Schedule\Persistence\DatabaseScheduleReadRepository;
+use App\Models\JadwalUmumModel;
 
 final class ScheduleReadService
 {
@@ -47,9 +48,7 @@ final class ScheduleReadService
         $range = $this->normalizeRange($filters);
         $unitId = $this->normalizeUnitId($filters['unit'] ?? null);
         $scope = ($filters['scope'] ?? 'saya') === 'semua' ? 'semua' : 'saya';
-        $allowedIds = $scope === 'saya'
-            ? $this->repository->findScheduleIdsForMember($memberId)
-            : null;
+        $allowedIds = $this->repository->findScheduleIdsForMember($memberId);
         $memberUnitIds = $this->repository->findMemberUnitIds($memberId);
         $rows = $this->repository->findSchedules(
             false,
@@ -58,6 +57,22 @@ final class ScheduleReadService
             $unitId,
             $allowedIds,
         );
+        if ($scope === 'semua') {
+            $rowMap = [];
+            foreach ($rows as $row) {
+                $rowMap[(string) $row['id']] = $row;
+            }
+            $publicRows = $this->repository->findSchedules(
+                true,
+                $range['date'],
+                $range['month'],
+                $unitId,
+            );
+            foreach ($publicRows as $row) {
+                $rowMap[(string) $row['id']] = $row;
+            }
+            $rows = array_values($rowMap);
+        }
 
         return [
             'date'  => $range['date'],
@@ -204,6 +219,15 @@ final class ScheduleReadService
 
     private function currentStatus(array $row): string
     {
+        if (($row['source'] ?? '') === JadwalUmumModel::SOURCE) {
+            return JadwalUmumModel::resolveLifecycleStatus(
+                (string) ($row['tanggal'] ?? ''),
+                $row['waktu_mulai'] ?? null,
+                $row['waktu_selesai'] ?? null,
+                ($this->clock)(),
+            );
+        }
+
         $storedStatus = (string) ($row['status'] ?? 'menunggu');
         if (in_array($storedStatus, ['proyeksi', 'ditunda', 'dibatalkan'], true)) {
             return $storedStatus;

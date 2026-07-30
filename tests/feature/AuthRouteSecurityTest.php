@@ -113,15 +113,19 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response->assertOK();
         $this->assertStringContainsString(base_url('agenda/jadwal-banmus'), $body);
         $this->assertStringContainsString('Proyeksi Banmus', $body);
+        $this->assertStringContainsString('Agenda Rapat', $body);
         $this->assertStringContainsString('Jadwal Umum', $body);
-        $this->assertStringContainsString("item.source === 'insidental_internal'", $body);
-        $this->assertStringContainsString('Agenda Insidental', $body);
-        $this->assertStringContainsString('v-for="item in generalAgendas"', $body);
+        $this->assertStringContainsString("item.source === 'jadwal_umum'", $body);
+        $this->assertStringContainsString("item.source === 'banmus'", $body);
+        $this->assertStringNotContainsString('Agenda Insidental', $body);
+        $this->assertStringContainsString('v-for="item in paginatedGeneralAgendas"', $body);
         $this->assertStringNotContainsString("navButtonClass('bamus')", $body);
         $this->assertStringNotContainsString('Jadwal Sidang', $body);
         $this->assertStringContainsString('Filter periode agenda rapat', $body);
+        $this->assertStringContainsString('Filter periode jadwal umum', $body);
         $this->assertStringContainsString('Semester ini', $body);
         $this->assertStringContainsString('Jumlah agenda per halaman', $body);
+        $this->assertStringContainsString('Jumlah jadwal umum per halaman', $body);
         $this->assertStringContainsString('collapse collapse-arrow', $body);
         $this->assertStringContainsString('handleAgendaToggle($event, item.key)', $body);
     }
@@ -161,9 +165,9 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertSame('application/json; charset=UTF-8', $response->response()->getHeaderLine('Content-Type'));
     }
 
-    public function testGeneralAgendaAdminRequiresAuthentication(): void
+    public function testGeneralScheduleAdminRequiresAuthentication(): void
     {
-        $response = $this->get('/admin/agenda-umum');
+        $response = $this->get('/admin/jadwal-umum');
 
         $response->assertRedirectTo(base_url('login?akses=admin'));
     }
@@ -221,8 +225,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         yield 'member OTP request' => ['/login/anggota'];
         yield 'member delete' => ['/admin/anggota/1/delete'];
         yield 'room delete' => ['/admin/ruangan/1/delete'];
-        yield 'meeting delete' => ['/admin/jadwal/1/delete'];
-        yield 'general agenda delete' => ['/admin/agenda-umum/1/delete'];
+        yield 'general schedule delete' => ['/admin/jadwal-umum/1/delete'];
         yield 'Banmus projection delete' => ['/admin/jadwal-banmus/1/delete'];
         yield 'admin profile update' => ['/admin/profile/update'];
     }

@@ -5,13 +5,11 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\Schedule\AgendaWorkspaceService;
 use App\Models\JadwalBanmusModel;
-use App\Models\JadwalModel;
 
 class AgendaWorkspaceController extends BaseController
 {
     public function kalender(): string
     {
-        (new JadwalModel())->autoUpdateStatuses();
         (new JadwalBanmusModel())->autoUpdateStatuses();
 
         $month = trim((string) $this->request->getGet('month'));
@@ -21,7 +19,7 @@ class AgendaWorkspaceController extends BaseController
 
         $view = $this->request->getGet('view') === 'calendar' ? 'calendar' : 'list';
         $filters = [];
-        foreach (['source', 'jenis', 'lingkup', 'unit', 'lokasi', 'status', 'publikasi'] as $filter) {
+        foreach (['source', 'unit', 'lokasi', 'status', 'publikasi'] as $filter) {
             $filters[$filter] = trim((string) $this->request->getGet($filter));
         }
 
@@ -38,7 +36,7 @@ class AgendaWorkspaceController extends BaseController
         $query = ['view' => $view, ...array_filter($filters, static fn (string $value): bool => $value !== '')];
 
         return view('admin/agenda_workspace/kalender', [
-            'pageTitle'       => 'Seluruh Agenda',
+            'pageTitle'       => 'Kalender Agenda',
             'month'           => $month,
             'month_label'     => $monthLabel,
             'view_mode'       => $view,
