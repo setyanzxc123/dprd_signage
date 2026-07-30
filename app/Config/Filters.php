@@ -77,7 +77,14 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            'csrf' => ['except' => ['webhooks/otp/fazpass']],
+            'csrf' => ['except' => [
+                'webhooks/otp/fazpass',
+                // Tetap dilindungi filter auth dan token acak milik sesi admin.
+                // Dikecualikan dari CSRF agar retry POST chunk tetap idempoten.
+                'admin/pengaturan/media-upload/start',
+                'admin/pengaturan/media-upload/chunk',
+                'admin/pengaturan/media-upload/cancel',
+            ]],
             // 'invalidchars',
         ],
         'after' => [

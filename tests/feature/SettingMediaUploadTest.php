@@ -43,7 +43,7 @@ final class SettingMediaUploadTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testSettingsPageUsesStandardMultipartUpload(): void
+    public function testSettingsPageUsesPostChunkUploadWithStandardMultipartFallback(): void
     {
         $response = $this
             ->withSession(['auth_user' => $this->adminSession()])
@@ -57,7 +57,13 @@ final class SettingMediaUploadTest extends CIUnitTestCase
         $this->assertStringContainsString('Maksimal 200 MB', $body);
         $this->assertStringContainsString('id="settings-upload-bar"', $body);
         $this->assertStringContainsString('id="settings-upload-speed"', $body);
+        $this->assertStringContainsString('name="media_upload_key"', $body);
+        $this->assertStringContainsString('data-upload-start-url="/admin/pengaturan/media-upload/start"', $body);
+        $this->assertStringContainsString('data-upload-chunk-url="/admin/pengaturan/media-upload/chunk"', $body);
+        $this->assertStringContainsString('data-upload-chunk-size="524288"', $body);
+        $this->assertMatchesRegularExpression('/data-upload-token="[a-f0-9]{64}"/', $body);
         $this->assertStringNotContainsString('media/tus', $body);
+        $this->assertStringNotContainsString('PATCH', $body);
         $this->assertStringNotContainsString('settings-upload.js', $body);
         $this->assertStringNotContainsString('uppy-status-bar', $body);
     }

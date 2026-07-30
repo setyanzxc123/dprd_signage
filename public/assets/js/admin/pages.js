@@ -339,12 +339,21 @@
         const submitSpinner = document.getElementById('settings-submit-spinner');
         const submitIcon = document.getElementById('settings-submit-icon');
         const submitLabel = document.getElementById('settings-submit-label');
+        const mediaInput = document.getElementById('media_file');
+        const uploadKeyInput = document.getElementById('media_upload_key');
 
-        if (!panel || !bar || !status || !percent || !submitButton || !window.FormData || !window.XMLHttpRequest) {
+        if (!panel || !bar || !status || !percent || !submitButton || !mediaInput || !uploadKeyInput
+            || !window.FormData || !window.XMLHttpRequest) {
             return;
         }
 
         form.dataset.settingsUploadBound = 'true';
+        const maxBytes = Number(form.dataset.uploadMax) || 200 * 1024 * 1024;
+        const configuredChunkSize = Number(form.dataset.uploadChunkSize) || 512 * 1024;
+        const retryDelays = [0, 1000, 3000, 5000, 10000, 20000];
+        let uploadStartedAt = 0;
+        let uploadInitialOffset = 0;
+        let currentAcceptedOffset = 0;
 
         const formatSpeed = (bytesPerSecond) => {
             const formatter = new Intl.NumberFormat('id-ID', {
@@ -373,6 +382,18 @@
             if (submitLabel) submitLabel.textContent = busy ? 'Menyimpan...' : 'Simpan Pengaturan';
         };
 
+        const preparePanel = (hasMediaFile) => {
+            panel.hidden = false;
+            panel.classList.remove('alert-error');
+            panel.classList.add('alert-info');
+            bar.classList.remove('progress-error');
+            bar.classList.add('progress-primary');
+            if (speed) {
+                speed.textContent = 'Mengukur kecepatan...';
+                speed.hidden = !hasMediaFile;
+            }
+        };
+
         const showError = (message) => {
             const currentValue = Number(bar.value) || 0;
             panel.hidden = false;
@@ -385,6 +406,183 @@
             setBusy(false);
         };
 
+        const sleep = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+
+        const bytesToHex = (buffer) => Array.from(new Uint8Array(buffer))
+            .map((byte) => byte.toString(16).padStart(2, '0'))
+            .join('');
+
+        const sha256 = async (value) => {
+            if (!window.crypto?.subtle) {
+                throw new Error('Browser tidak mendukung checksum upload yang aman.');
+            }
+
+            const buffer = value instanceof ArrayBuffer ? value : await value.arrayBuffer();
+            return bytesToHex(await window.crypto.subtle.digest('SHA-256', buffer));
+        };
+
+        const fileFingerprint = async (file) => {
+            const sampleSize = 64 * 1024;
+            const first = await file.slice(0, Math.min(sampleSize, file.size)).arrayBuffer();
+            const lastStart = Math.max(0, file.size - sampleSize);
+            const last = await file.slice(lastStart, file.size).arrayBuffer();
+            const metadata = new TextEncoder().encode(
+                `${file.name}\n${file.type}\n${file.size}\n${file.lastModified}\n`,
+            );
+            const combined = new Uint8Array(metadata.byteLength + first.byteLength + last.byteLength);
+            combined.set(metadata, 0);
+            combined.set(new Uint8Array(first), metadata.byteLength);
+            combined.set(new Uint8Array(last), metadata.byteLength + first.byteLength);
+
+            return sha256(combined.buffer);
+        };
+
+        const requestJson = (url, formData, onProgress = null, ajaxRequest = false) => new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            if (ajaxRequest) {
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('Accept', 'application/json');
+            }
+            if (onProgress) xhr.upload.addEventListener('progress', onProgress);
+
+            xhr.addEventListener('load', () => {
+                let payload = null;
+                try {
+                    payload = JSON.parse(xhr.responseText);
+                } catch {
+                    payload = null;
+                }
+
+                if (xhr.status >= 200 && xhr.status < 300 && payload?.status === 'success') {
+                    resolve(payload);
+                    return;
+                }
+
+                reject({
+                    status: xhr.status,
+                    payload,
+                    message: payload?.message || '',
+                });
+            });
+            xhr.addEventListener('error', () => reject({
+                status: 0,
+                payload: null,
+                message: 'Koneksi terputus saat mengunggah file.',
+            }));
+            xhr.addEventListener('abort', () => reject({
+                status: 0,
+                payload: null,
+                message: 'Upload dibatalkan.',
+            }));
+            xhr.send(formData);
+        });
+
+        const postWithRetry = async (url, createFormData, onProgress = null) => {
+            let lastError = null;
+
+            for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
+                if (retryDelays[attempt] > 0) {
+                    status.textContent = `Koneksi terputus, mencoba lagi (${attempt + 1}/${retryDelays.length})...`;
+                    await sleep(retryDelays[attempt]);
+                }
+
+                try {
+                    return await requestJson(url, createFormData(), onProgress);
+                } catch (error) {
+                    lastError = error;
+                    if (error.status > 0 && error.status < 500 && error.status !== 409) {
+                        throw error;
+                    }
+                }
+            }
+
+            throw lastError || { status: 0, message: 'Upload gagal setelah beberapa percobaan.' };
+        };
+
+        const createStartData = (file, clientKey) => {
+            const data = new FormData();
+            data.append('upload_token', form.dataset.uploadToken || '');
+            data.append('client_key', clientKey);
+            data.append('file_name', file.name);
+            data.append('file_size', String(file.size));
+            data.append('file_type', file.type);
+            return data;
+        };
+
+        const beginUpload = (file, clientKey) => postWithRetry(
+            form.dataset.uploadStartUrl,
+            () => createStartData(file, clientKey),
+        );
+
+        const updateUploadProgress = (fileSize, acceptedOffset, chunkLoaded = 0) => {
+            const uploaded = Math.min(fileSize, acceptedOffset + chunkLoaded);
+            const value = fileSize > 0 ? (uploaded / fileSize) * 100 : 0;
+            const elapsedSeconds = (performance.now() - uploadStartedAt) / 1000;
+            const transferred = Math.max(0, uploaded - uploadInitialOffset);
+
+            if (speed && elapsedSeconds >= 0.5 && transferred > 0) {
+                speed.textContent = `Kecepatan rata-rata ${formatSpeed(transferred / elapsedSeconds)}`;
+            }
+            setProgress(value, value >= 100 ? 'Upload selesai, memproses file...' : 'Mengunggah file media...');
+        };
+
+        const uploadFileInChunks = async (file) => {
+            status.textContent = 'Memeriksa file dan mencari upload sebelumnya...';
+            const clientKey = await fileFingerprint(file);
+            let uploadState = await beginUpload(file, clientKey);
+            let offset = Number(uploadState.offset) || 0;
+            const chunkSize = Math.min(Number(uploadState.chunk_size) || configuredChunkSize, configuredChunkSize);
+
+            uploadInitialOffset = offset;
+            currentAcceptedOffset = offset;
+            uploadStartedAt = performance.now();
+            updateUploadProgress(file.size, offset);
+
+            while (offset < file.size) {
+                const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
+                const checksum = await sha256(chunk);
+                const chunkOffset = offset;
+                const createChunkData = () => {
+                    const data = new FormData();
+                    data.append('upload_token', form.dataset.uploadToken || '');
+                    data.append('upload_id', uploadState.upload_id);
+                    data.append('offset', String(chunkOffset));
+                    data.append('checksum', checksum);
+                    data.append('chunk', chunk, 'chunk.bin');
+                    return data;
+                };
+
+                try {
+                    uploadState = await postWithRetry(
+                        form.dataset.uploadChunkUrl,
+                        createChunkData,
+                        (event) => updateUploadProgress(
+                            file.size,
+                            currentAcceptedOffset,
+                            event.lengthComputable ? Math.min(event.loaded, chunk.size) : 0,
+                        ),
+                    );
+                } catch (error) {
+                    if (error.status !== 409) throw error;
+                    uploadState = await beginUpload(file, clientKey);
+                }
+
+                offset = Number(uploadState.offset) || 0;
+                currentAcceptedOffset = offset;
+                updateUploadProgress(file.size, offset);
+            }
+
+            if (!uploadState.completed) {
+                uploadState = await beginUpload(file, clientKey);
+            }
+            if (!uploadState.completed) {
+                throw { status: 409, message: 'Server belum menandai upload sebagai selesai.' };
+            }
+
+            return uploadState.upload_id;
+        };
+
         const refreshCsrf = (csrf) => {
             if (!csrf?.name || !csrf?.hash) return;
 
@@ -392,91 +590,61 @@
             if (csrfInput) csrfInput.value = csrf.hash;
         };
 
-        form.addEventListener('submit', (event) => {
+        const saveSettings = async () => {
+            const formData = new FormData(form);
+            formData.delete('media_file');
+
+            return requestJson(form.action, formData, null, true);
+        };
+
+        const errorMessage = (error) => {
+            if (error?.message) return error.message;
+            if (error?.status === 413) {
+                return 'Bagian file masih melebihi batas server. Atur batas request server di atas 512 KB.';
+            }
+            if (error?.status === 403) {
+                return 'Sesi upload ditolak server. Muat ulang halaman lalu coba lagi.';
+            }
+
+            return 'Gagal menyimpan pengaturan. Periksa koneksi dan coba lagi.';
+        };
+
+        mediaInput.addEventListener('change', () => {
+            uploadKeyInput.value = '';
+            panel.hidden = true;
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
             if (form.dataset.settingsSubmitting === '1') {
-                event.preventDefault();
                 return;
             }
 
-            const mediaInput = document.getElementById('media_file');
             const mediaFile = mediaInput?.files?.[0] || null;
-            if (mediaFile && mediaFile.size > 200 * 1024 * 1024) {
-                event.preventDefault();
+            if (mediaFile && mediaFile.size > maxBytes) {
                 showError('Ukuran file melebihi batas 200 MB.');
                 return;
             }
 
-            event.preventDefault();
-
-            const hasMediaFile = mediaFile !== null;
-            const xhr = new XMLHttpRequest();
-            const formData = new FormData(form);
-            const uploadStartedAt = performance.now();
-
-            panel.hidden = false;
-            panel.classList.remove('alert-error');
-            panel.classList.add('alert-info');
-            bar.classList.remove('progress-error');
-            bar.classList.add('progress-primary');
-            if (speed) {
-                speed.textContent = 'Mengukur kecepatan...';
-                speed.hidden = !hasMediaFile;
-            }
+            preparePanel(mediaFile !== null);
             setBusy(true);
-            setProgress(hasMediaFile ? 1 : 100, hasMediaFile ? 'Mengunggah file media...' : 'Menyimpan pengaturan...');
+            setProgress(mediaFile ? 0 : 100, mediaFile ? 'Menyiapkan upload...' : 'Menyimpan pengaturan...');
 
-            xhr.open('POST', form.action, true);
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('Accept', 'application/json');
-
-            xhr.upload.addEventListener('progress', (progressEvent) => {
-                if (!hasMediaFile) return;
-
-                const elapsedSeconds = (performance.now() - uploadStartedAt) / 1000;
-                if (speed && elapsedSeconds >= 0.5 && progressEvent.loaded > 0) {
-                    speed.textContent = `Kecepatan rata-rata ${formatSpeed(progressEvent.loaded / elapsedSeconds)}`;
+            try {
+                if (mediaFile) {
+                    uploadKeyInput.value = await uploadFileInChunks(mediaFile);
                 }
 
-                if (progressEvent.lengthComputable) {
-                    const value = (progressEvent.loaded / progressEvent.total) * 100;
-                    setProgress(
-                        value,
-                        value >= 100 ? 'Upload selesai, memproses file...' : 'Mengunggah file media...',
-                    );
-                }
-            });
-
-            xhr.addEventListener('load', () => {
-                let payload = null;
-
-                try {
-                    payload = JSON.parse(xhr.responseText);
-                } catch {
-                    payload = null;
-                }
-
+                status.textContent = 'Menyimpan pengaturan...';
+                if (speed) speed.hidden = true;
+                const payload = await saveSettings();
                 refreshCsrf(payload?.csrf);
-
-                if (xhr.status >= 200 && xhr.status < 300 && payload?.status === 'success') {
-                    if (speed) speed.hidden = true;
-                    setProgress(100, 'Selesai, memuat ulang halaman...');
-                    window.location.assign(payload.redirect || form.dataset.redirectUrl || form.action);
-                    return;
-                }
-
-                const fallbackMessage = xhr.status === 413
-                    ? 'Ukuran upload melebihi batas server.'
-                    : (xhr.status === 403
-                        ? 'Sesi keamanan kedaluwarsa. Muat ulang halaman lalu coba lagi.'
-                        : 'Gagal menyimpan pengaturan. Periksa file dan coba lagi.');
-                showError(payload?.message || fallbackMessage);
-            });
-
-            xhr.addEventListener('error', () => {
-                showError('Koneksi terputus saat mengunggah file.');
-            });
-
-            xhr.send(formData);
+                setProgress(100, 'Selesai, memuat ulang halaman...');
+                window.location.assign(payload.redirect || form.dataset.redirectUrl || form.action);
+            } catch (error) {
+                refreshCsrf(error?.payload?.csrf);
+                showError(errorMessage(error));
+            }
         });
     }
 

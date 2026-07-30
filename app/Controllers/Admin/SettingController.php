@@ -3,12 +3,15 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Media\MediaUploadException;
+use App\Libraries\Media\PostChunkMediaUpload;
 use App\Models\SettingModel;
 
 class SettingController extends BaseController
 {
-    private const MEDIA_MAX_BYTES = 200 * 1024 * 1024;
+    private const MEDIA_MAX_BYTES = PostChunkMediaUpload::MAX_BYTES;
     private const MEDIA_UPLOAD_DIR = 'uploads/media/';
+    private const MEDIA_UPLOAD_SESSION_KEY = 'media_chunk_token';
 
     public function index(): string
     {
@@ -26,10 +29,14 @@ class SettingController extends BaseController
 
         $settings = array_merge($defaults, $settings);
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
+        $uploadToken = $this->mediaUploadToken();
 
         return view('admin/pengaturan/index', [
-            'pageTitle' => 'Pengaturan Sistem',
-            'settings'  => $settings,
+            'pageTitle'        => 'Pengaturan Sistem',
+            'settings'         => $settings,
+            'mediaUploadToken' => $uploadToken,
+            'mediaUploadMax'   => PostChunkMediaUpload::MAX_BYTES,
+            'mediaChunkSize'   => PostChunkMediaUpload::CHUNK_BYTES,
         ]);
     }
 
@@ -42,7 +49,8 @@ class SettingController extends BaseController
             return $this->failSave($requestSizeError);
         }
 
-        $mediaUpload = $this->validateMediaUpload();
+        $chunkUploadId = trim((string) $this->request->getPost('media_upload_key'));
+        $mediaUpload = $chunkUploadId === '' ? $this->validateMediaUpload() : ['file' => null, 'error' => null];
         if ($mediaUpload['error'] !== null) {
             return $this->failSave($mediaUpload['error']);
         }
@@ -51,7 +59,11 @@ class SettingController extends BaseController
         $oldMediaFile = '';
 
         try {
-            if ($mediaUpload['file'] !== null) {
+            $oldMediaFile = (string) $settingModel->getValue('media_file', '');
+
+            if ($chunkUploadId !== '') {
+                $newMediaFile = $this->mediaUploader()->consume($this->mediaUploadToken(), $chunkUploadId);
+            } elseif ($mediaUpload['file'] !== null) {
                 $uploadDir = FCPATH . self::MEDIA_UPLOAD_DIR;
                 if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
                     return $this->failSave('Folder upload media tidak dapat dibuat.');
@@ -61,7 +73,6 @@ class SettingController extends BaseController
                     return $this->failSave('Folder upload media tidak dapat ditulis.');
                 }
 
-                $oldMediaFile = (string) $settingModel->getValue('media_file', '');
                 $newMediaFile = $mediaUpload['file']->getRandomName();
                 $mediaUpload['file']->move($uploadDir, $newMediaFile);
             }
@@ -82,6 +93,11 @@ class SettingController extends BaseController
             if (!$db->transStatus()) {
                 throw new \RuntimeException('Transaksi database gagal.');
             }
+        } catch (MediaUploadException $e) {
+            $this->deleteMediaFile($newMediaFile);
+            log_message('warning', 'Gagal menyelesaikan upload media: {message}', ['message' => $e->getMessage()]);
+
+            return $this->failSave($e->getMessage());
         } catch (\Throwable $e) {
             $this->deleteMediaFile($newMediaFile);
             log_message('error', 'Gagal menyimpan pengaturan media: {message}', ['message' => $e->getMessage()]);
@@ -101,6 +117,71 @@ class SettingController extends BaseController
         }
 
         return redirect()->to(base_url('admin/pengaturan'));
+    }
+
+    public function startMediaUpload()
+    {
+        try {
+            $payload = $this->mediaUploader()->start(
+                $this->validatedRequestUploadToken(),
+                trim((string) $this->request->getPost('client_key')),
+                (string) $this->request->getPost('file_name'),
+                (int) $this->request->getPost('file_size'),
+                (string) $this->request->getPost('file_type')
+            );
+
+            return $this->response->setJSON(['status' => 'success'] + $payload);
+        } catch (MediaUploadException $e) {
+            return $this->mediaUploadError($e);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal memulai upload media: {message}', ['message' => $e->getMessage()]);
+
+            return $this->ajaxError('Server gagal menyiapkan upload media.', 500);
+        }
+    }
+
+    public function uploadMediaChunk()
+    {
+        try {
+            $chunk = $this->request->getFile('chunk');
+            if ($chunk === null) {
+                throw new MediaUploadException('Chunk upload tidak ditemukan.');
+            }
+
+            $payload = $this->mediaUploader()->append(
+                $this->validatedRequestUploadToken(),
+                trim((string) $this->request->getPost('upload_id')),
+                (int) $this->request->getPost('offset'),
+                trim((string) $this->request->getPost('checksum')),
+                $chunk
+            );
+
+            return $this->response->setJSON(['status' => 'success'] + $payload);
+        } catch (MediaUploadException $e) {
+            return $this->mediaUploadError($e);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal menerima chunk media: {message}', ['message' => $e->getMessage()]);
+
+            return $this->ajaxError('Server gagal menerima bagian file.', 500);
+        }
+    }
+
+    public function cancelMediaUpload()
+    {
+        try {
+            $this->mediaUploader()->cancel(
+                $this->validatedRequestUploadToken(),
+                trim((string) $this->request->getPost('upload_id'))
+            );
+
+            return $this->response->setJSON(['status' => 'success']);
+        } catch (MediaUploadException $e) {
+            return $this->mediaUploadError($e);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal membatalkan upload media: {message}', ['message' => $e->getMessage()]);
+
+            return $this->ajaxError('Server gagal membatalkan upload.', 500);
+        }
     }
 
     private function failSave(string $message, bool $withInput = false)
@@ -217,6 +298,43 @@ class SettingController extends BaseController
                 'hash' => csrf_hash(),
             ],
         ]);
+    }
+
+    private function mediaUploader(): PostChunkMediaUpload
+    {
+        return new PostChunkMediaUpload();
+    }
+
+    private function mediaUploadToken(): string
+    {
+        $token = (string) session()->get(self::MEDIA_UPLOAD_SESSION_KEY);
+        if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
+            $token = bin2hex(random_bytes(32));
+            session()->set(self::MEDIA_UPLOAD_SESSION_KEY, $token);
+        }
+
+        return $token;
+    }
+
+    private function validatedRequestUploadToken(): string
+    {
+        $requestToken = trim((string) $this->request->getPost('upload_token'));
+        $sessionToken = $this->mediaUploadToken();
+        if (!hash_equals($sessionToken, $requestToken)) {
+            throw new MediaUploadException('Sesi upload tidak valid. Muat ulang halaman.', 403);
+        }
+
+        return $sessionToken;
+    }
+
+    private function mediaUploadError(MediaUploadException $exception)
+    {
+        $statusCode = $exception->getStatusCode();
+        if (!in_array($statusCode, [400, 403, 404, 409, 413, 422, 500, 503], true)) {
+            $statusCode = 422;
+        }
+
+        return $this->ajaxError($exception->getMessage(), $statusCode);
     }
 
     public function deleteMedia()

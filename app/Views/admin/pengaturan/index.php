@@ -7,8 +7,16 @@
 </div>
 
 <form action="<?= base_url('admin/pengaturan/save') ?>" method="post" enctype="multipart/form-data"
-    class="space-y-5" id="settings-form" data-redirect-url="<?= base_url('admin/pengaturan') ?>">
+    class="space-y-5" id="settings-form"
+    data-redirect-url="<?= base_url('admin/pengaturan') ?>"
+    data-upload-start-url="/admin/pengaturan/media-upload/start"
+    data-upload-chunk-url="/admin/pengaturan/media-upload/chunk"
+    data-upload-cancel-url="/admin/pengaturan/media-upload/cancel"
+    data-upload-token="<?= esc($mediaUploadToken, 'attr') ?>"
+    data-upload-max="<?= (int) $mediaUploadMax ?>"
+    data-upload-chunk-size="<?= (int) $mediaChunkSize ?>">
     <?= csrf_field() ?>
+    <input type="hidden" name="media_upload_key" id="media_upload_key" value="">
 
     <section class="card card-border bg-base-100 shadow-sm">
         <div class="card-body gap-5 p-4 sm:p-5">
@@ -56,7 +64,7 @@
                     <legend class="fieldset-legend">Upload Media</legend>
                     <input type="file" class="file-input file-input-sm w-full min-w-0" id="media_file" name="media_file"
                         accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
-                    <p class="label">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB.</p>
+                    <p class="label">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB. File dikirim bertahap agar lebih stabil.</p>
                 </fieldset>
 
                 <fieldset class="fieldset col-span-12 min-w-0 lg:col-span-4">

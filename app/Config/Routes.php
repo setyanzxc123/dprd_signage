@@ -108,6 +108,9 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
+    $routes->post('pengaturan/media-upload/start',  'Admin\SettingController::startMediaUpload');
+    $routes->post('pengaturan/media-upload/chunk',  'Admin\SettingController::uploadMediaChunk');
+    $routes->post('pengaturan/media-upload/cancel', 'Admin\SettingController::cancelMediaUpload');
 
     // Profil akun admin
     $routes->get( 'profile',        'Admin\ProfileController::index');
