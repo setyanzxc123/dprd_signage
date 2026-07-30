@@ -11,7 +11,9 @@ use TusPhp\Tus\Server;
 final class ResumableMediaUpload
 {
     public const MAX_BYTES = 200 * 1024 * 1024;
-    public const CHUNK_BYTES = 5 * 1024 * 1024;
+    // Stay below Nginx's common/default 1 MiB request-body limit. The total
+    // upload may still reach MAX_BYTES because TUS sends it in many requests.
+    public const CHUNK_BYTES = 512 * 1024;
     public const API_PATH = '/admin/pengaturan/media/tus';
 
     /** @var array<string, list<string>> */

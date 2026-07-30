@@ -59,7 +59,7 @@ final class SettingMediaUploadTest extends CIUnitTestCase
         $response->assertOK();
         $body = $response->response()->getBody();
         $this->assertStringContainsString('data-media-max-bytes="209715200"', $body);
-        $this->assertStringContainsString('data-media-chunk-bytes="5242880"', $body);
+        $this->assertStringContainsString('data-media-chunk-bytes="524288"', $body);
         $this->assertStringContainsString(
             'data-media-upload-endpoint="/admin/pengaturan/media/tus"',
             $body,
