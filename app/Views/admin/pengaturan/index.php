@@ -7,14 +7,8 @@
 </div>
 
 <form action="<?= base_url('admin/pengaturan/save') ?>" method="post" enctype="multipart/form-data"
-    class="space-y-5" id="settings-form"
-    data-redirect-url="<?= base_url('admin/pengaturan') ?>"
-    data-media-upload-endpoint="<?= esc($mediaUploadEndpoint, 'attr') ?>"
-    data-media-upload-token="<?= esc($mediaUploadToken, 'attr') ?>"
-    data-media-max-bytes="<?= (int) $mediaMaxBytes ?>"
-    data-media-chunk-bytes="<?= (int) $mediaChunkBytes ?>">
+    class="space-y-5" id="settings-form" data-redirect-url="<?= base_url('admin/pengaturan') ?>">
     <?= csrf_field() ?>
-    <input type="hidden" id="media_upload_key" name="media_upload_key" value="" />
 
     <section class="card card-border bg-base-100 shadow-sm">
         <div class="card-body gap-5 p-4 sm:p-5">
@@ -62,7 +56,7 @@
                     <legend class="fieldset-legend">Upload Media</legend>
                     <input type="file" class="file-input file-input-sm w-full min-w-0" id="media_file" name="media_file"
                         accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
-                    <p class="label">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB. Upload dapat dilanjutkan saat koneksi kembali.</p>
+                    <p class="label">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB.</p>
                 </fieldset>
 
                 <fieldset class="fieldset col-span-12 min-w-0 lg:col-span-4">
@@ -109,14 +103,17 @@
     </section>
 
     <div class="form-actions-sticky mt-5 flex flex-col gap-3 sm:items-end">
-        <div class="w-full max-w-xl" id="settings-upload-progress" hidden aria-live="polite">
-            <div class="overflow-hidden rounded-box border border-base-300 bg-base-100" id="settings-upload-statusbar"></div>
-            <div class="mt-1 text-right text-xs font-semibold text-base-content/70" id="settings-upload-speed" hidden>
-                Mengukur kecepatan...
-            </div>
-            <div class="alert alert-info mt-2 py-2 text-sm" id="settings-upload-message" hidden>
-                <span class="loading loading-spinner loading-sm" id="settings-upload-message-spinner" aria-hidden="true"></span>
-                <span id="settings-upload-status">Menyiapkan upload...</span>
+        <div class="alert alert-info w-full max-w-xl" id="settings-upload-progress" hidden aria-live="polite">
+            <div class="w-full">
+                <div class="mb-2 grid grid-cols-[auto_1fr_auto] items-center gap-2 text-sm font-bold">
+                    <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+                    <span id="settings-upload-status">Menyiapkan upload...</span>
+                    <strong id="settings-upload-percent">0%</strong>
+                </div>
+                <progress class="progress progress-primary w-full" id="settings-upload-bar" value="0" max="100"></progress>
+                <div class="mt-1 text-right text-xs font-semibold opacity-70" id="settings-upload-speed" hidden>
+                    Mengukur kecepatan...
+                </div>
             </div>
         </div>
 
@@ -128,20 +125,4 @@
     </div>
 </form>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('styles') ?>
-<?php $statusBarCssVersion = is_file(FCPATH . 'assets/css/admin/uppy-status-bar.min.css')
-    ? filemtime(FCPATH . 'assets/css/admin/uppy-status-bar.min.css')
-    : time(); ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/admin/uppy-status-bar.min.css?v=' . $statusBarCssVersion) ?>"
-    data-turbo-track="reload" />
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<?php $settingsUploadVersion = is_file(FCPATH . 'assets/js/admin/settings-upload.js')
-    ? filemtime(FCPATH . 'assets/js/admin/settings-upload.js')
-    : time(); ?>
-<script src="<?= base_url('assets/js/admin/settings-upload.js?v=' . $settingsUploadVersion) ?>" defer
-    data-turbo-track="reload"></script>
 <?= $this->endSection() ?>

@@ -2,7 +2,6 @@
   "scripts": {
     "build:vendor": "node scripts/copy-vendor-assets.mjs",
     "build:wa-editor": "node scripts/build-wa-editor.mjs",
-    "build:settings-upload": "node scripts/build-settings-upload.mjs",
     "build:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --minify",
     "build:agenda": "tailwindcss -i ./resources/css/agenda.css -o ./public/assets/css/agenda.css --minify",
     "watch:publik": "tailwindcss -i ./resources/css/publik.css -o ./public/assets/css/publik.css --watch",
@@ -20,9 +19,6 @@
     "@fontsource/outfit": "^5.2.8",
     "@hotwired/turbo": "^8.0.23",
     "@tailwindcss/cli": "^4.3.1",
-    "@uppy/core": "^5.2.0",
-    "@uppy/status-bar": "^5.1.0",
-    "@uppy/tus": "^5.1.1",
     "daisyui": "^5.5.23",
     "datatables.net": "^2.3.8",
     "datatables.net-dt": "^2.3.8",

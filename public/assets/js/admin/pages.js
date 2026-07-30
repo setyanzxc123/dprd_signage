@@ -323,7 +323,161 @@
             document.getElementById('preview-text').textContent = this.value || 'Teks berjalan akan tampil di sini...';
         });
 
+        setupSettingsSubmitProgress(form);
         window.renderAdminIcons?.();
+    }
+
+    function setupSettingsSubmitProgress(form) {
+        if (form.dataset.settingsUploadBound === 'true') return;
+
+        const panel = document.getElementById('settings-upload-progress');
+        const bar = document.getElementById('settings-upload-bar');
+        const status = document.getElementById('settings-upload-status');
+        const percent = document.getElementById('settings-upload-percent');
+        const speed = document.getElementById('settings-upload-speed');
+        const submitButton = document.getElementById('settings-submit-button');
+        const submitSpinner = document.getElementById('settings-submit-spinner');
+        const submitIcon = document.getElementById('settings-submit-icon');
+        const submitLabel = document.getElementById('settings-submit-label');
+
+        if (!panel || !bar || !status || !percent || !submitButton || !window.FormData || !window.XMLHttpRequest) {
+            return;
+        }
+
+        form.dataset.settingsUploadBound = 'true';
+
+        const formatSpeed = (bytesPerSecond) => {
+            const formatter = new Intl.NumberFormat('id-ID', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 1,
+            });
+
+            return bytesPerSecond >= 1024 * 1024
+                ? `${formatter.format(bytesPerSecond / 1024 / 1024)} MB/dtk`
+                : `${formatter.format(bytesPerSecond / 1024)} KB/dtk`;
+        };
+
+        const setProgress = (value, message) => {
+            const safeValue = Math.max(0, Math.min(100, Math.round(value)));
+            bar.value = safeValue;
+            percent.textContent = safeValue + '%';
+            status.textContent = message;
+        };
+
+        const setBusy = (busy) => {
+            form.dataset.settingsSubmitting = busy ? '1' : '0';
+            form.setAttribute('aria-busy', busy ? 'true' : 'false');
+            submitButton.disabled = busy;
+            if (submitSpinner) submitSpinner.hidden = !busy;
+            if (submitIcon) submitIcon.hidden = busy;
+            if (submitLabel) submitLabel.textContent = busy ? 'Menyimpan...' : 'Simpan Pengaturan';
+        };
+
+        const showError = (message) => {
+            const currentValue = Number(bar.value) || 0;
+            panel.hidden = false;
+            panel.classList.remove('alert-info');
+            panel.classList.add('alert-error');
+            bar.classList.remove('progress-primary');
+            bar.classList.add('progress-error');
+            if (speed) speed.hidden = true;
+            setProgress(currentValue, message || 'Gagal menyimpan pengaturan.');
+            setBusy(false);
+        };
+
+        const refreshCsrf = (csrf) => {
+            if (!csrf?.name || !csrf?.hash) return;
+
+            const csrfInput = Array.from(form.elements).find((element) => element.name === csrf.name);
+            if (csrfInput) csrfInput.value = csrf.hash;
+        };
+
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.settingsSubmitting === '1') {
+                event.preventDefault();
+                return;
+            }
+
+            const mediaInput = document.getElementById('media_file');
+            const mediaFile = mediaInput?.files?.[0] || null;
+            if (mediaFile && mediaFile.size > 200 * 1024 * 1024) {
+                event.preventDefault();
+                showError('Ukuran file melebihi batas 200 MB.');
+                return;
+            }
+
+            event.preventDefault();
+
+            const hasMediaFile = mediaFile !== null;
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData(form);
+            const uploadStartedAt = performance.now();
+
+            panel.hidden = false;
+            panel.classList.remove('alert-error');
+            panel.classList.add('alert-info');
+            bar.classList.remove('progress-error');
+            bar.classList.add('progress-primary');
+            if (speed) {
+                speed.textContent = 'Mengukur kecepatan...';
+                speed.hidden = !hasMediaFile;
+            }
+            setBusy(true);
+            setProgress(hasMediaFile ? 1 : 100, hasMediaFile ? 'Mengunggah file media...' : 'Menyimpan pengaturan...');
+
+            xhr.open('POST', form.action, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Accept', 'application/json');
+
+            xhr.upload.addEventListener('progress', (progressEvent) => {
+                if (!hasMediaFile) return;
+
+                const elapsedSeconds = (performance.now() - uploadStartedAt) / 1000;
+                if (speed && elapsedSeconds >= 0.5 && progressEvent.loaded > 0) {
+                    speed.textContent = `Kecepatan rata-rata ${formatSpeed(progressEvent.loaded / elapsedSeconds)}`;
+                }
+
+                if (progressEvent.lengthComputable) {
+                    const value = (progressEvent.loaded / progressEvent.total) * 100;
+                    setProgress(
+                        value,
+                        value >= 100 ? 'Upload selesai, memproses file...' : 'Mengunggah file media...',
+                    );
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                let payload = null;
+
+                try {
+                    payload = JSON.parse(xhr.responseText);
+                } catch {
+                    payload = null;
+                }
+
+                refreshCsrf(payload?.csrf);
+
+                if (xhr.status >= 200 && xhr.status < 300 && payload?.status === 'success') {
+                    if (speed) speed.hidden = true;
+                    setProgress(100, 'Selesai, memuat ulang halaman...');
+                    window.location.assign(payload.redirect || form.dataset.redirectUrl || form.action);
+                    return;
+                }
+
+                const fallbackMessage = xhr.status === 413
+                    ? 'Ukuran upload melebihi batas server.'
+                    : (xhr.status === 403
+                        ? 'Sesi keamanan kedaluwarsa. Muat ulang halaman lalu coba lagi.'
+                        : 'Gagal menyimpan pengaturan. Periksa file dan coba lagi.');
+                showError(payload?.message || fallbackMessage);
+            });
+
+            xhr.addEventListener('error', () => {
+                showError('Koneksi terputus saat mengunggah file.');
+            });
+
+            xhr.send(formData);
+        });
     }
 
     document.addEventListener('turbo:load', initSettingsPage);
