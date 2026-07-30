@@ -575,11 +575,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     ? banmusProjections.value.filter((item) => item.is_participant)
                     : banmusProjections.value;
                 const selectedMonths = new Set(periodMonths());
-                visibleProjections = visibleProjections.filter((item) => {
-                    const month = projectionMonth(item);
-
-                    return month === null || selectedMonths.has(month);
-                });
+                visibleProjections = visibleProjections.filter((item) =>
+                    projectionOverlapsMonths(item, selectedMonths));
                 const rows = [
                     ...agendas.value.filter((item) =>
                         item.source === 'banmus'
@@ -676,25 +673,29 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     monthKey(new Date(current.getFullYear(), firstMonth + offset, 1)));
             }
 
-            function projectionMonth(item) {
+            function projectionRange(item) {
                 if (/^\d{4}-\d{2}/.test(item.tanggal || '')) {
-                    return item.tanggal.slice(0, 7);
+                    const month = item.tanggal.slice(0, 7);
+                    return [month, month];
                 }
 
-                const label = String(item.periode_label || '').toLowerCase();
-                const monthIndex = monthNames.findIndex((month) =>
-                    label.includes(month.toLowerCase()));
-                if (monthIndex < 0) {
+                const start = String(item.bulan_mulai || item.tanggal_mulai || '').slice(0, 7);
+                const end = String(item.bulan_selesai || item.tanggal_selesai || start).slice(0, 7);
+                if (!/^\d{4}-\d{2}$/.test(start) || !/^\d{4}-\d{2}$/.test(end)) {
                     return null;
                 }
 
-                const yearMatch = label.match(/\b(20\d{2})\b/);
-                const year = yearMatch ? Number(yearMatch[1]) : Number(item.document_year);
-                if (!Number.isInteger(year) || year < 2000) {
-                    return null;
+                return start <= end ? [start, end] : [end, start];
+            }
+
+            function projectionOverlapsMonths(item, selectedMonths) {
+                const range = projectionRange(item);
+                if (range === null || selectedMonths.size === 0) {
+                    return false;
                 }
 
-                return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+                const months = [...selectedMonths].sort();
+                return range[0] <= months[months.length - 1] && range[1] >= months[0];
             }
 
             function requestUrl(month) {

@@ -58,6 +58,10 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
             'agenda',
             'jenis_agenda',
             'periode_label',
+            'tanggal_mulai',
+            'tanggal_selesai',
+            'bulan_mulai',
+            'bulan_selesai',
             'publikasi',
             'urutan',
             'catatan',
@@ -339,14 +343,17 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
             $rows = [];
             foreach ($items as $index => $item) {
+                $projectionRange = JadwalBanmusModel::parseProjectionPeriodRange(
+                    $item['tanggal_pelaksanaan'],
+                    (int) $document['tahun'],
+                );
                 $rows[] = [
                     'dokumen_banmus_id' => $documentId,
                     'agenda'            => $item['uraian_kegiatan'],
                     'jenis_agenda'      => $this->banmusAgendaType($item['uraian_kegiatan']),
                     'periode_label'     => $item['tanggal_pelaksanaan'],
                     'publikasi'         => 'publik',
-                    'tanggal_mulai'     => null,
-                    'tanggal_selesai'   => null,
+                    ...$projectionRange,
                     'urutan'            => $index + 1,
                     'status'            => 'proyeksi',
                     'catatan'           => $item['keterangan'],

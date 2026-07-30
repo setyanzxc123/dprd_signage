@@ -80,6 +80,37 @@ final class JadwalBanmusModelTest extends CIUnitTestCase
         $this->assertSame([2027, 2026, 2025], $model->availableYears(true));
     }
 
+    public function testProjectionPeriodParserNormalizesMonthAndDateRanges(): void
+    {
+        $this->assertSame([
+            'tanggal_mulai'   => null,
+            'tanggal_selesai' => null,
+            'bulan_mulai'     => '2027-01',
+            'bulan_selesai'   => '2027-04',
+        ], JadwalBanmusModel::parseProjectionPeriodRange('Januari–April 2027'));
+
+        $this->assertSame([
+            'tanggal_mulai'   => '2026-07-01',
+            'tanggal_selesai' => '2026-07-05',
+            'bulan_mulai'     => '2026-07',
+            'bulan_selesai'   => '2026-07',
+        ], JadwalBanmusModel::parseProjectionPeriodRange('Rabu, 1–5 Juli 2026'));
+
+        $this->assertSame([
+            'tanggal_mulai'   => null,
+            'tanggal_selesai' => null,
+            'bulan_mulai'     => '2026-12',
+            'bulan_selesai'   => '2027-01',
+        ], JadwalBanmusModel::parseProjectionPeriodRange('Desember–Januari 2027'));
+
+        $this->assertSame([
+            'tanggal_mulai'   => null,
+            'tanggal_selesai' => null,
+            'bulan_mulai'     => null,
+            'bulan_selesai'   => null,
+        ], JadwalBanmusModel::parseProjectionPeriodRange('Menyesuaikan keputusan Banmus'));
+    }
+
     public function testAutoUpdateStatusesOnlyAdvancesScheduledAgenda(): void
     {
         $documentId = $this->insertDocument('SK Lifecycle', 1);
@@ -152,6 +183,8 @@ final class JadwalBanmusModelTest extends CIUnitTestCase
             'periode_label'     => ['type' => 'VARCHAR', 'constraint' => 100],
             'tanggal_mulai'     => ['type' => 'DATE', 'null' => true],
             'tanggal_selesai'   => ['type' => 'DATE', 'null' => true],
+            'bulan_mulai'       => ['type' => 'CHAR', 'constraint' => 7, 'null' => true],
+            'bulan_selesai'     => ['type' => 'CHAR', 'constraint' => 7, 'null' => true],
             'unit_rapat_id'     => ['type' => 'INTEGER', 'null' => true],
             'urutan'            => ['type' => 'INTEGER'],
             'status'            => ['type' => 'VARCHAR', 'constraint' => 20],

@@ -107,6 +107,103 @@ class JadwalBanmusModel extends Model
     }
 
     /**
+     * @return array{
+     *     tanggal_mulai: ?string,
+     *     tanggal_selesai: ?string,
+     *     bulan_mulai: ?string,
+     *     bulan_selesai: ?string
+     * }
+     */
+    public static function parseProjectionPeriodRange(?string $label, ?int $fallbackYear = null): array
+    {
+        $empty = [
+            'tanggal_mulai'   => null,
+            'tanggal_selesai' => null,
+            'bulan_mulai'     => null,
+            'bulan_selesai'   => null,
+        ];
+        $label = trim((string) $label);
+        if ($label === '') {
+            return $empty;
+        }
+
+        $normalized = str_replace(["\u{2012}", "\u{2013}", "\u{2014}", "\u{2212}"], '-', $label);
+        $monthNumbers = [
+            'januari'   => 1,
+            'februari'  => 2,
+            'maret'     => 3,
+            'april'     => 4,
+            'mei'       => 5,
+            'juni'      => 6,
+            'juli'      => 7,
+            'agustus'   => 8,
+            'september' => 9,
+            'oktober'   => 10,
+            'november'  => 11,
+            'desember'  => 12,
+        ];
+        preg_match_all(
+            '/\b(' . implode('|', array_keys($monthNumbers)) . ')\b/iu',
+            $normalized,
+            $monthMatches,
+        );
+        if (($monthMatches[1] ?? []) === []) {
+            return $empty;
+        }
+
+        preg_match_all('/\b(20\d{2})\b/u', $normalized, $yearMatches);
+        $years = array_map('intval', $yearMatches[1] ?? []);
+        $firstMonthName = mb_strtolower((string) $monthMatches[1][0]);
+        $lastMonthName = mb_strtolower((string) end($monthMatches[1]));
+        $firstMonth = $monthNumbers[$firstMonthName];
+        $lastMonth = $monthNumbers[$lastMonthName];
+        $firstYear = $years[0] ?? $fallbackYear;
+        $lastYear = $years !== [] ? (int) end($years) : $fallbackYear;
+
+        if ($firstYear === null || $lastYear === null) {
+            return $empty;
+        }
+        if (count($years) === 1 && $firstMonth > $lastMonth) {
+            $firstYear = $lastYear - 1;
+        }
+
+        $result = [
+            'tanggal_mulai'   => null,
+            'tanggal_selesai' => null,
+            'bulan_mulai'     => sprintf('%04d-%02d', $firstYear, $firstMonth),
+            'bulan_selesai'   => sprintf('%04d-%02d', $lastYear, $lastMonth),
+        ];
+
+        preg_match_all(
+            '/\b(\d{1,2})(?:\s*-\s*(\d{1,2}))?\s+('
+                . implode('|', array_keys($monthNumbers))
+                . ')\b/iu',
+            $normalized,
+            $dateMatches,
+            PREG_SET_ORDER,
+        );
+        if ($dateMatches === []) {
+            return $result;
+        }
+
+        $firstDateMatch = $dateMatches[0];
+        $lastDateMatch = $dateMatches[count($dateMatches) - 1];
+        $startDay = (int) $firstDateMatch[1];
+        $endDay = (int) ($lastDateMatch[2] !== '' ? $lastDateMatch[2] : $lastDateMatch[1]);
+        $startDateMonth = $monthNumbers[mb_strtolower($firstDateMatch[3])];
+        $endDateMonth = $monthNumbers[mb_strtolower($lastDateMatch[3])];
+
+        if (checkdate($startDateMonth, $startDay, $firstYear)) {
+            $result['tanggal_mulai'] = sprintf('%04d-%02d-%02d', $firstYear, $startDateMonth, $startDay);
+        }
+        if (checkdate($endDateMonth, $endDay, $lastYear)) {
+            $result['tanggal_selesai'] = sprintf('%04d-%02d-%02d', $lastYear, $endDateMonth, $endDay);
+        }
+
+        return $result;
+    }
+
+    /**
      * @param list<int> $documentIds
      * @return array<int, list<array<string, mixed>>>
      */
@@ -119,6 +216,7 @@ class JadwalBanmusModel extends Model
         $builder = $this->db->table($this->table . ' p')
             ->select(
                 'p.id, p.dokumen_banmus_id, p.agenda, p.jenis_agenda, p.periode_label,
+                 p.tanggal_mulai, p.tanggal_selesai, p.bulan_mulai, p.bulan_selesai,
                  p.urutan, p.catatan, p.status, p.tanggal, p.jam_mulai, p.jam_selesai,
                  p.ruangan_id, p.lokasi_lainnya, p.publikasi, p.materi_url, p.stream_url'
             )

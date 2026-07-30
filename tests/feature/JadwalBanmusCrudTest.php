@@ -217,13 +217,19 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->postItem([
             'agenda'        => 'Proyeksi pembahasan rancangan peraturan',
             'jenis_agenda'  => 'rapat',
-            'periode_label' => 'Agustus 2026',
+            'periode_label' => 'Agustus–November 2026',
             'tanggal'       => '',
             'jam_mulai'     => '',
             'jam_selesai'   => '',
             'ruangan_id'    => '',
             'publikasi'     => 'publik',
         ])->assertStatus(303);
+        $projection = $this->banmusDb->table('jadwal_banmus')
+            ->where('agenda', 'Proyeksi pembahasan rancangan peraturan')
+            ->get()
+            ->getRowArray();
+        $this->assertSame('2026-08', $projection['bulan_mulai']);
+        $this->assertSame('2026-11', $projection['bulan_selesai']);
 
         $response = $this->get('/agenda/jadwal-banmus?tahun=2026');
 
@@ -251,6 +257,8 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $agendaBody = $agendaResponse->response()->getBody();
         $this->assertStringContainsString('banmus_projection', $agendaBody);
         $this->assertStringContainsString('Proyeksi pembahasan rancangan peraturan', $agendaBody);
+        $this->assertStringContainsString('"bulan_mulai":"2026-08"', $agendaBody);
+        $this->assertStringContainsString('"bulan_selesai":"2026-11"', $agendaBody);
         $this->assertStringNotContainsString('Reses anggota DPRD', $agendaBody);
         $this->assertStringContainsString('Lihat Proyeksi &amp; SK', $agendaBody);
     }

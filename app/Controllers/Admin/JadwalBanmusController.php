@@ -182,7 +182,7 @@ class JadwalBanmusController extends BaseController
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
-        $input = $this->validatedItemPayload();
+        $input = $this->validatedItemPayload(null, (int) $document['tahun']);
         if (isset($input['error'])) {
             session()->setFlashdata('error', $input['error']);
 
@@ -235,7 +235,14 @@ class JadwalBanmusController extends BaseController
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
-        $input = $this->validatedItemPayload($item);
+        $document = (new BanmusDocumentModel())->find($documentId);
+        if ($document === null) {
+            session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
+
+            return redirect()->to(base_url('admin/jadwal-banmus'));
+        }
+
+        $input = $this->validatedItemPayload($item, (int) $document['tahun']);
         if (isset($input['error'])) {
             session()->setFlashdata('error', $input['error']);
 
@@ -292,7 +299,7 @@ class JadwalBanmusController extends BaseController
 
     // ── PRIVATE HELPERS ──────────────────────────────────────────────
 
-    private function validatedItemPayload(?array $existingItem = null): array
+    private function validatedItemPayload(?array $existingItem = null, ?int $documentYear = null): array
     {
         $agenda = trim((string) $this->request->getPost('agenda'));
         if ($agenda === '') {
@@ -300,6 +307,10 @@ class JadwalBanmusController extends BaseController
         }
 
         $periodeLabel = trim((string) $this->request->getPost('periode_label'));
+        $projectionRange = JadwalBanmusModel::parseProjectionPeriodRange(
+            $periodeLabel,
+            $documentYear,
+        );
 
         $agendaType = trim((string) $this->request->getPost('jenis_agenda'));
         if ($agendaType === '') {
@@ -409,6 +420,7 @@ class JadwalBanmusController extends BaseController
                 'agenda'          => $agenda,
                 'jenis_agenda'    => $agendaType,
                 'periode_label'   => $periodeLabel !== '' ? $periodeLabel : null,
+                ...$projectionRange,
                 'tanggal'         => $tanggal !== '' ? $tanggal : null,
                 'jam_mulai'       => $jamMulai !== '' ? $jamMulai : null,
                 'jam_selesai'     => $jamSelesai !== '' ? $jamSelesai : null,

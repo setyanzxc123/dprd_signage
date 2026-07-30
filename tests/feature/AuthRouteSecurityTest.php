@@ -128,6 +128,9 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('Jumlah jadwal umum per halaman', $body);
         $this->assertStringContainsString('collapse collapse-arrow', $body);
         $this->assertStringContainsString('handleAgendaToggle($event, item.key)', $body);
+        $this->assertStringContainsString('projectionOverlapsMonths(item, selectedMonths)', $body);
+        $this->assertStringContainsString('range[0] <= months[months.length - 1]', $body);
+        $this->assertStringNotContainsString('month === null || selectedMonths.has(month)', $body);
     }
 
     public function testAgendaHeadersLinkActiveAdminBackToAdminPanel(): void
