@@ -78,14 +78,18 @@ final class CurrentSystemDataSeederTest extends CIUnitTestCase
         $this->assertTrue($hasStream);
     }
 
-    public function testRequiredOfficialPdfSourcesExist(): void
+    public function testSeederDoesNotDependOnLocalPdfSources(): void
     {
-        foreach (['REAL_SK_ONE_PDF', 'REAL_SK_NINE_PDF'] as $constantName) {
-            $fileName = $this->reflection->getReflectionConstant($constantName)?->getValue();
+        $source = file_get_contents(
+            ROOTPATH . 'app/Database/Seeds/CurrentSystemDataSeeder.php'
+        );
 
-            $this->assertIsString($fileName);
-            $this->assertFileExists(ROOTPATH . 'tes' . DIRECTORY_SEPARATOR . $fileName);
-        }
+        $this->assertIsString($source);
+        $this->assertStringNotContainsString('storeSourcePdf', $source);
+        $this->assertStringNotContainsString('clearStoredBanmusPdfs', $source);
+        $this->assertStringNotContainsString("ROOTPATH . 'tes'", $source);
+        $this->assertGreaterThanOrEqual(4, substr_count($source, "'dokumen_file' => null"));
+        $this->assertGreaterThanOrEqual(4, substr_count($source, "'dokumen_nama_asli' => null"));
     }
 
     public function testGeneralScheduleUsesTargetShape(): void

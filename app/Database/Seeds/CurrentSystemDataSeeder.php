@@ -25,18 +25,9 @@ class CurrentSystemDataSeeder extends Seeder
     private const DUMMY_SK_2027_ONE_NUMBER = 'DUMMY/160/1/2027';
     private const DUMMY_SK_2027_TWO_NUMBER = 'DUMMY/160/9/2027';
 
-    private const REAL_SK_ONE_PDF = '1. PENETAPAN JADWAL BANMUS MASA PERSIDANGAN KE-II TAHUN KEDUA NO. 1 TGL 21 JAN 2026 .pdf';
-    private const REAL_SK_NINE_PDF = '9. PENETAPAN JADWAL BANMUS MASA PERSIDANGAN KE-III TAHUN KEDUA NO. 9  TGL 22 MEI 2026 (SALINAN) (1).pdf';
-
     public function run(): void
     {
         $this->assertCurrentSchema();
-        $this->clearStoredBanmusPdfs();
-
-        $storedPdfs = [
-            self::REAL_SK_ONE_NUMBER  => $this->storeSourcePdf(self::REAL_SK_ONE_PDF),
-            self::REAL_SK_NINE_NUMBER => $this->storeSourcePdf(self::REAL_SK_NINE_PDF),
-        ];
 
         $this->db->transBegin();
 
@@ -46,7 +37,7 @@ class CurrentSystemDataSeeder extends Seeder
             $this->seedRooms();
             $this->seedMeetingUnits();
             $this->seedMembers();
-            $this->seedBanmusDocuments($storedPdfs);
+            $this->seedBanmusDocuments();
             $this->seedGeneralSchedules();
             $this->seedExternalGeneralSchedules();
 
@@ -99,25 +90,6 @@ class CurrentSystemDataSeeder extends Seeder
             'settings',
             'agenda_migration_state',
         ];
-    }
-
-    private function clearStoredBanmusPdfs(): void
-    {
-        $uploadDirectory = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'sk-banmus';
-        if (! is_dir($uploadDirectory)) {
-            return;
-        }
-
-        $paths = glob($uploadDirectory . DIRECTORY_SEPARATOR . '*.pdf') ?: [];
-        foreach ($paths as $path) {
-            $fileName = basename($path);
-            if (preg_match('/^[a-f0-9]{40}\.pdf$/', $fileName) !== 1) {
-                continue;
-            }
-            if (is_file($path) && ! unlink($path)) {
-                throw new RuntimeException("PDF SK lama gagal dihapus: {$fileName}");
-            }
-        }
     }
 
     private function assertCurrentSchema(): void
@@ -365,10 +337,7 @@ class CurrentSystemDataSeeder extends Seeder
         return $rows;
     }
 
-    /**
-     * @param array<string, array{stored: string, original: string}> $storedPdfs
-     */
-    private function seedBanmusDocuments(array $storedPdfs): void
+    private function seedBanmusDocuments(): void
     {
         $documents = [
             [
@@ -383,8 +352,8 @@ class CurrentSystemDataSeeder extends Seeder
                     'periode_selesai' => '2026-05-25',
                     'status' => 'disahkan',
                     'is_publik' => 1,
-                    'dokumen_file' => $storedPdfs[self::REAL_SK_ONE_NUMBER]['stored'],
-                    'dokumen_nama_asli' => $storedPdfs[self::REAL_SK_ONE_NUMBER]['original'],
+                    'dokumen_file' => null,
+                    'dokumen_nama_asli' => null,
                     'dokumen_url' => null,
                     'catatan' => 'Sumber resmi: Keputusan Pimpinan DPRD Provinsi Sulawesi Tengah Nomor 160/1/2026 tanggal 21 Januari 2026.',
                 ],
@@ -402,8 +371,8 @@ class CurrentSystemDataSeeder extends Seeder
                     'periode_selesai' => '2026-09-22',
                     'status' => 'disahkan',
                     'is_publik' => 1,
-                    'dokumen_file' => $storedPdfs[self::REAL_SK_NINE_NUMBER]['stored'],
-                    'dokumen_nama_asli' => $storedPdfs[self::REAL_SK_NINE_NUMBER]['original'],
+                    'dokumen_file' => null,
+                    'dokumen_nama_asli' => null,
                     'dokumen_url' => null,
                     'catatan' => 'Sumber resmi: Keputusan Pimpinan DPRD Provinsi Sulawesi Tengah Nomor 160/9/2026 tanggal 22 Mei 2026.',
                 ],
@@ -1501,42 +1470,6 @@ class CurrentSystemDataSeeder extends Seeder
             'units' => $units,
             'created_at' => $now,
             'updated_at' => $now,
-        ];
-    }
-
-    /**
-     * @return array{stored: string, original: string}
-     */
-    private function storeSourcePdf(string $sourceFileName): array
-    {
-        $sourcePath = ROOTPATH . 'tes' . DIRECTORY_SEPARATOR . $sourceFileName;
-        if (! is_file($sourcePath) || ! is_readable($sourcePath)) {
-            throw new RuntimeException("PDF sumber SK tidak ditemukan: {$sourcePath}");
-        }
-
-        $checksum = sha1_file($sourcePath);
-        if (! is_string($checksum) || $checksum === '') {
-            throw new RuntimeException("Checksum PDF sumber gagal dihitung: {$sourceFileName}");
-        }
-
-        $storedFileName = $checksum . '.pdf';
-        $uploadDirectory = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'sk-banmus';
-        if (! is_dir($uploadDirectory)
-            && ! mkdir($uploadDirectory, 0750, true)
-            && ! is_dir($uploadDirectory)) {
-            throw new RuntimeException("Direktori unggahan SK tidak dapat dibuat: {$uploadDirectory}");
-        }
-
-        $targetPath = $uploadDirectory . DIRECTORY_SEPARATOR . $storedFileName;
-        if (! is_file($targetPath) || filesize($targetPath) !== filesize($sourcePath)) {
-            if (! copy($sourcePath, $targetPath)) {
-                throw new RuntimeException("PDF sumber SK gagal disalin: {$sourceFileName}");
-            }
-        }
-
-        return [
-            'stored' => $storedFileName,
-            'original' => $sourceFileName,
         ];
     }
 
