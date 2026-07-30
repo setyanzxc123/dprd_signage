@@ -110,6 +110,17 @@ function initSettingsUpload() {
         headers: {
             'X-Media-Upload-Token': uploadToken,
         },
+        onBeforeRequest: (request) => {
+            // Keep the POST tunnel, but omit the override header because some
+            // managed WAFs reject it before the request reaches CodeIgniter.
+            const requestHeaders = request?._headers;
+            if (!requestHeaders || typeof requestHeaders !== 'object') {
+                return;
+            }
+            Object.keys(requestHeaders)
+                .filter((name) => name.toLowerCase() === 'x-http-method-override')
+                .forEach((name) => Reflect.deleteProperty(requestHeaders, name));
+        },
         allowedMetaFields: ['name', 'filename', 'filetype', 'originalName', 'ownerToken'],
     });
 

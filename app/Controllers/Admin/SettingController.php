@@ -142,6 +142,16 @@ class SettingController extends BaseController
             }
         }
 
+        $originalRequestMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+        $isTunneledPatch = $method === 'POST'
+            && $uploadKey !== null
+            && $this->request->getHeaderLine('Upload-Offset') !== '';
+        if ($isTunneledPatch) {
+            // Nginx/WAF only sees an ordinary POST. tus-php is instantiated
+            // afterward and may safely interpret this authenticated chunk as PATCH.
+            $_SERVER['REQUEST_METHOD'] = 'PATCH';
+        }
+
         try {
             $tusResponse = (new ResumableMediaUpload())->serve();
 
@@ -155,6 +165,14 @@ class SettingController extends BaseController
                 ->setStatusCode(500)
                 ->setHeader('Tus-Resumable', '1.0.0')
                 ->setBody('');
+        } finally {
+            if ($isTunneledPatch) {
+                if ($originalRequestMethod === null) {
+                    unset($_SERVER['REQUEST_METHOD']);
+                } else {
+                    $_SERVER['REQUEST_METHOD'] = $originalRequestMethod;
+                }
+            }
         }
     }
 
