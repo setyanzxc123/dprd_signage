@@ -64,6 +64,56 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertStringNotContainsString('name="target_unit_ids[]"', $body);
     }
 
+    public function testStoreRejectsDuplicateYearAndSemesterFromDifferentSk(): void
+    {
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->post('/admin/jadwal-banmus/store', [
+                csrf_token() => csrf_hash(),
+                'nomor_sk'   => '160/OTHER/2026',
+                'judul'      => 'SK Banmus Duplikat Semester',
+                'tahun'      => '2026',
+                'semester'   => '2',
+            ]);
+
+        $response->assertStatus(422);
+        $body = $response->response()->getBody();
+        $this->assertStringContainsString(
+            'Semester 2 Tahun 2026 sudah terdaftar pada SK No. 160/TEST/2026.',
+            $body,
+        );
+        $this->assertSame(1, $this->banmusDb->table('dokumen_banmus')->countAllResults());
+    }
+
+    public function testUpdateAllowsDocumentToKeepItsOwnYearAndSemester(): void
+    {
+        $this->banmusDb->table('dokumen_banmus')
+            ->where('id', $this->documentId)
+            ->update([
+                'dokumen_file'      => str_repeat('a', 40) . '.pdf',
+                'dokumen_nama_asli' => 'sk-banmus-test.pdf',
+            ]);
+
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->post("/admin/jadwal-banmus/{$this->documentId}/update", [
+                csrf_token() => csrf_hash(),
+                'nomor_sk'   => '160/TEST/2026',
+                'judul'      => 'SK Banmus Pengujian Diperbarui',
+                'tahun'      => '2026',
+                'semester'   => '2',
+            ]);
+
+        $response->assertStatus(303);
+        $document = $this->banmusDb->table('dokumen_banmus')
+            ->where('id', $this->documentId)
+            ->get()
+            ->getRowArray();
+        $this->assertSame('SK Banmus Pengujian Diperbarui', $document['judul']);
+        $this->assertSame('2026', (string) $document['tahun']);
+        $this->assertSame('2', (string) $document['semester']);
+    }
+
     public function testItemTableShowsAgendaTypeColumnAndFilter(): void
     {
         $this->postItem([

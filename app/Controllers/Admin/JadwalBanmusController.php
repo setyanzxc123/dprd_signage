@@ -564,6 +564,24 @@ class JadwalBanmusController extends BaseController
             return ['error' => 'Semester wajib dipilih.'];
         }
 
+        $year = (int) $tahunRaw;
+        $semester = (int) $semesterRaw;
+        $periodQuery = (new BanmusDocumentModel())
+            ->where('tahun', $year)
+            ->where('semester', $semester);
+        if ($existingDocument !== null) {
+            $periodQuery->where('id !=', (int) $existingDocument['id']);
+        }
+
+        $existingPeriodDocument = $periodQuery->first();
+        if ($existingPeriodDocument !== null) {
+            return [
+                'error' => "Semester {$semester} Tahun {$year} sudah terdaftar pada SK No. "
+                    . $existingPeriodDocument['nomor_sk']
+                    . '. Silakan edit SK tersebut agar agenda semester tidak terduplikasi.',
+            ];
+        }
+
         $uploadResult = $this->validatedPdfUpload();
         if (isset($uploadResult['error'])) {
             return ['error' => $uploadResult['error']];
@@ -576,8 +594,6 @@ class JadwalBanmusController extends BaseController
             return ['error' => 'File SK dalam format PDF wajib diunggah.'];
         }
 
-        $year = (int) $tahunRaw;
-        $semester = (int) $semesterRaw;
         $customJudul = trim((string) $this->request->getPost('judul'));
         $catatan = trim((string) $this->request->getPost('catatan'));
 
