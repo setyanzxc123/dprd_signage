@@ -108,6 +108,12 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
+    $routes->match(['options', 'post'], 'pengaturan/media/tus', 'Admin\SettingController::tus');
+    $routes->match(
+        ['head', 'patch', 'delete'],
+        'pengaturan/media/tus/(:segment)',
+        'Admin\SettingController::tus/$1',
+    );
 
     // Profil akun admin
     $routes->get( 'profile',        'Admin\ProfileController::index');

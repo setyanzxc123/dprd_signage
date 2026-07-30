@@ -3,11 +3,13 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Media\ResumableMediaUpload;
 use App\Models\SettingModel;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class SettingController extends BaseController
 {
-    private const MEDIA_MAX_BYTES = 50 * 1024 * 1024;
+    private const MEDIA_MAX_BYTES = ResumableMediaUpload::MAX_BYTES;
     private const MEDIA_UPLOAD_DIR = 'uploads/media/';
 
     public function index(): string
@@ -26,10 +28,19 @@ class SettingController extends BaseController
 
         $settings = array_merge($defaults, $settings);
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
+        $uploadToken = (string) session()->get('media_upload_token');
+        if (preg_match('/^[a-f0-9]{64}$/', $uploadToken) !== 1) {
+            $uploadToken = bin2hex(random_bytes(32));
+            session()->set('media_upload_token', $uploadToken);
+        }
 
         return view('admin/pengaturan/index', [
-            'pageTitle'      => 'Pengaturan Sistem',
-            'settings'       => $settings,
+            'pageTitle'           => 'Pengaturan Sistem',
+            'settings'            => $settings,
+            'mediaUploadEndpoint' => base_url(ltrim(ResumableMediaUpload::API_PATH, '/')),
+            'mediaUploadToken'    => $uploadToken,
+            'mediaMaxBytes'       => ResumableMediaUpload::MAX_BYTES,
+            'mediaChunkBytes'     => ResumableMediaUpload::CHUNK_BYTES,
         ]);
     }
 
@@ -42,16 +53,25 @@ class SettingController extends BaseController
             return $this->failSave($requestSizeError);
         }
 
-        $mediaUpload = $this->validateMediaUpload();
-        if ($mediaUpload['error'] !== null) {
-            return $this->failSave($mediaUpload['error']);
-        }
+        $uploadKey = trim((string) $this->request->getPost('media_upload_key'));
+        $mediaUpload = $uploadKey === ''
+            ? $this->validateMediaUpload()
+            : ['file' => null, 'error' => null];
 
         $newMediaFile = '';
         $oldMediaFile = '';
 
         try {
-            if ($mediaUpload['file'] !== null) {
+            if ($uploadKey !== '') {
+                $oldMediaFile = (string) $settingModel->getValue('media_file', '');
+                $completedUpload = (new ResumableMediaUpload())->consumeCompletedUpload(
+                    $uploadKey,
+                    (string) session()->get('media_upload_token'),
+                );
+                $newMediaFile = $completedUpload['file_name'];
+            } elseif ($mediaUpload['error'] !== null) {
+                return $this->failSave($mediaUpload['error']);
+            } elseif ($mediaUpload['file'] !== null) {
                 $uploadDir = FCPATH . self::MEDIA_UPLOAD_DIR;
                 if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
                     return $this->failSave('Folder upload media tidak dapat dibuat.');
@@ -103,6 +123,38 @@ class SettingController extends BaseController
         return redirect()->to(base_url('admin/pengaturan'));
     }
 
+    public function tus(?string $uploadKey = null)
+    {
+        $method = strtoupper($this->request->getMethod());
+        if ($method !== 'OPTIONS') {
+            $expectedToken = (string) session()->get('media_upload_token');
+            $providedToken = $this->request->getHeaderLine('X-Media-Upload-Token');
+            if ($expectedToken === ''
+                || $providedToken === ''
+                || ! hash_equals($expectedToken, $providedToken)) {
+                return $this->response
+                    ->setStatusCode(403)
+                    ->setHeader('Tus-Resumable', '1.0.0')
+                    ->setJSON(['message' => 'Token upload media tidak valid.']);
+            }
+        }
+
+        try {
+            $tusResponse = (new ResumableMediaUpload())->serve();
+
+            return $this->fromSymfonyResponse($tusResponse);
+        } catch (\Throwable $exception) {
+            log_message('error', 'Endpoint Tus media gagal: {message}', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $this->response
+                ->setStatusCode(500)
+                ->setHeader('Tus-Resumable', '1.0.0')
+                ->setBody('');
+        }
+    }
+
     private function failSave(string $message, bool $withInput = false)
     {
         if ($this->request->isAJAX()) {
@@ -143,7 +195,7 @@ class SettingController extends BaseController
         }
 
         if ($file->getSize() > self::MEDIA_MAX_BYTES) {
-            return ['file' => null, 'error' => 'Ukuran file melebihi batas 50MB.'];
+            return ['file' => null, 'error' => 'Ukuran file melebihi batas 200 MB.'];
         }
 
         return ['file' => $file, 'error' => null];
@@ -225,7 +277,7 @@ class SettingController extends BaseController
         $fileAktif    = $settingModel->getValue('media_file');
 
         if ($fileAktif) {
-            $path = FCPATH . 'uploads/media/' . $fileAktif;
+            $path = FCPATH . self::MEDIA_UPLOAD_DIR . basename((string) $fileAktif);
             if (file_exists($path)) {
                 unlink($path);
             }
@@ -248,6 +300,16 @@ class SettingController extends BaseController
         }
     }
 
+    private function fromSymfonyResponse(SymfonyResponse $source)
+    {
+        $this->response->setStatusCode($source->getStatusCode());
+        foreach ($source->headers->allPreserveCaseWithoutCookies() as $name => $values) {
+            $this->response->setHeader($name, implode(', ', $values));
+        }
 
+        $body = $source->getContent();
+        $this->response->setBody(is_string($body) ? $body : '');
 
+        return $this->response;
+    }
 }

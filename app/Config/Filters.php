@@ -77,7 +77,11 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            'csrf' => ['except' => ['webhooks/otp/fazpass']],
+            'csrf' => ['except' => [
+                'webhooks/otp/fazpass',
+                'admin/pengaturan/media/tus',
+                'admin/pengaturan/media/tus/*',
+            ]],
             // 'invalidchars',
         ],
         'after' => [
