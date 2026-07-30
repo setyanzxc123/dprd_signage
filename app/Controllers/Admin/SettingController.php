@@ -37,7 +37,10 @@ class SettingController extends BaseController
         return view('admin/pengaturan/index', [
             'pageTitle'           => 'Pengaturan Sistem',
             'settings'            => $settings,
-            'mediaUploadEndpoint' => base_url(ltrim(ResumableMediaUpload::API_PATH, '/')),
+            // Keep the TUS endpoint same-origin. An absolute URL derived from a
+            // stale/proxied baseURL can downgrade HTTPS to HTTP and be blocked
+            // by CSP before the request reaches the server.
+            'mediaUploadEndpoint' => ResumableMediaUpload::API_PATH,
             'mediaUploadToken'    => $uploadToken,
             'mediaMaxBytes'       => ResumableMediaUpload::MAX_BYTES,
             'mediaChunkBytes'     => ResumableMediaUpload::CHUNK_BYTES,
