@@ -103,6 +103,9 @@ function initSettingsUpload() {
         limit: 1,
         retryDelays: [0, 1000, 3000, 5000, 10000, 20000],
         removeFingerprintOnSuccess: true,
+        // Some managed Nginx/ModSecurity stacks reject PATCH. TUS will send
+        // POST with X-HTTP-Method-Override while preserving PATCH semantics.
+        overridePatchMethod: true,
         withCredentials: true,
         headers: {
             'X-Media-Upload-Token': uploadToken,

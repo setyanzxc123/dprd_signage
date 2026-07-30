@@ -110,7 +110,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
     $routes->match(['options', 'post'], 'pengaturan/media/tus', 'Admin\SettingController::tus');
     $routes->match(
-        ['head', 'patch', 'delete'],
+        ['head', 'post', 'patch', 'delete'],
         'pengaturan/media/tus/(:segment)',
         'Admin\SettingController::tus/$1',
     );
