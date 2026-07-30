@@ -154,6 +154,7 @@ final class AgendaWorkspaceService
             ')
             ->join('dokumen_banmus db', 'db.id = jb.dokumen_banmus_id')
             ->join('ruangan r', 'r.id = jb.ruangan_id', 'left')
+            ->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING)
             ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
             ->where('jb.deleted_at', null)
             ->where('jb.tanggal >=', $startDate)

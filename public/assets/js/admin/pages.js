@@ -679,6 +679,7 @@
         const locationField = dialog.querySelector('#field_lokasi_lainnya');
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
+        const agendaTypeFields = [...dialog.querySelectorAll('input[name="jenis_agenda"]')];
 
         if (!(form instanceof HTMLFormElement)
             || !(dateField instanceof HTMLInputElement)
@@ -724,6 +725,12 @@
             if (title) title.textContent = 'Edit Item Agenda Banmus';
             field('field_agenda').value = item.agenda || '';
             field('field_periode_label').value = item.periode_label || '';
+            const agendaType = ['rapat', 'non_rapat'].includes(item.jenis_agenda)
+                ? item.jenis_agenda
+                : 'rapat';
+            agendaTypeFields.forEach((input) => {
+                input.checked = input.value === agendaType;
+            });
             dateField.value = item.tanggal || '';
             field('field_jam_mulai').value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
             field('field_jam_selesai').value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';

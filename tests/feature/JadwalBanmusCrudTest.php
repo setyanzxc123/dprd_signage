@@ -51,12 +51,35 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $body = $response->response()->getBody();
         $this->assertStringContainsString('name="tanggal"', $body);
         $this->assertStringContainsString('name="jam_mulai"', $body);
+        $this->assertStringContainsString('name="jenis_agenda"', $body);
+        $this->assertStringContainsString('value="rapat"', $body);
+        $this->assertStringContainsString('value="non_rapat"', $body);
         $this->assertStringContainsString('name="unit_ids[]"', $body);
         $this->assertStringContainsString('name="materi_url"', $body);
         $this->assertStringContainsString('Simpan Item Agenda', $body);
         $this->assertStringNotContainsString('value="save_projection"', $body);
         $this->assertStringNotContainsString('value="set_schedule"', $body);
         $this->assertStringNotContainsString('name="target_unit_ids[]"', $body);
+    }
+
+    public function testItemTableShowsAgendaTypeColumnAndFilter(): void
+    {
+        $this->postItem([
+            'agenda'        => 'Reses anggota DPRD',
+            'jenis_agenda'  => 'non_rapat',
+            'periode_label' => 'Agustus 2026',
+            'publikasi'     => 'publik',
+        ])->assertStatus(303);
+
+        $body = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->get("/admin/jadwal-banmus/{$this->documentId}")
+            ->response()
+            ->getBody();
+
+        $this->assertStringContainsString('<th>Jenis</th>', $body);
+        $this->assertStringContainsString('"col":2,"label":"Jenis"', $body);
+        $this->assertStringContainsString('Kegiatan non-rapat', $body);
     }
 
     public function testDateCanBeSavedWhileItemRemainsProjection(): void
@@ -77,6 +100,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertNotNull($row);
         $this->assertSame('2026-08-12', $row['tanggal']);
         $this->assertSame('proyeksi', $row['status']);
+        $this->assertSame('rapat', $row['jenis_agenda']);
         $this->assertSame(1, $this->banmusDb->table('jadwal_banmus_unit_rapat')->countAllResults());
 
         $body = $this
@@ -113,7 +137,18 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             ->update(['dokumen_url' => 'https://example.com/sk-banmus.pdf']);
 
         $this->postItem([
+            'agenda'        => 'Reses anggota DPRD',
+            'jenis_agenda'  => 'non_rapat',
+            'periode_label' => 'Agustus 2026',
+            'tanggal'       => '',
+            'jam_mulai'     => '',
+            'jam_selesai'   => '',
+            'ruangan_id'    => '',
+            'publikasi'     => 'publik',
+        ])->assertStatus(303);
+        $this->postItem([
             'agenda'        => 'Proyeksi pembahasan rancangan peraturan',
+            'jenis_agenda'  => 'rapat',
             'periode_label' => 'Agustus 2026',
             'tanggal'       => '',
             'jam_mulai'     => '',
@@ -128,6 +163,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $body = $response->response()->getBody();
         $this->assertStringContainsString('Proyeksi Banmus', $body);
         $this->assertStringContainsString('SK Banmus Pengujian', $body);
+        $this->assertStringContainsString('Reses anggota DPRD', $body);
         $this->assertStringContainsString('Proyeksi pembahasan rancangan peraturan', $body);
         $this->assertStringContainsString('Agustus 2026', $body);
         $this->assertStringNotContainsString('class="badge', $body);
@@ -146,6 +182,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $agendaBody = $agendaResponse->response()->getBody();
         $this->assertStringContainsString('banmus_projection', $agendaBody);
         $this->assertStringContainsString('Proyeksi pembahasan rancangan peraturan', $agendaBody);
+        $this->assertStringNotContainsString('Reses anggota DPRD', $agendaBody);
         $this->assertStringContainsString('Lihat Proyeksi &amp; SK', $agendaBody);
     }
 
@@ -373,6 +410,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'id'                => ['type' => 'INTEGER', 'auto_increment' => true],
             'dokumen_banmus_id' => ['type' => 'INTEGER'],
             'agenda'            => ['type' => 'TEXT'],
+            'jenis_agenda'      => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
             'periode_label'     => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true],
             'tanggal_mulai'     => ['type' => 'DATE', 'null' => true],
             'tanggal_selesai'   => ['type' => 'DATE', 'null' => true],

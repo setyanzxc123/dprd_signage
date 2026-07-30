@@ -38,6 +38,7 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
 
         if ($this->db->tableExists('jadwal_banmus')) {
             $builder = $this->baseBanmusQuery()
+                ->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING)
                 ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
                 ->where('jb.deleted_at', null)
                 ->where('jb.tanggal IS NOT NULL', null, false)
@@ -101,6 +102,7 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
         }
         if ($this->db->tableExists('jadwal_banmus')) {
             $banmusRows = $this->baseBanmusQuery()
+                ->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING)
                 ->where('jb.publikasi', 'publik')
                 ->where('db.is_publik', 1)
                 ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)

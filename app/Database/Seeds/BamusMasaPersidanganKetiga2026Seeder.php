@@ -2,6 +2,7 @@
 
 namespace App\Database\Seeds;
 
+use App\Models\JadwalBanmusModel;
 use CodeIgniter\Database\Seeder;
 use RuntimeException;
 
@@ -50,7 +51,9 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
         $requiredScheduleFields = [
             'dokumen_banmus_id',
             'agenda',
+            'jenis_agenda',
             'periode_label',
+            'publikasi',
             'urutan',
             'catatan',
         ];
@@ -335,7 +338,9 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
                 $rows[] = [
                     'dokumen_banmus_id' => $documentId,
                     'agenda'            => $item['uraian_kegiatan'],
+                    'jenis_agenda'      => $this->banmusAgendaType($item['uraian_kegiatan']),
                     'periode_label'     => $item['tanggal_pelaksanaan'],
+                    'publikasi'         => 'publik',
                     'tanggal_mulai'     => null,
                     'tanggal_selesai'   => null,
                     'urutan'            => $index + 1,
@@ -357,6 +362,32 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
 
             throw $exception;
         }
+    }
+
+    private function banmusAgendaType(string $agenda): string
+    {
+        $agenda = mb_strtolower(trim($agenda));
+        if (str_contains($agenda, 'reses')) {
+            return JadwalBanmusModel::TYPE_NON_MEETING;
+        }
+
+        foreach ([
+            'hari raya',
+            'cuti bersama',
+            'hari lahir',
+            'tahun baru',
+            'hut proklamasi',
+            'maulid',
+            'pengawasan penggunaan anggaran',
+            'koordinasi dan komunikasi dalam daerah',
+            'koordinasi dan komunikasi antar daerah',
+        ] as $prefix) {
+            if (str_starts_with($agenda, $prefix)) {
+                return JadwalBanmusModel::TYPE_NON_MEETING;
+            }
+        }
+
+        return JadwalBanmusModel::TYPE_MEETING;
     }
 
     private function seedGeneralAgendaExamples(): void

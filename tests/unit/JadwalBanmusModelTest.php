@@ -148,6 +148,7 @@ final class JadwalBanmusModelTest extends CIUnitTestCase
             'id'                => ['type' => 'INTEGER', 'auto_increment' => true],
             'dokumen_banmus_id' => ['type' => 'INTEGER'],
             'agenda'            => ['type' => 'TEXT'],
+            'jenis_agenda'      => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
             'periode_label'     => ['type' => 'VARCHAR', 'constraint' => 100],
             'tanggal_mulai'     => ['type' => 'DATE', 'null' => true],
             'tanggal_selesai'   => ['type' => 'DATE', 'null' => true],

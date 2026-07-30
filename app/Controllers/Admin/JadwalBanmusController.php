@@ -300,6 +300,14 @@ class JadwalBanmusController extends BaseController
 
         $periodeLabel = trim((string) $this->request->getPost('periode_label'));
 
+        $agendaType = trim((string) $this->request->getPost('jenis_agenda'));
+        if ($agendaType === '') {
+            $agendaType = (string) ($existingItem['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING);
+        }
+        if (! in_array($agendaType, JadwalBanmusModel::AGENDA_TYPES, true)) {
+            return ['error' => 'Jenis item Banmus tidak valid.'];
+        }
+
         $tanggal = trim((string) $this->request->getPost('tanggal'));
         if ($tanggal !== '' && ! $this->validDate($tanggal)) {
             return ['error' => 'Format tanggal pasti tidak valid.'];
@@ -390,6 +398,7 @@ class JadwalBanmusController extends BaseController
         return [
             'payload' => [
                 'agenda'          => $agenda,
+                'jenis_agenda'    => $agendaType,
                 'periode_label'   => $periodeLabel !== '' ? $periodeLabel : null,
                 'tanggal'         => $tanggal !== '' ? $tanggal : null,
                 'jam_mulai'       => $jamMulai !== '' ? $jamMulai : null,

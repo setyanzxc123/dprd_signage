@@ -1,6 +1,7 @@
 <?php
 
 use App\Libraries\Schedule\AgendaWorkspaceService;
+use App\Libraries\Schedule\Persistence\DatabaseScheduleReadRepository;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Forge;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -54,7 +55,12 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             $this->sortedSources($result['agendas']),
         );
         $this->assertNotContains('Proyeksi Banmus', array_column($result['agendas'], 'judul'));
+        $this->assertNotContains('Reses terjadwal', array_column($result['agendas'], 'judul'));
         $this->assertNotContains('Jadwal reguler lama', array_column($result['agendas'], 'judul'));
+
+        $upcoming = (new DatabaseScheduleReadRepository($this->testDb))
+            ->findUpcomingPublic('2099-08-01', 10);
+        $this->assertNotContains('Reses terjadwal', array_column($upcoming, 'judul'));
     }
 
     public function testWorkspaceMarksCrossSourceRoomAndTimeConflicts(): void
@@ -208,6 +214,7 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'id'                   => ['type' => 'INTEGER', 'auto_increment' => true],
             'dokumen_banmus_id'    => ['type' => 'INTEGER'],
             'agenda'               => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
             'catatan'              => ['type' => 'TEXT', 'null' => true],
             'tanggal'              => ['type' => 'DATE', 'null' => true],
             'jam_mulai'            => ['type' => 'TIME', 'null' => true],
@@ -216,6 +223,8 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'lokasi_lainnya'       => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'status'               => ['type' => 'VARCHAR', 'constraint' => 20],
             'publikasi'            => ['type' => 'VARCHAR', 'constraint' => 20],
+            'materi_url'           => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_url'           => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'deleted_at'           => ['type' => 'DATETIME', 'null' => true],
             'created_at'           => ['type' => 'DATETIME', 'null' => true],
             'updated_at'           => ['type' => 'DATETIME', 'null' => true],
@@ -288,22 +297,38 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             [
                 'dokumen_banmus_id' => 1,
                 'agenda'            => 'Banmus terjadwal',
+                'jenis_agenda'      => 'rapat',
                 'tanggal'           => '2099-08-12',
                 'jam_mulai'         => '09:30:00',
                 'jam_selesai'       => '10:30:00',
                 'ruangan_id'        => 1,
+                'lokasi_lainnya'    => null,
                 'status'            => 'menunggu',
                 'publikasi'         => 'publik',
             ],
             [
                 'dokumen_banmus_id' => 1,
                 'agenda'            => 'Proyeksi Banmus',
+                'jenis_agenda'      => 'rapat',
                 'tanggal'           => null,
                 'jam_mulai'         => null,
                 'jam_selesai'       => null,
                 'ruangan_id'        => null,
+                'lokasi_lainnya'    => null,
                 'status'            => 'proyeksi',
                 'publikasi'         => 'internal',
+            ],
+            [
+                'dokumen_banmus_id' => 1,
+                'agenda'            => 'Reses terjadwal',
+                'jenis_agenda'      => 'non_rapat',
+                'tanggal'           => '2099-08-13',
+                'jam_mulai'         => '09:00:00',
+                'jam_selesai'       => '10:00:00',
+                'ruangan_id'        => null,
+                'lokasi_lainnya'    => 'Daerah pemilihan',
+                'status'            => 'menunggu',
+                'publikasi'         => 'publik',
             ],
         ]);
         $this->testDb->table('jadwal_banmus_unit_rapat')->insert([

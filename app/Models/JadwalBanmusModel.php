@@ -6,6 +6,9 @@ use CodeIgniter\Model;
 
 class JadwalBanmusModel extends Model
 {
+    public const TYPE_MEETING = 'rapat';
+    public const TYPE_NON_MEETING = 'non_rapat';
+    public const AGENDA_TYPES = [self::TYPE_MEETING, self::TYPE_NON_MEETING];
     public const SCHEDULED_STATUSES = ['menunggu', 'persiapan', 'berlangsung', 'selesai'];
 
     protected $table         = 'jadwal_banmus';
@@ -16,6 +19,7 @@ class JadwalBanmusModel extends Model
     protected $allowedFields = [
         'dokumen_banmus_id',
         'agenda',
+        'jenis_agenda',
         'periode_label',
         'tanggal_mulai',
         'tanggal_selesai',
@@ -112,7 +116,7 @@ class JadwalBanmusModel extends Model
 
         $builder = $this->db->table($this->table . ' p')
             ->select(
-                'p.id, p.dokumen_banmus_id, p.agenda, p.periode_label,
+                'p.id, p.dokumen_banmus_id, p.agenda, p.jenis_agenda, p.periode_label,
                  p.urutan, p.catatan, p.status, p.tanggal, p.jam_mulai, p.jam_selesai,
                  p.ruangan_id, p.lokasi_lainnya, p.publikasi, p.materi_url, p.stream_url'
             )

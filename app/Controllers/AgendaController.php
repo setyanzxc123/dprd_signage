@@ -186,7 +186,8 @@ class AgendaController extends BaseController
         foreach ($displayYears as $year) {
             foreach ($documentModel->findForPortal($includeInternal, $year) as $document) {
                 foreach ($document['items'] as $item) {
-                    if (($item['status'] ?? null) !== 'proyeksi') {
+                    if (($item['status'] ?? null) !== 'proyeksi'
+                        || ($item['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING) !== JadwalBanmusModel::TYPE_MEETING) {
                         continue;
                     }
 

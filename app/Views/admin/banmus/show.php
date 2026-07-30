@@ -83,11 +83,12 @@
                     class="table table-zebra table-md w-full admin-data-table responsive-card-table"
                     data-admin-datatable
                     data-dt-page-length="10"
-                    data-dt-col-filters='[{"col":4,"label":"Publikasi","all":"Semua Publikasi"},{"col":5,"label":"Status","all":"Semua Status"}]'>
+                    data-dt-col-filters='[{"col":2,"label":"Jenis","all":"Semua Jenis"},{"col":5,"label":"Publikasi","all":"Semua Publikasi"},{"col":6,"label":"Status","all":"Semua Status"}]'>
                     <thead>
                         <tr class="bg-base-200">
                             <th class="dt-row-number no-sort">No</th>
                             <th>Agenda</th>
+                            <th>Jenis</th>
                             <th>Jadwal</th>
                             <th>Lokasi & Peserta</th>
                             <th class="mobile-hidden">Publikasi</th>
@@ -205,6 +206,13 @@
                                                 </a>
                                             <?php endif; ?>
                                         </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Jenis">
+                                    <?php if (($item['jenis_agenda'] ?? 'rapat') === 'non_rapat'): ?>
+                                        <span class="badge badge-ghost badge-sm whitespace-nowrap">Kegiatan non-rapat</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-neutral badge-soft badge-sm whitespace-nowrap">Rapat</span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Jadwal" data-order="<?= esc($scheduleOrder, 'attr') ?>">
@@ -327,6 +335,39 @@
                 <legend class="fieldset-legend">Uraian Agenda SK <span class="text-error">*</span></legend>
                 <textarea class="textarea min-h-20 w-full resize-none" id="field_agenda" name="agenda" rows="3" required
                     placeholder="Contoh: Rapat Paripurna Penjelasan Kepala Daerah Mengenai Ranperda..."></textarea>
+            </fieldset>
+
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Jenis Item Banmus <span class="text-error">*</span></legend>
+                <div class="grid gap-2 sm:grid-cols-2">
+                    <label class="label cursor-pointer items-start justify-start gap-3 rounded-box border border-base-300 bg-base-100 p-3">
+                        <input
+                            class="radio radio-sm mt-0.5"
+                            id="field_jenis_agenda_rapat"
+                            name="jenis_agenda"
+                            type="radio"
+                            value="rapat"
+                            checked
+                            required />
+                        <span>
+                            <span class="block text-sm font-bold text-base-content">Rapat</span>
+                            <span class="mt-0.5 block text-xs leading-relaxed text-base-content/55">Masuk ke daftar Agenda Rapat di portal.</span>
+                        </span>
+                    </label>
+                    <label class="label cursor-pointer items-start justify-start gap-3 rounded-box border border-base-300 bg-base-100 p-3">
+                        <input
+                            class="radio radio-sm mt-0.5"
+                            id="field_jenis_agenda_non_rapat"
+                            name="jenis_agenda"
+                            type="radio"
+                            value="non_rapat"
+                            required />
+                        <span>
+                            <span class="block text-sm font-bold text-base-content">Kegiatan non-rapat</span>
+                            <span class="mt-0.5 block text-xs leading-relaxed text-base-content/55">Reses dan kegiatan lain tetap ada di Proyeksi Banmus, tetapi tidak masuk Agenda Rapat.</span>
+                        </span>
+                    </label>
+                </div>
             </fieldset>
 
             <div class="grid grid-cols-12 gap-3">
