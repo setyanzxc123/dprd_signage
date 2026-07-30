@@ -46,7 +46,7 @@ final class ScheduleReadService
     {
         $range = $this->normalizeRange($filters);
         $unitId = $this->normalizeUnitId($filters['unit'] ?? null);
-        $scope = ($filters['scope'] ?? 'semua') === 'saya' ? 'saya' : 'semua';
+        $scope = ($filters['scope'] ?? 'saya') === 'semua' ? 'semua' : 'saya';
         $allowedIds = $scope === 'saya'
             ? $this->repository->findScheduleIdsForMember($memberId)
             : null;
@@ -64,7 +64,7 @@ final class ScheduleReadService
             'month' => $range['month'],
             'scope' => $scope,
             'units' => $this->activeUnits(),
-            'data'  => $this->formatRows($rows, $memberUnitIds),
+            'data'  => $this->formatRows($rows, $memberUnitIds, true),
         ];
     }
 
@@ -99,14 +99,18 @@ final class ScheduleReadService
      * @param list<int> $memberUnitIds
      * @return list<array<string, mixed>>
      */
-    private function formatRows(array $rows, array $memberUnitIds = []): array
+    private function formatRows(
+        array $rows,
+        array $memberUnitIds = [],
+        bool $isMember = false,
+    ): array
     {
         $unitMap = $this->repository->findUnitsByScheduleIds(array_map(
             static fn (array $row): int => (int) $row['id'],
             $rows,
         ));
 
-        return array_map(function (array $row) use ($unitMap, $memberUnitIds): array {
+        return array_map(function (array $row) use ($unitMap, $memberUnitIds, $isMember): array {
             $id = (int) $row['id'];
             $units = $unitMap[$id] ?? [];
             $unitIds = array_column($units, 'id');
@@ -121,12 +125,47 @@ final class ScheduleReadService
             $row['is_public'] = (int) ($row['is_publik'] ?? 0) === 1;
             $row['is_participant'] = $memberUnitIds !== []
                 && array_intersect($unitIds, $memberUnitIds) !== [];
-            $row['has_materi'] = trim((string) ($row['materi_url'] ?? '')) !== '';
-            $row['has_stream'] = trim((string) ($row['stream_url'] ?? '')) !== '';
-            unset($row['nama_ruangan'], $row['lokasi_lainnya'], $row['is_publik']);
+            $this->formatResourceAccess($row, 'materi', $isMember);
+            $this->formatResourceAccess($row, 'stream', $isMember);
+            unset(
+                $row['nama_ruangan'],
+                $row['lokasi_lainnya'],
+                $row['is_publik'],
+                $row['materi_url'],
+                $row['materi_akses'],
+                $row['stream_url'],
+                $row['stream_akses'],
+            );
 
             return $row;
         }, $rows);
+    }
+
+    /**
+     * URL asli tidak pernah dikirim oleh service. Controller hanya membentuk URL
+     * proxy setelah akses efektif dinyatakan boleh.
+     *
+     * @param array<string, mixed> $row
+     */
+    private function formatResourceAccess(array &$row, string $resource, bool $isMember): void
+    {
+        $default = $resource === 'materi'
+            ? ScheduleResourceAccess::PARTICIPANT
+            : ScheduleResourceAccess::MEMBER;
+        $access = ScheduleResourceAccess::normalize($row[$resource . '_akses'] ?? null, $default);
+        $available = trim((string) ($row[$resource . '_url'] ?? '')) !== '';
+        $allowed = $available && ScheduleResourceAccess::canView(
+            $access,
+            $isMember,
+            (bool) $row['is_participant'],
+        );
+
+        $row['has_' . $resource] = $allowed;
+        $row[$resource . '_access'] = ($isMember || $allowed) && $available ? $access : null;
+        $row[$resource . '_access_label'] = ($isMember || $allowed) && $available
+            ? ScheduleResourceAccess::label($access)
+            : null;
+        $row[$resource . '_restricted'] = $isMember && $available && ! $allowed;
     }
 
     /** @return array{date: ?string, month: ?string} */

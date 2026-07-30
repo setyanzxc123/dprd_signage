@@ -137,6 +137,7 @@ $routes->group('api/v1/publik', function ($routes) {
 
 $routes->group('api/v1/anggota', ['filter' => 'memberapi'], function ($routes) {
     $routes->get('jadwal', 'Api\MemberScheduleController::jadwal');
+    $routes->get('agenda-umum', 'Api\MemberGeneralAgendaController::index');
 });
 
 // ── API Signage (backward compatible) ────────────────────────────────

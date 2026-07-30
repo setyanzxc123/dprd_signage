@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Schedule\ScheduleResourceAccess;
 use App\Models\JadwalBanmusModel;
 use App\Models\JadwalModel;
 use App\Models\RuanganModel;
@@ -46,7 +47,7 @@ class MeetingController extends BaseController
         }
 
         return view('admin/jadwal/index', [
-            'pageTitle' => 'Insidental Internal',
+            'pageTitle' => 'Agenda Insidental',
             'meetings'  => $meetings,
         ]);
     }
@@ -54,7 +55,7 @@ class MeetingController extends BaseController
     public function create(): string
     {
         return view('admin/jadwal/form', [
-            'pageTitle'   => 'Tambah Jadwal Insidental',
+            'pageTitle'   => 'Tambah Agenda Insidental',
             'meeting'     => null,
             'rooms'       => $this->roomOptions(),
             'unit_rapat_list' => $this->unitRapatOptions(),
@@ -101,7 +102,7 @@ class MeetingController extends BaseController
         $jadwal['target_unit_ids'] = $this->jadwalUnitIds($id);
 
         return view('admin/jadwal/form', [
-            'pageTitle'   => 'Edit Jadwal Insidental',
+            'pageTitle'   => 'Edit Agenda Insidental',
             'meeting'     => $jadwal,
             'rooms'       => $this->roomOptions((int) ($jadwal['ruangan_id'] ?? 0)),
             'unit_rapat_list' => $this->unitRapatOptions($jadwal['target_unit_ids']),
@@ -244,6 +245,21 @@ class MeetingController extends BaseController
             return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
         }
 
+        $materiUrl = $this->validatedOptionalUrl(
+            (string) $this->request->getPost('materi_url'),
+            'Tautan materi atau dokumen tidak valid.',
+        );
+        if (isset($materiUrl['error'])) {
+            return ['error' => $materiUrl['error']];
+        }
+        $streamUrl = $this->validatedOptionalUrl(
+            (string) $this->request->getPost('stream_url'),
+            'Tautan live streaming tidak valid.',
+        );
+        if (isset($streamUrl['error'])) {
+            return ['error' => $streamUrl['error']];
+        }
+
         return [
             'payload' => [
                 'judul'          => $judul,
@@ -254,6 +270,16 @@ class MeetingController extends BaseController
                 'ruangan_id'     => $locationData['ruangan_id'],
                 'lokasi_lainnya' => $locationData['lokasi_lainnya'],
                 'is_publik'      => $this->request->getPost('is_publik') ? 1 : 0,
+                'materi_url'     => $materiUrl['url'],
+                'materi_akses'   => ScheduleResourceAccess::normalize(
+                    $this->request->getPost('materi_akses'),
+                    ScheduleResourceAccess::PARTICIPANT,
+                ),
+                'stream_url'     => $streamUrl['url'],
+                'stream_akses'   => ScheduleResourceAccess::normalize(
+                    $this->request->getPost('stream_akses'),
+                    ScheduleResourceAccess::MEMBER,
+                ),
                 'jenis'          => 'insidental',
                 'status'         => JadwalModel::resolveLifecycleStatus(
                     $tanggal,
@@ -310,6 +336,25 @@ class MeetingController extends BaseController
     private function isValidTimeValue(string $value): bool
     {
         return preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $value) === 1;
+    }
+
+    /**
+     * @return array{url: ?string}|array{error: string}
+     */
+    private function validatedOptionalUrl(string $value, string $message): array
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return ['url' => null];
+        }
+
+        $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+        if (filter_var($value, FILTER_VALIDATE_URL) === false
+            || ! in_array($scheme, ['http', 'https'], true)) {
+            return ['error' => $message];
+        }
+
+        return ['url' => $value];
     }
 
     private function validatedLocationData(?int $jadwalId = null): array
@@ -474,7 +519,7 @@ class MeetingController extends BaseController
         $meeting = $this->postedMeeting($id);
 
         return $this->formViewErrorResponse('admin/jadwal/form', [
-            'pageTitle'        => $id === null ? 'Tambah Jadwal Insidental' : 'Edit Jadwal Insidental',
+            'pageTitle'        => $id === null ? 'Tambah Agenda Insidental' : 'Edit Agenda Insidental',
             'meeting'          => $meeting,
             'rooms'            => $this->roomOptions((int) ($meeting['ruangan_id'] ?? 0)),
             'unit_rapat_list'  => $this->unitRapatOptions($meeting['target_unit_ids'] ?? []),
@@ -508,6 +553,16 @@ class MeetingController extends BaseController
             'ruangan_id'      => (int) $this->request->getPost('ruangan_id'),
             'lokasi_lainnya'  => trim((string) $this->request->getPost('lokasi_lainnya')),
             'is_publik'       => $this->request->getPost('is_publik') ? 1 : 0,
+            'materi_url'      => trim((string) $this->request->getPost('materi_url')),
+            'materi_akses'    => ScheduleResourceAccess::normalize(
+                $this->request->getPost('materi_akses'),
+                ScheduleResourceAccess::PARTICIPANT,
+            ),
+            'stream_url'      => trim((string) $this->request->getPost('stream_url')),
+            'stream_akses'    => ScheduleResourceAccess::normalize(
+                $this->request->getPost('stream_akses'),
+                ScheduleResourceAccess::MEMBER,
+            ),
             'jenis'           => 'insidental',
             'target_unit_ids' => $this->postedUnitIds(),
         ];

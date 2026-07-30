@@ -56,6 +56,8 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertStringContainsString('value="non_rapat"', $body);
         $this->assertStringContainsString('name="unit_ids[]"', $body);
         $this->assertStringContainsString('name="materi_url"', $body);
+        $this->assertStringContainsString('name="materi_akses"', $body);
+        $this->assertStringContainsString('name="stream_akses"', $body);
         $this->assertStringContainsString('Simpan Item Agenda', $body);
         $this->assertStringNotContainsString('value="save_projection"', $body);
         $this->assertStringNotContainsString('value="set_schedule"', $body);
@@ -166,7 +168,8 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertStringContainsString('Reses anggota DPRD', $body);
         $this->assertStringContainsString('Proyeksi pembahasan rancangan peraturan', $body);
         $this->assertStringContainsString('Agustus 2026', $body);
-        $this->assertStringNotContainsString('class="badge', $body);
+        $this->assertStringNotContainsString('Dokumen Publik', $body);
+        $this->assertStringNotContainsString('Kegiatan non-rapat</span>', $body);
         $this->assertStringNotContainsString('Periode Proyeksi', $body);
         $this->assertStringContainsString('Lihat SK Asli', $body);
         $this->assertStringContainsString(
@@ -198,7 +201,9 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'publikasi'     => 'publik',
             'unit_ids'      => ['1', '2'],
             'materi_url'    => 'https://example.com/materi.pdf',
+            'materi_akses'  => 'peserta',
             'stream_url'    => 'https://example.com/live',
+            'stream_akses'  => 'anggota',
         ]);
 
         $response->assertStatus(303);
@@ -307,7 +312,9 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'publikasi'    => 'publik',
             'unit_ids'     => ['1'],
             'materi_url'   => 'https://example.com/materi.pdf',
+            'materi_akses' => 'publik',
             'stream_url'   => 'https://example.com/live',
+            'stream_akses' => 'publik',
         ])->assertStatus(303);
 
         $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
@@ -427,7 +434,9 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'lokasi_lainnya'    => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'publikasi'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'internal'],
             'materi_url'        => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'materi_akses'      => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
             'stream_url'        => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_akses'      => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
             'status'            => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'proyeksi'],
             'catatan'           => ['type' => 'TEXT', 'null' => true],
             'created_at'        => ['type' => 'DATETIME', 'null' => true],
@@ -469,11 +478,19 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->banmusForge->addField([
             'id'             => ['type' => 'INTEGER', 'auto_increment' => true],
             'judul'          => ['type' => 'VARCHAR', 'constraint' => 255],
+            'keterangan'     => ['type' => 'TEXT', 'null' => true],
             'tanggal'        => ['type' => 'DATE'],
             'waktu_mulai'    => ['type' => 'TIME'],
             'waktu_selesai'  => ['type' => 'TIME'],
             'ruangan_id'     => ['type' => 'INTEGER', 'null' => true],
+            'lokasi_lainnya' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'status'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
+            'materi_url'     => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'materi_akses'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
+            'stream_url'     => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_akses'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
+            'jenis'          => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'insidental'],
+            'is_publik'      => ['type' => 'INTEGER', 'default' => 0],
         ]);
         $this->banmusForge->addPrimaryKey('id');
         $this->banmusForge->createTable('jadwal');

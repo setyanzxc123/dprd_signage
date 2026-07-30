@@ -36,7 +36,9 @@ class JadwalBanmusModel extends Model
         'lokasi_lainnya',
         'publikasi',
         'materi_url',
+        'materi_akses',
         'stream_url',
+        'stream_akses',
         'status',
         'catatan',
     ];

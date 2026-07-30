@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Models\JadwalBanmusModel;
+use App\Libraries\Schedule\ScheduleResourceLinkService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 class RedirectController extends BaseController
@@ -15,7 +15,11 @@ class RedirectController extends BaseController
      */
     public function live(int $id): RedirectResponse|string
     {
-        $url = $this->_getScheduleUrl($id, 'stream_url');
+        $url = (new ScheduleResourceLinkService())->publicUrl(
+            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
+            $id,
+            'stream',
+        );
 
         if ($url) {
             return redirect()->to($url);
@@ -31,7 +35,11 @@ class RedirectController extends BaseController
      */
     public function berkas(int $id): RedirectResponse|string
     {
-        $url = $this->_getScheduleUrl($id, 'materi_url');
+        $url = (new ScheduleResourceLinkService())->publicUrl(
+            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
+            $id,
+            'materi',
+        );
 
         if ($url) {
             return redirect()->to($url);
@@ -42,7 +50,11 @@ class RedirectController extends BaseController
 
     public function liveBanmus(int $id): RedirectResponse|string
     {
-        $url = $this->getBanmusUrl($id, 'stream_url');
+        $url = (new ScheduleResourceLinkService())->publicUrl(
+            ScheduleResourceLinkService::SOURCE_BANMUS,
+            $id,
+            'stream',
+        );
 
         return $url
             ? redirect()->to($url)
@@ -51,7 +63,11 @@ class RedirectController extends BaseController
 
     public function berkasBanmus(int $id): RedirectResponse|string
     {
-        $url = $this->getBanmusUrl($id, 'materi_url');
+        $url = (new ScheduleResourceLinkService())->publicUrl(
+            ScheduleResourceLinkService::SOURCE_BANMUS,
+            $id,
+            'materi',
+        );
 
         return $url
             ? redirect()->to($url)
@@ -59,57 +75,6 @@ class RedirectController extends BaseController
     }
 
     // ── Private Helpers ──────────────────────────────────────────────────
-
-    /**
-     * Ambil nilai kolom URL dari jadwal publik tertentu.
-     *
-     * @param  string      $column  'stream_url' atau 'materi_url'
-     * @return string|null          URL jika ada, null jika tidak
-     */
-    private function _getScheduleUrl(int $id, string $column): ?string
-    {
-        if (! in_array($column, ['stream_url', 'materi_url'], true)) {
-            return null;
-        }
-
-        $db = \Config\Database::connect();
-
-        $row = $db->table('jadwal')
-            ->select($column)
-            ->where('id', $id)
-            ->where('is_publik', 1)
-            ->where($column . ' !=', '')
-            ->where($column . ' IS NOT NULL', null, false)
-            ->limit(1)
-            ->get()
-            ->getRowArray();
-
-        return $row[$column] ?? null;
-    }
-
-    private function getBanmusUrl(int $id, string $column): ?string
-    {
-        if ($id < 1 || ! in_array($column, ['stream_url', 'materi_url'], true)) {
-            return null;
-        }
-
-        $row = \Config\Database::connect()
-            ->table('jadwal_banmus jb')
-            ->select('jb.' . $column)
-            ->join('dokumen_banmus db', 'db.id = jb.dokumen_banmus_id')
-            ->where('jb.id', $id)
-            ->where('jb.publikasi', 'publik')
-            ->where('db.is_publik', 1)
-            ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
-            ->where('jb.deleted_at', null)
-            ->where('jb.' . $column . ' !=', '')
-            ->where('jb.' . $column . ' IS NOT NULL', null, false)
-            ->limit(1)
-            ->get()
-            ->getRowArray();
-
-        return $row[$column] ?? null;
-    }
 
     /**
      * Tampilkan halaman sederhana jika URL belum tersedia.

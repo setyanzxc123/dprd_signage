@@ -62,7 +62,7 @@ $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
             <li class="nav-item-custom">
                 <a class="nav-link-custom" href="<?= base_url('admin/jadwal') ?>" data-path="/admin/jadwal">
                     <i data-lucide="calendar-days" class="nav-icon"></i>
-                    <span class="nav-text">Insidental Internal</span>
+                    <span class="nav-text">Agenda Insidental</span>
                     <span class="nav-badge badge badge-primary badge-sm ml-auto hidden" id="badge-jadwal"></span>
                 </a>
             </li>

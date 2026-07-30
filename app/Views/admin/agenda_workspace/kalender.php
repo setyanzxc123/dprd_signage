@@ -22,7 +22,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Operasional</p>
         <h1 class="page-title">Seluruh Agenda</h1>
         <p class="mt-1 text-sm text-base-content/60">
-            Daftar operasional Agenda Banmus terjadwal, Insidental Internal, dan Agenda Eksternal.
+            Daftar operasional Agenda Banmus terjadwal, Agenda Insidental, dan Agenda Eksternal.
         </p>
     </div>
     <div class="join w-full sm:w-auto">
@@ -54,7 +54,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     </div>
     <div class="card card-border bg-base-100 shadow-sm">
         <div class="card-body gap-1 p-4">
-            <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Insidental</span>
+            <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Agenda Insidental</span>
             <strong class="text-2xl"><?= number_format($counts['insidental_internal'], 0, ',', '.') ?></strong>
         </div>
     </div>
@@ -233,7 +233,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                                     };
                                     $sourceShort = match ($agenda['source']) {
                                         'banmus'              => 'Banmus',
-                                        'insidental_internal' => 'Insidental',
+                                        'insidental_internal' => 'Agenda Insidental',
                                         default               => 'Eksternal',
                                     };
                                     ?>

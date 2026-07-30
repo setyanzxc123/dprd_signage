@@ -53,8 +53,10 @@ final class InsidentalInternalCrudTest extends CIUnitTestCase
         $this->assertStringContainsString('name="waktu_mulai" type="time"', $body);
         $this->assertStringContainsString('Default internal', $body);
         $this->assertStringNotContainsString('name="jenis"', $body);
-        $this->assertStringNotContainsString('name="materi_url"', $body);
-        $this->assertStringNotContainsString('name="stream_url"', $body);
+        $this->assertStringContainsString('name="materi_url"', $body);
+        $this->assertStringContainsString('name="materi_akses"', $body);
+        $this->assertStringContainsString('name="stream_url"', $body);
+        $this->assertStringContainsString('name="stream_akses"', $body);
     }
 
     public function testStoreForcesInsidentalSourceAndInternalPublication(): void
@@ -390,7 +392,9 @@ final class InsidentalInternalCrudTest extends CIUnitTestCase
             'lokasi_lainnya'   => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'status'           => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
             'materi_url'       => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'materi_akses'     => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
             'stream_url'       => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_akses'     => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
             'is_publik'        => ['type' => 'INTEGER', 'default' => 0],
             'jenis'            => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'insidental'],
         ]);

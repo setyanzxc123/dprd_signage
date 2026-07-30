@@ -183,7 +183,16 @@ $isMember = is_array($member ?? null);
                                             <p class="text-xs font-bold uppercase tracking-wider text-base-content/50">
                                                 Semester <?= (int) $document['semester'] ?> · <?= (int) $document['tahun'] ?>
                                             </p>
-                                            <h2 class="mt-3 text-lg font-black leading-snug sm:text-xl">
+                                            <?php if ($isMember && (int) ($document['is_publik'] ?? 0) !== 1): ?>
+                                                <span
+                                                    class="tooltip tooltip-bottom mt-2 cursor-help"
+                                                    data-tip="Dokumen ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
+                                                    aria-label="Dokumen Internal DPRD. Dokumen ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
+                                                >
+                                                    <span class="badge badge-ghost badge-sm">Dokumen Internal DPRD</span>
+                                                </span>
+                                            <?php endif; ?>
+                                            <h2 class="<?= $isMember && (int) ($document['is_publik'] ?? 0) !== 1 ? 'mt-3' : 'mt-2' ?> text-lg font-black leading-snug sm:text-xl">
                                                 <?= esc($document['judul'] ?: 'Agenda Banmus') ?>
                                             </h2>
                                             <p class="mt-1 text-sm font-semibold text-base-content/60">

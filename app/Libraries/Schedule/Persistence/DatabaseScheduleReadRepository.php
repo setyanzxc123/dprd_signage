@@ -268,7 +268,9 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
                 j.waktu_selesai,
                 j.status,
                 j.materi_url,
+                j.materi_akses,
                 j.stream_url,
+                j.stream_akses,
                 j.jenis,
                 j.is_publik,
                 j.lokasi_lainnya,
@@ -294,9 +296,14 @@ final class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInte
                 jb.jam_selesai AS waktu_selesai,
                 jb.status,
                 jb.materi_url,
+                jb.materi_akses,
                 jb.stream_url,
+                jb.stream_akses,
                 "reguler" AS jenis,
-                CASE WHEN jb.publikasi = "publik" THEN 1 ELSE 0 END AS is_publik,
+                CASE
+                    WHEN jb.publikasi = "publik" AND db.is_publik = 1 THEN 1
+                    ELSE 0
+                END AS is_publik,
                 jb.lokasi_lainnya,
                 r.name AS nama_ruangan
             ', false)

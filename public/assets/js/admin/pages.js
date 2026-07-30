@@ -737,7 +737,9 @@
             field('field_catatan').value = item.catatan || '';
             field('field_publikasi').value = item.publikasi || 'internal';
             field('field_materi_url').value = item.materi_url || '';
+            field('field_materi_akses').value = item.materi_akses || 'peserta';
             field('field_stream_url').value = item.stream_url || '';
+            field('field_stream_akses').value = item.stream_akses || 'anggota';
 
             if (item.ruangan_id) {
                 roomField.value = String(item.ruangan_id);

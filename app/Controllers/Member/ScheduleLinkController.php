@@ -3,75 +3,63 @@
 namespace App\Controllers\Member;
 
 use App\Controllers\BaseController;
-use App\Models\JadwalBanmusModel;
+use App\Libraries\Schedule\ScheduleResourceLinkService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 class ScheduleLinkController extends BaseController
 {
     public function live(int $id): RedirectResponse
     {
-        return $this->redirectToScheduleUrl($id, 'stream_url');
+        return $this->redirectToResource(
+            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
+            $id,
+            'stream',
+        );
     }
 
     public function berkas(int $id): RedirectResponse
     {
-        return $this->redirectToScheduleUrl($id, 'materi_url');
+        return $this->redirectToResource(
+            ScheduleResourceLinkService::SOURCE_INSIDENTAL,
+            $id,
+            'materi',
+        );
     }
 
     public function liveBanmus(int $id): RedirectResponse
     {
-        return $this->redirectToBanmusUrl($id, 'stream_url');
+        return $this->redirectToResource(
+            ScheduleResourceLinkService::SOURCE_BANMUS,
+            $id,
+            'stream',
+        );
     }
 
     public function berkasBanmus(int $id): RedirectResponse
     {
-        return $this->redirectToBanmusUrl($id, 'materi_url');
+        return $this->redirectToResource(
+            ScheduleResourceLinkService::SOURCE_BANMUS,
+            $id,
+            'materi',
+        );
     }
 
-    private function redirectToScheduleUrl(int $id, string $column): RedirectResponse
+    private function redirectToResource(
+        string $source,
+        int $id,
+        string $resource,
+    ): RedirectResponse
     {
-        if ($id < 1 || ! in_array($column, ['stream_url', 'materi_url'], true)) {
-            return redirect()->to(base_url('agenda'), 303);
-        }
+        $auth = session()->get('member_auth');
+        $memberId = is_array($auth) ? (int) ($auth['anggota_id'] ?? 0) : 0;
+        $url = (new ScheduleResourceLinkService())->memberUrl(
+            $source,
+            $id,
+            $resource,
+            $memberId,
+        );
 
-        $row = db_connect()
-            ->table('jadwal')
-            ->select($column)
-            ->where('id', $id)
-            ->where($column . ' !=', '')
-            ->where($column . ' IS NOT NULL', null, false)
-            ->limit(1)
-            ->get()
-            ->getRowArray();
-        $url = trim((string) ($row[$column] ?? ''));
-
-        if ($url === '') {
-            return redirect()->to(base_url('agenda'), 303);
-        }
-
-        return redirect()->to($url);
-    }
-
-    private function redirectToBanmusUrl(int $id, string $column): RedirectResponse
-    {
-        if ($id < 1 || ! in_array($column, ['stream_url', 'materi_url'], true)) {
-            return redirect()->to(base_url('agenda'), 303);
-        }
-
-        $row = db_connect()
-            ->table('jadwal_banmus')
-            ->select($column)
-            ->where('id', $id)
-            ->whereIn('status', JadwalBanmusModel::SCHEDULED_STATUSES)
-            ->where('deleted_at', null)
-            ->where($column . ' !=', '')
-            ->where($column . ' IS NOT NULL', null, false)
-            ->limit(1)
-            ->get()
-            ->getRowArray();
-        $url = trim((string) ($row[$column] ?? ''));
-
-        return $url === ''
+        return $url === null
             ? redirect()->to(base_url('agenda'), 303)
             : redirect()->to($url);
     }

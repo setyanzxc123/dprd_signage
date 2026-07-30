@@ -14,7 +14,8 @@ class JadwalModel extends Model
     protected $allowedFields = [
         'judul', 'keterangan', 'tanggal', 'waktu_mulai', 'waktu_selesai',
         'ruangan_id', 'lokasi_lainnya',
-        'status', 'materi_url', 'stream_url', 'is_publik', 'jenis',
+        'status', 'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
+        'is_publik', 'jenis',
     ];
     protected $useTimestamps = false;
     protected $returnType    = 'array';

@@ -171,9 +171,13 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             <div class="border-t border-base-300 bg-base-100" aria-label="Cakupan agenda anggota">
                 <div class="mx-auto flex w-[min(1180px,calc(100%-20px))] flex-col gap-2 py-3 sm:w-[min(1180px,calc(100%-32px))] sm:flex-row sm:items-center sm:justify-between">
                     <div class="join" role="group" aria-label="Pilih cakupan agenda">
-                        <button type="button" class="join-item btn btn-sm" :class="scopeButtonClass('semua')" :aria-pressed="memberScope === 'semua'" @click="setMemberScope('semua')">Semua Jadwal</button>
                         <button type="button" class="join-item btn btn-sm" :class="scopeButtonClass('saya')" :aria-pressed="memberScope === 'saya'" @click="setMemberScope('saya')">Jadwal Saya</button>
+                        <button type="button" class="join-item btn btn-sm" :class="scopeButtonClass('semua')" :aria-pressed="memberScope === 'semua'" @click="setMemberScope('semua')">Semua Jadwal</button>
                     </div>
+                    <p class="flex items-center gap-2 text-xs font-semibold text-base-content/60">
+                        <span class="badge badge-info badge-soft badge-sm">Akses Anggota</span>
+                        Anda dapat melihat agenda dan sumber daya internal sesuai kewenangan.
+                    </p>
                 </div>
             </div>
         <?php endif; ?>
@@ -254,9 +258,23 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                 <span class="min-w-0">
                                     <span class="line-clamp-2 text-sm font-extrabold leading-5 sm:text-base">{{ item.judul }}</span>
                                     <span class="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-                                        <span v-if="item.source === 'insidental_internal'" class="badge badge-secondary badge-soft badge-sm">
-                                            Insidental Internal
+                                        <span v-if="item.source === 'banmus' || item.source === 'banmus_projection'" class="badge badge-info badge-soft badge-sm">
+                                            Banmus
                                         </span>
+                                        <span v-if="item.source === 'insidental_internal'" class="badge badge-secondary badge-soft badge-sm">
+                                            Agenda Insidental
+                                        </span>
+                                        <?php if ($isMember): ?>
+                                            <span
+                                                v-if="!item.is_public"
+                                                class="tooltip tooltip-bottom cursor-help"
+                                                data-tip="Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
+                                                aria-label="Internal DPRD. Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
+                                            >
+                                                <span class="badge badge-ghost badge-sm">Internal DPRD</span>
+                                            </span>
+                                            <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm">Anda Peserta</span>
+                                        <?php endif; ?>
                                         <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-semibold text-base-content/50">
                                             {{ item.periode_label || 'Periode belum ditentukan' }}
                                         </span>
@@ -268,15 +286,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                             </summary>
 
                             <div class="collapse-content border-t border-base-300">
-                                <div class="flex flex-wrap gap-2 pt-4">
-                                    <span :class="statusBadgeClass(item.status)">{{ statusLabel(item.status) }}</span>
-                                    <?php if ($isMember): ?>
-                                        <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm">Anda Peserta</span>
-                                        <span v-if="!item.is_public" class="badge badge-ghost badge-sm">Internal</span>
-                                    <?php endif; ?>
-                                </div>
-
-                                <p v-if="item.keterangan" class="mt-3 text-sm font-medium leading-6 text-base-content/60">{{ item.keterangan }}</p>
+                                <p v-if="item.keterangan" class="pt-4 text-sm font-medium leading-6 text-base-content/60">{{ item.keterangan }}</p>
 
                                 <dl v-if="item.status === 'proyeksi'" class="mt-4 grid gap-3 rounded-box bg-base-200 p-4 sm:grid-cols-2">
                                     <div>
@@ -310,9 +320,19 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                                         Lihat Proyeksi &amp; SK
                                     </a>
                                     <template v-else>
-                                        <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">Bahan Rapat</a>
-                                        <a v-if="item.has_stream" class="btn btn-outline btn-sm" :href="item.stream_url" target="_blank" rel="noopener noreferrer">Live / Video</a>
-                                        <span v-if="!item.has_materi && !item.has_stream" class="text-xs font-semibold text-base-content/45">Belum ada bahan atau tautan video.</span>
+                                        <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
+                                            Bahan Rapat
+                                            <span v-if="item.materi_access_label" class="badge badge-ghost badge-xs">{{ item.materi_access_label }}</span>
+                                        </a>
+                                        <a v-if="item.has_stream" class="btn btn-outline btn-sm" :href="item.stream_url" target="_blank" rel="noopener noreferrer">
+                                            Live / Video
+                                            <span v-if="item.stream_access_label" class="badge badge-ghost badge-xs">{{ item.stream_access_label }}</span>
+                                        </a>
+                                        <?php if ($isMember): ?>
+                                            <span v-if="item.materi_restricted" class="badge badge-warning badge-soft badge-sm">Bahan khusus peserta</span>
+                                            <span v-if="item.stream_restricted" class="badge badge-warning badge-soft badge-sm">Live/video khusus peserta</span>
+                                        <?php endif; ?>
+                                        <span v-if="!item.has_materi && !item.has_stream && !item.materi_restricted && !item.stream_restricted" class="text-xs font-semibold text-base-content/45">Belum ada bahan atau tautan video.</span>
                                     </template>
                                 </div>
                             </div>
@@ -354,6 +374,17 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                             </div>
                             <div class="list-col-grow min-w-0">
                                 <p class="line-clamp-2 text-sm font-extrabold leading-5">{{ item.judul }}</p>
+                                <?php if ($isMember): ?>
+                                    <div v-if="!item.is_public" class="mt-1 flex flex-wrap gap-1.5">
+                                        <span
+                                            class="tooltip tooltip-bottom cursor-help"
+                                            data-tip="Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
+                                            aria-label="Internal DPRD. Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
+                                        >
+                                            <span class="badge badge-ghost badge-xs">Internal DPRD</span>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
                                 <p class="mt-1 truncate text-xs font-semibold text-base-content/50">{{ item.waktu_mulai }} WITA · {{ item.lokasi }}</p>
                                 <p v-if="item.pihak_eksternal" class="mt-1 truncate text-xs text-base-content/50">{{ item.pihak_eksternal }}</p>
                                 <span class="mt-1 flex flex-wrap gap-1">
@@ -412,7 +443,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             });
             const now = ref(new Date());
             const activeNavigation = ref('all');
-            const memberScope = ref('semua');
+            const memberScope = ref(IS_MEMBER ? 'saya' : 'semua');
             const periodMode = ref('month');
             const pageSize = ref(10);
             const currentPage = ref(1);
@@ -752,7 +783,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
             function updateUrl() {
                 const url = new URL(window.location.href);
                 setOptionalParam(url, 'menu', activeNavigation.value, 'all');
-                setOptionalParam(url, 'scope', memberScope.value, 'semua');
+                setOptionalParam(url, 'scope', memberScope.value, IS_MEMBER ? 'saya' : 'semua');
                 setOptionalParam(url, 'periode', periodMode.value, 'month');
                 setOptionalParam(url, 'tampil', String(pageSize.value), '10');
                 setOptionalParam(url, 'halaman', String(currentPage.value), '1');
@@ -844,8 +875,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                 if (requestedMenu === 'all' || /^unit:\d+$/.test(requestedMenu || '')) {
                     activeNavigation.value = requestedMenu;
                 }
-                if (IS_MEMBER && params.get('scope') === 'saya') {
-                    memberScope.value = 'saya';
+                if (IS_MEMBER && ['saya', 'semua'].includes(params.get('scope'))) {
+                    memberScope.value = params.get('scope');
                 }
                 if (['quarter', 'semester'].includes(params.get('periode'))) {
                     periodMode.value = params.get('periode');

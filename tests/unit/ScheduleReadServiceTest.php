@@ -72,8 +72,9 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
         $this->assertTrue($result['data'][0]['is_participant']);
     }
 
-    public function testMemberAgendaRejectsUnknownScopeAsSemua(): void
+    public function testMemberAgendaDefaultsUnknownScopeToPersonalSchedule(): void
     {
+        $this->repository->memberScheduleIds = [10];
         $this->repository->schedules = [];
 
         $result = $this->service()->memberAgenda(9, [
@@ -81,8 +82,43 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
             'scope' => 'admin',
         ]);
 
-        $this->assertSame('semua', $result['scope']);
-        $this->assertNull($this->repository->lastAllowedScheduleIds);
+        $this->assertSame('saya', $result['scope']);
+        $this->assertSame([10], $this->repository->lastAllowedScheduleIds);
+    }
+
+    public function testPublicDoesNotReceiveParticipantOnlyResourceUrl(): void
+    {
+        $this->repository->schedules = [$this->schedule([
+            'materi_akses' => 'peserta',
+        ])];
+
+        $result = $this->service()->publicAgenda(['date' => '2026-07-27']);
+
+        $this->assertFalse($result['data'][0]['has_materi']);
+        $this->assertNull($result['data'][0]['materi_access']);
+        $this->assertArrayNotHasKey('materi_url', $result['data'][0]);
+    }
+
+    public function testMemberParticipantReceivesParticipantResourceCapability(): void
+    {
+        $this->repository->memberUnitIds = [3];
+        $this->repository->schedules = [$this->schedule([
+            'is_publik'    => 0,
+            'materi_akses' => 'peserta',
+        ])];
+        $this->repository->scheduleUnits = [
+            10 => [['id' => 3, 'nama' => 'Komisi I']],
+        ];
+
+        $result = $this->service()->memberAgenda(9, [
+            'date'  => '2026-07-27',
+            'scope' => 'semua',
+        ]);
+
+        $this->assertTrue($result['data'][0]['has_materi']);
+        $this->assertSame('Peserta', $result['data'][0]['materi_access_label']);
+        $this->assertFalse($result['data'][0]['materi_restricted']);
+        $this->assertArrayNotHasKey('materi_url', $result['data'][0]);
     }
 
     public function testSignageContractRemainsBackwardCompatible(): void
@@ -136,7 +172,9 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
             'waktu_selesai'   => '11:00:00',
             'status'          => 'menunggu',
             'materi_url'      => 'https://example.com/materi',
+            'materi_akses'    => 'publik',
             'stream_url'      => '',
+            'stream_akses'    => 'anggota',
             'jenis'           => 'Rapat Kerja',
             'is_publik'       => 1,
             'lokasi_lainnya' => '',

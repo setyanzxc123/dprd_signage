@@ -4,13 +4,13 @@
 
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Agenda Internal DPRD</p>
-        <h1 class="page-title">Insidental Internal</h1>
-        <p class="mt-1 text-sm text-base-content/60">Rapat dan agenda internal mendadak di luar SK Banmus.</p>
+        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Pengelolaan Agenda</p>
+        <h1 class="page-title">Agenda Insidental</h1>
+        <p class="mt-1 text-sm text-base-content/60">Rapat atau kegiatan mendadak di luar agenda Banmus.</p>
     </div>
     <a href="<?= base_url('admin/jadwal/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
         <i data-lucide="plus" class="h-4 w-4"></i>
-        Tambah Jadwal
+        Tambah Agenda
     </a>
 </div>
 
@@ -18,9 +18,9 @@
     <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
         <h2 class="card-title text-base">
             <i data-lucide="calendar-days" class="h-5 w-5 text-primary"></i>
-            Daftar Jadwal
+            Daftar Agenda Insidental
         </h2>
-        <span class="badge badge-ghost whitespace-nowrap"><?= count($meetings) ?> jadwal</span>
+        <span class="badge badge-ghost whitespace-nowrap"><?= count($meetings) ?> agenda</span>
     </div>
 
     <div class="min-w-0">

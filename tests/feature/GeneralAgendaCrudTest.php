@@ -1,6 +1,7 @@
 <?php
 
 use App\Database\Migrations\ExpandGeneralAgendaFields;
+use App\Libraries\Schedule\GeneralAgendaReadService;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Forge;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -180,6 +181,22 @@ final class GeneralAgendaCrudTest extends CIUnitTestCase
         $this->assertArrayNotHasKey('lingkup', $payload['data'][0]);
         $this->assertArrayNotHasKey('status', $payload['data'][0]);
         $this->assertArrayNotHasKey('perkiraan_peserta', $payload['data'][0]);
+    }
+
+    public function testMemberReadIncludesInternalExternalAgendaWithVisibilityMarker(): void
+    {
+        $this->testDb->table('agenda_umum')->update(['is_publik' => 1]);
+        $this->insertAgenda('Agenda eksternal internal', 0);
+
+        $result = (new GeneralAgendaReadService())->read(['month' => '2099-08'], true);
+
+        $this->assertCount(2, $result['data']);
+        $internal = array_values(array_filter(
+            $result['data'],
+            static fn (array $item): bool => $item['judul'] === 'Agenda eksternal internal',
+        ))[0];
+        $this->assertFalse($internal['is_public']);
+        $this->assertSame('agenda_eksternal', $internal['source']);
     }
 
     private function postAgenda(array $payload)

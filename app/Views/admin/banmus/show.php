@@ -2,6 +2,14 @@
 
 <?= $this->section('content') ?>
 
+<?php
+$resourceAccessLabels = [
+    'publik'  => 'Publik',
+    'anggota' => 'Anggota DPRD',
+    'peserta' => 'Peserta',
+];
+?>
+
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
         <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Agenda Internal DPRD</p>
@@ -192,6 +200,9 @@
                                                     title="Buka materi atau dokumen">
                                                     <i data-lucide="paperclip" class="h-3.5 w-3.5"></i>
                                                     Materi
+                                                    <span class="badge badge-ghost badge-xs">
+                                                        <?= esc($resourceAccessLabels[$item['materi_akses'] ?? 'peserta'] ?? 'Terbatas') ?>
+                                                    </span>
                                                 </a>
                                             <?php endif; ?>
                                             <?php if (! empty($item['stream_url'])): ?>
@@ -203,6 +214,9 @@
                                                     title="Buka tautan live streaming">
                                                     <i data-lucide="radio" class="h-3.5 w-3.5"></i>
                                                     Live
+                                                    <span class="badge badge-ghost badge-xs">
+                                                        <?= esc($resourceAccessLabels[$item['stream_akses'] ?? 'anggota'] ?? 'Terbatas') ?>
+                                                    </span>
                                                 </a>
                                             <?php endif; ?>
                                         </div>
@@ -448,10 +462,22 @@
                     <fieldset class="fieldset col-span-12 sm:col-span-6">
                         <legend class="fieldset-legend">Tautan Materi / Dokumen</legend>
                         <input class="input w-full" id="field_materi_url" name="materi_url" type="url" placeholder="https://..." />
+                        <label class="label" for="field_materi_akses">Akses bahan</label>
+                        <select class="select select-sm w-full" id="field_materi_akses" name="materi_akses">
+                            <option value="peserta">Peserta rapat</option>
+                            <option value="anggota">Seluruh anggota DPRD</option>
+                            <option value="publik">Publik</option>
+                        </select>
                     </fieldset>
                     <fieldset class="fieldset col-span-12 sm:col-span-6">
                         <legend class="fieldset-legend">Tautan Live Streaming</legend>
                         <input class="input w-full" id="field_stream_url" name="stream_url" type="url" placeholder="https://..." />
+                        <label class="label" for="field_stream_akses">Akses live/video</label>
+                        <select class="select select-sm w-full" id="field_stream_akses" name="stream_akses">
+                            <option value="anggota">Seluruh anggota DPRD</option>
+                            <option value="peserta">Peserta rapat</option>
+                            <option value="publik">Publik</option>
+                        </select>
                     </fieldset>
                 </div>
             </div>

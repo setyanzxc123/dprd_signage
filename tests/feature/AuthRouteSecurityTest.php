@@ -115,7 +115,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('Proyeksi Banmus', $body);
         $this->assertStringContainsString('Jadwal Umum', $body);
         $this->assertStringContainsString("item.source === 'insidental_internal'", $body);
-        $this->assertStringContainsString('Insidental Internal', $body);
+        $this->assertStringContainsString('Agenda Insidental', $body);
         $this->assertStringContainsString('v-for="item in generalAgendas"', $body);
         $this->assertStringNotContainsString("navButtonClass('bamus')", $body);
         $this->assertStringNotContainsString('Jadwal Sidang', $body);

@@ -78,7 +78,7 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             $this->sortedSources($conflicts),
         );
         $this->assertStringContainsString('Agenda Banmus', $conflicts[0]['conflicts'][0]['label']);
-        $this->assertStringContainsString('Insidental Internal', $conflicts[1]['conflicts'][0]['label']);
+        $this->assertStringContainsString('Agenda Insidental', $conflicts[1]['conflicts'][0]['label']);
     }
 
     public function testWorkspaceFiltersBySourceUnitLocationStatusAndPublication(): void
@@ -192,7 +192,9 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'is_publik'        => ['type' => 'INTEGER', 'default' => 0],
             'jenis'            => ['type' => 'VARCHAR', 'constraint' => 20],
             'materi_url'       => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'materi_akses'     => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
             'stream_url'       => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_akses'     => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('jadwal');
@@ -224,7 +226,9 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'status'               => ['type' => 'VARCHAR', 'constraint' => 20],
             'publikasi'            => ['type' => 'VARCHAR', 'constraint' => 20],
             'materi_url'           => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'materi_akses'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
             'stream_url'           => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_akses'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
             'deleted_at'           => ['type' => 'DATETIME', 'null' => true],
             'created_at'           => ['type' => 'DATETIME', 'null' => true],
             'updated_at'           => ['type' => 'DATETIME', 'null' => true],

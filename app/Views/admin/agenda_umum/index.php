@@ -25,7 +25,7 @@
 
     <div role="alert" class="alert alert-info rounded-none border-x-0 border-t-0 py-2 text-sm">
         <i data-lucide="info" class="h-4 w-4"></i>
-        <span>Khusus kegiatan nonrapat. Rapat mendadak dicatat sebagai <strong>Rapat Insidental</strong>.</span>
+        <span>Khusus kegiatan nonrapat. Rapat mendadak dicatat sebagai <strong>Agenda Insidental</strong>.</span>
     </div>
 
     <div class="min-w-0">

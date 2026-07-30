@@ -10,13 +10,13 @@ final class AgendaWorkspaceService
 {
     private const SOURCE_LABELS = [
         'banmus'              => 'Agenda Banmus',
-        'insidental_internal' => 'Insidental Internal',
+        'insidental_internal' => 'Agenda Insidental',
         'agenda_eksternal'    => 'Agenda Eksternal',
     ];
 
     private const TYPE_LABELS = [
         'banmus'           => 'Agenda Banmus',
-        'insidental'       => 'Insidental Internal',
+        'insidental'       => 'Agenda Insidental',
         'audiensi'         => 'Audiensi / Penerimaan Aspirasi',
         'audiensi_publik'  => 'Audiensi / Penerimaan Aspirasi',
         'demonstrasi'      => 'Aksi Unjuk Rasa / Demonstrasi',

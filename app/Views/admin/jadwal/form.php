@@ -12,7 +12,7 @@ $targetUnitIds = array_map('intval', $meeting['target_unit_ids'] ?? []);
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
     <p class="page-subtitle">
-        <?= $isEdit ? 'Perbarui data agenda insidental internal.' : 'Tambahkan agenda internal di luar SK Banmus.' ?>
+        <?= $isEdit ? 'Perbarui data agenda insidental.' : 'Tambahkan agenda mendadak di luar agenda Banmus.' ?>
     </p>
 </div>
 
@@ -163,6 +163,37 @@ $targetUnitIds = array_map('intval', $meeting['target_unit_ids'] ?? []);
                     </span>
                 </label>
             </div>
+
+            <fieldset class="fieldset col-span-12 rounded-box border border-base-300 p-3">
+                <legend class="fieldset-legend">Bahan dan tautan rapat</legend>
+                <p class="label">Akses sumber daya diatur terpisah dari publikasi agenda.</p>
+
+                <div class="grid grid-cols-12 gap-3">
+                    <div class="col-span-12 sm:col-span-6">
+                        <label class="label" for="materi_url">Tautan materi/dokumen</label>
+                        <input class="input w-full" id="materi_url" name="materi_url" type="url"
+                            value="<?= esc($meeting['materi_url'] ?? '') ?>" placeholder="https://..." />
+                        <label class="label" for="materi_akses">Akses bahan</label>
+                        <select class="select select-sm w-full" id="materi_akses" name="materi_akses">
+                            <option value="peserta" <?= ($meeting['materi_akses'] ?? 'peserta') === 'peserta' ? 'selected' : '' ?>>Peserta rapat</option>
+                            <option value="anggota" <?= ($meeting['materi_akses'] ?? '') === 'anggota' ? 'selected' : '' ?>>Seluruh anggota DPRD</option>
+                            <option value="publik" <?= ($meeting['materi_akses'] ?? '') === 'publik' ? 'selected' : '' ?>>Publik</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-12 sm:col-span-6">
+                        <label class="label" for="stream_url">Tautan live/video</label>
+                        <input class="input w-full" id="stream_url" name="stream_url" type="url"
+                            value="<?= esc($meeting['stream_url'] ?? '') ?>" placeholder="https://..." />
+                        <label class="label" for="stream_akses">Akses live/video</label>
+                        <select class="select select-sm w-full" id="stream_akses" name="stream_akses">
+                            <option value="anggota" <?= ($meeting['stream_akses'] ?? 'anggota') === 'anggota' ? 'selected' : '' ?>>Seluruh anggota DPRD</option>
+                            <option value="peserta" <?= ($meeting['stream_akses'] ?? '') === 'peserta' ? 'selected' : '' ?>>Peserta rapat</option>
+                            <option value="publik" <?= ($meeting['stream_akses'] ?? '') === 'publik' ? 'selected' : '' ?>>Publik</option>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
         </div>
     </div>
 

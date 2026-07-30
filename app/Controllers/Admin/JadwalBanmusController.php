@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Schedule\ScheduleResourceAccess;
 use App\Models\BanmusDocumentModel;
 use App\Models\JadwalBanmusModel;
 use App\Models\RuanganModel;
@@ -378,6 +379,14 @@ class JadwalBanmusController extends BaseController
         if (isset($streamUrl['error'])) {
             return ['error' => $streamUrl['error']];
         }
+        $materiAkses = ScheduleResourceAccess::normalize(
+            $this->request->getPost('materi_akses'),
+            ScheduleResourceAccess::PARTICIPANT,
+        );
+        $streamAkses = ScheduleResourceAccess::normalize(
+            $this->request->getPost('stream_akses'),
+            ScheduleResourceAccess::MEMBER,
+        );
 
         $isScheduleComplete = $tanggal !== ''
             && $jamMulai !== ''
@@ -408,7 +417,9 @@ class JadwalBanmusController extends BaseController
                 'catatan'         => $catatan !== '' ? $catatan : null,
                 'publikasi'       => in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'internal',
                 'materi_url'      => $materiUrl['url'],
+                'materi_akses'    => $materiAkses,
                 'stream_url'      => $streamUrl['url'],
+                'stream_akses'    => $streamAkses,
             ],
             'unit_ids'             => $unitIds,
             'is_schedule_complete' => $isScheduleComplete,
