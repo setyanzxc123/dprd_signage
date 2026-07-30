@@ -9,6 +9,8 @@ use App\Models\MemberAccountModel;
 
 class MemberController extends BaseController
 {
+    private const EMERGENCY_OTP_REASON = 'OTP darurat dibuat admin melalui panel anggota.';
+
     private array $fraksiList = [
         'Amanat Nasional',
         'Bulan Bintang',
@@ -163,7 +165,6 @@ class MemberController extends BaseController
         $account = (new MemberAccountModel())->findByAnggotaId($id);
         $member = (new AnggotaModel())->find($id);
         $admin = session()->get('auth_user');
-        $reason = trim((string) $this->request->getPost('reason'));
 
         if ($account === null || $member === null || ! is_array($admin) || empty($member['aktif'])) {
             session()->setFlashdata('error', 'Akun anggota tidak aktif atau tidak ditemukan.');
@@ -171,7 +172,11 @@ class MemberController extends BaseController
         }
 
         try {
-            $otp = (new OtpService())->createEmergency((int) $account['id'], (int) $admin['id'], $reason);
+            $otp = (new OtpService())->createEmergency(
+                (int) $account['id'],
+                (int) $admin['id'],
+                self::EMERGENCY_OTP_REASON,
+            );
         } catch (\InvalidArgumentException $exception) {
             session()->setFlashdata('error', $exception->getMessage());
             return redirect()->to(base_url('admin/anggota'), 303);

@@ -182,6 +182,29 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response->assertRedirectTo(base_url('login?akses=admin'));
     }
 
+    public function testEmergencyOtpActionDoesNotExposeReasonInput(): void
+    {
+        $body = view('admin/anggota/index', [
+            'pageTitle' => 'Anggota DPRD',
+            'members'   => [[
+                'id'            => 7,
+                'name'          => 'Anggota Pengujian',
+                'jabatan'       => 'Anggota DPRD',
+                'fraksi'        => 'Fraksi Pengujian',
+                'komisi'        => 'Komisi I',
+                'no_wa'         => '85156049890',
+                'aktif'         => 1,
+                'last_login_at' => null,
+            ]],
+            'data_scope' => ['label' => 'seluruh master anggota'],
+        ]);
+
+        $this->assertStringContainsString('/admin/anggota/7/otp-darurat', $body);
+        $this->assertStringContainsString('Buat OTP darurat', $body);
+        $this->assertStringNotContainsString('name="reason"', $body);
+        $this->assertStringNotContainsString('placeholder="Alasan darurat"', $body);
+    }
+
     /**
      * @dataProvider stateChangingGetRoutes
      */

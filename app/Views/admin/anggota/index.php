@@ -87,12 +87,10 @@
                                 <div class="flex flex-wrap items-center justify-end gap-2">
                                     <?php if (! empty($m['aktif'])): ?>
                                         <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/otp-darurat") ?>"
-                                            class="join m-0 inline-flex"
+                                            class="m-0 inline-flex"
                                             data-confirm-message="Buat OTP darurat untuk anggota ini? Pastikan identitas anggota sudah diverifikasi.">
                                             <?= csrf_field() ?>
-                                            <input type="text" name="reason" class="input input-sm join-item w-40"
-                                                minlength="5" maxlength="255" placeholder="Alasan darurat" required />
-                                            <button type="submit" class="btn btn-outline btn-warning btn-sm join-item gap-1" title="Buat OTP darurat">
+                                            <button type="submit" class="btn btn-outline btn-warning btn-sm gap-1" title="Buat OTP darurat">
                                                 <i data-lucide="key-round" class="h-4 w-4"></i>
                                                 OTP
                                             </button>
