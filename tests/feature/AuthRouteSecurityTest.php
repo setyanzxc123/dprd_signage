@@ -126,6 +126,31 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('handleAgendaToggle($event, item.key)', $body);
     }
 
+    public function testAgendaHeadersLinkActiveAdminBackToAdminPanel(): void
+    {
+        $session = [
+            'auth_user' => [
+                'id'       => 1,
+                'name'     => 'Admin Pengujian',
+                'username' => 'admin-test',
+                'role'     => 'superadmin',
+            ],
+        ];
+
+        foreach (['/agenda', '/agenda/jadwal-banmus'] as $path) {
+            $response = $this->withSession($session)->get($path);
+
+            $response->assertOK();
+            $body = $response->response()->getBody();
+            $this->assertStringContainsString(base_url('admin/dashboard'), $body);
+            $this->assertStringContainsString('Panel Admin', $body);
+            $this->assertStringNotContainsString(
+                '<span class="hidden sm:inline">Masuk Anggota</span>',
+                $body,
+            );
+        }
+    }
+
     public function testMemberScheduleApiRejectsAnonymousRequestWithJson(): void
     {
         $response = $this->get('/api/v1/anggota/jadwal');

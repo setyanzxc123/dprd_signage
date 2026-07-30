@@ -3,6 +3,7 @@ $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCP
 $vueVersion = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
 $cssVersion = is_file(FCPATH . 'assets/css/agenda.css') ? filemtime(FCPATH . 'assets/css/agenda.css') : time();
 $isMember = is_array($member ?? null);
+$isAdmin = ! $isMember && ! empty($isAdmin);
 $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
 ?>
 <!DOCTYPE html>
@@ -93,6 +94,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda Rapat DPRD';
                             </form>
                         </div>
                     </details>
+                <?php elseif ($isAdmin): ?>
+                    <a class="btn btn-outline btn-sm" href="<?= base_url('admin/dashboard') ?>">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        <span class="hidden sm:inline">Panel Admin</span>
+                    </a>
                 <?php else: ?>
                     <a class="btn btn-primary btn-sm" href="<?= base_url('login?akses=anggota') ?>">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4m-4-4 5-5-5-5m5 5H3" stroke-linecap="round" stroke-linejoin="round"/></svg>

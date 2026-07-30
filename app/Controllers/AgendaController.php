@@ -20,6 +20,7 @@ class AgendaController extends BaseController
     {
         $member = $this->activeMember();
         $isMember = $member !== null;
+        $isAdmin = ! $isMember && session()->has('auth_user');
         $banmusProjections = $this->databaseDriverAvailable()
             ? $this->portalBanmusProjections($member)
             : [];
@@ -33,6 +34,7 @@ class AgendaController extends BaseController
                 ? 'api/v1/anggota/agenda-umum'
                 : 'api/v1/publik/agenda-umum'),
             'member'       => $member,
+            'isAdmin'      => $isAdmin,
             'banmusProjections' => $banmusProjections,
         ]));
     }
@@ -41,6 +43,7 @@ class AgendaController extends BaseController
     {
         $member = $this->activeMember();
         $includeInternal = $member !== null;
+        $isAdmin = ! $includeInternal && session()->has('auth_user');
         $model = $this->databaseDriverAvailable() ? new BanmusDocumentModel() : null;
         if ($model !== null) {
             (new JadwalBanmusModel())->autoUpdateStatuses();
@@ -63,6 +66,7 @@ class AgendaController extends BaseController
             'logoUrl'           => base_url('assets/images/logo_dprd.jpg'),
             'portalUrl'         => base_url('agenda'),
             'member'            => $member,
+            'isAdmin'           => $isAdmin,
             'documents'         => $model?->findForPortal($includeInternal, $selectedYear, $selectedSemester) ?? [],
             'availableYears'    => $availableYears,
             'selectedYear'      => $selectedYear,
