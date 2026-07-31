@@ -17,13 +17,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 ?>
 
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Operasional</p>
-        <h1 class="page-title">Kalender Agenda</h1>
-        <p class="mt-1 text-sm text-base-content/60">
-            Agenda Banmus terjadwal dan Jadwal Umum dalam satu ruang kerja operasional.
-        </p>
-    </div>
+    <h1 class="page-title">Kalender Agenda</h1>
     <div class="join w-full sm:w-auto">
         <a href="<?= esc($list_url) ?>"
             class="btn btn-sm join-item flex-1 <?= $view_mode === 'list' ? 'btn-neutral' : 'btn-outline' ?>">
@@ -38,31 +32,23 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     </div>
 </div>
 
-<section class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+<section class="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
     <div class="card card-border bg-base-100 shadow-sm">
-        <div class="card-body gap-1 p-4">
+        <div class="card-body gap-1 p-3 sm:p-4">
             <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Ditampilkan</span>
             <strong class="text-2xl"><?= number_format($counts['total'], 0, ',', '.') ?></strong>
         </div>
     </div>
     <div class="card card-border bg-base-100 shadow-sm">
-        <div class="card-body gap-1 p-4">
+        <div class="card-body gap-1 p-3 sm:p-4">
             <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Banmus</span>
             <strong class="text-2xl"><?= number_format($counts['banmus'], 0, ',', '.') ?></strong>
         </div>
     </div>
     <div class="card card-border bg-base-100 shadow-sm">
-        <div class="card-body gap-1 p-4">
+        <div class="card-body gap-1 p-3 sm:p-4">
             <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Jadwal Umum</span>
             <strong class="text-2xl"><?= number_format($counts['jadwal_umum'], 0, ',', '.') ?></strong>
-        </div>
-    </div>
-    <div class="card card-border bg-base-100 shadow-sm">
-        <div class="card-body gap-1 p-4">
-            <span class="text-xs font-bold uppercase tracking-wide text-base-content/50">Berpotensi Konflik</span>
-            <strong class="text-2xl <?= $counts['conflicts'] > 0 ? 'text-error' : '' ?>">
-                <?= number_format($counts['conflicts'], 0, ',', '.') ?>
-            </strong>
         </div>
     </div>
 </section>
@@ -233,8 +219,8 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         </div>
     <?php else: ?>
         <div class="min-w-0">
-            <div class="w-full overflow-x-auto">
-            <table class="table table-zebra table-md w-full admin-data-table"
+            <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
+            <table class="admin-tablet-card-table calendar-agenda-table responsive-card-table table table-zebra table-md w-full admin-data-table"
                 id="table-agenda-terpadu"
                 data-admin-datatable
                 data-dt-order='[[0,"asc"]]'
@@ -253,23 +239,25 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                 <tbody>
                     <?php foreach ($agendas as $agenda): ?>
                         <tr class="transition-colors hover:bg-base-200/40">
-                            <td data-order="<?= esc($agenda['tanggal'] . ' ' . $agenda['waktu_mulai'], 'attr') ?>">
-                                <div class="whitespace-nowrap text-sm font-bold">
-                                    <?= esc(date('d/m/Y', strtotime($agenda['tanggal']))) ?>
-                                </div>
-                                <div class="whitespace-nowrap text-xs text-base-content/55">
-                                    <?php if ($agenda['waktu_mulai'] === null): ?>
-                                        Sepanjang hari
-                                    <?php else: ?>
-                                        <?= esc($agenda['waktu_mulai']) ?>
-                                    <?php endif; ?>
-                                    <?php if ($agenda['waktu_mulai'] !== null && $agenda['waktu_selesai'] !== null): ?>
-                                        &ndash;<?= esc($agenda['waktu_selesai']) ?>
-                                    <?php endif; ?>
-                                    <?= $agenda['waktu_mulai'] !== null ? ' WITA' : '' ?>
+                            <td data-label="Tanggal dan Waktu" data-order="<?= esc($agenda['tanggal'] . ' ' . $agenda['waktu_mulai'], 'attr') ?>">
+                                <div>
+                                    <div class="whitespace-nowrap text-sm font-bold">
+                                        <?= esc(date('d/m/Y', strtotime($agenda['tanggal']))) ?>
+                                    </div>
+                                    <div class="whitespace-nowrap text-xs text-base-content/55">
+                                        <?php if ($agenda['waktu_mulai'] === null): ?>
+                                            Sepanjang hari
+                                        <?php else: ?>
+                                            <?= esc($agenda['waktu_mulai']) ?>
+                                        <?php endif; ?>
+                                        <?php if ($agenda['waktu_mulai'] !== null && $agenda['waktu_selesai'] !== null): ?>
+                                            &ndash;<?= esc($agenda['waktu_selesai']) ?>
+                                        <?php endif; ?>
+                                        <?= $agenda['waktu_mulai'] !== null ? ' WITA' : '' ?>
+                                    </div>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Agenda">
                                 <a href="<?= esc($agenda['edit_url']) ?>" class="link link-hover font-bold">
                                     <?= esc($agenda['judul']) ?>
                                 </a>
@@ -282,12 +270,12 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Sumber">
                                 <span class="<?= esc($sourceBadgeClasses[$agenda['source']] ?? 'badge') ?> badge-sm">
                                     <?= esc($agenda['source_label']) ?>
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Unit / Peserta">
                                 <?php if ($agenda['units'] !== []): ?>
                                     <div class="flex max-w-xs flex-wrap gap-1">
                                         <?php foreach ($agenda['units'] as $unit): ?>
@@ -298,13 +286,13 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
                                     <span class="text-xs text-base-content/45">&mdash;</span>
                                 <?php endif; ?>
                             </td>
-                            <td><span class="max-w-xs text-sm font-semibold"><?= esc($agenda['lokasi']) ?></span></td>
-                            <td>
+                            <td data-label="Lokasi"><span class="max-w-xs text-sm font-semibold"><?= esc($agenda['lokasi']) ?></span></td>
+                            <td data-label="Status">
                                 <span class="<?= esc($statusBadgeClasses[$agenda['status']] ?? 'badge badge-ghost') ?> badge-sm">
                                     <?= esc(ucfirst($agenda['status'])) ?>
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="Publikasi">
                                 <span class="badge badge-sm <?= $agenda['is_publik'] ? 'badge-success badge-soft' : 'badge-ghost' ?>">
                                     <?= $agenda['is_publik'] ? 'Publik' : 'Internal' ?>
                                 </span>

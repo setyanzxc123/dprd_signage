@@ -32,7 +32,7 @@
 
     <div class="min-w-0">
         <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
-            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+            <table class="member-admin-table table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
@@ -84,7 +84,7 @@
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                <div class="member-row-actions flex flex-wrap items-center justify-end gap-1.5">
                                     <?php if (! empty($m['aktif'])): ?>
                                         <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/otp-darurat") ?>"
                                             class="m-0 inline-flex"

@@ -97,7 +97,7 @@ $scheduledCount = count($items) - $projectionCount;
             <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
                 <table
                     id="table-jadwal-banmus"
-                    class="table table-zebra table-sm w-full admin-data-table responsive-card-table"
+                    class="banmus-tablet-card-table banmus-item-table table table-zebra table-sm w-full admin-data-table responsive-card-table"
                     data-admin-datatable
                     data-dt-page-length="10"
                     data-dt-col-filters='[{"col":2,"label":"Jenis","all":"Semua Jenis"},{"col":5,"label":"Publikasi","all":"Semua Publikasi"},{"col":6,"label":"Status","all":"Semua Status"}]'>
@@ -316,7 +316,7 @@ $scheduledCount = count($items) - $projectionCount;
                                     </div>
                                 </td>
                                 <td data-label="Aksi">
-                                    <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                    <div class="banmus-item-actions flex flex-wrap items-center justify-end gap-1.5">
                                         <button
                                             type="button"
                                             data-banmus-item-edit

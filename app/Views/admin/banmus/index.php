@@ -44,7 +44,7 @@
         </div>
     <?php else: ?>
         <div class="overflow-x-auto">
-            <table class="table table-sm responsive-card-table banmus-document-table w-full">
+            <table class="banmus-tablet-card-table table table-sm responsive-card-table banmus-document-table w-full">
                 <thead>
                     <tr class="bg-base-200/60">
                         <th>Dokumen SK</th>
@@ -99,7 +99,7 @@
                                 </span>
                             </td>
                             <td data-label="Aksi" class="text-right">
-                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                <div class="banmus-document-actions flex flex-wrap items-center justify-end gap-1.5">
                                     <a href="<?= base_url('admin/jadwal-banmus/' . $doc['id']) ?>"
                                        class="btn btn-xs w-20 gap-1"
                                        title="Kelola Item Agenda">

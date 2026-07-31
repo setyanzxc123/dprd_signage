@@ -21,7 +21,7 @@
 
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
-            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+            <table class="room-admin-table table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
@@ -63,7 +63,7 @@
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                <div class="room-row-actions flex flex-wrap items-center justify-end gap-1.5">
                                     <a href="<?= base_url("admin/ruangan/{$r['id']}/edit") ?>" class="btn btn-xs w-20 gap-1">
                                         <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                         Edit

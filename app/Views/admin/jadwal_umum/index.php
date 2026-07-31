@@ -3,13 +3,7 @@
 <?= $this->section('content') ?>
 
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-base-content/50">Agenda Non-Banmus</p>
-        <h1 class="page-title">Jadwal Umum</h1>
-        <p class="mt-1 text-sm text-base-content/60">
-            Seluruh kegiatan di luar penetapan Banmus, termasuk rapat insidental dan kegiatan bersama pihak luar.
-        </p>
-    </div>
+    <h1 class="page-title">Jadwal Umum</h1>
     <a href="<?= base_url('admin/jadwal-umum/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
         <i data-lucide="plus" class="h-4 w-4"></i>
         Tambah Jadwal
@@ -25,14 +19,9 @@
         <span class="badge badge-ghost whitespace-nowrap"><?= count($schedules) ?> jadwal</span>
     </div>
 
-    <div role="alert" class="alert alert-info rounded-none border-x-0 border-t-0 py-2 text-sm">
-        <i data-lucide="info" class="h-4 w-4"></i>
-        <span>Kelompok peserta, pihak eksternal, dan publikasi dapat ditentukan secara independen.</span>
-    </div>
-
     <div class="min-w-0">
         <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
-            <table class="table table-zebra table-md w-full admin-data-table responsive-card-table"
+            <table class="admin-tablet-card-table general-schedule-table table table-zebra table-md w-full admin-data-table responsive-card-table"
                 data-admin-datatable
                 data-dt-order='[[1,"desc"]]'
                 data-dt-col-filters='[{"column":4,"label":"Status"},{"column":5,"label":"Publikasi"}]'>
@@ -52,6 +41,7 @@
                         <tr class="transition-colors hover:bg-base-200/40">
                             <td class="dt-row-number" data-label="No"></td>
                             <td data-label="Jadwal" data-order="<?= esc($schedule['tanggal'] . ' ' . ($schedule['waktu_mulai'] ?? '00:00:00')) ?>">
+                                <div>
                                 <div class="whitespace-nowrap text-sm font-bold">
                                     <?= esc(date('d/m/Y', strtotime($schedule['tanggal']))) ?>
                                 </div>
@@ -63,6 +53,7 @@
                                         <?= ! empty($schedule['waktu_selesai']) ? '–' . esc(substr($schedule['waktu_selesai'], 0, 5)) : '' ?>
                                         WITA
                                     <?php endif; ?>
+                                </div>
                                 </div>
                             </td>
                             <td data-label="Agenda">
@@ -102,7 +93,7 @@
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                <div class="general-schedule-actions flex flex-wrap items-center justify-end gap-1.5">
                                     <a href="<?= base_url("admin/jadwal-umum/{$schedule['id']}/edit") ?>" class="btn btn-xs w-20 gap-1">
                                         <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                         Edit

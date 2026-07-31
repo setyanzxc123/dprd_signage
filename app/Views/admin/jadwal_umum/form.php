@@ -11,14 +11,9 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
 
 <div class="page-header">
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
-    <p class="page-subtitle">
-        <?= $isEdit
-            ? 'Perbarui kegiatan non-Banmus beserta peserta dan publikasinya.'
-            : 'Catat rapat insidental, audiensi, kunjungan, atau kegiatan non-Banmus lainnya.' ?>
-    </p>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="post" class="schedule-form" data-require-targets="false" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="post" class="schedule-form min-w-0 max-w-full" data-require-targets="false" data-turbo="true">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>
@@ -28,51 +23,51 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         </div>
     <?php endif; ?>
 
-    <div class="card card-border max-w-5xl bg-base-100 shadow-sm">
-        <div class="card-body gap-5 p-4 sm:p-5">
-            <fieldset class="fieldset">
+    <div class="card card-border min-w-0 max-w-5xl bg-base-100 shadow-sm">
+        <div class="card-body min-w-0 gap-5 p-4 sm:p-5">
+            <fieldset class="fieldset min-w-0">
                 <legend class="fieldset-legend">Data agenda</legend>
 
                 <label class="label" for="judul">Judul <span class="text-error">*</span></label>
-                <input class="input w-full" id="judul" name="judul" type="text" maxlength="255" required
+                <input class="input w-full min-w-0 max-w-full" id="judul" name="judul" type="text" maxlength="255" required
                     value="<?= esc($schedule['judul'] ?? '') ?>"
                     placeholder="Contoh: Audiensi Forum Pemuda bersama Komisi I" />
 
                 <label class="label mt-2" for="pihak_eksternal">Pihak eksternal</label>
-                <input class="input w-full" id="pihak_eksternal" name="pihak_eksternal" type="text" maxlength="255"
+                <input class="input w-full min-w-0 max-w-full" id="pihak_eksternal" name="pihak_eksternal" type="text" maxlength="255"
                     value="<?= esc($schedule['pihak_eksternal'] ?? '') ?>"
                     placeholder="Opsional: nama masyarakat, organisasi, atau instansi luar" />
-                <p class="label">Boleh dikosongkan untuk kegiatan yang tidak melibatkan pihak luar.</p>
+                <p class="label block w-full whitespace-normal break-words">Boleh dikosongkan untuk kegiatan yang tidak melibatkan pihak luar.</p>
 
                 <label class="label mt-2" for="keterangan">Keterangan</label>
-                <textarea class="textarea w-full" id="keterangan" name="keterangan" rows="4" maxlength="5000"
+                <textarea class="textarea w-full min-w-0 max-w-full" id="keterangan" name="keterangan" rows="4" maxlength="5000"
                     placeholder="Tambahkan informasi operasional bila diperlukan."><?= esc($schedule['keterangan'] ?? '') ?></textarea>
             </fieldset>
 
-            <fieldset class="fieldset">
+            <fieldset class="fieldset min-w-0">
                 <legend class="fieldset-legend">Pelaksanaan</legend>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div>
+                    <div class="min-w-0">
                         <label class="label" for="tanggal">Tanggal <span class="text-error">*</span></label>
-                        <input class="input w-full" id="tanggal" name="tanggal" type="date" required
+                        <input class="input w-full min-w-0 max-w-full" id="tanggal" name="tanggal" type="date" required
                             value="<?= esc($schedule['tanggal'] ?? date('Y-m-d')) ?>" />
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <label class="label" for="waktu_mulai">Jam mulai</label>
-                        <input class="input w-full" id="waktu_mulai" name="waktu_mulai" type="time" step="60"
+                        <input class="input w-full min-w-0 max-w-full" id="waktu_mulai" name="waktu_mulai" type="time" step="60"
                             value="<?= esc(substr((string) ($schedule['waktu_mulai'] ?? ''), 0, 5)) ?>" />
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <label class="label" for="waktu_selesai">Jam selesai</label>
-                        <input class="input w-full" id="waktu_selesai" name="waktu_selesai" type="time" step="60"
+                        <input class="input w-full min-w-0 max-w-full" id="waktu_selesai" name="waktu_selesai" type="time" step="60"
                             value="<?= esc(substr((string) ($schedule['waktu_selesai'] ?? ''), 0, 5)) ?>" />
                     </div>
                 </div>
-                <p class="label">Kosongkan kedua jam untuk kegiatan sepanjang hari. Pemakaian ruangan DPRD memerlukan jam lengkap.</p>
+                <p class="label block w-full whitespace-normal break-words">Kosongkan kedua jam untuk kegiatan sepanjang hari. Pemakaian ruangan DPRD memerlukan jam lengkap.</p>
                 <p class="hidden text-xs text-error" id="waktu-rapat-error">Jam selesai harus setelah jam mulai.</p>
             </fieldset>
 
-            <fieldset class="fieldset">
+            <fieldset class="fieldset min-w-0">
                 <legend class="fieldset-legend">Lokasi <span class="text-error">*</span></legend>
                 <div class="flex flex-wrap gap-4">
                     <label class="label cursor-pointer gap-2" for="lokasi-ruangan">
@@ -87,7 +82,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                     </label>
                 </div>
                 <div id="ruangan-panel">
-                    <select class="select w-full" id="ruangan_id" name="ruangan_id">
+                    <select class="select w-full min-w-0 max-w-full" id="ruangan_id" name="ruangan_id">
                         <option value="">Pilih ruangan</option>
                         <?php foreach ($rooms as $room): ?>
                             <option value="<?= (int) $room['id'] ?>"
@@ -99,19 +94,19 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                     </select>
                 </div>
                 <div id="lokasi-lainnya-panel" hidden>
-                    <input class="input w-full" id="lokasi_lainnya" name="lokasi_lainnya" type="text" maxlength="255"
+                    <input class="input w-full min-w-0 max-w-full" id="lokasi_lainnya" name="lokasi_lainnya" type="text" maxlength="255"
                         value="<?= esc($otherLocation) ?>" placeholder="Masukkan nama lokasi" />
                 </div>
             </fieldset>
 
-            <fieldset class="fieldset">
+            <fieldset class="fieldset min-w-0">
                 <legend class="fieldset-legend">Kelompok peserta</legend>
-                <div class="flex items-center gap-2">
-                    <input class="input input-sm w-full" id="target-search" type="search"
+                <div class="flex min-w-0 items-center gap-2">
+                    <input class="input input-sm min-w-0 flex-1" id="target-search" type="search"
                         placeholder="Cari kelompok peserta..." autocomplete="off" />
-                    <span class="badge badge-ghost whitespace-nowrap" id="target-selected-count">0 dipilih</span>
+                    <span class="badge badge-ghost shrink-0 whitespace-nowrap" id="target-selected-count">0 dipilih</span>
                 </div>
-                <div class="grid max-h-64 grid-cols-1 overflow-y-auto rounded-box border border-base-300 sm:grid-cols-2"
+                <div class="grid max-h-64 w-full min-w-0 grid-cols-1 overflow-y-auto rounded-box border border-base-300 sm:grid-cols-2"
                     id="target-list">
                     <?php foreach ($unit_rapat_list as $unit):
                         $unitId = (int) $unit['id'];
@@ -136,17 +131,17 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                         Kelompok peserta tidak ditemukan.
                     </div>
                 </div>
-                <p class="label">Opsional. Jadwal akan menjadi “Jadwal Saya” bagi anggota kelompok yang dipilih setelah fase integrasi portal.</p>
+                <p class="label block w-full whitespace-normal break-words">Opsional. Jadwal akan menjadi “Jadwal Saya” bagi anggota kelompok yang dipilih setelah fase integrasi portal.</p>
                 <p class="hidden text-xs text-error" id="target-peserta-error">Kelompok peserta tidak valid.</p>
             </fieldset>
 
-            <fieldset class="fieldset">
+            <fieldset class="fieldset min-w-0">
                 <legend class="fieldset-legend">Publikasi</legend>
                 <label class="flex cursor-pointer items-start gap-3 rounded-box border border-base-300 bg-base-200 p-3"
                     for="is_publik">
                     <input class="checkbox checkbox-sm mt-0.5" id="is_publik" name="is_publik" type="checkbox"
                         value="1" <?= (int) ($schedule['is_publik'] ?? 0) === 1 ? 'checked' : '' ?> />
-                    <span>
+                    <span class="min-w-0">
                         <span class="block text-sm font-bold">Tampilkan kepada publik</span>
                         <span class="mt-1 block text-xs text-base-content/55" id="publik-label">
                             <?= (int) ($schedule['is_publik'] ?? 0) === 1
@@ -159,7 +154,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         </div>
     </div>
 
-    <div class="mt-4 flex gap-2">
+    <div class="form-actions-sticky">
         <a href="<?= base_url('admin/jadwal-umum') ?>" class="btn btn-outline flex-1 sm:btn-sm sm:flex-none">
             <i data-lucide="arrow-left" class="h-4 w-4"></i>
             Batal

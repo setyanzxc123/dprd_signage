@@ -27,7 +27,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
 </head>
 
-<body class="min-h-screen bg-base-200">
+<body class="min-h-screen overflow-x-hidden bg-base-200">
     <label class="btn btn-ghost btn-circle swap swap-rotate fixed right-4 top-4 z-10 bg-base-100 shadow-sm"
         title="Ganti tema" aria-label="Ganti tema" data-theme-toggle>
         <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
@@ -35,25 +35,25 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
         <i class="swap-off h-5 w-5" data-lucide="moon"></i>
     </label>
 
-    <main class="flex min-h-screen items-center justify-center px-4 py-8">
+    <main class="flex min-h-screen items-center justify-center px-3 py-5 min-[380px]:px-4 min-[380px]:py-8">
         <div class="w-full max-w-md">
             <header class="mb-6 text-center">
                 <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>"
                     alt="Logo DPRD Provinsi Sulawesi Tengah"
-                    class="mx-auto mb-4 h-20 w-20 rounded-2xl border border-base-300 bg-white object-contain" />
-                <h1 class="text-2xl font-black leading-normal text-base-content">
+                    class="mx-auto mb-4 h-16 w-16 rounded-2xl border border-base-300 bg-white object-contain min-[380px]:h-20 min-[380px]:w-20" />
+                <h1 class="text-xl font-black leading-normal text-base-content min-[380px]:text-2xl">
                     Sistem Informasi Agenda dan Jadwal Rapat DPRD
                 </h1>
-                <p class="mt-1 text-sm font-semibold tracking-widest text-base-content/70">
+                <p class="mt-1 text-xs font-semibold tracking-widest text-base-content/70 min-[380px]:text-sm">
                     PROVINSI SULAWESI TENGAH
                 </p>
             </header>
 
             <section class="card card-border bg-base-100 shadow-xl">
-                <div class="card-body">
+                <div class="card-body max-[379px]:p-4">
                     <fieldset class="fieldset gap-2">
                         <legend class="fieldset-legend">Jenis Akses</legend>
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
                             <label class="label min-w-0 cursor-pointer justify-start gap-2 rounded-lg border border-base-300 px-3 py-2 has-checked:border-primary has-checked:bg-primary/10 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
                                 for="akses-anggota">
                                 <input type="radio" name="login_access" id="akses-anggota" value="anggota"
@@ -87,7 +87,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                         </div>
                     <?php endif; ?>
 
-                    <div data-login-panel="anggota" class="card-body <?= $activeAccess === 'anggota' ? '' : 'hidden' ?>">
+                    <div data-login-panel="anggota" class="card-body max-[379px]:px-0 max-[379px]:pb-0 <?= $activeAccess === 'anggota' ? '' : 'hidden' ?>">
                         <div class="mb-4 text-center">
                             <h2 class="font-bold text-base-content">
                                 <?= ($member_step ?? 'request') === 'verify' ? 'Verifikasi Kode OTP' : 'Masuk sebagai Anggota' ?>
@@ -112,7 +112,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                                 <label class="block text-sm font-semibold text-base-content" for="member-otp">
                                     Kode OTP
                                 </label>
-                                <input type="text" class="input input-lg mt-1 w-full text-center text-2xl tracking-[0.35em]"
+                                <input type="text" class="input input-lg mt-1 w-full text-center text-2xl tracking-[0.25em] min-[380px]:tracking-[0.35em]"
                                     id="member-otp" name="otp" placeholder="000000" inputmode="numeric"
                                     pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code"
                                     data-digits-only data-max-digits="6" autofocus required />
@@ -160,7 +160,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                         <?php endif; ?>
                     </div>
 
-                    <div data-login-panel="admin" class="card-body <?= $activeAccess === 'admin' ? '' : 'hidden' ?>">
+                    <div data-login-panel="admin" class="card-body max-[379px]:px-0 max-[379px]:pb-0 <?= $activeAccess === 'admin' ? '' : 'hidden' ?>">
                         <div class="mb-4 text-center">
                             <h2 class="font-bold text-base-content">Masuk sebagai Admin</h2>
                         </div>

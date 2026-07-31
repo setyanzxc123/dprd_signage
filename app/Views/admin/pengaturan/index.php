@@ -7,7 +7,7 @@
 </div>
 
 <form action="<?= base_url('admin/pengaturan/save') ?>" method="post" enctype="multipart/form-data"
-    class="space-y-5" id="settings-form"
+    class="min-w-0 max-w-full space-y-5" id="settings-form"
     data-redirect-url="<?= base_url('admin/pengaturan') ?>"
     data-upload-start-url="/admin/pengaturan/media-upload/start"
     data-upload-chunk-url="/admin/pengaturan/media-upload/chunk"
@@ -18,15 +18,15 @@
     <?= csrf_field() ?>
     <input type="hidden" name="media_upload_key" id="media_upload_key" value="">
 
-    <section class="card card-border bg-base-100 shadow-sm">
-        <div class="card-body gap-5 p-4 sm:p-5">
+    <section class="card card-border min-w-0 max-w-full bg-base-100 shadow-sm">
+        <div class="card-body min-w-0 gap-5 p-4 sm:p-5">
             <h2 class="card-title text-base">
                 <i data-lucide="tv" class="h-5 w-5 text-primary"></i>
                 Pengaturan Signage
             </h2>
 
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <fieldset class="fieldset rounded-box border border-base-300 bg-base-200 p-4">
+            <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+                <fieldset class="fieldset min-w-0 rounded-box border border-base-300 bg-base-200 p-4">
                     <legend class="fieldset-legend">Tema Layar</legend>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="label cursor-pointer justify-start gap-3 rounded-field border border-base-300 bg-base-100 px-3 py-2">
@@ -42,7 +42,7 @@
                     </div>
                 </fieldset>
 
-                <fieldset class="fieldset rounded-box border border-base-300 bg-base-200 p-4">
+                <fieldset class="fieldset min-w-0 rounded-box border border-base-300 bg-base-200 p-4">
                     <legend class="fieldset-legend">Media Tampilan</legend>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="label cursor-pointer justify-start gap-3 rounded-field border border-base-300 bg-base-100 px-3 py-2">
@@ -59,21 +59,21 @@
                 </fieldset>
             </div>
 
-            <div class="grid grid-cols-12 gap-4 border-t border-base-300 pt-4">
+            <div class="grid min-w-0 grid-cols-12 gap-4 border-t border-base-300 pt-4">
                 <fieldset class="fieldset col-span-12 min-w-0 lg:col-span-8">
                     <legend class="fieldset-legend">Upload Media</legend>
-                    <input type="file" class="file-input file-input-sm w-full min-w-0" id="media_file" name="media_file"
+                    <input type="file" class="file-input file-input-sm w-full min-w-0 max-w-full overflow-hidden" id="media_file" name="media_file"
                         accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
-                    <p class="label">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB. File dikirim bertahap agar lebih stabil.</p>
+                    <p class="label block w-full min-w-0 whitespace-normal break-words">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB. File dikirim bertahap agar lebih stabil.</p>
                 </fieldset>
 
                 <fieldset class="fieldset col-span-12 min-w-0 lg:col-span-4">
                     <legend class="fieldset-legend">File Aktif</legend>
                     <?php if (! empty($settings['media_file'])): ?>
-                        <div class="alert alert-info min-h-8 overflow-hidden py-2 text-sm" role="status"
+                        <div class="alert alert-info min-h-8 w-full min-w-0 max-w-full grid-cols-[auto_minmax(0,1fr)] overflow-hidden py-2 text-sm" role="status"
                             title="<?= esc(basename($settings['media_file'])) ?>">
                             <i data-lucide="file-check-2" class="h-4 w-4 shrink-0"></i>
-                            <span class="truncate"><?= esc(basename($settings['media_file'])) ?></span>
+                            <span class="min-w-0 truncate"><?= esc(basename($settings['media_file'])) ?></span>
                         </div>
                     <?php else: ?>
                         <div class="alert min-h-8 py-2 text-sm" role="status">
@@ -84,7 +84,7 @@
                 </fieldset>
             </div>
 
-            <fieldset class="fieldset rounded-box border border-base-300 p-4">
+            <fieldset class="fieldset min-w-0 rounded-box border border-base-300 p-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <span class="font-bold">Running Text</span>
                     <label class="label cursor-pointer gap-2">
@@ -94,10 +94,10 @@
                     </label>
                 </div>
 
-                <textarea class="textarea mt-2 min-h-16 w-full" id="running_text" name="running_text" rows="2"
+                <textarea class="textarea mt-2 min-h-16 w-full min-w-0 max-w-full" id="running_text" name="running_text" rows="2"
                     placeholder="Contoh: Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah."><?= esc($settings['running_text']) ?></textarea>
 
-                <div class="mt-2 overflow-hidden rounded-box bg-neutral p-3 text-neutral-content">
+                <div class="mt-2 min-w-0 max-w-full overflow-hidden rounded-box bg-neutral p-3 text-neutral-content">
                     <div class="mb-2 flex items-center gap-1 text-xs font-bold uppercase tracking-wider opacity-60">
                         <i data-lucide="eye" class="h-3.5 w-3.5"></i>
                         Pratinjau

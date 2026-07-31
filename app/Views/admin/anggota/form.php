@@ -19,7 +19,7 @@ if (str_starts_with($whatsAppValue, '62')) {
     </h1>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form min-w-0" data-turbo="true">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>
@@ -29,7 +29,7 @@ if (str_starts_with($whatsAppValue, '62')) {
         </div>
     <?php endif; ?>
 
-    <section class="card card-border bg-base-100 shadow-sm">
+    <section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
         <div class="card-body gap-5 p-4 sm:p-5">
             <h2 class="card-title text-base">
                 <i data-lucide="user-round" class="h-5 w-5 text-primary"></i>
@@ -100,9 +100,9 @@ if (str_starts_with($whatsAppValue, '62')) {
                         <label class="label py-1 font-semibold" for="no_wa">
                             Nomor WhatsApp <span class="text-error">*</span>
                         </label>
-                        <div class="join w-full">
-                            <span class="join-item bg-base-200 border border-base-300 border-r-0 px-3 flex items-center text-xs font-semibold font-mono">+62</span>
-                            <input type="text" class="input join-item flex-1 w-full" id="no_wa" name="no_wa"
+                        <div class="join w-full min-w-0">
+                            <span class="join-item flex shrink-0 items-center border border-r-0 border-base-300 bg-base-200 px-3 font-mono text-xs font-semibold">+62</span>
+                            <input type="text" class="input join-item min-w-0 flex-1 w-full" id="no_wa" name="no_wa"
                                 value="<?= esc($whatsAppValue) ?>" placeholder="8123456789"
                                 inputmode="numeric" pattern="8[0-9]{7,11}" maxlength="12"
                                 title="Gunakan maksimal 12 digit setelah +62." required />
@@ -115,10 +115,10 @@ if (str_starts_with($whatsAppValue, '62')) {
 
     <!-- Tombol Aksi -->
     <div class="form-actions-sticky">
-        <a href="<?= base_url('admin/anggota') ?>" class="btn btn-outline sm:btn-sm">
+        <a href="<?= base_url('admin/anggota') ?>" class="btn btn-outline min-w-0 sm:btn-sm">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>Batal
         </a>
-        <button type="submit" class="btn btn-primary sm:btn-sm">
+        <button type="submit" class="btn btn-primary min-w-0 sm:btn-sm">
             <i data-lucide="check" class="w-4 h-4"></i>
             <?= $member ? 'Simpan Perubahan' : 'Tambah Anggota' ?>
         </button>

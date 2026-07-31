@@ -384,28 +384,25 @@
         line-height: 1.5;
     }
 
-    .nav-mobile-logout-item {
-        display: none !important;
-    }
-    .nav-mobile-logout-divider {
-        display: none !important;
+    .nav-account-divider {
+        display: block;
         margin: 8px 0 4px;
         border-top: 1px solid var(--od-border-soft);
     }
-    .sidebar-mobile-logout-form {
+    .sidebar-logout-form {
         display: none;
     }
-    .sidebar-mobile-logout {
+    .sidebar-logout {
         appearance: none;
         width: 100%;
         margin: 0;
         font: inherit;
         color: var(--od-danger);
     }
-    .sidebar-mobile-logout .nav-icon {
+    .sidebar-logout .nav-icon {
         color: currentColor;
     }
-    .sidebar-mobile-logout:hover {
+    .sidebar-logout:hover {
         background: var(--od-border-soft);
         color: var(--od-danger);
     }
@@ -1550,8 +1547,6 @@
         padding-bottom: calc(24px + env(safe-area-inset-bottom));
         overscroll-behavior: contain;
     }
-    .nav-mobile-logout-divider { display: block !important; }
-    .nav-mobile-logout-item { display: list-item !important; }
     #content { padding: 24px 20px 96px; }
     .mobile-nav { display: grid; }
     body.mobile-sidebar-open {
@@ -1682,6 +1677,227 @@
     }
 }
 
+@media (min-width: 641px) and (max-width: 820px) {
+    .member-admin-table,
+    .room-admin-table {
+        display: block !important;
+        width: 100% !important;
+        border: 0 !important;
+        border-collapse: collapse;
+    }
+    .member-admin-table thead,
+    .room-admin-table thead {
+        display: none !important;
+    }
+    .member-admin-table tbody,
+    .room-admin-table tbody {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+    }
+    .member-admin-table tbody tr,
+    .room-admin-table tbody tr {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 14px !important;
+        border: 1px solid var(--od-border) !important;
+        border-radius: var(--od-radius-lg) !important;
+        background: var(--od-surface) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    }
+    .member-admin-table tbody td,
+    .room-admin-table tbody td {
+        display: flex !important;
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px;
+        padding: 8px 0 !important;
+        border-bottom: 1px solid var(--od-border-soft) !important;
+        background: transparent !important;
+    }
+    .member-admin-table tbody td:last-child,
+    .room-admin-table tbody td:last-child {
+        border-bottom: 0 !important;
+    }
+    .member-admin-table tbody td.dt-row-number,
+    .room-admin-table tbody td.dt-row-number {
+        display: none !important;
+    }
+    .member-admin-table tbody td[data-label="Nama Lengkap"],
+    .room-admin-table tbody td[data-label="Nama Ruangan"] {
+        display: block !important;
+        padding-top: 0 !important;
+        padding-bottom: 12px !important;
+    }
+    .member-admin-table tbody td[data-label="Nama Lengkap"]::before,
+    .room-admin-table tbody td[data-label="Nama Ruangan"]::before {
+        content: none !important;
+    }
+    .member-admin-table tbody td::before,
+    .room-admin-table tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: var(--od-muted);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .member-admin-table tbody td[data-label="Aksi"],
+    .room-admin-table tbody td[data-label="Aksi"] {
+        display: block !important;
+        padding-bottom: 0 !important;
+    }
+    .member-admin-table tbody td[data-label="Aksi"]::before,
+    .room-admin-table tbody td[data-label="Aksi"]::before {
+        display: block;
+        margin-bottom: 8px;
+    }
+    .member-admin-table .member-row-actions {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .member-admin-table .member-row-actions form,
+    .member-admin-table .member-row-actions .btn {
+        width: 100% !important;
+    }
+    .room-admin-table .room-row-actions {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .room-admin-table .room-row-actions form,
+    .room-admin-table .room-row-actions .btn {
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 720px) and (max-width: 820px) {
+    .member-admin-table tbody,
+    .room-admin-table tbody {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+    .banmus-tablet-card-table,
+    .admin-tablet-card-table {
+        display: block !important;
+        width: 100% !important;
+        border: 0 !important;
+        border-collapse: collapse;
+    }
+    .banmus-tablet-card-table thead,
+    .admin-tablet-card-table thead {
+        display: none !important;
+    }
+    .banmus-tablet-card-table tbody,
+    .admin-tablet-card-table tbody {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+    }
+    .banmus-tablet-card-table tbody tr,
+    .admin-tablet-card-table tbody tr {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 14px !important;
+        border: 1px solid var(--od-border) !important;
+        border-radius: var(--od-radius-lg) !important;
+        background: var(--od-surface) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    }
+    .banmus-tablet-card-table tbody td,
+    .admin-tablet-card-table tbody td {
+        display: flex !important;
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px;
+        padding: 8px 0 !important;
+        border-bottom: 1px solid var(--od-border-soft) !important;
+        background: transparent !important;
+    }
+    .banmus-tablet-card-table tbody td:last-child,
+    .admin-tablet-card-table tbody td:last-child {
+        border-bottom: 0 !important;
+    }
+    .banmus-tablet-card-table tbody td.dt-row-number,
+    .admin-tablet-card-table tbody td.dt-row-number {
+        display: none !important;
+    }
+    .banmus-tablet-card-table tbody td[data-label="Dokumen SK"],
+    .banmus-tablet-card-table tbody td[data-label="Agenda"],
+    .admin-tablet-card-table tbody td[data-label="Agenda"] {
+        display: block !important;
+        padding-top: 0 !important;
+        padding-bottom: 12px !important;
+    }
+    .banmus-tablet-card-table tbody td[data-label="Dokumen SK"]::before,
+    .banmus-tablet-card-table tbody td[data-label="Agenda"]::before,
+    .admin-tablet-card-table tbody td[data-label="Agenda"]::before {
+        content: none !important;
+    }
+    .banmus-tablet-card-table tbody td::before,
+    .admin-tablet-card-table tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: var(--od-muted);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .banmus-tablet-card-table tbody td[data-label="Aksi"],
+    .admin-tablet-card-table tbody td[data-label="Aksi"] {
+        display: block !important;
+        padding-bottom: 0 !important;
+    }
+    .banmus-tablet-card-table tbody td[data-label="Aksi"]::before,
+    .admin-tablet-card-table tbody td[data-label="Aksi"]::before {
+        display: block;
+        margin-bottom: 8px;
+    }
+    .banmus-document-actions,
+    .banmus-item-actions {
+        display: grid !important;
+        width: 100% !important;
+    }
+    .banmus-document-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .banmus-item-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .general-schedule-actions {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .banmus-document-actions form,
+    .banmus-document-actions .btn,
+    .banmus-item-actions form,
+    .banmus-item-actions .btn,
+    .general-schedule-actions form,
+    .general-schedule-actions .btn {
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 720px) and (max-width: 900px) {
+    .banmus-document-table tbody {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 640px) {
     /* Responsive Card Table (Method A) */
     .responsive-card-table {
@@ -1774,6 +1990,38 @@
         justify-content: flex-end !important;
         width: auto !important;
     }
+    .general-schedule-table tbody td[data-label="Aksi"] {
+        display: block !important;
+    }
+    .general-schedule-table tbody td[data-label="Aksi"]::before {
+        display: block;
+        margin-bottom: 8px;
+    }
+    .general-schedule-table .general-schedule-actions {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .general-schedule-table .general-schedule-actions form,
+    .general-schedule-table .general-schedule-actions .btn {
+        width: 100% !important;
+    }
+    .member-admin-table tbody td[data-label="Aksi"] {
+        display: block !important;
+    }
+    .member-admin-table tbody td[data-label="Aksi"]::before {
+        display: block;
+        margin-bottom: 8px;
+    }
+    .member-admin-table .member-row-actions {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .member-admin-table .member-row-actions form,
+    .member-admin-table .member-row-actions .btn {
+        width: 100% !important;
+    }
     .participant-group-form {
         padding-bottom: 18px;
     }
@@ -1799,8 +2047,9 @@
         border-radius: 8px;
     }
     .participant-source-list {
-        max-height: none !important;
-        overflow: visible !important;
+        max-height: min(42dvh, 320px) !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
     }
     .anggota-source {
         min-height: 54px;
@@ -1913,6 +2162,20 @@
     #content { padding-inline: 16px; }
     body.mobile-agenda-open { overflow: hidden; }
     body.mobile-agenda-open .mobile-nav { display: none; }
+    .dashboard-preview-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-flow: row;
+        overflow: hidden;
+    }
+    .dashboard-preview-stats .stat {
+        min-width: 0;
+    }
+    .dashboard-preview-stats .stat:nth-child(2) {
+        border-inline-end: 0;
+    }
+    .dashboard-preview-stats .stat:nth-child(n + 3) {
+        border-block-start: var(--border) dashed color-mix(in oklab, currentColor 10%, transparent);
+    }
     .topbar-user-info,
     .topbar-clock { display: none; }
     .topbar-actions { gap: 8px; }
@@ -2006,26 +2269,33 @@
         height: 7px;
     }
     .agenda-workspace-calendar {
-        padding: 14px;
+        padding: 10px;
+    }
+    .agenda-workspace-calendar .dashboard-weekday-grid,
+    .agenda-workspace-calendar .dashboard-calendar-grid {
+        min-width: 0;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 4px;
     }
     .agenda-workspace-calendar .dashboard-calendar-day {
         position: relative;
+        min-width: 0;
         min-height: 78px;
-        padding: 7px 6px;
-        gap: 6px;
+        padding: 6px 3px;
+        gap: 4px;
     }
     .agenda-workspace-calendar .calendar-day-num {
-        width: 24px;
-        height: 24px;
-        font-size: 0.72rem;
+        width: 22px;
+        height: 22px;
+        font-size: 0.68rem;
     }
     .agenda-workspace-calendar .calendar-day-count {
         position: absolute;
-        top: 5px;
-        right: 5px;
-        min-width: 18px;
-        height: 18px;
-        font-size: 0.6rem;
+        top: 4px;
+        right: 3px;
+        min-width: 16px;
+        height: 16px;
+        font-size: 0.56rem;
     }
     .agenda-workspace-calendar .calendar-day-events {
         min-height: 7px;
@@ -2143,6 +2413,19 @@
 }
 
 @media (max-width: 380px) {
+    .dashboard-preview-stats .stat {
+        padding-inline: 12px !important;
+    }
+    .mobile-nav a,
+    .mobile-nav button {
+        min-height: 48px;
+        font-size: 9px;
+    }
+    .mobile-nav-label {
+        line-height: 1.05;
+        text-align: center;
+        white-space: normal;
+    }
     .dashboard-calendar-wrap {
         overflow-x: auto;
         padding-inline: 12px;

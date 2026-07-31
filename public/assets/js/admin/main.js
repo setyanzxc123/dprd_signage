@@ -163,6 +163,7 @@
 
         return ![
             '/admin/dashboard',
+            '/admin/jadwal-banmus',
             '/admin/jadwal-umum',
         ].some(function (path) {
             return isMobilePrimaryPath(current, path);

@@ -62,7 +62,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
                     <input class="input min-w-0 max-w-full" id="judul" name="judul" type="text" maxlength="200"
                         value="<?= esc($document['judul'] ?? '') ?>"
                         placeholder="Default: Jadwal Rapat Hasil Banmus Semester X Tahun YYYY" />
-                    <p class="label block text-xs text-base-content/50">Jika dikosongkan, judul otomatis dibuat dari semester & tahun.</p>
+                    <p class="label block w-full whitespace-normal break-words text-xs text-base-content/50">Jika dikosongkan, judul otomatis dibuat dari semester & tahun.</p>
                 </fieldset>
 
                 <fieldset class="fieldset col-span-12 min-w-0 sm:col-span-12">
@@ -74,7 +74,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
                     </legend>
                     <input class="file-input w-full min-w-0 max-w-full overflow-hidden" id="dokumen_file" name="dokumen_file" type="file"
                         accept="application/pdf,.pdf" <?= $isEdit ? '' : 'required' ?> />
-                    <p class="label block min-w-0 max-w-full overflow-hidden text-xs text-base-content/60">
+                    <p class="label block w-full min-w-0 max-w-full whitespace-normal break-words text-xs text-base-content/60">
                         <?php if ($isEdit && (! empty($document['dokumen_file']) || ! empty($document['dokumen_url']))): ?>
                             <?php $storedDocumentName = $document['dokumen_nama_asli'] ?: 'Dokumen SK'; ?>
                             <span class="block max-w-full truncate font-semibold text-primary" title="<?= esc($storedDocumentName) ?>">
@@ -101,7 +101,8 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
         </a>
         <button type="submit" class="btn btn-primary gap-1">
             <i data-lucide="check" class="h-4 w-4"></i>
-            <?= $isEdit ? 'Simpan Perubahan SK' : 'Simpan & Lanjut ke Item Agenda' ?>
+            <span class="sm:hidden">Simpan SK</span>
+            <span class="hidden sm:inline"><?= $isEdit ? 'Simpan Perubahan SK' : 'Simpan & Lanjut ke Item Agenda' ?></span>
         </button>
     </div>
 </form>
