@@ -105,7 +105,9 @@ class SettingController extends BaseController
             return $this->failSave('Gagal menyimpan pengaturan. Pastikan folder upload dapat ditulis dan coba lagi.');
         }
 
-        $this->deleteMediaFile($oldMediaFile);
+        if ($newMediaFile !== '' && $newMediaFile !== $oldMediaFile) {
+            $this->deleteMediaFile($oldMediaFile);
+        }
 
         session()->setFlashdata('success', 'Pengaturan berhasil disimpan.');
 
