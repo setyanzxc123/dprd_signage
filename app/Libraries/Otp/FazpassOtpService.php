@@ -42,9 +42,9 @@ final class FazpassOtpService
             $active = $this->repository->findActive($accountId, $now);
             if ($active !== null) {
                 $expiresAt = strtotime((string) $active['expires_at']);
-                $retryAfter = max(1, strtotime((string) $active['resend_available_at']) - $nowTs);
-                if (in_array((string) ($active['delivery_status'] ?? ''), ['created', 'pending'], true)
-                    || strtotime((string) $active['resend_available_at']) > $nowTs) {
+                $resendAvailableAt = strtotime((string) $active['resend_available_at']);
+                $retryAfter = max(1, $resendAvailableAt - $nowTs);
+                if ($resendAvailableAt > $nowTs) {
                     return new OtpRequestResult(false, 'cooldown', $retryAfter, expiresAt: $expiresAt);
                 }
             }
@@ -53,6 +53,30 @@ final class FazpassOtpService
             if ($this->repository->countRequests('phone_hash', $phoneHash, $since) >= $this->config->maxRequestsPerPhone
                 || $this->repository->countRequests('ip_hash', $ipHash, $since) >= $this->config->maxRequestsPerIp) {
                 return new OtpRequestResult(false, 'rate_limited', $this->config->requestWindowSeconds);
+            }
+
+            $dailySince = $this->date($nowTs - $this->config->dailyWindowSeconds);
+            if ($this->repository->countAccountRequests($accountId, $dailySince) >= $this->config->maxRequestsPerAccountPerDay) {
+                return new OtpRequestResult(false, 'rate_limited', $this->config->dailyWindowSeconds);
+            }
+
+            $globalSince = $this->date($nowTs - $this->config->globalWindowSeconds);
+            $globalDailySince = $this->date($nowTs - $this->config->dailyWindowSeconds);
+            $hourlyGlobalLimitReached = $this->repository->countGlobalRequests($globalSince) >= $this->config->maxRequestsGlobal;
+            $dailyGlobalLimitReached = $this->repository->countGlobalRequests($globalDailySince) >= $this->config->maxRequestsGlobalPerDay;
+            if ($hourlyGlobalLimitReached || $dailyGlobalLimitReached) {
+                $limit = $hourlyGlobalLimitReached
+                    ? $this->config->maxRequestsGlobal
+                    : $this->config->maxRequestsGlobalPerDay;
+                $window = $hourlyGlobalLimitReached
+                    ? $this->config->globalWindowSeconds
+                    : $this->config->dailyWindowSeconds;
+                log_message('warning', 'Circuit breaker OTP aktif: kuota global {limit} permintaan/{window} detik tercapai.', [
+                    'limit'  => $limit,
+                    'window' => $window,
+                ]);
+
+                return new OtpRequestResult(false, 'rate_limited', $window);
             }
 
             $this->repository->cancelActive($accountId, $now);

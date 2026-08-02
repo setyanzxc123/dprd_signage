@@ -15,6 +15,10 @@ interface OtpRepositoryInterface
 
     public function countRequests(string $field, string $value, string $since): int;
 
+    public function countAccountRequests(int $accountId, string $since): int;
+
+    public function countGlobalRequests(string $since): int;
+
     public function cancelActive(int $accountId, string $now): void;
 
     /** @param array<string, mixed> $data */

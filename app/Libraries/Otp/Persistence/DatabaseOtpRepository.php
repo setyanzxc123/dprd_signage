@@ -77,6 +77,23 @@ final class DatabaseOtpRepository implements OtpRepositoryInterface
             ->countAllResults();
     }
 
+    public function countAccountRequests(int $accountId, string $since): int
+    {
+        return $this->db()->table('member_otp_audits')
+            ->where('event', 'requested')
+            ->where('member_account_id', $accountId)
+            ->where('created_at >=', $since)
+            ->countAllResults();
+    }
+
+    public function countGlobalRequests(string $since): int
+    {
+        return $this->db()->table('member_otp_audits')
+            ->where('event', 'requested')
+            ->where('created_at >=', $since)
+            ->countAllResults();
+    }
+
     public function cancelActive(int $accountId, string $now): void
     {
         $this->db()->table('member_otps')

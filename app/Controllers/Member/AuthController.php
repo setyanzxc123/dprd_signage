@@ -200,9 +200,18 @@ class AuthController extends BaseController
 
     private function allowRequest(?string $phone, string $ip): bool
     {
-        $ipAllowed = service('throttler')->check('member_otp_ip_' . hash('sha256', $ip), 20, 3600);
+        $config = new Otp();
+        $ipAllowed = service('throttler')->check(
+            'member_otp_ip_' . hash('sha256', $ip),
+            $config->maxRequestsPerIp,
+            $config->requestWindowSeconds,
+        );
         $phoneAllowed = $phone === null
-            || service('throttler')->check('member_otp_phone_' . $this->phoneHash($phone), 5, 3600);
+            || service('throttler')->check(
+                'member_otp_phone_' . $this->phoneHash($phone),
+                $config->maxRequestsPerPhone,
+                $config->requestWindowSeconds,
+            );
 
         return $ipAllowed && $phoneAllowed;
     }
@@ -210,11 +219,16 @@ class AuthController extends BaseController
     /** @param array<string, mixed> $pending */
     private function allowPendingRequest(array $pending, string $ip): bool
     {
-        $ipAllowed = service('throttler')->check('member_otp_ip_' . hash('sha256', $ip), 20, 3600);
+        $config = new Otp();
+        $ipAllowed = service('throttler')->check(
+            'member_otp_ip_' . hash('sha256', $ip),
+            $config->maxRequestsPerIp,
+            $config->requestWindowSeconds,
+        );
         $phoneAllowed = service('throttler')->check(
             'member_otp_phone_' . (string) ($pending['phone_hash'] ?? 'invalid'),
-            5,
-            3600,
+            $config->maxRequestsPerPhone,
+            $config->requestWindowSeconds,
         );
 
         return $ipAllowed && $phoneAllowed;
