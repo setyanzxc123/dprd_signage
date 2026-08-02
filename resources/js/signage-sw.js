@@ -3,11 +3,14 @@ import { createPartialResponse } from 'workbox-range-requests';
 const CACHE_PREFIX = 'dprd-signage-shell-';
 const MEDIA_CACHE_NAME = 'dprd-signage-media-v1';
 const MEDIA_MANIFEST_URL = '/__signage_media_manifest__';
+const MEDIA_STAGED_MANIFEST_URL = '/__signage_media_staged_manifest__';
+const MEDIA_PREVIOUS_MANIFEST_URL = '/__signage_media_previous_manifest__';
 const WEATHER_ICON_CACHE_NAME = 'dprd-signage-weather-icons-v1';
 const BMKG_ICON_ORIGIN = 'https://api-apps.bmkg.go.id';
 const BMKG_ICON_PATH_PREFIX = '/storage/icon/cuaca/';
 const MAX_MEDIA_BYTES = 200 * 1024 * 1024;
 const STORAGE_RESERVE_BYTES = 10 * 1024 * 1024;
+const MEDIA_PROTOCOL_VERSION = 2;
 const workerVersion = new URL(self.location.href).searchParams.get('v') || '1';
 const CACHE_NAME = `${CACHE_PREFIX}${workerVersion.replace(/[^a-zA-Z0-9._-]/g, '')}`;
 const APP_SHELL = [
@@ -157,22 +160,39 @@ async function weatherIconResponse(request) {
     return response;
 }
 
-async function readMediaManifest(cache = null) {
+async function readMediaManifestAt(key, cache = null) {
     const mediaCache = cache || await caches.open(MEDIA_CACHE_NAME);
-    const response = await mediaCache.match(MEDIA_MANIFEST_URL);
+    const response = await mediaCache.match(key);
     if (!response) return null;
 
     try {
         const manifest = await response.json();
         return manifest?.status === 'ready' && manifest.url ? manifest : null;
     } catch (error) {
-        await mediaCache.delete(MEDIA_MANIFEST_URL);
+        await mediaCache.delete(key);
         return null;
     }
 }
 
+function readMediaManifest(cache = null) {
+    return readMediaManifestAt(MEDIA_MANIFEST_URL, cache);
+}
+
+function readStagedMediaManifest(cache = null) {
+    return readMediaManifestAt(MEDIA_STAGED_MANIFEST_URL, cache);
+}
+
+function readPreviousMediaManifest(cache = null) {
+    return readMediaManifestAt(MEDIA_PREVIOUS_MANIFEST_URL, cache);
+}
+
 async function postMediaStatus(client, status, details = {}) {
-    const payload = { type: 'SIGNAGE_MEDIA_STATUS', status, ...details };
+    const payload = {
+        type: 'SIGNAGE_MEDIA_STATUS',
+        protocol_version: MEDIA_PROTOCOL_VERSION,
+        status,
+        ...details,
+    };
     if (client && typeof client.postMessage === 'function') {
         client.postMessage(payload);
     }
@@ -213,6 +233,17 @@ async function prepareMedia(client, rawUrl, mode) {
         await postMediaStatus(client, 'downloading', activeMediaDownload.details);
         return activeMediaDownload.promise;
     }
+
+    const cache = await caches.open(MEDIA_CACHE_NAME);
+    const staged = await readStagedMediaManifest(cache);
+    if (staged?.url === url && await cache.match(url)) {
+        await postMediaStatus(client, 'staged', staged);
+        return;
+    }
+    if (staged?.url && staged.url !== url) {
+        await cache.delete(staged.url);
+        await cache.delete(MEDIA_STAGED_MANIFEST_URL);
+    }
     if (activeMediaDownload) activeMediaDownload.controller.abort();
 
     const controller = new AbortController();
@@ -242,6 +273,7 @@ async function downloadAndActivateMedia(client, url, mode, signal, details) {
             method: 'GET',
             credentials: 'same-origin',
             cache: 'no-store',
+            priority: 'low',
             signal,
         }));
         if (response.status !== 200) {
@@ -277,25 +309,144 @@ async function downloadAndActivateMedia(client, url, mode, signal, details) {
             status: 'ready',
             cached_at: new Date().toISOString(),
         };
-        await cache.put(MEDIA_MANIFEST_URL, new Response(JSON.stringify(manifest), {
+        await cache.put(MEDIA_STAGED_MANIFEST_URL, new Response(JSON.stringify(manifest), {
             headers: { 'Content-Type': 'application/json' },
         }));
-
-        const keep = new Set([new URL(url).href, new URL(MEDIA_MANIFEST_URL, self.location.origin).href]);
-        const keys = await cache.keys();
-        await Promise.all(keys.filter(request => !keep.has(request.url)).map(request => cache.delete(request)));
-        await postMediaStatus(client, 'ready', manifest);
+        await postMediaStatus(client, 'staged', { ...manifest, ...fallback });
     } catch (error) {
         if (error?.name === 'AbortError') return;
         await postMediaStatus(client, 'error', { message: error?.message || 'Media gagal disimpan.', ...fallback });
     }
 }
 
+async function activateStagedMedia(client, rawUrl) {
+    const url = canonicalMediaUrl(rawUrl);
+    const cache = await caches.open(MEDIA_CACHE_NAME);
+    const staged = await readStagedMediaManifest(cache);
+    const previous = await readMediaManifest(cache);
+    const fallback = previous ? { fallback_url: previous.url, fallback_mode: previous.mode } : {};
+
+    try {
+        if (!staged || staged.url !== url || !await cache.match(url)) {
+            throw new Error('Media staging tidak tersedia untuk diaktifkan.');
+        }
+
+        if (previous?.url && previous.url !== staged.url && await cache.match(previous.url)) {
+            await cache.put(MEDIA_PREVIOUS_MANIFEST_URL, new Response(JSON.stringify(previous), {
+                headers: { 'Content-Type': 'application/json' },
+            }));
+        } else {
+            await cache.delete(MEDIA_PREVIOUS_MANIFEST_URL);
+        }
+        await cache.put(MEDIA_MANIFEST_URL, new Response(JSON.stringify(staged), {
+            headers: { 'Content-Type': 'application/json' },
+        }));
+        await cache.delete(MEDIA_STAGED_MANIFEST_URL);
+
+        const keep = new Set([
+            new URL(url).href,
+            new URL(MEDIA_MANIFEST_URL, self.location.origin).href,
+            new URL(MEDIA_PREVIOUS_MANIFEST_URL, self.location.origin).href,
+        ]);
+        if (previous?.url && previous.url !== staged.url) keep.add(new URL(previous.url).href);
+        const keys = await cache.keys();
+        await Promise.all(keys.filter(request => !keep.has(request.url)).map(request => cache.delete(request)));
+        await postMediaStatus(client, 'ready', {
+            ...staged,
+            activated: true,
+            rollback_url: previous?.url || '',
+            rollback_mode: previous?.mode || '',
+        });
+    } catch (error) {
+        await postMediaStatus(client, 'error', {
+            message: error?.message || 'Media staging gagal diaktifkan.',
+            activation_failed: true,
+            ...fallback,
+        });
+    }
+}
+
+async function rejectStagedMedia(client, rawUrl, message = '') {
+    const url = canonicalMediaUrl(rawUrl);
+    const cache = await caches.open(MEDIA_CACHE_NAME);
+    const staged = await readStagedMediaManifest(cache);
+    const active = await readMediaManifest(cache);
+    if (staged?.url === url) {
+        await cache.delete(url);
+        await cache.delete(MEDIA_STAGED_MANIFEST_URL);
+    }
+    await postMediaStatus(client, 'error', {
+        message: message || 'Media staging tidak lolos validasi playback.',
+        rejected: true,
+        fallback_url: active?.url || '',
+        fallback_mode: active?.mode || '',
+    });
+}
+
+async function commitActiveMedia(client, rawUrl) {
+    const url = canonicalMediaUrl(rawUrl);
+    const cache = await caches.open(MEDIA_CACHE_NAME);
+    const active = await readMediaManifest(cache);
+    const previous = await readPreviousMediaManifest(cache);
+    if (!active || active.url !== url || !await cache.match(url)) {
+        await postMediaStatus(client, 'error', { message: 'Media aktif tidak tersedia untuk dikonfirmasi.' });
+        return;
+    }
+
+    if (previous?.url && previous.url !== active.url) await cache.delete(previous.url);
+    await cache.delete(MEDIA_PREVIOUS_MANIFEST_URL);
+    await postMediaStatus(client, 'ready', { ...active, committed: true });
+}
+
+async function rollbackActiveMedia(client, rawUrl, message = '') {
+    const failedUrl = canonicalMediaUrl(rawUrl);
+    const cache = await caches.open(MEDIA_CACHE_NAME);
+    const active = await readMediaManifest(cache);
+    const previous = await readPreviousMediaManifest(cache);
+
+    if (!active || active.url !== failedUrl || !previous || !await cache.match(previous.url)) {
+        await postMediaStatus(client, 'error', {
+            message: message || 'Media sebelumnya tidak tersedia untuk rollback.',
+        });
+        return;
+    }
+
+    await cache.put(MEDIA_MANIFEST_URL, new Response(JSON.stringify(previous), {
+        headers: { 'Content-Type': 'application/json' },
+    }));
+    await cache.delete(failedUrl);
+    await cache.delete(MEDIA_PREVIOUS_MANIFEST_URL);
+    await cache.delete(MEDIA_STAGED_MANIFEST_URL);
+    await postMediaStatus(client, 'ready', {
+        ...previous,
+        rolled_back: true,
+        failed_url: failedUrl,
+        message: message || 'Media baru gagal diputar; media sebelumnya dipulihkan.',
+    });
+}
+
 async function reportMediaStatus(client) {
     const cache = await caches.open(MEDIA_CACHE_NAME);
     const manifest = await readMediaManifest(cache);
+    const staged = await readStagedMediaManifest(cache);
+    const previous = await readPreviousMediaManifest(cache);
     if (manifest && await cache.match(manifest.url)) {
-        await postMediaStatus(client, 'ready', manifest);
+        await postMediaStatus(client, 'ready', {
+            ...manifest,
+            rollback_url: previous?.url || '',
+            rollback_mode: previous?.mode || '',
+        });
+        if (staged?.url !== manifest.url && staged && await cache.match(staged.url)) {
+            await postMediaStatus(client, 'staged', {
+                ...staged,
+                fallback_url: manifest.url,
+                fallback_mode: manifest.mode,
+            });
+        }
+        return;
+    }
+    if (staged && await cache.match(staged.url)) {
+        await postMediaStatus(client, 'staged', staged);
         return;
     }
     await postMediaStatus(client, 'unavailable');
@@ -322,6 +473,14 @@ self.addEventListener('message', event => {
         event.waitUntil(self.skipWaiting());
     } else if (data.type === 'CACHE_ACTIVE_MEDIA') {
         event.waitUntil(prepareMedia(event.source, data.url, data.mode));
+    } else if (data.type === 'ACTIVATE_STAGED_MEDIA') {
+        event.waitUntil(activateStagedMedia(event.source, data.url));
+    } else if (data.type === 'REJECT_STAGED_MEDIA') {
+        event.waitUntil(rejectStagedMedia(event.source, data.url, data.message));
+    } else if (data.type === 'COMMIT_ACTIVE_MEDIA') {
+        event.waitUntil(commitActiveMedia(event.source, data.url));
+    } else if (data.type === 'ROLLBACK_ACTIVE_MEDIA') {
+        event.waitUntil(rollbackActiveMedia(event.source, data.url, data.message));
     } else if (data.type === 'CACHE_WEATHER_ICON') {
         event.waitUntil(cacheWeatherIcon(event.source, data.url));
     } else if (data.type === 'GET_MEDIA_STATUS') {

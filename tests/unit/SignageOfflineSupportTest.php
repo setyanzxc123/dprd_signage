@@ -23,9 +23,17 @@ final class SignageOfflineSupportTest extends CIUnitTestCase
         $this->assertStringContainsString('Date.now() - freshnessAt > SNAPSHOT_MAX_AGE_MS', $source);
         $this->assertStringContainsString('readSnapshot', $source);
         $this->assertMatchesRegularExpression(
-            '/function handleNetworkOnline\(\).*?loadData\(\);.*?loadCuaca\(\);/s',
+            '/function handleNetworkOnline\(\).*?beginReconnectRecovery\(\);/s',
             $source,
         );
+        $this->assertMatchesRegularExpression(
+            '/function beginReconnectRecovery\(\).*?loadData\(\{ queueIfBusy: true \}\);.*?loadCuaca\(\{ queueIfBusy: true \}\);/s',
+            $source,
+        );
+        $this->assertStringContainsString('RECONNECT_RETRY_DELAYS_MS', $source);
+        $this->assertStringContainsString('dataRefreshQueued = true', $source);
+        $this->assertStringContainsString('weatherRefreshQueued = true', $source);
+        $this->assertStringContainsString("apiHealth.weather !== 'online'", $source);
     }
 
     public function testServiceWorkerCachesOnlyTheAppShell(): void

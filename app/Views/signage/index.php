@@ -40,21 +40,6 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
             </div>
 
             <div class="navbar-end w-auto min-w-max">
-                <div class="mr-[0.8vw] flex flex-col items-end gap-[0.35vh]" aria-live="polite">
-                    <div class="flex gap-[0.35vw]">
-                        <span :class="connectionBadgeClasses()">
-                            <span :class="connectionDotClasses()"></span>
-                            {{ connectionStatusLabel() }}
-                        </span>
-                        <span v-if="media.url" :class="mediaOfflineBadgeClasses()">
-                            <span :class="mediaOfflineDotClasses()"></span>
-                            {{ mediaOfflineStatusLabel() }}
-                        </span>
-                    </div>
-                    <span v-if="lastSyncAt" class="text-[clamp(8px,0.5vw,11px)] text-base-content/60">
-                        Sinkron terakhir {{ formatLastSync(lastSyncAt) }}
-                    </span>
-                </div>
                 <div class="stats stats-horizontal border border-base-300 bg-base-200 shadow-sm">
                     <div class="stat place-items-center px-[1vw] py-[0.7vh]">
                         <div class="stat-value flex items-center gap-[0.4vw] text-[clamp(20px,1.2vw,28px)]">
@@ -107,13 +92,14 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 :src="media.url" crossorigin="anonymous" autoplay loop muted playsinline preload="auto"
                 @loadedmetadata="ensureMediaPlayback" @canplay="ensureMediaPlayback"
                 @timeupdate="handleMediaProgress" @playing="handleMediaPlaying"
-                @waiting="handleMediaWaiting" @stalled="handleMediaWaiting" @error="handleMediaError">
+                @waiting="handleMediaWaiting" @stalled="handleMediaWaiting"
+                @ended="handleMediaEnded" @error="handleMediaError">
             </video>
             <img class="media-main" v-else-if="media.mode === 'image' && media.url"
                 :src="media.url" alt="Media Signage DPRD"
-                @load="mediaError = false" @error="handleMediaError" />
+                @load="handleMediaImageLoaded" @error="handleMediaError" />
 
-            <div v-if="!media.url || mediaError"
+            <div v-if="(!media.url && !mediaStatusPending) || mediaError"
                 class="media-state card-body absolute inset-0 z-[2] items-center justify-center text-center text-neutral-content">
                 <span class="badge badge-warning">Media tidak tersedia</span>
                 <p class="max-w-[28vw] text-[clamp(11px,0.75vw,15px)] text-neutral-content/70">
@@ -246,10 +232,16 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 const runningTextAktif = ref(<?= ($runningTextAktif ?? false) ? 'true' : 'false' ?>);
                 const configuredMediaMode = '<?= esc($mediaMode ?? 'video') ?>';
                 const configuredMediaUrl = '<?= esc($mediaUrl ?? '') ?>';
-                const media = ref({ mode: configuredMediaMode, url: configuredMediaUrl });
+                const waitForCachedMediaStatus = 'serviceWorker' in navigator
+                    && navigator.serviceWorker.controller;
+                const media = ref({
+                    mode: configuredMediaMode,
+                    url: waitForCachedMediaStatus ? '' : configuredMediaUrl,
+                });
                 const mediaVideo = ref(null);
                 const mediaBackdrop = ref(null);
                 const mediaError = ref(false);
+                const mediaStatusPending = ref(Boolean(waitForCachedMediaStatus));
                 const mediaOfflineStatus = ref(configuredMediaUrl ? 'checking' : 'unavailable');
                 const mediaOfflineSize = ref(0);
                 const mediaOfflineFallbackUrl = ref('');
@@ -280,6 +272,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     schedule: 'dprd-signage:snapshot:schedule:v1',
                     weather: 'dprd-signage:snapshot:weather:v1',
                 };
+                const DIAGNOSTICS_KEY = 'dprd-signage:diagnostics:v1';
                 let qrSlideTimer = null;
 
 
@@ -295,8 +288,28 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 let mediaRecoveryTimer = null;
                 let mediaRecoveryInProgress = false;
                 let mediaWaitingForConnection = false;
+                let mediaStableSince = 0;
+                let mediaCacheWarmupStartedAt = Date.now();
+                let mediaPreparationRequested = false;
+                let mediaStatusFallbackTimer = null;
+                let stagedMediaUrl = '';
+                let stagedMediaMode = '';
+                let stagedMediaActivationRequested = false;
+                let stagedMediaValidationId = 0;
+                let pendingMediaCommitUrl = '';
+                let pendingMediaCommitSince = 0;
+                let mediaCommitRequested = false;
+                let mediaCommitTimer = null;
+                let mediaRecoveryTotal = 0;
+                let mediaWorkerProtocolVersion = 0;
+                let diagnosticsTimer = null;
                 let dataRequestInFlight = false;
                 let weatherRequestInFlight = false;
+                let dataRefreshQueued = false;
+                let weatherRefreshQueued = false;
+                let reconnectRecoveryActive = false;
+                let reconnectRetryAttempt = 0;
+                let reconnectRetryTimer = null;
                 let signageWorkerRegistration = null;
                 let waitingServiceWorker = null;
                 let workerUpdateTimer = null;
@@ -305,6 +318,12 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 const MEDIA_STALL_THRESHOLD_MS = 15000;
                 const MEDIA_RECOVERY_COOLDOWN_MS = 30000;
                 const MEDIA_MAX_RECOVERY_ATTEMPTS = 3;
+                const MEDIA_CACHE_MIN_STABLE_MS = 15000;
+                const MEDIA_CACHE_MIN_BUFFER_SECONDS = 20;
+                const MEDIA_CACHE_MAX_WAIT_MS = 60000;
+                const MEDIA_STAGED_VALIDATION_TIMEOUT_MS = 15000;
+                const MEDIA_COMMIT_STABLE_MS = 10000;
+                const RECONNECT_RETRY_DELAYS_MS = [5000, 15000, 30000, 60000, 120000];
 
                 function paintMediaBackdrop(timestamp = 0) {
                     const video = mediaVideo.value;
@@ -388,6 +407,80 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     }
                 }
 
+                function recordMediaPlaybackStatus(status, error = '') {
+                    document.documentElement.dataset.mediaPlaybackStatus = status;
+                    if (error) {
+                        document.documentElement.dataset.mediaLastError = String(error).slice(0, 500);
+                        document.documentElement.dataset.mediaLastErrorAt = new Date().toISOString();
+                    }
+                    persistSignageDiagnostics();
+                }
+
+                function persistSignageDiagnostics() {
+                    const state = document.documentElement.dataset;
+                    try {
+                        localStorage.setItem(DIAGNOSTICS_KEY, JSON.stringify({
+                            savedAt: new Date().toISOString(),
+                            connectionStatus: connectionStatus.value,
+                            scheduleApi: apiHealth.schedule,
+                            weatherApi: apiHealth.weather,
+                            lastSyncAt: lastSyncAt.value || '',
+                            mediaOfflineStatus: mediaOfflineStatus.value,
+                            mediaPlaybackStatus: state.mediaPlaybackStatus || '',
+                            mediaActiveUrl: state.mediaActiveUrl || '',
+                            mediaStagedUrl: state.mediaStagedUrl || '',
+                            mediaActivationStatus: state.mediaActivationStatus || '',
+                            mediaRecoveryCount: Number(state.mediaRecoveryCount) || 0,
+                            mediaLastRecoveryAt: state.mediaLastRecoveryAt || '',
+                            mediaLastRecoveryReason: state.mediaLastRecoveryReason || '',
+                            mediaLastError: state.mediaLastError || '',
+                            mediaLastErrorAt: state.mediaLastErrorAt || '',
+                            mediaBufferedSeconds: Number(state.mediaBufferedSeconds) || 0,
+                            storageUsageBytes: Number(state.storageUsageBytes) || 0,
+                            storageQuotaBytes: Number(state.storageQuotaBytes) || 0,
+                            storagePersistent: storagePersistent.value,
+                            workerVersion: SIGNAGE_WORKER_VERSION,
+                            workerProtocol: mediaWorkerProtocolVersion,
+                        }));
+                    } catch (error) {
+                        console.warn('[Signage] Diagnostik lokal gagal disimpan:', error);
+                    }
+                }
+
+                function canonicalClientMediaUrl(value) {
+                    if (!value) return '';
+                    try {
+                        const url = new URL(value, window.location.origin);
+                        url.searchParams.delete('media_retry');
+                        url.hash = '';
+                        return url.href;
+                    } catch (error) {
+                        return String(value);
+                    }
+                }
+
+                function isConfiguredMediaUrl(value) {
+                    return canonicalClientMediaUrl(value) === canonicalClientMediaUrl(configuredMediaUrl);
+                }
+
+                function showMedia(mode, url) {
+                    if (!url) return;
+                    mediaStatusPending.value = false;
+                    if (media.value.mode === mode && canonicalClientMediaUrl(media.value.url) === canonicalClientMediaUrl(url)) {
+                        nextTick(ensureMediaPlayback);
+                        return;
+                    }
+
+                    stopMediaBackdrop();
+                    media.value = { mode: mode || configuredMediaMode, url };
+                    mediaRecoveryAttempts = 0;
+                    mediaStableSince = 0;
+                    mediaCacheWarmupStartedAt = Date.now();
+                    mediaError.value = false;
+                    document.documentElement.dataset.mediaDisplayedUrl = canonicalClientMediaUrl(url);
+                    nextTick(ensureMediaPlayback);
+                }
+
                 function clearMediaRecoveryTimer() {
                     if (mediaRecoveryTimer !== null) {
                         clearTimeout(mediaRecoveryTimer);
@@ -406,7 +499,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         && lastMediaCurrentTime > 3
                         && currentTime < 3
                         && lastMediaCurrentTime > currentTime + 1;
-                    if (loopedToStart) activateWaitingServiceWorker('batas loop video');
+                    if (loopedToStart) {
+                        if (stagedMediaUrl) activateStagedMedia('batas loop video');
+                        activateWaitingServiceWorker('batas loop video');
+                    }
                     if (Math.abs(currentTime - lastMediaCurrentTime) < 0.1) return;
 
                     lastMediaCurrentTime = currentTime;
@@ -459,6 +555,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                     mediaRecoveryInProgress = true;
                     mediaRecoveryAttempts += 1;
+                    mediaRecoveryTotal += 1;
+                    document.documentElement.dataset.mediaRecoveryCount = String(mediaRecoveryTotal);
+                    document.documentElement.dataset.mediaLastRecoveryAt = new Date().toISOString();
+                    document.documentElement.dataset.mediaLastRecoveryReason = reason;
                     const attempt = mediaRecoveryAttempts;
                     const savedTime = Number(video.currentTime) || lastMediaCurrentTime || 0;
                     let resumed = false;
@@ -504,12 +604,21 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                 function handleMediaWaiting() {
                     stopMediaBackdrop();
+                    mediaStableSince = 0;
+                    if (pendingMediaCommitUrl) {
+                        pendingMediaCommitSince = 0;
+                        clearMediaCommitTimer();
+                    }
+                    recordMediaPlaybackStatus('buffering');
                     scheduleMediaRecovery('buffering');
                 }
 
                 function handleMediaError(event) {
                     stopMediaBackdrop();
                     mediaError.value = true;
+                    mediaStableSince = 0;
+                    recordMediaPlaybackStatus('error', event?.currentTarget?.error?.message || 'Media gagal dimuat.');
+                    if (rollbackActivatedMedia('Media baru gagal diputar setelah aktivasi.')) return;
                     console.error('[Signage] Media gagal dimuat:', event?.currentTarget?.error ?? event);
                     activateWaitingServiceWorker('media error');
                     if (event?.currentTarget instanceof HTMLVideoElement) {
@@ -522,9 +631,32 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     mediaError.value = false;
                     mediaRecoveryInProgress = false;
                     mediaWaitingForConnection = false;
+                    if (mediaStableSince === 0) mediaStableSince = Date.now();
+                    if (pendingMediaCommitUrl && isConfiguredMediaUrl(media.value.url)
+                        && pendingMediaCommitSince === 0
+                    ) scheduleMediaCommit();
                     lastMediaCurrentTime = Number(event?.currentTarget?.currentTime) || lastMediaCurrentTime;
                     lastMediaProgressAt = Date.now();
+                    recordMediaPlaybackStatus('playing');
                     startMediaBackdrop();
+                }
+
+                function handleMediaImageLoaded() {
+                    mediaError.value = false;
+                    if (mediaStableSince === 0) mediaStableSince = Date.now();
+                    recordMediaPlaybackStatus('showing');
+                    if (pendingMediaCommitUrl && isConfiguredMediaUrl(media.value.url)) scheduleMediaCommit();
+                    maybePrepareActiveMediaOffline();
+                }
+
+                function handleMediaEnded() {
+                    if (stagedMediaUrl) {
+                        activateStagedMedia('akhir video');
+                        return;
+                    }
+                    const video = mediaVideo.value;
+                    if (video) video.loop = true;
+                    ensureMediaPlayback();
                 }
 
                 function handleMediaVisibilityChange() {
@@ -539,15 +671,19 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                 function handleNetworkOffline() {
                     clearMediaRecoveryTimer();
+                    clearReconnectRetryTimer();
+                    reconnectRecoveryActive = false;
+                    dataRefreshQueued = false;
+                    weatherRefreshQueued = false;
                     mediaWaitingForConnection = true;
                     updateConnectionStatus();
                     useCachedMediaFallback();
+                    recordMediaPlaybackStatus('offline');
                     console.warn('[Signage] Perangkat offline; buffer media dipertahankan.');
                 }
 
                 function handleNetworkOnline() {
                     const shouldRecover = mediaWaitingForConnection;
-                    const wasUsingFallback = media.value.url !== configuredMediaUrl;
                     mediaWaitingForConnection = false;
                     lastMediaProgressAt = Date.now();
                     apiHealth.schedule = 'unknown';
@@ -555,20 +691,66 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     updateConnectionStatus();
                     console.info('[Signage] Koneksi kembali tersedia.');
 
-                    if (wasUsingFallback) {
-                        media.value = { mode: configuredMediaMode, url: configuredMediaUrl };
-                        mediaRecoveryAttempts = 0;
-                        mediaError.value = false;
-                        nextTick(ensureMediaPlayback);
-                    } else if (shouldRecover) {
+                    if (shouldRecover && isConfiguredMediaUrl(media.value.url)) {
                         recoverMediaPlayback('online');
                     } else {
                         ensureMediaPlayback();
                     }
 
-                    loadData();
-                    loadCuaca();
-                    prepareActiveMediaOffline();
+                    beginReconnectRecovery();
+                    if (['error', 'insufficient', 'unavailable'].includes(mediaOfflineStatus.value)) {
+                        mediaPreparationRequested = false;
+                    }
+                    requestActiveMediaStatus();
+                    maybePrepareActiveMediaOffline();
+                }
+
+                function clearReconnectRetryTimer() {
+                    if (reconnectRetryTimer !== null) {
+                        clearTimeout(reconnectRetryTimer);
+                        reconnectRetryTimer = null;
+                    }
+                }
+
+                function beginReconnectRecovery() {
+                    clearReconnectRetryTimer();
+                    reconnectRecoveryActive = true;
+                    reconnectRetryAttempt = 0;
+                    loadData({ queueIfBusy: true });
+                    loadCuaca({ queueIfBusy: true });
+                }
+
+                function continueReconnectRecovery() {
+                    if (!reconnectRecoveryActive || navigator.onLine === false
+                        || dataRequestInFlight || weatherRequestInFlight
+                        || dataRefreshQueued || weatherRefreshQueued
+                    ) return;
+
+                    if (apiHealth.schedule === 'online' && apiHealth.weather === 'online') {
+                        reconnectRecoveryActive = false;
+                        reconnectRetryAttempt = 0;
+                        clearReconnectRetryTimer();
+                        console.info('[Signage] Seluruh API kembali menggunakan data online.');
+                        return;
+                    }
+
+                    if (reconnectRetryTimer !== null) return;
+                    if (reconnectRetryAttempt >= RECONNECT_RETRY_DELAYS_MS.length) {
+                        reconnectRecoveryActive = false;
+                        console.warn('[Signage] Recovery API beralih ke pemeriksaan berkala.');
+                        return;
+                    }
+
+                    const retryDelay = RECONNECT_RETRY_DELAYS_MS[reconnectRetryAttempt];
+                    reconnectRetryAttempt += 1;
+                    reconnectRetryTimer = setTimeout(() => {
+                        reconnectRetryTimer = null;
+                        if (navigator.onLine === false) return;
+
+                        if (apiHealth.schedule !== 'online') loadData({ queueIfBusy: true });
+                        if (apiHealth.weather !== 'online') loadCuaca({ queueIfBusy: true });
+                        continueReconnectRecovery();
+                    }, retryDelay);
                 }
 
                 function updateClock() {
@@ -801,78 +983,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         connectionStatus.value = 'online';
                     }
                     document.documentElement.dataset.connectionStatus = connectionStatus.value;
-                }
-
-                function connectionStatusLabel() {
-                    return {
-                        online: 'Online',
-                        degraded: 'Menggunakan data tersimpan',
-                        offline: 'Offline',
-                    }[connectionStatus.value] ?? 'Memeriksa koneksi';
-                }
-
-                function connectionBadgeClasses() {
-                    return {
-                        online: 'badge badge-soft badge-success badge-sm gap-1',
-                        degraded: 'badge badge-soft badge-warning badge-sm gap-1',
-                        offline: 'badge badge-soft badge-error badge-sm gap-1',
-                    }[connectionStatus.value] ?? 'badge badge-soft badge-info badge-sm gap-1';
-                }
-
-                function connectionDotClasses() {
-                    return {
-                        online: 'status status-success status-xs',
-                        degraded: 'status status-warning status-xs',
-                        offline: 'status status-error status-xs',
-                    }[connectionStatus.value] ?? 'status status-info status-xs';
-                }
-
-                function mediaOfflineStatusLabel() {
-                    return {
-                        checking: 'Memeriksa media offline',
-                        downloading: 'Media offline sedang diunduh',
-                        ready: 'Media siap offline',
-                        insufficient: 'Penyimpanan tidak cukup',
-                        error: 'Media hanya online',
-                        unsupported: 'Media hanya online',
-                        unavailable: 'Media tidak tersedia',
-                    }[mediaOfflineStatus.value] ?? 'Memeriksa media offline';
-                }
-
-                function mediaOfflineBadgeClasses() {
-                    return {
-                        ready: 'badge badge-soft badge-success badge-sm gap-1',
-                        downloading: 'badge badge-soft badge-info badge-sm gap-1',
-                        checking: 'badge badge-soft badge-info badge-sm gap-1',
-                        insufficient: 'badge badge-soft badge-error badge-sm gap-1',
-                        error: 'badge badge-soft badge-warning badge-sm gap-1',
-                        unsupported: 'badge badge-soft badge-warning badge-sm gap-1',
-                    }[mediaOfflineStatus.value] ?? 'badge badge-soft badge-neutral badge-sm gap-1';
-                }
-
-                function mediaOfflineDotClasses() {
-                    return {
-                        ready: 'status status-success status-xs',
-                        downloading: 'status status-info status-xs',
-                        checking: 'status status-info status-xs',
-                        insufficient: 'status status-error status-xs',
-                        error: 'status status-warning status-xs',
-                        unsupported: 'status status-warning status-xs',
-                    }[mediaOfflineStatus.value] ?? 'status status-neutral status-xs';
-                }
-
-                function formatLastSync(value) {
-                    const date = new Date(value);
-                    if (Number.isNaN(date.getTime())) return '-';
-
-                    return new Intl.DateTimeFormat('id-ID', {
-                        timeZone: 'Asia/Makassar',
-                        day: '2-digit',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                    }).format(date) + ' WITA';
+                    persistSignageDiagnostics();
                 }
 
                 function applySchedulePayload(data) {
@@ -906,8 +1017,11 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     prepareWeatherIconOffline(cuaca.value.icon_url);
                 }
 
-                async function loadData() {
-                    if (dataRequestInFlight) return;
+                async function loadData({ queueIfBusy = false } = {}) {
+                    if (dataRequestInFlight) {
+                        if (queueIfBusy) dataRefreshQueued = true;
+                        return;
+                    }
                     dataRequestInFlight = true;
                     try {
                         const data = await fetchJsonWithRetry('/api/signage/jadwal');
@@ -922,11 +1036,19 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     } finally {
                         dataRequestInFlight = false;
                         updateConnectionStatus();
+                        if (dataRefreshQueued && navigator.onLine !== false) {
+                            dataRefreshQueued = false;
+                            loadData({ queueIfBusy: true });
+                        }
+                        continueReconnectRecovery();
                     }
                 }
 
-                async function loadCuaca() {
-                    if (weatherRequestInFlight) return;
+                async function loadCuaca({ queueIfBusy = false } = {}) {
+                    if (weatherRequestInFlight) {
+                        if (queueIfBusy) weatherRefreshQueued = true;
+                        return;
+                    }
                     weatherRequestInFlight = true;
                     try {
                         const data = await fetchJsonWithRetry('/api/signage/cuaca');
@@ -944,22 +1066,212 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     } finally {
                         weatherRequestInFlight = false;
                         updateConnectionStatus();
+                        if (weatherRefreshQueued && navigator.onLine !== false) {
+                            weatherRefreshQueued = false;
+                            loadCuaca({ queueIfBusy: true });
+                        }
+                        continueReconnectRecovery();
                     }
                 }
 
                 function useCachedMediaFallback() {
-                    if (mediaOfflineStatus.value === 'ready' || !mediaOfflineFallbackUrl.value
-                        || media.value.url === mediaOfflineFallbackUrl.value
+                    if (!mediaOfflineFallbackUrl.value
+                        || canonicalClientMediaUrl(media.value.url) === canonicalClientMediaUrl(mediaOfflineFallbackUrl.value)
                     ) return;
 
-                    media.value = {
-                        mode: mediaOfflineFallbackMode.value || configuredMediaMode,
-                        url: mediaOfflineFallbackUrl.value,
-                    };
-                    mediaRecoveryAttempts = 0;
-                    mediaError.value = false;
                     console.warn('[Signage] Menggunakan media lama yang sudah siap offline.');
-                    nextTick(ensureMediaPlayback);
+                    showMedia(
+                        mediaOfflineFallbackMode.value || configuredMediaMode,
+                        mediaOfflineFallbackUrl.value,
+                    );
+                }
+
+                function clearMediaStatusFallbackTimer() {
+                    if (mediaStatusFallbackTimer !== null) {
+                        clearTimeout(mediaStatusFallbackTimer);
+                        mediaStatusFallbackTimer = null;
+                    }
+                }
+
+                function validateStagedImage(url) {
+                    return new Promise((resolve, reject) => {
+                        const image = new Image();
+                        const timeout = setTimeout(
+                            () => reject(new Error('Validasi gambar staging timeout.')),
+                            MEDIA_STAGED_VALIDATION_TIMEOUT_MS,
+                        );
+                        image.onload = () => {
+                            clearTimeout(timeout);
+                            if (image.naturalWidth > 0 && image.naturalHeight > 0) resolve();
+                            else reject(new Error('Dimensi gambar staging tidak valid.'));
+                        };
+                        image.onerror = () => {
+                            clearTimeout(timeout);
+                            reject(new Error('Gambar staging tidak dapat dibaca.'));
+                        };
+                        image.src = url;
+                    });
+                }
+
+                function validateStagedVideo(url) {
+                    return new Promise((resolve, reject) => {
+                        const probe = document.createElement('video');
+                        let settled = false;
+                        const finish = (error = null) => {
+                            if (settled) return;
+                            settled = true;
+                            clearTimeout(timeout);
+                            probe.removeAttribute('src');
+                            probe.load();
+                            if (error) reject(error);
+                            else resolve();
+                        };
+                        const timeout = setTimeout(
+                            () => finish(new Error('Validasi metadata video staging timeout.')),
+                            MEDIA_STAGED_VALIDATION_TIMEOUT_MS,
+                        );
+                        probe.preload = 'metadata';
+                        probe.crossOrigin = 'anonymous';
+                        probe.muted = true;
+                        probe.onloadedmetadata = () => {
+                            const validDuration = Number.isFinite(probe.duration) && probe.duration > 0;
+                            const validDimensions = probe.videoWidth > 0 && probe.videoHeight > 0;
+                            finish(validDuration && validDimensions
+                                ? null
+                                : new Error('Metadata video staging tidak valid.'));
+                        };
+                        probe.onerror = () => finish(new Error('Video staging tidak dapat dibaca.'));
+                        probe.src = url;
+                        probe.load();
+                    });
+                }
+
+                function queueStagedMedia(data) {
+                    stagedMediaValidationId += 1;
+                    stagedMediaUrl = data.url;
+                    stagedMediaMode = data.mode || configuredMediaMode;
+                    mediaOfflineStatus.value = 'staged';
+                    document.documentElement.dataset.mediaOfflineStatus = 'staged';
+                    document.documentElement.dataset.mediaStagedUrl = canonicalClientMediaUrl(data.url);
+                    document.documentElement.dataset.mediaActivationStatus = 'waiting-boundary';
+                    if (data.fallback_url) useCachedMediaFallback();
+
+                    if (media.value.mode === 'video' && media.value.url) {
+                        nextTick(() => {
+                            const video = mediaVideo.value;
+                            if (video) video.loop = false;
+                            else activateStagedMedia('video aktif tidak tersedia');
+                        });
+                    } else {
+                        activateStagedMedia('tidak ada batas loop video aktif');
+                    }
+                    persistSignageDiagnostics();
+                }
+
+                function clearMediaCommitTimer() {
+                    if (mediaCommitTimer !== null) {
+                        clearTimeout(mediaCommitTimer);
+                        mediaCommitTimer = null;
+                    }
+                }
+
+                function scheduleMediaCommit() {
+                    if (!pendingMediaCommitUrl || mediaCommitRequested) return;
+                    clearMediaCommitTimer();
+                    pendingMediaCommitSince = Date.now();
+                    mediaCommitTimer = setTimeout(() => {
+                        mediaCommitTimer = null;
+                        maybeCommitActiveMedia();
+                    }, MEDIA_COMMIT_STABLE_MS);
+                }
+
+                function maybeCommitActiveMedia() {
+                    if (!pendingMediaCommitUrl || mediaCommitRequested || pendingMediaCommitSince <= 0
+                        || !isConfiguredMediaUrl(media.value.url)
+                        || Date.now() - pendingMediaCommitSince < MEDIA_COMMIT_STABLE_MS
+                    ) return;
+
+                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
+                    if (!worker) return;
+                    mediaCommitRequested = true;
+                    clearMediaCommitTimer();
+                    document.documentElement.dataset.mediaActivationStatus = 'committing';
+                    worker.postMessage({ type: 'COMMIT_ACTIVE_MEDIA', url: pendingMediaCommitUrl });
+                }
+
+                function rollbackActivatedMedia(message) {
+                    if (!pendingMediaCommitUrl || mediaCommitRequested) return false;
+                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
+                    if (!worker) return false;
+
+                    mediaCommitRequested = true;
+                    clearMediaCommitTimer();
+                    document.documentElement.dataset.mediaActivationStatus = 'rolling-back';
+                    worker.postMessage({
+                        type: 'ROLLBACK_ACTIVE_MEDIA',
+                        url: pendingMediaCommitUrl,
+                        message,
+                    });
+                    return true;
+                }
+
+                function finalizeActivatedMedia(data) {
+                    clearMediaCommitTimer();
+                    stagedMediaUrl = '';
+                    stagedMediaMode = '';
+                    stagedMediaActivationRequested = false;
+                    mediaPreparationRequested = true;
+                    document.documentElement.dataset.mediaActiveUrl = canonicalClientMediaUrl(data.url);
+                    document.documentElement.dataset.mediaStagedUrl = '';
+                    pendingMediaCommitUrl = data.rollback_url ? data.url : '';
+                    pendingMediaCommitSince = 0;
+                    mediaCommitRequested = false;
+                    document.documentElement.dataset.mediaActivationStatus = pendingMediaCommitUrl
+                        ? 'verifying-playback'
+                        : 'active';
+                    persistSignageDiagnostics();
+
+                    const video = mediaVideo.value;
+                    if (!isConfiguredMediaUrl(media.value.url)) {
+                        showMedia(configuredMediaMode, configuredMediaUrl);
+                        nextTick(() => {
+                            if (mediaVideo.value) mediaVideo.value.loop = true;
+                        });
+                    } else if (video && configuredMediaMode === 'video') {
+                        video.loop = true;
+                        const separator = configuredMediaUrl.includes('?') ? '&' : '?';
+                        video.src = `${configuredMediaUrl}${separator}media_retry=${Date.now()}`;
+                        video.load();
+                        ensureMediaPlayback();
+                    }
+                }
+
+                async function activateStagedMedia(reason) {
+                    if (!stagedMediaUrl || stagedMediaActivationRequested) return;
+                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
+                    if (!worker) return;
+
+                    stagedMediaActivationRequested = true;
+                    const validationId = ++stagedMediaValidationId;
+                    document.documentElement.dataset.mediaActivationStatus = 'validating';
+                    document.documentElement.dataset.mediaActivationReason = reason;
+                    try {
+                        if (stagedMediaMode === 'image') await validateStagedImage(stagedMediaUrl);
+                        else await validateStagedVideo(stagedMediaUrl);
+                        if (validationId !== stagedMediaValidationId) return;
+
+                        document.documentElement.dataset.mediaActivationStatus = 'activating';
+                        worker.postMessage({ type: 'ACTIVATE_STAGED_MEDIA', url: stagedMediaUrl });
+                    } catch (error) {
+                        if (validationId !== stagedMediaValidationId) return;
+                        document.documentElement.dataset.mediaActivationStatus = 'rejected';
+                        worker.postMessage({
+                            type: 'REJECT_STAGED_MEDIA',
+                            url: stagedMediaUrl,
+                            message: error?.message || 'Media staging tidak lolos validasi.',
+                        });
+                    }
+                    persistSignageDiagnostics();
                 }
 
                 function handleMediaWorkerMessage(event) {
@@ -971,18 +1283,124 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     }
                     if (data.type !== 'SIGNAGE_MEDIA_STATUS') return;
 
-                    mediaOfflineStatus.value = data.status || 'error';
+                    clearMediaStatusFallbackTimer();
+                    mediaStatusPending.value = false;
+                    mediaWorkerProtocolVersion = Number(data.protocol_version) || 0;
+                    document.documentElement.dataset.mediaWorkerProtocol = String(mediaWorkerProtocolVersion);
                     mediaOfflineSize.value = Number(data.size) || 0;
-                    mediaOfflineFallbackUrl.value = data.fallback_url || '';
-                    mediaOfflineFallbackMode.value = data.fallback_mode || '';
+                    if (data.fallback_url) mediaOfflineFallbackUrl.value = data.fallback_url;
+                    if (data.fallback_mode) mediaOfflineFallbackMode.value = data.fallback_mode;
+                    mediaOfflineStatus.value = data.status || 'error';
                     document.documentElement.dataset.mediaOfflineStatus = mediaOfflineStatus.value;
                     document.documentElement.dataset.mediaOfflineBytes = String(mediaOfflineSize.value);
+                    queueMicrotask(persistSignageDiagnostics);
 
                     if (Number.isFinite(Number(data.available))) {
                         document.documentElement.dataset.storageAvailableBytes = String(Number(data.available));
                     }
                     if (data.message) console.warn('[Signage] Cache media:', data.message);
-                    if (navigator.onLine === false) useCachedMediaFallback();
+
+                    if (data.status === 'ready' && data.url) {
+                        if (data.committed && isConfiguredMediaUrl(data.url)) {
+                            clearMediaCommitTimer();
+                            pendingMediaCommitUrl = '';
+                            pendingMediaCommitSince = 0;
+                            mediaCommitRequested = false;
+                            document.documentElement.dataset.mediaActivationStatus = 'active';
+                            persistSignageDiagnostics();
+                            return;
+                        }
+
+                        if (data.rolled_back) {
+                            clearMediaCommitTimer();
+                            pendingMediaCommitUrl = '';
+                            pendingMediaCommitSince = 0;
+                            mediaCommitRequested = false;
+                            stagedMediaUrl = '';
+                            stagedMediaMode = '';
+                            stagedMediaActivationRequested = false;
+                            mediaPreparationRequested = true;
+                            mediaOfflineFallbackUrl.value = data.url;
+                            mediaOfflineFallbackMode.value = data.mode || configuredMediaMode;
+                            mediaOfflineStatus.value = 'fallback';
+                            document.documentElement.dataset.mediaOfflineStatus = 'fallback';
+                            document.documentElement.dataset.mediaActiveUrl = canonicalClientMediaUrl(data.url);
+                            document.documentElement.dataset.mediaActivationStatus = 'rolled-back';
+                            showMedia(data.mode || configuredMediaMode, data.url);
+                            nextTick(() => {
+                                if (mediaVideo.value) mediaVideo.value.loop = true;
+                            });
+                            persistSignageDiagnostics();
+                            return;
+                        }
+
+                        if (data.activated && isConfiguredMediaUrl(data.url)) {
+                            finalizeActivatedMedia(data);
+                            return;
+                        }
+
+                        mediaOfflineFallbackUrl.value = data.url;
+                        mediaOfflineFallbackMode.value = data.mode || configuredMediaMode;
+                        document.documentElement.dataset.mediaActiveUrl = canonicalClientMediaUrl(data.url);
+                        if (isConfiguredMediaUrl(data.url)) {
+                            mediaPreparationRequested = true;
+                            if (data.rollback_url) {
+                                pendingMediaCommitUrl = data.url;
+                                pendingMediaCommitSince = 0;
+                                mediaCommitRequested = false;
+                                document.documentElement.dataset.mediaActivationStatus = 'verifying-playback';
+                            }
+                            showMedia(data.mode || configuredMediaMode, data.url);
+                        } else {
+                            mediaOfflineStatus.value = 'fallback';
+                            document.documentElement.dataset.mediaOfflineStatus = 'fallback';
+                            mediaPreparationRequested = false;
+                            useCachedMediaFallback();
+                            maybePrepareActiveMediaOffline();
+                        }
+                        return;
+                    }
+
+                    if (data.status === 'staged' && data.url) {
+                        mediaPreparationRequested = true;
+                        if (data.fallback_url) useCachedMediaFallback();
+                        queueStagedMedia(data);
+                        return;
+                    }
+
+                    if (['checking', 'downloading'].includes(data.status)) {
+                        mediaPreparationRequested = true;
+                        if (data.fallback_url) useCachedMediaFallback();
+                        return;
+                    }
+
+                    if (data.status === 'unavailable') {
+                        mediaPreparationRequested = false;
+                        if (!media.value.url && configuredMediaUrl) showMedia(configuredMediaMode, configuredMediaUrl);
+                        maybePrepareActiveMediaOffline();
+                        return;
+                    }
+
+                    if (navigator.onLine === false || ['error', 'insufficient'].includes(data.status)) {
+                        if (data.rejected) {
+                            stagedMediaValidationId += 1;
+                            stagedMediaUrl = '';
+                            stagedMediaMode = '';
+                            document.documentElement.dataset.mediaStagedUrl = '';
+                            document.documentElement.dataset.mediaActivationStatus = 'rejected';
+                        } else {
+                            document.documentElement.dataset.mediaActivationStatus = 'error';
+                        }
+                        stagedMediaActivationRequested = false;
+                        mediaCommitRequested = false;
+                        useCachedMediaFallback();
+                        const video = mediaVideo.value;
+                        if (video) {
+                            video.loop = true;
+                            ensureMediaPlayback();
+                        }
+                    }
+                    persistSignageDiagnostics();
                 }
 
                 async function requestPersistentStorage() {
@@ -1011,15 +1429,61 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     }
                 }
 
-                function prepareActiveMediaOffline() {
-                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
-                    if (!worker) return;
+                function bufferedMediaSeconds(video) {
+                    if (!video || !video.buffered) return 0;
+                    const currentTime = Number(video.currentTime) || 0;
+                    for (let index = 0; index < video.buffered.length; index += 1) {
+                        if (video.buffered.start(index) <= currentTime && video.buffered.end(index) >= currentTime) {
+                            return Math.max(0, video.buffered.end(index) - currentTime);
+                        }
+                    }
+                    return 0;
+                }
 
+                function maybePrepareActiveMediaOffline() {
+                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
+                    if (!worker || !configuredMediaUrl || mediaPreparationRequested
+                        || stagedMediaUrl || navigator.onLine === false || mediaStatusPending.value
+                        || mediaWorkerProtocolVersion < 2 || waitingServiceWorker
+                    ) return;
+
+                    const now = Date.now();
+                    const stableFor = mediaStableSince > 0 ? now - mediaStableSince : 0;
+                    const waitedFor = now - mediaCacheWarmupStartedAt;
+                    const displayedMediaIsCachedFallback = mediaOfflineFallbackUrl.value
+                        && canonicalClientMediaUrl(media.value.url) === canonicalClientMediaUrl(mediaOfflineFallbackUrl.value);
+                    const video = mediaVideo.value;
+                    const minimumStableMs = media.value.mode === 'image' ? 2000 : MEDIA_CACHE_MIN_STABLE_MS;
+                    const hasSafeBuffer = media.value.mode === 'image'
+                        || displayedMediaIsCachedFallback
+                        || bufferedMediaSeconds(video) >= MEDIA_CACHE_MIN_BUFFER_SECONDS;
+
+                    if (stableFor < minimumStableMs || (!hasSafeBuffer && waitedFor < MEDIA_CACHE_MAX_WAIT_MS)) return;
+
+                    mediaPreparationRequested = true;
+                    document.documentElement.dataset.mediaDownloadPolicy = hasSafeBuffer
+                        ? 'playback-stable'
+                        : 'maximum-wait-reached';
                     worker.postMessage({
                         type: 'CACHE_ACTIVE_MEDIA',
                         url: configuredMediaUrl,
                         mode: configuredMediaMode,
                     });
+                }
+
+                function requestActiveMediaStatus() {
+                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
+                    if (!worker) return;
+
+                    clearMediaStatusFallbackTimer();
+                    mediaStatusPending.value = true;
+                    worker.postMessage({ type: 'GET_MEDIA_STATUS' });
+                    mediaStatusFallbackTimer = setTimeout(() => {
+                        mediaStatusFallbackTimer = null;
+                        mediaStatusPending.value = false;
+                        if (!media.value.url && configuredMediaUrl) showMedia(configuredMediaMode, configuredMediaUrl);
+                        maybePrepareActiveMediaOffline();
+                    }, 2000);
                 }
 
                 function prepareWeatherIconOffline(url = cuaca.value.icon_url) {
@@ -1079,6 +1543,8 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 async function registerSignageServiceWorker() {
                     if (!('serviceWorker' in navigator)) {
                         mediaOfflineStatus.value = 'unsupported';
+                        mediaStatusPending.value = false;
+                        if (!media.value.url && configuredMediaUrl) showMedia(configuredMediaMode, configuredMediaUrl);
                         return;
                     }
 
@@ -1099,10 +1565,12 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                         signageWorkerRegistration = await navigator.serviceWorker.ready;
                         await requestPersistentStorage();
-                        prepareActiveMediaOffline();
+                        requestActiveMediaStatus();
                         prepareWeatherIconOffline();
                     } catch (error) {
                         mediaOfflineStatus.value = 'unsupported';
+                        mediaStatusPending.value = false;
+                        if (!media.value.url && configuredMediaUrl) showMedia(configuredMediaMode, configuredMediaUrl);
                         document.documentElement.dataset.mediaOfflineStatus = 'unsupported';
                         console.warn('[Signage] Service worker tidak dapat didaftarkan:', error);
                     }
@@ -1111,6 +1579,11 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 onMounted(() => {
                     updateClock();
                     clockTimer = setInterval(updateClock, 1000);
+                    document.documentElement.dataset.mediaRecoveryCount = '0';
+                    document.documentElement.dataset.mediaActivationStatus = 'checking';
+                    document.documentElement.dataset.mediaDisplayedUrl = canonicalClientMediaUrl(media.value.url);
+                    persistSignageDiagnostics();
+                    diagnosticsTimer = setInterval(persistSignageDiagnostics, 60000);
 
                     loadData();
                     loadCuaca();
@@ -1118,7 +1591,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     navigator.serviceWorker?.addEventListener('message', handleMediaWorkerMessage);
                     navigator.serviceWorker?.addEventListener('controllerchange', handleServiceWorkerControllerChange);
                     registerSignageServiceWorker();
-                    dataTimer = setInterval(loadData, 60000);
+                    dataTimer = setInterval(() => {
+                        loadData();
+                        if (apiHealth.weather !== 'online') loadCuaca();
+                    }, 60000);
                     // Cuaca refresh setiap 15 menit (cache BMKG 30 menit)
                     weatherTimer = setInterval(loadCuaca, 900000);
 
@@ -1128,8 +1604,12 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         if (!video || document.hidden) return;
 
                         handleMediaProgress();
+                        document.documentElement.dataset.mediaCurrentTime = String(Math.round(Number(video.currentTime) || 0));
+                        document.documentElement.dataset.mediaBufferedSeconds = String(Math.round(bufferedMediaSeconds(video)));
+                        maybePrepareActiveMediaOffline();
+                        maybeCommitActiveMedia();
                         if (video.paused || video.ended) {
-                            ensureMediaPlayback();
+                            if (!stagedMediaActivationRequested) ensureMediaPlayback();
                         }
                         if (!video.ended && Date.now() - lastMediaProgressAt >= MEDIA_STALL_THRESHOLD_MS) {
                             scheduleMediaRecovery('watchdog');
@@ -1146,8 +1626,12 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     clearInterval(dataTimer);
                     clearInterval(weatherTimer);
                     clearInterval(mediaWatchTimer);
+                    clearInterval(diagnosticsTimer);
                     clearInterval(qrSlideTimer);
                     clearMediaRecoveryTimer();
+                    clearMediaStatusFallbackTimer();
+                    clearMediaCommitTimer();
+                    clearReconnectRetryTimer();
                     clearWorkerUpdateTimer();
                     document.removeEventListener('visibilitychange', handleMediaVisibilityChange);
                     window.removeEventListener('offline', handleNetworkOffline);
@@ -1160,14 +1644,12 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 return {
                     clock, dateDay, dateFull,
                     connectionStatus, lastSyncAt,
-                    mediaOfflineStatus, mediaOfflineSize, storagePersistent,
+                    mediaOfflineStatus, mediaOfflineSize, storagePersistent, mediaStatusPending,
                     cuaca, qrBerkas, qrLive, activeQR, qrFading,
                     jadwal, upcoming, runningText, runningTextAktif, media,
                     mediaVideo, mediaBackdrop, mediaError,
                     ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
-                    handleMediaWaiting, handleMediaError,
-                    connectionStatusLabel, connectionBadgeClasses, connectionDotClasses,
-                    mediaOfflineStatusLabel, mediaOfflineBadgeClasses, mediaOfflineDotClasses, formatLastSync,
+                    handleMediaWaiting, handleMediaEnded, handleMediaImageLoaded, handleMediaError,
                     statusLabel, statusClasses, statusDotClasses, scheduleItemClasses, upcomingDateLabel
                 };
             }

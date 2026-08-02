@@ -6,7 +6,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 await build({
   absWorkingDir: root,
-  entryPoints: ['./resources/js/signage-sw.js'],
+  entryPoints: [path.join(root, 'resources', 'js', 'signage-sw.js')],
   outfile: path.join(root, 'public/signage-sw.js'),
   bundle: true,
   format: 'iife',
