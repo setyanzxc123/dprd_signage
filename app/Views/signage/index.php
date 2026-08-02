@@ -40,6 +40,21 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
             </div>
 
             <div class="navbar-end w-auto min-w-max">
+                <div class="mr-[0.8vw] flex flex-col items-end gap-[0.35vh]" aria-live="polite">
+                    <div class="flex gap-[0.35vw]">
+                        <span :class="connectionBadgeClasses()">
+                            <span :class="connectionDotClasses()"></span>
+                            {{ connectionStatusLabel() }}
+                        </span>
+                        <span v-if="media.url" :class="mediaOfflineBadgeClasses()">
+                            <span :class="mediaOfflineDotClasses()"></span>
+                            {{ mediaOfflineStatusLabel() }}
+                        </span>
+                    </div>
+                    <span v-if="lastSyncAt" class="text-[clamp(8px,0.5vw,11px)] text-base-content/60">
+                        Sinkron terakhir {{ formatLastSync(lastSyncAt) }}
+                    </span>
+                </div>
                 <div class="stats stats-horizontal border border-base-300 bg-base-200 shadow-sm">
                     <div class="stat place-items-center px-[1vw] py-[0.7vh]">
                         <div class="stat-value flex items-center gap-[0.4vw] text-[clamp(20px,1.2vw,28px)]">
@@ -89,9 +104,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
             <img class="media-bg" v-if="media.mode === 'image' && media.url"
                 :src="media.url" alt="" aria-hidden="true" />
             <video ref="mediaVideo" class="media-main" v-if="media.mode === 'video' && media.url"
-                :src="media.url" autoplay loop muted playsinline preload="auto"
+                :src="media.url" crossorigin="anonymous" autoplay loop muted playsinline preload="auto"
                 @loadedmetadata="ensureMediaPlayback" @canplay="ensureMediaPlayback"
-                @playing="handleMediaPlaying" @stalled="ensureMediaPlayback" @error="handleMediaError">
+                @timeupdate="handleMediaProgress" @playing="handleMediaPlaying"
+                @waiting="handleMediaWaiting" @stalled="handleMediaWaiting" @error="handleMediaError">
             </video>
             <img class="media-main" v-else-if="media.mode === 'image' && media.url"
                 :src="media.url" alt="Media Signage DPRD"
@@ -228,13 +244,19 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 const upcoming = ref([]);
                 const runningText = ref('<?= esc($runningText ?? 'Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah') ?>');
                 const runningTextAktif = ref(<?= ($runningTextAktif ?? false) ? 'true' : 'false' ?>);
-                const media = ref({
-                    mode: '<?= esc($mediaMode ?? 'video') ?>',
-                    url:  '<?= esc($mediaUrl  ?? '') ?>',
-                });
+                const configuredMediaMode = '<?= esc($mediaMode ?? 'video') ?>';
+                const configuredMediaUrl = '<?= esc($mediaUrl ?? '') ?>';
+                const media = ref({ mode: configuredMediaMode, url: configuredMediaUrl });
                 const mediaVideo = ref(null);
                 const mediaBackdrop = ref(null);
                 const mediaError = ref(false);
+                const mediaOfflineStatus = ref(configuredMediaUrl ? 'checking' : 'unavailable');
+                const mediaOfflineSize = ref(0);
+                const mediaOfflineFallbackUrl = ref('');
+                const mediaOfflineFallbackMode = ref('');
+                const storagePersistent = ref(false);
+                const connectionStatus = ref(navigator.onLine === false ? 'offline' : 'online');
+                const lastSyncAt = ref('');
 
                 const cuaca = ref({
                     suhu: '-- C',
@@ -252,6 +274,12 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 const qrFading  = ref(false);
                 const activeJadwalId = ref(null);
                 const BASE_URL  = '<?= rtrim(base_url(), '/') ?>';
+                const SIGNAGE_WORKER_VERSION = '<?= esc((string) ($signageWorkerVersion ?? '1'), 'js') ?>';
+                const SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+                const SNAPSHOT_KEYS = {
+                    schedule: 'dprd-signage:snapshot:schedule:v1',
+                    weather: 'dprd-signage:snapshot:weather:v1',
+                };
                 let qrSlideTimer = null;
 
 
@@ -261,6 +289,22 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 let mediaWatchTimer = null;
                 let mediaBackdropFrame = null;
                 let lastBackdropPaint = 0;
+                let lastMediaCurrentTime = 0;
+                let lastMediaProgressAt = Date.now();
+                let mediaRecoveryAttempts = 0;
+                let mediaRecoveryTimer = null;
+                let mediaRecoveryInProgress = false;
+                let mediaWaitingForConnection = false;
+                let dataRequestInFlight = false;
+                let weatherRequestInFlight = false;
+                let signageWorkerRegistration = null;
+                let waitingServiceWorker = null;
+                let workerUpdateTimer = null;
+                let workerUpdateActivationRequested = false;
+                const apiHealth = { schedule: 'unknown', weather: 'unknown' };
+                const MEDIA_STALL_THRESHOLD_MS = 15000;
+                const MEDIA_RECOVERY_COOLDOWN_MS = 30000;
+                const MEDIA_MAX_RECOVERY_ATTEMPTS = 3;
 
                 function paintMediaBackdrop(timestamp = 0) {
                     const video = mediaVideo.value;
@@ -344,15 +388,187 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     }
                 }
 
+                function clearMediaRecoveryTimer() {
+                    if (mediaRecoveryTimer !== null) {
+                        clearTimeout(mediaRecoveryTimer);
+                        mediaRecoveryTimer = null;
+                    }
+                }
+
+                function handleMediaProgress(event = null) {
+                    const video = event?.currentTarget instanceof HTMLVideoElement
+                        ? event.currentTarget
+                        : mediaVideo.value;
+                    if (!video) return;
+
+                    const currentTime = Number(video.currentTime) || 0;
+                    const loopedToStart = !mediaRecoveryInProgress
+                        && lastMediaCurrentTime > 3
+                        && currentTime < 3
+                        && lastMediaCurrentTime > currentTime + 1;
+                    if (loopedToStart) activateWaitingServiceWorker('batas loop video');
+                    if (Math.abs(currentTime - lastMediaCurrentTime) < 0.1) return;
+
+                    lastMediaCurrentTime = currentTime;
+                    lastMediaProgressAt = Date.now();
+                    mediaRecoveryAttempts = 0;
+                    mediaWaitingForConnection = false;
+                    mediaError.value = false;
+                    clearMediaRecoveryTimer();
+                }
+
+                function resumeRecoveredMedia(video, savedTime) {
+                    if (video !== mediaVideo.value) return;
+
+                    if (Number.isFinite(savedTime) && savedTime > 0 && Number.isFinite(video.duration)) {
+                        try {
+                            video.currentTime = Math.min(savedTime, Math.max(0, video.duration - 0.25));
+                        } catch (error) {
+                            console.warn('[Signage] Posisi media tidak dapat dipulihkan:', error);
+                        }
+                    }
+
+                    mediaRecoveryInProgress = false;
+                    lastMediaCurrentTime = Number(video.currentTime) || 0;
+                    lastMediaProgressAt = Date.now();
+                    mediaError.value = false;
+                    ensureMediaPlayback();
+                }
+
+                function recoverMediaPlayback(reason) {
+                    const video = mediaVideo.value;
+                    if (!video || media.value.mode !== 'video' || mediaRecoveryInProgress) return;
+
+                    if (navigator.onLine === false) {
+                        mediaWaitingForConnection = true;
+                        console.warn('[Signage] Recovery media menunggu koneksi kembali.');
+                        return;
+                    }
+
+                    if (mediaRecoveryAttempts >= MEDIA_MAX_RECOVERY_ATTEMPTS) {
+                        mediaError.value = true;
+                        clearMediaRecoveryTimer();
+                        mediaRecoveryTimer = setTimeout(() => {
+                            mediaRecoveryTimer = null;
+                            mediaRecoveryAttempts = 0;
+                            mediaError.value = false;
+                            recoverMediaPlayback('cooldown');
+                        }, MEDIA_RECOVERY_COOLDOWN_MS);
+                        return;
+                    }
+
+                    mediaRecoveryInProgress = true;
+                    mediaRecoveryAttempts += 1;
+                    const attempt = mediaRecoveryAttempts;
+                    const savedTime = Number(video.currentTime) || lastMediaCurrentTime || 0;
+                    let resumed = false;
+
+                    console.warn(
+                        `[Signage] Memulihkan media (${reason}), percobaan ${attempt}/${MEDIA_MAX_RECOVERY_ATTEMPTS}.`
+                    );
+                    stopMediaBackdrop();
+                    mediaError.value = false;
+
+                    const resume = () => {
+                        if (resumed) return;
+                        resumed = true;
+                        resumeRecoveredMedia(video, savedTime);
+                    };
+
+                    video.addEventListener('loadedmetadata', resume, { once: true });
+                    video.pause();
+                    if (attempt === MEDIA_MAX_RECOVERY_ATTEMPTS) {
+                        const separator = media.value.url.includes('?') ? '&' : '?';
+                        video.src = `${media.value.url}${separator}media_retry=${Date.now()}`;
+                    }
+                    video.load();
+                    setTimeout(resume, 10000);
+                }
+
+                function scheduleMediaRecovery(reason) {
+                    if (document.hidden || mediaRecoveryInProgress || mediaRecoveryTimer !== null) return;
+                    if (navigator.onLine === false) {
+                        mediaWaitingForConnection = true;
+                        return;
+                    }
+
+                    const remaining = Math.max(
+                        0,
+                        MEDIA_STALL_THRESHOLD_MS - (Date.now() - lastMediaProgressAt)
+                    );
+                    mediaRecoveryTimer = setTimeout(() => {
+                        mediaRecoveryTimer = null;
+                        recoverMediaPlayback(reason);
+                    }, remaining);
+                }
+
+                function handleMediaWaiting() {
+                    stopMediaBackdrop();
+                    scheduleMediaRecovery('buffering');
+                }
+
                 function handleMediaError(event) {
                     stopMediaBackdrop();
                     mediaError.value = true;
                     console.error('[Signage] Media gagal dimuat:', event?.currentTarget?.error ?? event);
+                    activateWaitingServiceWorker('media error');
+                    if (event?.currentTarget instanceof HTMLVideoElement) {
+                        scheduleMediaRecovery('error');
+                    }
                 }
 
-                function handleMediaPlaying() {
+                function handleMediaPlaying(event) {
+                    clearMediaRecoveryTimer();
                     mediaError.value = false;
+                    mediaRecoveryInProgress = false;
+                    mediaWaitingForConnection = false;
+                    lastMediaCurrentTime = Number(event?.currentTarget?.currentTime) || lastMediaCurrentTime;
+                    lastMediaProgressAt = Date.now();
                     startMediaBackdrop();
+                }
+
+                function handleMediaVisibilityChange() {
+                    if (document.hidden) {
+                        clearMediaRecoveryTimer();
+                        return;
+                    }
+
+                    lastMediaProgressAt = Date.now();
+                    ensureMediaPlayback();
+                }
+
+                function handleNetworkOffline() {
+                    clearMediaRecoveryTimer();
+                    mediaWaitingForConnection = true;
+                    updateConnectionStatus();
+                    useCachedMediaFallback();
+                    console.warn('[Signage] Perangkat offline; buffer media dipertahankan.');
+                }
+
+                function handleNetworkOnline() {
+                    const shouldRecover = mediaWaitingForConnection;
+                    const wasUsingFallback = media.value.url !== configuredMediaUrl;
+                    mediaWaitingForConnection = false;
+                    lastMediaProgressAt = Date.now();
+                    apiHealth.schedule = 'unknown';
+                    apiHealth.weather = 'unknown';
+                    updateConnectionStatus();
+                    console.info('[Signage] Koneksi kembali tersedia.');
+
+                    if (wasUsingFallback) {
+                        media.value = { mode: configuredMediaMode, url: configuredMediaUrl };
+                        mediaRecoveryAttempts = 0;
+                        mediaError.value = false;
+                        nextTick(ensureMediaPlayback);
+                    } else if (shouldRecover) {
+                        recoverMediaPlayback('online');
+                    } else {
+                        ensureMediaPlayback();
+                    }
+
+                    loadData();
+                    loadCuaca();
+                    prepareActiveMediaOffline();
                 }
 
                 function updateClock() {
@@ -496,38 +712,400 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     renderActiveQR();
                 }
 
-                function loadData() {
-                    fetch('/api/signage/jadwal')
-                        .then(r => r.json())
-                        .then(data => {
-                            jadwal.value = data.jadwal ?? [];
-                            upcoming.value = data.upcoming ?? [];
-                            const aktif  = jadwal.value.find(j => j.status === 'berlangsung');
-                            activeJadwalId.value = aktif?.id ?? null;
-                            qrBerkas.value = !!(aktif?.materi_url);
-                            qrLive.value   = !!(aktif?.stream_url);
-                            syncQrSlide();
-                        })
-                        .catch(err => console.error('[Signage] Gagal ambil data jadwal:', err));
+                function delay(milliseconds) {
+                    return new Promise(resolve => setTimeout(resolve, milliseconds));
                 }
 
-                function loadCuaca() {
-                    fetch('/api/signage/cuaca')
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.status === 'success' && data.cuaca) {
-                                cuaca.value = {
-                                    suhu:       data.cuaca.suhu,
-                                    kondisi:    data.cuaca.kondisi,
-                                    kelembapan: data.cuaca.kelembapan,
-                                    kec_angin:  data.cuaca.kec_angin,
-                                    icon_url:   data.cuaca.icon_url,
-                                    desa:       data.lokasi?.desa || '',
-                                    kecamatan:  data.lokasi?.kecamatan || '',
-                                };
+                async function fetchJsonWithRetry(url, options = {}) {
+                    const timeoutMs = options.timeoutMs ?? 8000;
+                    const retryDelays = options.retryDelays ?? [1000, 3000];
+                    let lastError = null;
+
+                    for (let attempt = 0; attempt <= retryDelays.length; attempt += 1) {
+                        if (navigator.onLine === false) {
+                            throw new Error('Perangkat sedang offline.');
+                        }
+
+                        const controller = new AbortController();
+                        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+                        try {
+                            const response = await fetch(url, {
+                                method: 'GET',
+                                headers: { Accept: 'application/json' },
+                                cache: 'no-store',
+                                signal: controller.signal,
+                            });
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
                             }
-                        })
-                        .catch(err => console.error('[Signage] Gagal ambil cuaca BMKG:', err));
+
+                            return await response.json();
+                        } catch (error) {
+                            lastError = error;
+                            if (attempt >= retryDelays.length || navigator.onLine === false) break;
+                            await delay(retryDelays[attempt]);
+                        } finally {
+                            clearTimeout(timeout);
+                        }
+                    }
+
+                    throw lastError ?? new Error('Request gagal.');
+                }
+
+                function saveSnapshot(key, payload, sourceTimestamp = null) {
+                    const savedAt = new Date().toISOString();
+                    const parsedSourceTimestamp = Date.parse(sourceTimestamp ?? '');
+                    const freshnessAt = Number.isFinite(parsedSourceTimestamp)
+                        ? new Date(Math.min(Date.now(), parsedSourceTimestamp)).toISOString()
+                        : savedAt;
+                    try {
+                        localStorage.setItem(key, JSON.stringify({ savedAt, freshnessAt, payload }));
+                        lastSyncAt.value = savedAt;
+                        document.documentElement.dataset.lastSyncAt = savedAt;
+                    } catch (error) {
+                        console.warn('[Signage] Snapshot browser tidak dapat disimpan:', error);
+                    }
+                }
+
+                function readSnapshot(key) {
+                    try {
+                        const raw = localStorage.getItem(key);
+                        if (!raw) return null;
+
+                        const snapshot = JSON.parse(raw);
+                        const savedAt = Date.parse(snapshot?.savedAt ?? '');
+                        const freshnessAt = Date.parse(snapshot?.freshnessAt ?? snapshot?.savedAt ?? '');
+                        if (!snapshot?.payload || !Number.isFinite(savedAt) || !Number.isFinite(freshnessAt)
+                            || Date.now() - freshnessAt > SNAPSHOT_MAX_AGE_MS
+                        ) {
+                            localStorage.removeItem(key);
+                            return null;
+                        }
+
+                        lastSyncAt.value = snapshot.savedAt;
+                        document.documentElement.dataset.lastSyncAt = snapshot.savedAt;
+                        return snapshot.payload;
+                    } catch (error) {
+                        console.warn('[Signage] Snapshot browser rusak dan diabaikan:', error);
+                        localStorage.removeItem(key);
+                        return null;
+                    }
+                }
+
+                function updateConnectionStatus() {
+                    if (navigator.onLine === false) {
+                        connectionStatus.value = 'offline';
+                    } else if (apiHealth.schedule === 'degraded' || apiHealth.weather === 'degraded') {
+                        connectionStatus.value = 'degraded';
+                    } else {
+                        connectionStatus.value = 'online';
+                    }
+                    document.documentElement.dataset.connectionStatus = connectionStatus.value;
+                }
+
+                function connectionStatusLabel() {
+                    return {
+                        online: 'Online',
+                        degraded: 'Menggunakan data tersimpan',
+                        offline: 'Offline',
+                    }[connectionStatus.value] ?? 'Memeriksa koneksi';
+                }
+
+                function connectionBadgeClasses() {
+                    return {
+                        online: 'badge badge-soft badge-success badge-sm gap-1',
+                        degraded: 'badge badge-soft badge-warning badge-sm gap-1',
+                        offline: 'badge badge-soft badge-error badge-sm gap-1',
+                    }[connectionStatus.value] ?? 'badge badge-soft badge-info badge-sm gap-1';
+                }
+
+                function connectionDotClasses() {
+                    return {
+                        online: 'status status-success status-xs',
+                        degraded: 'status status-warning status-xs',
+                        offline: 'status status-error status-xs',
+                    }[connectionStatus.value] ?? 'status status-info status-xs';
+                }
+
+                function mediaOfflineStatusLabel() {
+                    return {
+                        checking: 'Memeriksa media offline',
+                        downloading: 'Media offline sedang diunduh',
+                        ready: 'Media siap offline',
+                        insufficient: 'Penyimpanan tidak cukup',
+                        error: 'Media hanya online',
+                        unsupported: 'Media hanya online',
+                        unavailable: 'Media tidak tersedia',
+                    }[mediaOfflineStatus.value] ?? 'Memeriksa media offline';
+                }
+
+                function mediaOfflineBadgeClasses() {
+                    return {
+                        ready: 'badge badge-soft badge-success badge-sm gap-1',
+                        downloading: 'badge badge-soft badge-info badge-sm gap-1',
+                        checking: 'badge badge-soft badge-info badge-sm gap-1',
+                        insufficient: 'badge badge-soft badge-error badge-sm gap-1',
+                        error: 'badge badge-soft badge-warning badge-sm gap-1',
+                        unsupported: 'badge badge-soft badge-warning badge-sm gap-1',
+                    }[mediaOfflineStatus.value] ?? 'badge badge-soft badge-neutral badge-sm gap-1';
+                }
+
+                function mediaOfflineDotClasses() {
+                    return {
+                        ready: 'status status-success status-xs',
+                        downloading: 'status status-info status-xs',
+                        checking: 'status status-info status-xs',
+                        insufficient: 'status status-error status-xs',
+                        error: 'status status-warning status-xs',
+                        unsupported: 'status status-warning status-xs',
+                    }[mediaOfflineStatus.value] ?? 'status status-neutral status-xs';
+                }
+
+                function formatLastSync(value) {
+                    const date = new Date(value);
+                    if (Number.isNaN(date.getTime())) return '-';
+
+                    return new Intl.DateTimeFormat('id-ID', {
+                        timeZone: 'Asia/Makassar',
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                    }).format(date) + ' WITA';
+                }
+
+                function applySchedulePayload(data) {
+                    if (!data || !Array.isArray(data.jadwal) || !Array.isArray(data.upcoming)) {
+                        throw new Error('Format data jadwal tidak valid.');
+                    }
+
+                    jadwal.value = data.jadwal;
+                    upcoming.value = data.upcoming;
+                    const aktif = jadwal.value.find(item => item.status === 'berlangsung');
+                    activeJadwalId.value = aktif?.id ?? null;
+                    qrBerkas.value = !!aktif?.materi_url;
+                    qrLive.value = !!aktif?.stream_url;
+                    syncQrSlide();
+                }
+
+                function applyWeatherPayload(data) {
+                    if (data?.status !== 'success' || !data.cuaca) {
+                        throw new Error(data?.message || 'Format data cuaca tidak valid.');
+                    }
+
+                    cuaca.value = {
+                        suhu:       data.cuaca.suhu,
+                        kondisi:    data.cuaca.kondisi,
+                        kelembapan: data.cuaca.kelembapan,
+                        kec_angin:  data.cuaca.kec_angin,
+                        icon_url:   data.cuaca.icon_url,
+                        desa:       data.lokasi?.desa || '',
+                        kecamatan:  data.lokasi?.kecamatan || '',
+                    };
+                    prepareWeatherIconOffline(cuaca.value.icon_url);
+                }
+
+                async function loadData() {
+                    if (dataRequestInFlight) return;
+                    dataRequestInFlight = true;
+                    try {
+                        const data = await fetchJsonWithRetry('/api/signage/jadwal');
+                        applySchedulePayload(data);
+                        saveSnapshot(SNAPSHOT_KEYS.schedule, data);
+                        apiHealth.schedule = 'online';
+                    } catch (error) {
+                        const snapshot = readSnapshot(SNAPSHOT_KEYS.schedule);
+                        if (snapshot) applySchedulePayload(snapshot);
+                        apiHealth.schedule = 'degraded';
+                        console.error('[Signage] Gagal ambil data jadwal; snapshot dipertahankan:', error);
+                    } finally {
+                        dataRequestInFlight = false;
+                        updateConnectionStatus();
+                    }
+                }
+
+                async function loadCuaca() {
+                    if (weatherRequestInFlight) return;
+                    weatherRequestInFlight = true;
+                    try {
+                        const data = await fetchJsonWithRetry('/api/signage/cuaca');
+                        applyWeatherPayload(data);
+                        const weatherFreshness = Number(data.cached_at_epoch) > 0
+                            ? Number(data.cached_at_epoch) * 1000
+                            : data.cached_at;
+                        saveSnapshot(SNAPSHOT_KEYS.weather, data, weatherFreshness);
+                        apiHealth.weather = data.stale ? 'degraded' : 'online';
+                    } catch (error) {
+                        const snapshot = readSnapshot(SNAPSHOT_KEYS.weather);
+                        if (snapshot) applyWeatherPayload(snapshot);
+                        apiHealth.weather = 'degraded';
+                        console.error('[Signage] Gagal ambil cuaca BMKG; snapshot dipertahankan:', error);
+                    } finally {
+                        weatherRequestInFlight = false;
+                        updateConnectionStatus();
+                    }
+                }
+
+                function useCachedMediaFallback() {
+                    if (mediaOfflineStatus.value === 'ready' || !mediaOfflineFallbackUrl.value
+                        || media.value.url === mediaOfflineFallbackUrl.value
+                    ) return;
+
+                    media.value = {
+                        mode: mediaOfflineFallbackMode.value || configuredMediaMode,
+                        url: mediaOfflineFallbackUrl.value,
+                    };
+                    mediaRecoveryAttempts = 0;
+                    mediaError.value = false;
+                    console.warn('[Signage] Menggunakan media lama yang sudah siap offline.');
+                    nextTick(ensureMediaPlayback);
+                }
+
+                function handleMediaWorkerMessage(event) {
+                    const data = event.data || {};
+                    if (data.type === 'SIGNAGE_WEATHER_ICON_STATUS') {
+                        document.documentElement.dataset.weatherIconOfflineStatus = data.status || 'error';
+                        if (data.message) console.warn('[Signage] Cache ikon cuaca:', data.message);
+                        return;
+                    }
+                    if (data.type !== 'SIGNAGE_MEDIA_STATUS') return;
+
+                    mediaOfflineStatus.value = data.status || 'error';
+                    mediaOfflineSize.value = Number(data.size) || 0;
+                    mediaOfflineFallbackUrl.value = data.fallback_url || '';
+                    mediaOfflineFallbackMode.value = data.fallback_mode || '';
+                    document.documentElement.dataset.mediaOfflineStatus = mediaOfflineStatus.value;
+                    document.documentElement.dataset.mediaOfflineBytes = String(mediaOfflineSize.value);
+
+                    if (Number.isFinite(Number(data.available))) {
+                        document.documentElement.dataset.storageAvailableBytes = String(Number(data.available));
+                    }
+                    if (data.message) console.warn('[Signage] Cache media:', data.message);
+                    if (navigator.onLine === false) useCachedMediaFallback();
+                }
+
+                async function requestPersistentStorage() {
+                    if (!navigator.storage) return;
+
+                    try {
+                        storagePersistent.value = navigator.storage.persisted
+                            ? await navigator.storage.persisted()
+                            : false;
+                        if (!storagePersistent.value && navigator.storage.persist) {
+                            storagePersistent.value = await navigator.storage.persist();
+                        }
+                        document.documentElement.dataset.storagePersistent = String(storagePersistent.value);
+
+                        if (navigator.storage.estimate) {
+                            const estimate = await navigator.storage.estimate();
+                            if (Number.isFinite(Number(estimate.quota))) {
+                                document.documentElement.dataset.storageQuotaBytes = String(Number(estimate.quota));
+                            }
+                            if (Number.isFinite(Number(estimate.usage))) {
+                                document.documentElement.dataset.storageUsageBytes = String(Number(estimate.usage));
+                            }
+                        }
+                    } catch (error) {
+                        console.warn('[Signage] Status penyimpanan browser tidak dapat diperiksa:', error);
+                    }
+                }
+
+                function prepareActiveMediaOffline() {
+                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
+                    if (!worker) return;
+
+                    worker.postMessage({
+                        type: 'CACHE_ACTIVE_MEDIA',
+                        url: configuredMediaUrl,
+                        mode: configuredMediaMode,
+                    });
+                }
+
+                function prepareWeatherIconOffline(url = cuaca.value.icon_url) {
+                    if (!url) return;
+
+                    const worker = signageWorkerRegistration?.active || navigator.serviceWorker?.controller;
+                    worker?.postMessage({ type: 'CACHE_WEATHER_ICON', url });
+                }
+
+                function clearWorkerUpdateTimer() {
+                    if (workerUpdateTimer !== null) {
+                        clearTimeout(workerUpdateTimer);
+                        workerUpdateTimer = null;
+                    }
+                }
+
+                function activateWaitingServiceWorker(reason) {
+                    if (!waitingServiceWorker || workerUpdateActivationRequested) return;
+
+                    workerUpdateActivationRequested = true;
+                    clearWorkerUpdateTimer();
+                    document.documentElement.dataset.serviceWorkerUpdate = 'activating';
+                    console.info(`[Signage] Mengaktifkan update service worker (${reason}).`);
+                    waitingServiceWorker.postMessage({ type: 'ACTIVATE_UPDATE' });
+                }
+
+                function queueServiceWorkerUpdate(worker) {
+                    if (!worker || workerUpdateActivationRequested) return;
+
+                    waitingServiceWorker = worker;
+                    document.documentElement.dataset.serviceWorkerUpdate = 'waiting';
+                    clearWorkerUpdateTimer();
+
+                    const video = mediaVideo.value;
+                    if (media.value.mode !== 'video' || !video || mediaError.value) {
+                        activateWaitingServiceWorker('tidak ada video aktif');
+                        return;
+                    }
+
+                    const remainingMs = Number.isFinite(video.duration) && video.duration > 0
+                        ? Math.max(1000, (video.duration - video.currentTime + 0.5) * 1000)
+                        : 300000;
+                    workerUpdateTimer = setTimeout(
+                        () => activateWaitingServiceWorker('batas tunggu update'),
+                        Math.min(remainingMs, 300000),
+                    );
+                    console.info('[Signage] Update app shell akan aktif pada loop video berikutnya.');
+                }
+
+                function handleServiceWorkerControllerChange() {
+                    if (!workerUpdateActivationRequested) return;
+
+                    document.documentElement.dataset.serviceWorkerUpdate = 'activated';
+                    window.location.reload();
+                }
+
+                async function registerSignageServiceWorker() {
+                    if (!('serviceWorker' in navigator)) {
+                        mediaOfflineStatus.value = 'unsupported';
+                        return;
+                    }
+
+                    const workerUrl = `/signage-sw.js?v=${encodeURIComponent(SIGNAGE_WORKER_VERSION)}`;
+                    try {
+                        const registration = await navigator.serviceWorker.register(workerUrl, { scope: '/' });
+                        if (registration.waiting) {
+                            queueServiceWorkerUpdate(registration.waiting);
+                        }
+                        registration.addEventListener('updatefound', () => {
+                            const worker = registration.installing;
+                            worker?.addEventListener('statechange', () => {
+                                if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    queueServiceWorkerUpdate(worker);
+                                }
+                            });
+                        });
+
+                        signageWorkerRegistration = await navigator.serviceWorker.ready;
+                        await requestPersistentStorage();
+                        prepareActiveMediaOffline();
+                        prepareWeatherIconOffline();
+                    } catch (error) {
+                        mediaOfflineStatus.value = 'unsupported';
+                        document.documentElement.dataset.mediaOfflineStatus = 'unsupported';
+                        console.warn('[Signage] Service worker tidak dapat didaftarkan:', error);
+                    }
                 }
 
                 onMounted(() => {
@@ -536,6 +1114,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                     loadData();
                     loadCuaca();
+                    updateConnectionStatus();
+                    navigator.serviceWorker?.addEventListener('message', handleMediaWorkerMessage);
+                    navigator.serviceWorker?.addEventListener('controllerchange', handleServiceWorkerControllerChange);
+                    registerSignageServiceWorker();
                     dataTimer = setInterval(loadData, 60000);
                     // Cuaca refresh setiap 15 menit (cache BMKG 30 menit)
                     weatherTimer = setInterval(loadCuaca, 900000);
@@ -543,10 +1125,20 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     nextTick(ensureMediaPlayback);
                     mediaWatchTimer = setInterval(() => {
                         const video = mediaVideo.value;
-                        if (video && (video.paused || video.ended)) {
+                        if (!video || document.hidden) return;
+
+                        handleMediaProgress();
+                        if (video.paused || video.ended) {
                             ensureMediaPlayback();
                         }
+                        if (!video.ended && Date.now() - lastMediaProgressAt >= MEDIA_STALL_THRESHOLD_MS) {
+                            scheduleMediaRecovery('watchdog');
+                        }
                     }, 5000);
+                    document.addEventListener('visibilitychange', handleMediaVisibilityChange);
+                    window.addEventListener('offline', handleNetworkOffline);
+                    window.addEventListener('online', handleNetworkOnline);
+                    if (navigator.onLine === false) handleNetworkOffline();
                 });
 
                 onUnmounted(() => {
@@ -555,15 +1147,27 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     clearInterval(weatherTimer);
                     clearInterval(mediaWatchTimer);
                     clearInterval(qrSlideTimer);
+                    clearMediaRecoveryTimer();
+                    clearWorkerUpdateTimer();
+                    document.removeEventListener('visibilitychange', handleMediaVisibilityChange);
+                    window.removeEventListener('offline', handleNetworkOffline);
+                    window.removeEventListener('online', handleNetworkOnline);
+                    navigator.serviceWorker?.removeEventListener('message', handleMediaWorkerMessage);
+                    navigator.serviceWorker?.removeEventListener('controllerchange', handleServiceWorkerControllerChange);
                     stopMediaBackdrop();
                 });
 
                 return {
                     clock, dateDay, dateFull,
+                    connectionStatus, lastSyncAt,
+                    mediaOfflineStatus, mediaOfflineSize, storagePersistent,
                     cuaca, qrBerkas, qrLive, activeQR, qrFading,
                     jadwal, upcoming, runningText, runningTextAktif, media,
                     mediaVideo, mediaBackdrop, mediaError,
-                    ensureMediaPlayback, handleMediaPlaying, handleMediaError,
+                    ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
+                    handleMediaWaiting, handleMediaError,
+                    connectionStatusLabel, connectionBadgeClasses, connectionDotClasses,
+                    mediaOfflineStatusLabel, mediaOfflineBadgeClasses, mediaOfflineDotClasses, formatLastSync,
                     statusLabel, statusClasses, statusDotClasses, scheduleItemClasses, upcomingDateLabel
                 };
             }

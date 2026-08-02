@@ -26,6 +26,32 @@ class SignageController extends BaseController
             'mediaUrl'         => $mediaFile ? base_url('uploads/media/' . $mediaFile) : '',
             'runningText'      => $settings['running_text'] ?? '',
             'runningTextAktif' => (bool) ($settings['running_text_aktif'] ?? false),
+            'signageWorkerVersion' => $this->signageWorkerVersion(),
         ]);
+    }
+
+    private function signageWorkerVersion(): int
+    {
+        $files = [
+            FCPATH . 'signage-sw.js',
+            FCPATH . 'assets/css/signage.css',
+            FCPATH . 'assets/vendor/fonts/fonts.css',
+            FCPATH . 'assets/vendor/vue/vue.global.prod.js',
+            FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js',
+            FCPATH . 'assets/images/logo_dprd.jpg',
+        ];
+        $fontFiles = glob(FCPATH . 'assets/vendor/fonts/files/*.woff2');
+        if (is_array($fontFiles)) {
+            $files = [...$files, ...$fontFiles];
+        }
+
+        $latest = 1;
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                $latest = max($latest, (int) filemtime($file));
+            }
+        }
+
+        return $latest;
     }
 }

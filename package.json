@@ -8,10 +8,12 @@
     "build:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --minify",
     "watch:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch",
     "build:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --minify",
+    "build:signage-sw": "node scripts/build-signage-sw.mjs",
     "watch:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --watch"
   },
   "devDependencies": {
-    "tailwindcss": "^4.3.1"
+    "tailwindcss": "^4.3.1",
+    "workbox-range-requests": "^7.4.1"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",

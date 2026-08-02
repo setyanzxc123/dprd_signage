@@ -192,7 +192,7 @@ class ContentSecurityPolicy extends BaseConfig
     /**
      * @var list<string>|string
      */
-    public array|string $workerSrc = [];
+    public array|string $workerSrc = 'self';
 
     /**
      * Limits the kinds of plugins a page may invoke.
