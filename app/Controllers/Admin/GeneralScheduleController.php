@@ -3,6 +3,8 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Schedule\ScheduleInvitationStorage;
+use App\Libraries\Schedule\ScheduleResourceAccess;
 use App\Models\JadwalUmumModel;
 use App\Models\RuanganModel;
 use App\Models\UnitRapatModel;
@@ -52,11 +54,18 @@ class GeneralScheduleController extends BaseController
             return $this->failForm($input['error']);
         }
 
+        $storedInvitation = $this->storeInvitationUpload($input);
+        if (isset($storedInvitation['error'])) {
+            return $this->failForm($storedInvitation['error']);
+        }
+        $input['payload'] = array_merge($input['payload'], $storedInvitation['payload']);
+
         $db = db_connect();
         $db->transStart();
         $id = (new JadwalUmumModel())->insert($input['payload'], true);
         if ($id === false) {
             $db->transRollback();
+            (new ScheduleInvitationStorage())->delete($storedInvitation['new_file'] ?? null);
 
             return $this->failForm('Jadwal Umum gagal disimpan. Silakan coba kembali.');
         }
@@ -64,6 +73,7 @@ class GeneralScheduleController extends BaseController
         $db->transComplete();
 
         if (! $db->transStatus()) {
+            (new ScheduleInvitationStorage())->delete($storedInvitation['new_file'] ?? null);
             return $this->failForm('Jadwal Umum gagal disimpan. Silakan coba kembali.');
         }
 
@@ -90,7 +100,8 @@ class GeneralScheduleController extends BaseController
     public function update(int $id)
     {
         $model = new JadwalUmumModel();
-        if ($model->find($id) === null) {
+        $existing = $model->find($id);
+        if ($existing === null) {
             session()->setFlashdata('error', 'Jadwal Umum tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-umum'));
@@ -101,10 +112,17 @@ class GeneralScheduleController extends BaseController
             return $this->failForm($input['error'], $id);
         }
 
+        $storedInvitation = $this->storeInvitationUpload($input);
+        if (isset($storedInvitation['error'])) {
+            return $this->failForm($storedInvitation['error'], $id);
+        }
+        $input['payload'] = array_merge($input['payload'], $storedInvitation['payload']);
+
         $db = db_connect();
         $db->transStart();
         if (! $model->update($id, $input['payload'])) {
             $db->transRollback();
+            (new ScheduleInvitationStorage())->delete($storedInvitation['new_file'] ?? null);
 
             return $this->failForm('Jadwal Umum gagal diperbarui. Silakan coba kembali.', $id);
         }
@@ -112,7 +130,12 @@ class GeneralScheduleController extends BaseController
         $db->transComplete();
 
         if (! $db->transStatus()) {
+            (new ScheduleInvitationStorage())->delete($storedInvitation['new_file'] ?? null);
             return $this->failForm('Jadwal Umum gagal diperbarui. Silakan coba kembali.', $id);
+        }
+
+        if (($existing['undangan_file'] ?? null) !== ($input['payload']['undangan_file'] ?? $existing['undangan_file'] ?? null)) {
+            (new ScheduleInvitationStorage())->delete($existing['undangan_file'] ?? null);
         }
 
         return $this->formSuccessResponse('Jadwal Umum berhasil diperbarui.', base_url('admin/jadwal-umum'));
@@ -121,7 +144,8 @@ class GeneralScheduleController extends BaseController
     public function delete(int $id)
     {
         $model = new JadwalUmumModel();
-        if ($model->find($id) === null) {
+        $existing = $model->find($id);
+        if ($existing === null) {
             session()->setFlashdata('error', 'Jadwal Umum tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-umum'));
@@ -138,6 +162,8 @@ class GeneralScheduleController extends BaseController
 
             return redirect()->to(base_url('admin/jadwal-umum'));
         }
+
+        (new ScheduleInvitationStorage())->delete($existing['undangan_file'] ?? null);
 
         return $this->formSuccessResponse('Jadwal Umum berhasil dihapus.', base_url('admin/jadwal-umum'));
     }
@@ -185,6 +211,19 @@ class GeneralScheduleController extends BaseController
             return ['error' => 'Keterangan maksimal 5.000 karakter.'];
         }
 
+        $invitation = (new ScheduleInvitationStorage())->validate($this->request->getFile('undangan_file'));
+        if (isset($invitation['error'])) {
+            return ['error' => $invitation['error']];
+        }
+        $materialUrl = $this->validatedOptionalUrl((string) $this->request->getPost('materi_url'), 'Tautan bahan rapat tidak valid.');
+        if (isset($materialUrl['error'])) {
+            return ['error' => $materialUrl['error']];
+        }
+        $streamUrl = $this->validatedOptionalUrl((string) $this->request->getPost('stream_url'), 'Tautan live streaming tidak valid.');
+        if (isset($streamUrl['error'])) {
+            return ['error' => $streamUrl['error']];
+        }
+
         if ($location['ruangan_id'] !== null
             && (new JadwalUmumModel())->hasRoomConflict(
                 $location['ruangan_id'],
@@ -207,8 +246,14 @@ class GeneralScheduleController extends BaseController
                 'pihak_eksternal' => $pihakEksternal !== '' ? $pihakEksternal : null,
                 'is_publik'       => $this->request->getPost('is_publik') === '1' ? 1 : 0,
                 'keterangan'      => $keterangan !== '' ? $keterangan : null,
+                'materi_url'      => $materialUrl['url'],
+                'materi_akses'    => ScheduleResourceAccess::normalize($this->request->getPost('materi_akses'), ScheduleResourceAccess::PARTICIPANT),
+                'stream_url'      => $streamUrl['url'],
+                'stream_akses'    => ScheduleResourceAccess::normalize($this->request->getPost('stream_akses'), ScheduleResourceAccess::MEMBER),
             ],
             'unit_ids' => $unitIds,
+            'invitation_upload' => $invitation['file'],
+            'remove_invitation' => $this->request->getPost('hapus_undangan') === '1',
         ];
     }
 
@@ -323,6 +368,8 @@ class GeneralScheduleController extends BaseController
 
     private function postedSchedule(?int $id): array
     {
+        $existing = $id !== null ? (new JadwalUmumModel())->find($id) : null;
+
         return [
             'id'              => $id,
             'judul'           => trim((string) $this->request->getPost('judul')),
@@ -336,8 +383,41 @@ class GeneralScheduleController extends BaseController
             'pihak_eksternal' => trim((string) $this->request->getPost('pihak_eksternal')),
             'is_publik'       => $this->request->getPost('is_publik') === '1' ? 1 : 0,
             'keterangan'      => trim((string) $this->request->getPost('keterangan')),
+            'materi_url'      => trim((string) $this->request->getPost('materi_url')),
+            'materi_akses'    => trim((string) $this->request->getPost('materi_akses')),
+            'stream_url'      => trim((string) $this->request->getPost('stream_url')),
+            'stream_akses'    => trim((string) $this->request->getPost('stream_akses')),
             'target_unit_ids' => $this->postedUnitIds(),
+            'undangan_file' => $existing['undangan_file'] ?? null,
+            'undangan_nama_asli' => $existing['undangan_nama_asli'] ?? null,
         ];
+    }
+
+    /** @return array{payload?: array<string, mixed>, new_file?: ?string, error?: string} */
+    private function storeInvitationUpload(array $input): array
+    {
+        if (($input['remove_invitation'] ?? false) === true && ($input['invitation_upload'] ?? null) === null) {
+            return ['payload' => ['undangan_file' => null, 'undangan_nama_asli' => null], 'new_file' => null];
+        }
+        if (($input['invitation_upload'] ?? null) === null) {
+            return ['payload' => [], 'new_file' => null];
+        }
+
+        try {
+            $stored = (new ScheduleInvitationStorage())->store($input['invitation_upload']);
+
+            return [
+                'payload' => [
+                    'undangan_file' => $stored['file'],
+                    'undangan_nama_asli' => $stored['original_name'],
+                ],
+                'new_file' => $stored['file'],
+            ];
+        } catch (\Throwable $exception) {
+            log_message('error', 'Gagal menyimpan undangan Jadwal Umum: {message}', ['message' => $exception->getMessage()]);
+
+            return ['error' => 'PDF undangan gagal disimpan. Silakan coba kembali.'];
+        }
     }
 
     private function roomOptions(int $selectedId): array
@@ -445,5 +525,20 @@ class GeneralScheduleController extends BaseController
     private function validTime(string $value): bool
     {
         return preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $value) === 1;
+    }
+
+    /** @return array{url?: ?string, error?: string} */
+    private function validatedOptionalUrl(string $url, string $message): array
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return ['url' => null];
+        }
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        if (filter_var($url, FILTER_VALIDATE_URL) === false || ! in_array($scheme, ['http', 'https'], true)) {
+            return ['error' => $message];
+        }
+
+        return ['url' => $url];
     }
 }

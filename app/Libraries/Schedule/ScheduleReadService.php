@@ -142,6 +142,7 @@ final class ScheduleReadService
                 && array_intersect($unitIds, $memberUnitIds) !== [];
             $this->formatResourceAccess($row, 'materi', $isMember);
             $this->formatResourceAccess($row, 'stream', $isMember);
+            $row['has_undangan'] = $isMember && trim((string) ($row['undangan_file'] ?? '')) !== '';
             unset(
                 $row['nama_ruangan'],
                 $row['lokasi_lainnya'],
@@ -150,6 +151,8 @@ final class ScheduleReadService
                 $row['materi_akses'],
                 $row['stream_url'],
                 $row['stream_akses'],
+                $row['undangan_file'],
+                $row['undangan_nama_asli'],
             );
 
             return $row;

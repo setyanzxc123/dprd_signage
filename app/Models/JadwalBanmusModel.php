@@ -39,6 +39,8 @@ class JadwalBanmusModel extends Model
         'materi_akses',
         'stream_url',
         'stream_akses',
+        'undangan_file',
+        'undangan_nama_asli',
         'status',
         'catatan',
     ];
@@ -218,7 +220,8 @@ class JadwalBanmusModel extends Model
                 'p.id, p.dokumen_banmus_id, p.agenda, p.jenis_agenda, p.periode_label,
                  p.tanggal_mulai, p.tanggal_selesai, p.bulan_mulai, p.bulan_selesai,
                  p.urutan, p.catatan, p.status, p.tanggal, p.jam_mulai, p.jam_selesai,
-                 p.ruangan_id, p.lokasi_lainnya, p.publikasi, p.materi_url, p.stream_url'
+                 p.ruangan_id, p.lokasi_lainnya, p.publikasi, p.materi_url, p.stream_url,
+                 p.undangan_file, p.undangan_nama_asli'
             )
             ->whereIn('p.dokumen_banmus_id', $documentIds)
             ->where('p.deleted_at', null);

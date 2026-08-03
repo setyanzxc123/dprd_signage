@@ -13,7 +13,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="post" class="schedule-form min-w-0 max-w-full" data-require-targets="false" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="post" enctype="multipart/form-data" class="schedule-form min-w-0 max-w-full" data-require-targets="false" data-turbo="true">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>
@@ -133,6 +133,51 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 </div>
                 <p class="label block w-full whitespace-normal break-words">Opsional. Jadwal akan menjadi “Jadwal Saya” bagi anggota kelompok yang dipilih setelah fase integrasi portal.</p>
                 <p class="hidden text-xs text-error" id="target-peserta-error">Kelompok peserta tidak valid.</p>
+            </fieldset>
+
+            <fieldset class="fieldset min-w-0">
+                <legend class="fieldset-legend">Bahan dan streaming</legend>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="min-w-0">
+                        <label class="label" for="materi_url">Tautan bahan rapat</label>
+                        <input class="input w-full min-w-0 max-w-full" id="materi_url" name="materi_url" type="url"
+                            value="<?= esc($schedule['materi_url'] ?? '') ?>" placeholder="https://..." />
+                        <label class="label" for="materi_akses">Akses bahan</label>
+                        <select class="select w-full" id="materi_akses" name="materi_akses">
+                            <?php foreach (['peserta' => 'Peserta rapat', 'anggota' => 'Seluruh anggota DPRD', 'publik' => 'Publik'] as $value => $label): ?>
+                                <option value="<?= $value ?>" <?= ($schedule['materi_akses'] ?? 'peserta') === $value ? 'selected' : '' ?>><?= $label ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="min-w-0">
+                        <label class="label" for="stream_url">Tautan live/video</label>
+                        <input class="input w-full min-w-0 max-w-full" id="stream_url" name="stream_url" type="url"
+                            value="<?= esc($schedule['stream_url'] ?? '') ?>" placeholder="https://..." />
+                        <label class="label" for="stream_akses">Akses live/video</label>
+                        <select class="select w-full" id="stream_akses" name="stream_akses">
+                            <?php foreach (['anggota' => 'Seluruh anggota DPRD', 'peserta' => 'Peserta rapat', 'publik' => 'Publik'] as $value => $label): ?>
+                                <option value="<?= $value ?>" <?= ($schedule['stream_akses'] ?? 'anggota') === $value ? 'selected' : '' ?>><?= $label ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="fieldset min-w-0">
+                <legend class="fieldset-legend">Undangan rapat</legend>
+                <input class="file-input w-full min-w-0 max-w-full" id="undangan_file" name="undangan_file" type="file"
+                    accept="application/pdf,.pdf" />
+                <p class="label block w-full whitespace-normal break-words">PDF maksimal 10 MB. Undangan hanya tersedia untuk anggota yang sudah login.</p>
+                <?php if (! empty($schedule['undangan_file'])): ?>
+                    <div class="alert alert-soft mt-2">
+                        <i data-lucide="file-check-2" class="h-4 w-4"></i>
+                        <span class="min-w-0 flex-1 truncate"><?= esc($schedule['undangan_nama_asli'] ?: 'undangan-rapat.pdf') ?></span>
+                        <label class="label cursor-pointer gap-2" for="hapus_undangan">
+                            <input class="checkbox checkbox-sm" id="hapus_undangan" name="hapus_undangan" type="checkbox" value="1" />
+                            Hapus
+                        </label>
+                    </div>
+                <?php endif; ?>
             </fieldset>
 
             <fieldset class="fieldset min-w-0">

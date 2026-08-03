@@ -8,6 +8,7 @@ use CodeIgniter\Database\BaseConnection;
 final class ScheduleResourceLinkService
 {
     public const SOURCE_BANMUS = 'banmus';
+    public const SOURCE_GENERAL = 'jadwal_umum';
 
     public function __construct(?BaseConnection $db = null)
     {
@@ -82,6 +83,18 @@ final class ScheduleResourceLinkService
         $urlColumn = $resource . '_url';
         $accessColumn = $resource . '_akses';
 
+        if ($source === self::SOURCE_GENERAL) {
+            $builder = $this->db->table('jadwal_umum')
+                ->select("{$urlColumn} AS resource_url, {$accessColumn} AS resource_access")
+                ->where('id', $id)
+                ->where("{$urlColumn} !=", '')
+                ->where("{$urlColumn} IS NOT NULL", null, false);
+            if ($publicOnly) {
+                $builder->where('is_publik', 1);
+            }
+
+            return $builder->get(1)->getRowArray();
+        }
         if ($source !== self::SOURCE_BANMUS) {
             return null;
         }
@@ -110,6 +123,14 @@ final class ScheduleResourceLinkService
             return $this->db->table('jadwal_banmus_unit_rapat jbur')
                 ->join('anggota_unit_rapat aur', 'aur.unit_rapat_id = jbur.unit_rapat_id')
                 ->where('jbur.jadwal_banmus_id', $id)
+                ->where('aur.anggota_id', $memberId)
+                ->countAllResults() > 0;
+        }
+
+        if ($source === self::SOURCE_GENERAL) {
+            return $this->db->table('jadwal_umum_unit_rapat juur')
+                ->join('anggota_unit_rapat aur', 'aur.unit_rapat_id = juur.unit_rapat_id')
+                ->where('juur.jadwal_umum_id', $id)
                 ->where('aur.anggota_id', $memberId)
                 ->countAllResults() > 0;
         }

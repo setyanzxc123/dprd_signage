@@ -104,13 +104,33 @@ final class CurrentSystemDataSeederTest extends CIUnitTestCase
             null,
             ['Pimpinan DPRD'],
             'publik',
+            'https://example.com/dummy/materi/rapat-insidental',
+            'peserta',
+            'https://example.com/dummy/live/rapat-insidental',
+            'publik',
         );
 
         $this->assertArrayNotHasKey('jenis', $schedule);
         $this->assertArrayNotHasKey('sumber_agenda', $schedule);
         $this->assertNull($schedule['pihak_eksternal']);
         $this->assertSame(1, $schedule['is_publik']);
+        $this->assertSame('https://example.com/dummy/materi/rapat-insidental', $schedule['materi_url']);
+        $this->assertSame('peserta', $schedule['materi_akses']);
+        $this->assertSame('https://example.com/dummy/live/rapat-insidental', $schedule['stream_url']);
+        $this->assertSame('publik', $schedule['stream_akses']);
         $this->assertStringStartsWith('(Dummy) ', $schedule['judul']);
+    }
+
+    public function testDummyResourceLinksUseExampleDotComOnly(): void
+    {
+        $source = file_get_contents(
+            ROOTPATH . 'app/Database/Seeds/CurrentSystemDataSeeder.php'
+        );
+
+        $this->assertIsString($source);
+        $this->assertStringContainsString('https://example.com/dummy/materi/', $source);
+        $this->assertStringContainsString('https://example.com/dummy/live/', $source);
+        $this->assertStringNotContainsString('https://example.test/', $source);
     }
 
     public function testSeederWritesOnlyTheTargetGeneralScheduleTables(): void
@@ -148,6 +168,57 @@ final class CurrentSystemDataSeederTest extends CIUnitTestCase
         $this->assertIsString($source);
         $this->assertStringNotContainsString("table('users')", $source);
         $this->assertStringNotContainsString('insertBatch($users', $source);
+    }
+
+    public function testSampleLoginMemberCoversManyRelevantAgendaUnits(): void
+    {
+        $members = $this->invokeArrayMethod('members');
+        $sampleMembers = array_values(array_filter(
+            $members,
+            static fn (array $member): bool => $member['no_wa'] === '85156049890',
+        ));
+        $unitNames = $this->invokeArrayMethod('sampleMemberUnitNames');
+
+        $this->assertCount(1, $sampleMembers);
+        $this->assertSame('(Dummy) Anggota Uji Agenda', $sampleMembers[0]['name']);
+        $this->assertSame('Komisi I', $sampleMembers[0]['komisi']);
+        $this->assertSame(1, $sampleMembers[0]['aktif']);
+        $this->assertGreaterThanOrEqual(10, count($unitNames));
+        $this->assertContains('Seluruh Anggota', $unitNames);
+        $this->assertContains('Komisi I', $unitNames);
+        $this->assertContains('Badan Musyawarah', $unitNames);
+        $this->assertContains('Badan Anggaran', $unitNames);
+        $this->assertContains('Gabungan Komisi', $unitNames);
+        $this->assertContains('Pimpinan DPRD', $unitNames);
+        $this->assertContains('Pansus Ranperda Pajak Daerah', $unitNames);
+        $this->assertContains('Tim Pembahas RAPBD', $unitNames);
+        $this->assertSame($unitNames, array_values(array_unique($unitNames)));
+    }
+
+    public function testCurrentMonthDummyBanmusDocumentIsImmediatelyUsefulForMemberTesting(): void
+    {
+        $now = new DateTimeImmutable();
+        $method = $this->reflection->getMethod('dummyCurrentMonthBanmusDocument');
+        $dataset = $method->invoke($this->subject, $now);
+        $document = $dataset['document'];
+        $items = $dataset['items'];
+
+        $this->assertSame('(Dummy) SK Jadwal Rapat Banmus Uji Bulan Berjalan', $document['judul']);
+        $this->assertSame('DUMMY/UJI-AGENDA/' . $now->format('Y-m'), $document['nomor_sk']);
+        $this->assertSame((int) $now->format('Y'), $document['tahun']);
+        $this->assertSame(1, $document['is_publik']);
+        $this->assertCount(6, $items);
+
+        foreach ($items as $item) {
+            $this->assertSame('rapat', $item['jenis_agenda']);
+            $this->assertNotSame('proyeksi', $item['status']);
+            $this->assertNotEmpty($item['tanggal']);
+            $this->assertNotEmpty($item['units']);
+            $this->assertStringStartsWith('(Dummy) ', $item['agenda']);
+        }
+
+        $this->assertGreaterThanOrEqual(5, count(array_filter(array_column($items, 'materi_url'))));
+        $this->assertGreaterThanOrEqual(5, count(array_filter(array_column($items, 'stream_url'))));
     }
 
     /**

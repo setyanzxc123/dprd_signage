@@ -511,6 +511,8 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'materi_akses'      => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
             'stream_url'        => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'stream_akses'      => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
+            'undangan_file'     => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'undangan_nama_asli'=> ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'status'            => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'proyeksi'],
             'catatan'           => ['type' => 'TEXT', 'null' => true],
             'created_at'        => ['type' => 'DATETIME', 'null' => true],
@@ -563,6 +565,8 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'materi_akses'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'peserta'],
             'stream_url'     => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'stream_akses'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
+            'undangan_file'  => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'undangan_nama_asli' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'jenis'          => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'insidental'],
             'is_publik'      => ['type' => 'INTEGER', 'default' => 0],
         ]);

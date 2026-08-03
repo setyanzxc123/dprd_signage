@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\Schedule\ScheduleResourceAccess;
+use App\Libraries\Schedule\ScheduleInvitationStorage;
 use App\Models\BanmusDocumentModel;
 use App\Models\JadwalBanmusModel;
 use App\Models\RuanganModel;
@@ -158,12 +159,24 @@ class JadwalBanmusController extends BaseController
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
 
+        $invitationFiles = db_connect()->table('jadwal_banmus')
+            ->select('undangan_file')
+            ->where('dokumen_banmus_id', $id)
+            ->where('undangan_file IS NOT NULL', null, false)
+            ->where('undangan_file !=', '')
+            ->get()
+            ->getResultArray();
+
         if (! $model->delete($id)) {
             session()->setFlashdata('error', 'Dokumen SK Banmus gagal dihapus.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
         }
         $this->deleteStoredPdf($document['dokumen_file'] ?? null);
+        $invitationStorage = new ScheduleInvitationStorage();
+        foreach ($invitationFiles as $invitation) {
+            $invitationStorage->delete($invitation['undangan_file'] ?? null);
+        }
 
         return $this->formSuccessResponse(
             'Dokumen SK Banmus berhasil dihapus.',
@@ -202,6 +215,13 @@ class JadwalBanmusController extends BaseController
                 $input['payload']['jam_selesai'],
             ),
         ]);
+        $storedInvitation = $this->storeInvitationUpload($input);
+        if (isset($storedInvitation['error'])) {
+            session()->setFlashdata('error', $storedInvitation['error']);
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+        $payload = array_merge($payload, $storedInvitation['payload']);
 
         $db = Database::connect();
         $db->transStart();
@@ -212,6 +232,7 @@ class JadwalBanmusController extends BaseController
         $db->transComplete();
 
         if ($itemId < 1 || ! $db->transStatus()) {
+            (new ScheduleInvitationStorage())->delete($storedInvitation['new_file'] ?? null);
             session()->setFlashdata('error', 'Gagal menambahkan item agenda.');
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
@@ -256,6 +277,13 @@ class JadwalBanmusController extends BaseController
             $payload['jam_mulai'],
             $payload['jam_selesai'],
         );
+        $storedInvitation = $this->storeInvitationUpload($input);
+        if (isset($storedInvitation['error'])) {
+            session()->setFlashdata('error', $storedInvitation['error']);
+
+            return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+        $payload = array_merge($payload, $storedInvitation['payload']);
 
         $db = Database::connect();
         $db->transStart();
@@ -266,9 +294,14 @@ class JadwalBanmusController extends BaseController
         $db->transComplete();
 
         if (! $updated || ! $db->transStatus()) {
+            (new ScheduleInvitationStorage())->delete($storedInvitation['new_file'] ?? null);
             session()->setFlashdata('error', 'Gagal memperbarui item agenda.');
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
+        }
+
+        if (($item['undangan_file'] ?? null) !== ($payload['undangan_file'] ?? $item['undangan_file'] ?? null)) {
+            (new ScheduleInvitationStorage())->delete($item['undangan_file'] ?? null);
         }
 
         return $this->formSuccessResponse(
@@ -290,6 +323,7 @@ class JadwalBanmusController extends BaseController
         }
 
         $model->delete($itemId);
+        (new ScheduleInvitationStorage())->delete($item['undangan_file'] ?? null);
 
         return $this->formSuccessResponse(
             'Item agenda berhasil dihapus.',
@@ -398,6 +432,10 @@ class JadwalBanmusController extends BaseController
             $this->request->getPost('stream_akses'),
             ScheduleResourceAccess::PUBLIC,
         );
+        $invitation = (new ScheduleInvitationStorage())->validate($this->request->getFile('undangan_file'));
+        if (isset($invitation['error'])) {
+            return ['error' => $invitation['error']];
+        }
 
         $isScheduleComplete = $tanggal !== ''
             && $jamMulai !== ''
@@ -435,7 +473,36 @@ class JadwalBanmusController extends BaseController
             ],
             'unit_ids'             => $unitIds,
             'is_schedule_complete' => $isScheduleComplete,
+            'invitation_upload'    => $invitation['file'],
+            'remove_invitation'    => $this->request->getPost('hapus_undangan') === '1',
         ];
+    }
+
+    /** @return array{payload?: array<string, mixed>, new_file?: ?string, error?: string} */
+    private function storeInvitationUpload(array $input): array
+    {
+        if (($input['remove_invitation'] ?? false) === true && ($input['invitation_upload'] ?? null) === null) {
+            return ['payload' => ['undangan_file' => null, 'undangan_nama_asli' => null], 'new_file' => null];
+        }
+        if (($input['invitation_upload'] ?? null) === null) {
+            return ['payload' => [], 'new_file' => null];
+        }
+
+        try {
+            $stored = (new ScheduleInvitationStorage())->store($input['invitation_upload']);
+
+            return [
+                'payload' => [
+                    'undangan_file' => $stored['file'],
+                    'undangan_nama_asli' => $stored['original_name'],
+                ],
+                'new_file' => $stored['file'],
+            ];
+        } catch (Throwable $exception) {
+            log_message('error', 'Gagal menyimpan undangan Banmus: {message}', ['message' => $exception->getMessage()]);
+
+            return ['error' => 'PDF undangan gagal disimpan. Silakan coba kembali.'];
+        }
     }
 
     /**

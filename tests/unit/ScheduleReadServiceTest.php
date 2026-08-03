@@ -195,6 +195,18 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
         $this->assertArrayNotHasKey('materi_url', $result['data'][0]);
     }
 
+    public function testInvitationCapabilityIsOnlyExposedToAuthenticatedMembers(): void
+    {
+        $this->repository->schedules = [$this->schedule()];
+        $public = $this->service()->publicAgenda(['date' => '2026-07-27']);
+        $member = $this->service()->memberAgenda(9, ['date' => '2026-07-27', 'scope' => 'saya']);
+
+        $this->assertFalse($public['data'][0]['has_undangan']);
+        $this->assertTrue($member['data'][0]['has_undangan']);
+        $this->assertArrayNotHasKey('undangan_file', $member['data'][0]);
+        $this->assertArrayNotHasKey('undangan_nama_asli', $member['data'][0]);
+    }
+
     public function testSignageContractRemainsBackwardCompatible(): void
     {
         $this->repository->schedules = [$this->schedule()];
@@ -250,6 +262,8 @@ final class ScheduleReadServiceTest extends CIUnitTestCase
             'materi_akses'    => 'publik',
             'stream_url'      => '',
             'stream_akses'    => 'anggota',
+            'undangan_file'   => '0123456789012345678901234567890123456789.pdf',
+            'undangan_nama_asli' => 'Undangan Rapat.pdf',
             'jenis'           => 'Rapat Kerja',
             'is_publik'       => 1,
             'lokasi_lainnya' => '',

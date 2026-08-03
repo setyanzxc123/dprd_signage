@@ -22,6 +22,12 @@ class JadwalUmumModel extends Model
         'pihak_eksternal',
         'is_publik',
         'keterangan',
+        'materi_url',
+        'materi_akses',
+        'stream_url',
+        'stream_akses',
+        'undangan_file',
+        'undangan_nama_asli',
     ];
 
     public static function resolveLifecycleStatus(

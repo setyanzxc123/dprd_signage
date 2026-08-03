@@ -19,6 +19,7 @@ class CurrentSystemDataSeeder extends Seeder
 {
     private const SEED_MARKER = '[CurrentSystemDataSeeder]';
     private const DUMMY_PREFIX = '(Dummy) ';
+    private const SAMPLE_MEMBER_PHONE = '85156049890';
 
     private const REAL_SK_ONE_NUMBER = '160/1/2026';
     private const REAL_SK_NINE_NUMBER = '160/9/2026';
@@ -118,10 +119,16 @@ class CurrentSystemDataSeeder extends Seeder
 
         $requiredFields = [
             'dokumen_banmus' => ['nomor_sk', 'tahun', 'semester', 'dokumen_file', 'is_publik'],
-            'jadwal_banmus'  => ['dokumen_banmus_id', 'agenda', 'jenis_agenda', 'publikasi', 'status'],
+            'jadwal_banmus'  => [
+                'dokumen_banmus_id', 'agenda', 'jenis_agenda', 'publikasi', 'status',
+                'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
+                'undangan_file', 'undangan_nama_asli',
+            ],
             'jadwal_umum'    => [
                 'judul', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'ruangan_id',
                 'lokasi_lainnya', 'pihak_eksternal', 'is_publik',
+                'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
+                'undangan_file', 'undangan_nama_asli',
             ],
         ];
 
@@ -263,6 +270,10 @@ class CurrentSystemDataSeeder extends Seeder
             }
         }
 
+        foreach ($this->sampleMemberUnitNames() as $unitName) {
+            $assignments[$unitName][] = self::SAMPLE_MEMBER_PHONE;
+        }
+
         foreach ($assignments as $unitName => $assignedPhones) {
             $unitId = (int) ($unitIdsByName[$unitName] ?? 0);
             if ($unitId < 1) {
@@ -334,12 +345,54 @@ class CurrentSystemDataSeeder extends Seeder
             ];
         }
 
+        $rows[] = [
+            'name'    => self::DUMMY_PREFIX . 'Anggota Uji Agenda',
+            'jabatan' => 'Anggota DPRD (Akun Uji)',
+            'fraksi'  => 'Golongan Karya',
+            'komisi'  => 'Komisi I',
+            'no_wa'   => self::SAMPLE_MEMBER_PHONE,
+            'aktif'   => 1,
+            'foto'    => null,
+        ];
+
         return $rows;
+    }
+
+    /**
+     * Kelompok lintas agenda untuk menguji Jadwal Saya, bahan rapat, dan
+     * streaming tanpa menjadikan akun uji anggota semua komisi sekaligus.
+     *
+     * @return list<string>
+     */
+    private function sampleMemberUnitNames(): array
+    {
+        return [
+            'Seluruh Anggota',
+            'Komisi I',
+            'Badan Musyawarah',
+            'Badan Anggaran',
+            'Bapemperda',
+            'Gabungan Komisi',
+            'Pimpinan DPRD',
+            'Ketua Fraksi',
+            'Pansus Ranperda Pajak Daerah',
+            'Pansus Tata Tertib DPRD',
+            'Tim Pembahas RAPBD',
+            'Tim Kunjungan Kerja',
+        ];
     }
 
     private function seedBanmusDocuments(): void
     {
+        $currentMonthDocument = $this->dummyCurrentMonthBanmusDocument(new DateTimeImmutable());
+        [$invitationFile, $invitationName] = $this->storeDummyInvitationPdf();
+        foreach ($currentMonthDocument['items'] as &$item) {
+            $item['undangan_file'] = $invitationFile;
+            $item['undangan_nama_asli'] = $invitationName;
+        }
+        unset($item);
         $documents = [
+            $currentMonthDocument,
             [
                 'document' => [
                     'judul' => 'Penetapan Jadwal Kegiatan Masa Persidangan Kedua Tahun Kedua DPRD Provinsi Sulawesi Tengah Masa Jabatan 2024-2029',
@@ -421,6 +474,138 @@ class CurrentSystemDataSeeder extends Seeder
         foreach ($documents as $document) {
             $this->upsertBanmusDocument($document['document'], $document['items']);
         }
+    }
+
+    /**
+     * @return array{document: array<string, mixed>, items: list<array<string, mixed>>}
+     */
+    private function dummyCurrentMonthBanmusDocument(DateTimeImmutable $now): array
+    {
+        $monthKey = $now->format('Y-m');
+
+        return [
+            'document' => [
+                'judul' => self::DUMMY_PREFIX . 'SK Jadwal Rapat Banmus Uji Bulan Berjalan',
+                'nomor_sk' => 'DUMMY/UJI-AGENDA/' . $monthKey,
+                'tanggal_sk' => $now->format('Y-m-d'),
+                'tahun' => (int) $now->format('Y'),
+                'semester' => (int) $now->format('n') <= 6 ? 1 : 2,
+                'masa_persidangan' => self::DUMMY_PREFIX . 'Masa Uji Agenda Bulan Berjalan',
+                'periode_mulai' => $now->modify('first day of this month')->format('Y-m-d'),
+                'periode_selesai' => $now->modify('last day of this month')->format('Y-m-d'),
+                'status' => 'disahkan',
+                'is_publik' => 1,
+                'dokumen_file' => null,
+                'dokumen_nama_asli' => null,
+                'dokumen_url' => null,
+                'catatan' => self::DUMMY_PREFIX . 'SK simulasi Jadwal Saya, bahan rapat, dan streaming pada bulan berjalan.',
+            ],
+            'items' => $this->dummyCurrentMonthBanmusItems($now),
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function dummyCurrentMonthBanmusItems(DateTimeImmutable $now): array
+    {
+        $date = $now->format('Y-m-d');
+        $tomorrow = $now->modify('+1 day')->format('Y-m-d');
+
+        return [
+            $this->dummyBanmusItem(
+                $date,
+                'Rapat Badan Musyawarah Evaluasi Agenda Pagi',
+                'rapat',
+                $date,
+                '08:00:00',
+                '09:30:00',
+                'Ruang Badan Musyawarah',
+                null,
+                ['Badan Musyawarah'],
+                'internal',
+                'https://example.com/dummy/materi/banmus-evaluasi-pagi',
+                'peserta',
+            ),
+            $this->dummyBanmusItem(
+                $date,
+                'Rapat Pimpinan dan Banmus Sinkronisasi Jadwal',
+                'rapat',
+                $date,
+                '10:00:00',
+                '12:00:00',
+                'Ruang Rapat Utama',
+                null,
+                ['Badan Musyawarah', 'Pimpinan DPRD'],
+                'internal',
+                'https://example.com/dummy/materi/sinkronisasi-jadwal',
+                'peserta',
+                'https://example.com/dummy/live/sinkronisasi-jadwal',
+                'anggota',
+            ),
+            $this->dummyBanmusItem(
+                $date,
+                'Rapat Paripurna Tindak Lanjut Keputusan Banmus',
+                'rapat',
+                $date,
+                '13:30:00',
+                '15:00:00',
+                'Ruang Rapat Paripurna',
+                null,
+                ['Seluruh Anggota'],
+                'publik',
+                'https://example.com/dummy/materi/tindak-lanjut-banmus',
+                'publik',
+                'https://example.com/dummy/live/tindak-lanjut-banmus',
+                'publik',
+            ),
+            $this->dummyBanmusItem(
+                $date,
+                'Rapat Banmus dan Badan Anggaran Penyesuaian Agenda',
+                'rapat',
+                $date,
+                '15:30:00',
+                '17:00:00',
+                'Ruang Badan Anggaran',
+                null,
+                ['Badan Musyawarah', 'Badan Anggaran'],
+                'internal',
+                'https://example.com/dummy/materi/penyesuaian-agenda',
+                'peserta',
+                'https://example.com/dummy/live/penyesuaian-agenda',
+                'anggota',
+            ),
+            $this->dummyBanmusItem(
+                $date,
+                'Rapat Gabungan Komisi Persiapan Agenda Banmus',
+                'rapat',
+                $date,
+                '17:30:00',
+                '19:00:00',
+                'Ruang Rapat Utama',
+                null,
+                ['Gabungan Komisi', 'Badan Musyawarah'],
+                'publik',
+                'https://example.com/dummy/materi/persiapan-agenda-banmus',
+                'anggota',
+                'https://example.com/dummy/live/persiapan-agenda-banmus',
+                'anggota',
+            ),
+            $this->dummyBanmusItem(
+                $tomorrow,
+                'Rapat Banmus Finalisasi Jadwal Hari Berikutnya',
+                'rapat',
+                $tomorrow,
+                '09:00:00',
+                '11:00:00',
+                'Ruang Badan Musyawarah',
+                null,
+                ['Badan Musyawarah', 'Ketua Fraksi'],
+                'internal',
+                'https://example.com/dummy/materi/finalisasi-jadwal',
+                'peserta',
+                'https://example.com/dummy/live/finalisasi-jadwal',
+                'anggota',
+            ),
+        ];
     }
 
     /**
@@ -658,7 +843,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Pimpinan DPRD', 'Ketua Fraksi'],
                 'internal',
-                'https://example.test/dummy/materi/rapat-pimpinan-februari',
+                'https://example.com/dummy/materi/rapat-pimpinan-februari',
                 'anggota',
             ),
             $this->dummyBanmusItem(
@@ -672,7 +857,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Komisi I'],
                 'publik',
-                'https://example.test/dummy/materi/rdp-komisi-i',
+                'https://example.com/dummy/materi/rdp-komisi-i',
                 'publik',
             ),
             $this->dummyBanmusItem(
@@ -698,9 +883,9 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Gabungan Komisi'],
                 'publik',
-                'https://example.test/dummy/materi/aspirasi-masyarakat',
+                'https://example.com/dummy/materi/aspirasi-masyarakat',
                 'publik',
-                'https://example.test/dummy/live/aspirasi-masyarakat',
+                'https://example.com/dummy/live/aspirasi-masyarakat',
                 'publik',
             ),
             $this->dummyBanmusItem(
@@ -731,9 +916,9 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Seluruh Anggota'],
                 'publik',
-                'https://example.test/dummy/materi/laporan-reses',
+                'https://example.com/dummy/materi/laporan-reses',
                 'publik',
-                'https://example.test/dummy/live/paripurna-reses',
+                'https://example.com/dummy/live/paripurna-reses',
                 'publik',
             ),
             $this->dummyBanmusItem(
@@ -747,7 +932,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Badan Anggaran'],
                 'internal',
-                'https://example.test/dummy/materi/evaluasi-apbd',
+                'https://example.com/dummy/materi/evaluasi-apbd',
                 'peserta',
             ),
             $this->dummyBanmusItem(
@@ -761,7 +946,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Pansus Ranperda Pajak Daerah'],
                 'internal',
-                'https://example.test/dummy/materi/ranperda-pajak',
+                'https://example.com/dummy/materi/ranperda-pajak',
                 'peserta',
             ),
             $this->dummyBanmusItem(
@@ -787,7 +972,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Bapemperda'],
                 'publik',
-                'https://example.test/dummy/materi/harmonisasi-propemperda',
+                'https://example.com/dummy/materi/harmonisasi-propemperda',
                 'anggota',
             ),
             $this->dummyBanmusItem(
@@ -806,9 +991,9 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Badan Musyawarah'],
                 'publik',
-                'https://example.test/dummy/materi/evaluasi-banmus',
+                'https://example.com/dummy/materi/evaluasi-banmus',
                 'publik',
-                'https://example.test/dummy/live/evaluasi-banmus',
+                'https://example.com/dummy/live/evaluasi-banmus',
                 'anggota',
             ),
             $this->dummyBanmusItem(
@@ -837,9 +1022,9 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Seluruh Anggota'],
                 'publik',
-                'https://example.test/dummy/materi/paripurna-penutupan',
+                'https://example.com/dummy/materi/paripurna-penutupan',
                 'publik',
-                'https://example.test/dummy/live/paripurna-penutupan',
+                'https://example.com/dummy/live/paripurna-penutupan',
                 'publik',
             ),
         ];
@@ -882,7 +1067,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Badan Anggaran', 'Tim Pembahas RAPBD'],
                 'internal',
-                'https://example.test/dummy/materi/kua-ppas-2028',
+                'https://example.com/dummy/materi/kua-ppas-2028',
                 'peserta',
             ),
             $this->dummyBanmusItem(
@@ -932,7 +1117,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Komisi IV'],
                 'publik',
-                'https://example.test/dummy/materi/kesehatan-rujukan',
+                'https://example.com/dummy/materi/kesehatan-rujukan',
                 'publik',
             ),
             $this->dummyBanmusItem(
@@ -946,9 +1131,9 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Seluruh Anggota'],
                 'publik',
-                'https://example.test/dummy/materi/paripurna-kua-ppas',
+                'https://example.com/dummy/materi/paripurna-kua-ppas',
                 'publik',
-                'https://example.test/dummy/live/paripurna-kua-ppas',
+                'https://example.com/dummy/live/paripurna-kua-ppas',
                 'publik',
             ),
             $this->dummyBanmusItem(
@@ -962,7 +1147,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Gabungan Komisi', 'Badan Anggaran'],
                 'internal',
-                'https://example.test/dummy/materi/gabungan-komisi-banggar',
+                'https://example.com/dummy/materi/gabungan-komisi-banggar',
                 'peserta',
             ),
             $this->dummyBanmusItem(
@@ -988,7 +1173,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Pansus Tata Tertib DPRD'],
                 'internal',
-                'https://example.test/dummy/materi/tata-tertib',
+                'https://example.com/dummy/materi/tata-tertib',
                 'anggota',
             ),
             $this->dummyBanmusItem(
@@ -1004,7 +1189,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'publik',
                 null,
                 'publik',
-                'https://example.test/dummy/live/penyesuaian-banmus',
+                'https://example.com/dummy/live/penyesuaian-banmus',
                 'anggota',
             ),
             $this->dummyBanmusItem(
@@ -1030,9 +1215,9 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Seluruh Anggota'],
                 'publik',
-                'https://example.test/dummy/materi/persetujuan-kua-ppas',
+                'https://example.com/dummy/materi/persetujuan-kua-ppas',
                 'publik',
-                'https://example.test/dummy/live/persetujuan-kua-ppas',
+                'https://example.com/dummy/live/persetujuan-kua-ppas',
                 'publik',
             ),
             $this->dummyBanmusItem(
@@ -1068,9 +1253,9 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Seluruh Anggota'],
                 'publik',
-                'https://example.test/dummy/materi/penutupan-masa-persidangan',
+                'https://example.com/dummy/materi/penutupan-masa-persidangan',
                 'publik',
-                'https://example.test/dummy/live/penutupan-masa-persidangan',
+                'https://example.com/dummy/live/penutupan-masa-persidangan',
                 'publik',
             ),
         ];
@@ -1139,6 +1324,7 @@ class CurrentSystemDataSeeder extends Seeder
         $roomIdsByName = $this->idsBy('ruangan', 'name');
         $unitIdsByName = $this->idsBy('unit_rapat', 'nama');
         $now = new DateTimeImmutable();
+        [$invitationFile, $invitationName] = $this->storeDummyInvitationPdf();
         $schedules = [
             $this->generalSchedule(
                 'Rapat Koordinasi Sekretariat yang Telah Selesai',
@@ -1166,7 +1352,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Pimpinan DPRD'],
                 'publik',
-                'https://example.test/dummy/materi/persiapan-pimpinan',
+                'https://example.com/dummy/materi/persiapan-pimpinan',
                 'anggota',
             ),
             $this->generalSchedule(
@@ -1179,7 +1365,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'publik',
                 null,
                 'publik',
-                'https://example.test/dummy/live/rapat-insidental',
+                'https://example.com/dummy/live/rapat-insidental',
                 'publik',
             ),
             $this->generalSchedule(
@@ -1208,7 +1394,7 @@ class CurrentSystemDataSeeder extends Seeder
                 null,
                 ['Pimpinan DPRD'],
                 'internal',
-                'https://example.test/dummy/materi/bahan-paripurna',
+                'https://example.com/dummy/materi/bahan-paripurna',
                 'peserta',
             ),
             $this->generalSchedule(
@@ -1230,7 +1416,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'publik',
                 null,
                 'publik',
-                'https://example.test/dummy/live/evaluasi-sistem',
+                'https://example.com/dummy/live/evaluasi-sistem',
                 'anggota',
             ),
             $this->generalSchedule(
@@ -1243,6 +1429,12 @@ class CurrentSystemDataSeeder extends Seeder
                 'internal',
             ),
         ];
+
+        foreach ($schedules as &$schedule) {
+            $schedule['undangan_file'] = $invitationFile;
+            $schedule['undangan_nama_asli'] = $invitationName;
+        }
+        unset($schedule);
 
         foreach ($schedules as $schedule) {
             $unitNames = $schedule['units'];
@@ -1299,9 +1491,53 @@ class CurrentSystemDataSeeder extends Seeder
             'pihak_eksternal' => null,
             'units' => $units,
             'is_publik' => $publication === 'publik' ? 1 : 0,
+            'materi_url' => $materialUrl,
+            'materi_akses' => $materialAccess,
+            'stream_url' => $streamUrl,
+            'stream_akses' => $streamAccess,
+            'undangan_file' => null,
+            'undangan_nama_asli' => null,
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ];
+    }
+
+    /** @return array{0: string, 1: string} */
+    private function storeDummyInvitationPdf(): array
+    {
+        $directory = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'agenda-invitations';
+        if (! is_dir($directory) && ! mkdir($directory, 0750, true) && ! is_dir($directory)) {
+            throw new RuntimeException('Direktori undangan dummy tidak dapat dibuat.');
+        }
+
+        $stream = 'BT /F1 16 Tf 72 720 Td (UNDANGAN RAPAT CONTOH) Tj 0 -30 Td (Khusus pengujian portal anggota DPRD.) Tj ET';
+        $objects = [
+            '<< /Type /Catalog /Pages 2 0 R >>',
+            '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+            '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',
+            "<< /Length " . strlen($stream) . ">>\nstream\n{$stream}\nendstream",
+            '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        ];
+        $pdf = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
+        $offsets = [0];
+        foreach ($objects as $number => $object) {
+            $offsets[] = strlen($pdf);
+            $pdf .= ($number + 1) . " 0 obj\n{$object}\nendobj\n";
+        }
+        $xrefOffset = strlen($pdf);
+        $pdf .= "xref\n0 " . (count($objects) + 1) . "\n0000000000 65535 f \n";
+        for ($index = 1; $index <= count($objects); $index++) {
+            $pdf .= sprintf("%010d 00000 n \n", $offsets[$index]);
+        }
+        $pdf .= "trailer\n<< /Size " . (count($objects) + 1) . " /Root 1 0 R >>\nstartxref\n{$xrefOffset}\n%%EOF\n";
+
+        $fileName = sha1($pdf) . '.pdf';
+        $path = $directory . DIRECTORY_SEPARATOR . $fileName;
+        if (! is_file($path) && file_put_contents($path, $pdf) === false) {
+            throw new RuntimeException('PDF undangan dummy tidak dapat disimpan.');
+        }
+
+        return [$fileName, 'Undangan Rapat Contoh Anggota.pdf'];
     }
 
     private function seedExternalGeneralSchedules(): void

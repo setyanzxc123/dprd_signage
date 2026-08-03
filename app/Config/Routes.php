@@ -23,6 +23,8 @@ $routes->get('jadwal', 'AgendaController::legacy');
 // Redirect QR Code signage — mengarahkan ke URL asli dari jadwal publik tertentu
 $routes->get('go/jadwal-banmus/(:num)/live',   'RedirectController::liveBanmus/$1');
 $routes->get('go/jadwal-banmus/(:num)/berkas', 'RedirectController::berkasBanmus/$1');
+$routes->get('go/jadwal-umum/(:num)/live',      'RedirectController::liveGeneral/$1');
+$routes->get('go/jadwal-umum/(:num)/berkas',    'RedirectController::berkasGeneral/$1');
 
 // Login satu pintu
 $routes->get( 'login',         'LoginController::index');
@@ -47,6 +49,10 @@ $routes->group('anggota', ['filter' => 'memberauth'], function ($routes) {
     $routes->get('', 'Member\PortalController::index');
     $routes->get('jadwal-banmus/(:num)/live',   'Member\ScheduleLinkController::liveBanmus/$1');
     $routes->get('jadwal-banmus/(:num)/berkas', 'Member\ScheduleLinkController::berkasBanmus/$1');
+    $routes->get('jadwal-banmus/(:num)/undangan', 'Member\ScheduleInvitationController::banmus/$1');
+    $routes->get('jadwal-umum/(:num)/live',       'Member\ScheduleLinkController::liveGeneral/$1');
+    $routes->get('jadwal-umum/(:num)/berkas',     'Member\ScheduleLinkController::berkasGeneral/$1');
+    $routes->get('jadwal-umum/(:num)/undangan',   'Member\ScheduleInvitationController::general/$1');
 });
 
 // Admin — semua route dilindungi filter auth

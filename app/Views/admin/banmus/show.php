@@ -370,7 +370,7 @@ $scheduledCount = count($items) - $projectionCount;
             </form>
         </div>
 
-        <form id="item_form" action="" method="post" class="flex min-h-0 flex-1 flex-col" data-turbo="false">
+        <form id="item_form" action="" method="post" enctype="multipart/form-data" class="flex min-h-0 flex-1 flex-col" data-turbo="false">
             <?= csrf_field() ?>
 
             <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
@@ -537,6 +537,20 @@ $scheduledCount = count($items) - $projectionCount;
                                     <option value="peserta">Peserta rapat</option>
                                     <option value="publik" selected>Publik</option>
                                 </select>
+                            </fieldset>
+                            <fieldset class="fieldset sm:col-span-2">
+                                <legend class="fieldset-legend">Undangan rapat</legend>
+                                <input class="file-input file-input-sm w-full" id="field_undangan_file" name="undangan_file" type="file"
+                                    accept="application/pdf,.pdf" />
+                                <p class="label text-xs">PDF maksimal 10 MB. Hanya dapat dibuka oleh anggota yang sudah login.</p>
+                                <div class="alert alert-soft hidden" id="field_undangan_existing">
+                                    <i data-lucide="file-check-2" class="h-4 w-4"></i>
+                                    <span class="min-w-0 flex-1 truncate" id="field_undangan_name"></span>
+                                    <label class="label cursor-pointer gap-2" for="field_hapus_undangan">
+                                        <input class="checkbox checkbox-sm" id="field_hapus_undangan" name="hapus_undangan" type="checkbox" value="1" />
+                                        Hapus
+                                    </label>
+                                </div>
                             </fieldset>
                         </div>
                     </div>

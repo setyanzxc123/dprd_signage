@@ -877,6 +877,8 @@
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
         const agendaTypeFields = [...dialog.querySelectorAll('input[name="jenis_agenda"]')];
+        const invitationExisting = dialog.querySelector('#field_undangan_existing');
+        const invitationName = dialog.querySelector('#field_undangan_name');
 
         if (!(form instanceof HTMLFormElement)
             || !(dateField instanceof HTMLInputElement)
@@ -897,6 +899,7 @@
 
         const openCreateDialog = () => {
             form.reset();
+            invitationExisting?.classList.add('hidden');
             form.action = dialog.dataset.storeUrl || '';
             if (title) title.textContent = 'Tambah Item Agenda Banmus';
             showDialog();
@@ -937,6 +940,8 @@
             field('field_materi_akses').value = item.materi_akses || 'publik';
             field('field_stream_url').value = item.stream_url || '';
             field('field_stream_akses').value = item.stream_akses || 'publik';
+            if (invitationName) invitationName.textContent = item.undangan_nama_asli || 'undangan-rapat.pdf';
+            invitationExisting?.classList.toggle('hidden', !item.undangan_file);
 
             if (item.ruangan_id) {
                 roomField.value = String(item.ruangan_id);

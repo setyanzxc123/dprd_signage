@@ -26,6 +26,24 @@ class ScheduleLinkController extends BaseController
         );
     }
 
+    public function liveGeneral(int $id): RedirectResponse
+    {
+        return $this->redirectToResource(
+            ScheduleResourceLinkService::SOURCE_GENERAL,
+            $id,
+            'stream',
+        );
+    }
+
+    public function berkasGeneral(int $id): RedirectResponse
+    {
+        return $this->redirectToResource(
+            ScheduleResourceLinkService::SOURCE_GENERAL,
+            $id,
+            'materi',
+        );
+    }
+
     private function redirectToResource(
         string $source,
         int $id,

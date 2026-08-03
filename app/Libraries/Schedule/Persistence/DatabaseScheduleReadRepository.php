@@ -162,7 +162,8 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
                 "ju.id, ju.id AS source_id, 'jadwal_umum' AS source, NULL AS lingkup, "
                 . 'NULL AS dokumen_banmus_id, ju.judul, ju.keterangan, ju.tanggal, '
                 . "ju.waktu_mulai, ju.waktu_selesai, 'menunggu' AS status, "
-                . 'NULL AS materi_url, NULL AS materi_akses, NULL AS stream_url, NULL AS stream_akses, '
+                . 'ju.materi_url, ju.materi_akses, ju.stream_url, ju.stream_akses, '
+                . 'ju.undangan_file, ju.undangan_nama_asli, '
                 . "'jadwal_umum' AS jenis, ju.is_publik, ju.lokasi_lainnya, "
                 . 'r.name AS nama_ruangan, ju.pihak_eksternal',
                 false,
@@ -199,6 +200,7 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
                 . 'jb.dokumen_banmus_id, jb.agenda AS judul, jb.catatan AS keterangan, '
                 . 'jb.tanggal, jb.jam_mulai AS waktu_mulai, jb.jam_selesai AS waktu_selesai, jb.status, '
                 . 'jb.materi_url, jb.materi_akses, jb.stream_url, jb.stream_akses, '
+                . 'jb.undangan_file, jb.undangan_nama_asli, '
                 . "'rapat' AS jenis, CASE WHEN jb.publikasi = 'publik' AND db.is_publik = 1 THEN 1 ELSE 0 END AS is_publik, "
                 . 'jb.lokasi_lainnya, r.name AS nama_ruangan, NULL AS pihak_eksternal',
                 false,

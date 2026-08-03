@@ -128,6 +128,10 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('Jumlah jadwal umum per halaman', $body);
         $this->assertStringContainsString('collapse collapse-arrow', $body);
         $this->assertStringContainsString('handleAgendaToggle($event, item.key)', $body);
+        $this->assertSame(2, substr_count($body, ':href="item.materi_url"'));
+        $this->assertSame(2, substr_count($body, ':href="item.stream_url"'));
+        $viewSource = (string) file_get_contents(APPPATH . 'Views/agenda/index.php');
+        $this->assertSame(2, substr_count($viewSource, ':href="item.undangan_url"'));
         $this->assertStringContainsString('projectionOverlapsMonths(item, selectedMonths)', $body);
         $this->assertStringContainsString('range[0] <= months[months.length - 1]', $body);
         $this->assertStringNotContainsString('month === null || selectedMonths.has(month)', $body);

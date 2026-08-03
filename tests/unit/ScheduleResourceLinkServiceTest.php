@@ -143,6 +143,8 @@ final class ScheduleResourceLinkServiceTest extends CIUnitTestCase
             'materi_akses'       => ['type' => 'VARCHAR', 'constraint' => 20],
             'stream_url'         => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'stream_akses'       => ['type' => 'VARCHAR', 'constraint' => 20],
+            'undangan_file'      => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'undangan_nama_asli' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'deleted_at'         => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->resourceForge->addPrimaryKey('id');

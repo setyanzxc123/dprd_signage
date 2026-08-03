@@ -34,6 +34,32 @@ class RedirectController extends BaseController
             : $this->noActive('Berkas Rapat', 'Berkas untuk rapat ini belum tersedia.');
     }
 
+    public function liveGeneral(int $id): RedirectResponse|string
+    {
+        $url = (new ScheduleResourceLinkService())->publicUrl(
+            ScheduleResourceLinkService::SOURCE_GENERAL,
+            $id,
+            'stream',
+        );
+
+        return $url
+            ? redirect()->to($url)
+            : $this->noActive('Siaran Langsung', 'Siaran langsung untuk agenda ini belum tersedia.');
+    }
+
+    public function berkasGeneral(int $id): RedirectResponse|string
+    {
+        $url = (new ScheduleResourceLinkService())->publicUrl(
+            ScheduleResourceLinkService::SOURCE_GENERAL,
+            $id,
+            'materi',
+        );
+
+        return $url
+            ? redirect()->to($url)
+            : $this->noActive('Berkas Agenda', 'Berkas untuk agenda ini belum tersedia.');
+    }
+
     private function noActive(string $judul, string $pesan): string
     {
         return <<<HTML

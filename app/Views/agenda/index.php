@@ -330,6 +330,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                         Lihat Proyeksi &amp; SK
                                     </a>
                                     <template v-else>
+                                        <?php if ($isMember): ?>
+                                            <a v-if="item.has_undangan" class="btn btn-outline btn-sm" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
+                                                Undangan
+                                            </a>
+                                        <?php endif; ?>
                                         <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
                                             Bahan Rapat
                                             <span v-if="item.materi_access_label" class="badge badge-ghost badge-xs">{{ item.materi_access_label }}</span>
@@ -342,7 +347,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                             <span v-if="item.materi_restricted" class="badge badge-warning badge-soft badge-sm">Bahan khusus peserta</span>
                                             <span v-if="item.stream_restricted" class="badge badge-warning badge-soft badge-sm">Live/video khusus peserta</span>
                                         <?php endif; ?>
-                                        <span v-if="!item.has_materi && !item.has_stream && !item.materi_restricted && !item.stream_restricted" class="text-xs font-semibold text-base-content/45">Belum ada bahan atau tautan video.</span>
+                                        <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.materi_restricted && !item.stream_restricted" class="text-xs font-semibold text-base-content/45">Belum ada undangan, bahan, atau tautan video.</span>
                                     </template>
                                 </div>
                             </div>
@@ -462,6 +467,27 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                         <dd class="mt-1 text-sm font-bold">{{ item.pihak_eksternal }}</dd>
                                     </div>
                                 </dl>
+
+                                <div class="mt-4 flex flex-wrap items-center gap-2">
+                                    <?php if ($isMember): ?>
+                                        <a v-if="item.has_undangan" class="btn btn-outline btn-sm" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
+                                            Undangan
+                                        </a>
+                                    <?php endif; ?>
+                                    <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
+                                        Bahan Rapat
+                                        <span v-if="item.materi_access_label" class="badge badge-ghost badge-xs">{{ item.materi_access_label }}</span>
+                                    </a>
+                                    <a v-if="item.has_stream" class="btn btn-outline btn-sm" :href="item.stream_url" target="_blank" rel="noopener noreferrer">
+                                        Live / Video
+                                        <span v-if="item.stream_access_label" class="badge badge-ghost badge-xs">{{ item.stream_access_label }}</span>
+                                    </a>
+                                    <?php if ($isMember): ?>
+                                        <span v-if="item.materi_restricted" class="badge badge-warning badge-soft badge-sm">Bahan khusus peserta</span>
+                                        <span v-if="item.stream_restricted" class="badge badge-warning badge-soft badge-sm">Live/video khusus peserta</span>
+                                    <?php endif; ?>
+                                    <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.materi_restricted && !item.stream_restricted" class="text-xs font-semibold text-base-content/45">Belum ada undangan, bahan, atau tautan video.</span>
+                                </div>
                             </div>
                         </details>
                     </div>
