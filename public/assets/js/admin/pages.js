@@ -731,17 +731,36 @@
                 el.className = 'flex items-center gap-2 px-3 py-1 border-b transfer-target-item min-h-[42px]';
                 el.id = 'target-' + id;
                 el.setAttribute('data-id', id);
-                el.innerHTML =
-                    '<span class="inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content w-7 h-7 text-xs font-bold">' + initial + '</span>' +
-                    '<div class="flex-1 min-w-0">' +
-                        '<div class="text-xs font-semibold truncate">' + name + '</div>' +
-                        '<div class="text-[11px] text-base-content/60 truncate">' + detail + '</div>' +
-                    '</div>' +
-                    '<button type="button" class="btn btn-sm btn-ghost btn-circle text-error w-6 h-6 min-h-6 leading-none" title="Hapus dari unit">' +
-                        '<i data-lucide="x" class="w-3.5 h-3.5"></i>' +
-                    '</button>';
 
-                el.querySelector('button').addEventListener('click', function() {
+                const avatar = document.createElement('span');
+                avatar.className = 'inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content w-7 h-7 text-xs font-bold';
+                avatar.textContent = initial;
+
+                const memberContent = document.createElement('div');
+                memberContent.className = 'flex-1 min-w-0';
+
+                const memberName = document.createElement('div');
+                memberName.className = 'text-xs font-semibold truncate';
+                memberName.textContent = name;
+
+                const memberDetail = document.createElement('div');
+                memberDetail.className = 'text-[11px] text-base-content/60 truncate';
+                memberDetail.textContent = detail;
+
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'btn btn-sm btn-ghost btn-circle text-error w-6 h-6 min-h-6 leading-none';
+                removeButton.title = 'Hapus dari unit';
+
+                const removeIcon = document.createElement('i');
+                removeIcon.setAttribute('data-lucide', 'x');
+                removeIcon.className = 'w-3.5 h-3.5';
+
+                memberContent.append(memberName, memberDetail);
+                removeButton.appendChild(removeIcon);
+                el.append(avatar, memberContent, removeButton);
+
+                removeButton.addEventListener('click', function() {
                     window.removeMember?.(parseInt(id, 10));
                 });
 
