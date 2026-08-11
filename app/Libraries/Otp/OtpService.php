@@ -2,18 +2,14 @@
 
 namespace App\Libraries\Otp;
 
-use App\Libraries\Otp\Persistence\DatabaseOtpRepository;
 use App\Libraries\Otp\Contracts\OtpRepositoryInterface;
+use App\Libraries\Otp\Persistence\DatabaseOtpRepository;
 use App\Libraries\Otp\Providers\FazpassProvider;
 use App\Libraries\Otp\ValueObjects\EmergencyOtpResult;
 use App\Libraries\Otp\ValueObjects\OtpRequestResult;
 use App\Libraries\Otp\ValueObjects\OtpVerificationResult;
 use Config\Otp;
 
-/**
- * Application OTP facade. The member login lifecycle is owned by Fazpass;
- * emergency codes remain local and are created only by an authenticated admin.
- */
 final class OtpService
 {
     private readonly OtpRepositoryInterface $repository;
@@ -35,56 +31,98 @@ final class OtpService
     /** @var \Closure(): int */
     private \Closure $clock;
 
-    public function request(int $accountId, string $phone, string $ipAddress): OtpRequestResult
+    public function request(int $anggotaId, string $phone): OtpRequestResult
     {
-        return $this->fazpass->request($accountId, $phone, $ipAddress);
+        return $this->fazpass->request($anggotaId, $phone);
     }
 
-    public function verify(int $accountId, string $code, string $ipAddress, ?string $phone = null): OtpVerificationResult
+    public function verify(int $anggotaId, string $code): OtpVerificationResult
     {
-        if ($phone === null) {
-            return new OtpVerificationResult(false, 'invalid');
+        $now = $this->date(($this->clock)());
+        $otp = $this->repository->findActive($anggotaId, $now);
+        if (($otp['provider'] ?? null) === 'emergency') {
+            return $this->verifyEmergency($anggotaId, $code);
         }
 
-        return $this->fazpass->verify($accountId, $code, $ipAddress, $phone);
+        return $this->fazpass->verify($anggotaId, $code);
     }
 
-    public function createEmergency(int $accountId, int $adminId, string $reason): EmergencyOtpResult
+    public function createEmergency(int $anggotaId, int $adminId): EmergencyOtpResult
     {
-        $reason = trim($reason);
-        if ($accountId < 1 || $adminId < 1 || mb_strlen($reason) < 5) {
-            throw new \InvalidArgumentException('Akun, admin, dan alasan OTP darurat wajib valid.');
+        if ($anggotaId < 1 || $adminId < 1) {
+            throw new \InvalidArgumentException('Akun dan admin pembuat OTP darurat wajib valid.');
         }
 
-        return $this->repository->transaction(function () use ($accountId, $adminId, $reason): EmergencyOtpResult {
-            $this->repository->lockAccount($accountId);
+        return $this->repository->transaction(function () use ($anggotaId, $adminId): EmergencyOtpResult {
+            $this->repository->lockAccount($anggotaId);
             $nowTs = ($this->clock)();
             $now = date('Y-m-d H:i:s', $nowTs);
             $expiresAt = date('Y-m-d H:i:s', $nowTs + $this->config->ttlSeconds);
             $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            $this->repository->cancelActive($accountId, $now);
+            $this->repository->cancelActive($anggotaId, $now);
             $otpId = $this->repository->create([
-                'member_account_id'     => $accountId,
-                'code_hash'             => password_hash($code, PASSWORD_DEFAULT),
-                'phone_hash'            => hash('sha256', 'emergency-account:' . $accountId),
-                'ip_hash'               => hash('sha256', 'emergency-admin:' . $adminId),
-                'delivery_status'       => 'manual',
-                'source'                => 'emergency',
-                'created_by_admin_id'   => $adminId,
-                'emergency_reason'      => mb_substr($reason, 0, 255),
-                'verification_attempts' => 0,
-                'max_attempts'          => $this->config->maxVerificationAttempts,
-                'expires_at'            => $expiresAt,
-                'resend_available_at'   => $expiresAt,
-                'created_at'            => $now,
-                'updated_at'            => $now,
+                'anggota_id'         => $anggotaId,
+                'code_hash'          => password_hash($code, PASSWORD_DEFAULT),
+                'provider'           => 'emergency',
+                'status'             => OtpStatus::MANUAL,
+                'attempts'           => 0,
+                'expires_at'         => $expiresAt,
+                'created_by_admin_id' => $adminId,
+                'created_at'         => $now,
+                'updated_at'         => $now,
             ]);
-            $this->repository->audit($otpId, $accountId, 'emergency_created', [
-                'ip_hash' => hash('sha256', 'admin:' . $adminId),
-                'reason'  => mb_substr($reason, 0, 255),
-            ], $now);
 
             return new EmergencyOtpResult($otpId, $code, $expiresAt);
         });
+    }
+
+    private function verifyEmergency(int $anggotaId, string $code): OtpVerificationResult
+    {
+        return $this->repository->transaction(function () use ($anggotaId, $code): OtpVerificationResult {
+            $this->repository->lockAccount($anggotaId);
+            $now = $this->date(($this->clock)());
+            $otp = $this->repository->findActive($anggotaId, $now);
+            if ($otp === null || ($otp['provider'] ?? null) !== 'emergency') {
+                return new OtpVerificationResult(false, 'invalid');
+            }
+
+            $attempts = (int) $otp['attempts'];
+            if ($attempts >= $this->config->maxVerificationAttempts) {
+                return new OtpVerificationResult(false, 'too_many_attempts');
+            }
+
+            $validFormat = preg_match('/^\d{' . $this->config->length . '}$/', $code) === 1;
+            $codeHash = (string) ($otp['code_hash'] ?? '');
+            if (! $validFormat || $codeHash === '' || ! password_verify($code, $codeHash)) {
+                $attempts++;
+                $changes = ['attempts' => $attempts, 'updated_at' => $now];
+                if ($attempts >= $this->config->maxVerificationAttempts) {
+                    $this->repository->transitionStatus(
+                        (int) $otp['id'],
+                        [(string) $otp['status']],
+                        OtpStatus::CANCELLED,
+                        $changes,
+                    );
+                } else {
+                    $this->repository->update((int) $otp['id'], $changes);
+                }
+
+                return new OtpVerificationResult(
+                    false,
+                    $attempts >= $this->config->maxVerificationAttempts ? 'too_many_attempts' : 'invalid',
+                );
+            }
+
+            if (! $this->repository->consume((int) $otp['id'], $now)) {
+                return new OtpVerificationResult(false, 'invalid');
+            }
+
+            return new OtpVerificationResult(true, 'verified');
+        });
+    }
+
+    private function date(int $timestamp): string
+    {
+        return date('Y-m-d H:i:s', $timestamp);
     }
 }

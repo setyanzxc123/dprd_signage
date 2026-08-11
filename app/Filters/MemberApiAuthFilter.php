@@ -2,7 +2,7 @@
 
 namespace App\Filters;
 
-use App\Models\MemberAccountModel;
+use App\Models\AnggotaModel;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -16,8 +16,7 @@ class MemberApiAuthFilter implements FilterInterface
             return $this->unauthorized();
         }
 
-        $account = (new MemberAccountModel())->findActiveSessionAccount(
-            (int) ($auth['account_id'] ?? 0),
+        $account = (new AnggotaModel())->findActiveSessionMember(
             (int) ($auth['anggota_id'] ?? 0),
         );
 
@@ -28,7 +27,6 @@ class MemberApiAuthFilter implements FilterInterface
         }
 
         session()->set('member_auth', [
-            'account_id' => (int) $account['account_id'],
             'anggota_id' => (int) $account['anggota_id'],
             'name'       => (string) $account['name'],
         ]);

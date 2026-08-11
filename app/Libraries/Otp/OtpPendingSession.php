@@ -33,7 +33,7 @@ final class OtpPendingSession
 
         if (! is_array($pending)
             || (int) ($pending['expires_at'] ?? 0) <= $now
-            || ! isset($pending['account_id'], $pending['anggota_id'], $pending['phone_hash'])) {
+            || ! isset($pending['anggota_id'], $pending['phone_hash'])) {
             $this->forget();
 
             return null;
@@ -44,7 +44,6 @@ final class OtpPendingSession
 
     /** @return array<string, mixed> */
     public function begin(
-        int $accountId,
         int $anggotaId,
         string $phoneHash,
         string $maskedPhone,
@@ -55,7 +54,6 @@ final class OtpPendingSession
         $retryAt = $now + max(0, $retryAfter);
         $otpExpiresAt = max($now, $otpExpiresAt);
         $pending = [
-            'account_id'     => $accountId,
             'anggota_id'     => $anggotaId,
             'phone_hash'     => $phoneHash,
             'masked'         => $maskedPhone,

@@ -8,7 +8,7 @@ class Otp extends BaseConfig
 {
     public string $provider = 'internal';
     public string $fazpassApiUrl = 'https://api.fazpass.com';
-    public string $fazpassApiPrefix = '/v1';
+    public string $fazpassApiPrefix = '/api/v1';
     public string $fazpassMerchantKey = '';
     public string $fazpassGatewayKey = '';
     public string $fazpassCallbackSecret = '';

@@ -72,16 +72,10 @@ class CurrentSystemDataSeeder extends Seeder
     private function resettableTables(): array
     {
         return [
-            'member_otp_audits',
             'member_otps',
-            'otp_webhook_events',
-            'notifikasi',
-            'agenda_audit_log',
-            'jadwal_banmus_dokumen',
             'jadwal_banmus_unit_rapat',
             'jadwal_umum_unit_rapat',
             'anggota_unit_rapat',
-            'member_accounts',
             'jadwal_banmus',
             'jadwal_umum',
             'dokumen_banmus',
@@ -89,27 +83,12 @@ class CurrentSystemDataSeeder extends Seeder
             'unit_rapat',
             'ruangan',
             'settings',
-            'agenda_migration_state',
         ];
     }
 
     private function assertCurrentSchema(): void
     {
-        $requiredTables = [
-            'settings',
-            'ruangan',
-            'unit_rapat',
-            'anggota',
-            'anggota_unit_rapat',
-            'member_accounts',
-            'dokumen_banmus',
-            'jadwal_banmus',
-            'jadwal_banmus_unit_rapat',
-            'jadwal_umum',
-            'jadwal_umum_unit_rapat',
-        ];
-
-        foreach ($requiredTables as $table) {
+        foreach ($this->requiredTables() as $table) {
             if (! $this->db->tableExists($table)) {
                 throw new RuntimeException(
                     "Tabel {$table} belum tersedia. Jalankan `php spark migrate` terlebih dahulu."
@@ -117,7 +96,45 @@ class CurrentSystemDataSeeder extends Seeder
             }
         }
 
-        $requiredFields = [
+        foreach ($this->requiredFields() as $table => $fields) {
+            foreach ($fields as $field) {
+                if (! $this->db->fieldExists($field, $table)) {
+                    throw new RuntimeException("Kolom {$table}.{$field} belum tersedia.");
+                }
+            }
+        }
+    }
+
+    /** @return list<string> */
+    private function requiredTables(): array
+    {
+        return [
+            'users',
+            'settings',
+            'ruangan',
+            'unit_rapat',
+            'anggota',
+            'member_otps',
+            'anggota_unit_rapat',
+            'dokumen_banmus',
+            'jadwal_banmus',
+            'jadwal_banmus_unit_rapat',
+            'jadwal_umum',
+            'jadwal_umum_unit_rapat',
+        ];
+    }
+
+    /** @return array<string, list<string>> */
+    private function requiredFields(): array
+    {
+        return [
+            'anggota'        => ['id', 'no_wa', 'aktif', 'last_login_at'],
+            'member_otps'    => [
+                'anggota_id', 'code_hash', 'provider', 'provider_otp_id',
+                'provider_transaction_id', 'status', 'attempts', 'expires_at',
+                'used_at', 'created_by_admin_id',
+                'created_at', 'updated_at',
+            ],
             'dokumen_banmus' => ['nomor_sk', 'tahun', 'semester', 'dokumen_file', 'is_publik'],
             'jadwal_banmus'  => [
                 'dokumen_banmus_id', 'agenda', 'jenis_agenda', 'publikasi', 'status',
@@ -131,14 +148,6 @@ class CurrentSystemDataSeeder extends Seeder
                 'undangan_file', 'undangan_nama_asli',
             ],
         ];
-
-        foreach ($requiredFields as $table => $fields) {
-            foreach ($fields as $field) {
-                if (! $this->db->fieldExists($field, $table)) {
-                    throw new RuntimeException("Kolom {$table}.{$field} belum tersedia.");
-                }
-            }
-        }
     }
 
     private function seedSettings(): void
@@ -236,13 +245,6 @@ class CurrentSystemDataSeeder extends Seeder
 
         foreach ($memberRows as $member) {
             $memberId = (int) $member['id'];
-            $this->upsertBy('member_accounts', 'anggota_id', [
-                'anggota_id'    => $memberId,
-                'last_login_at' => null,
-                'created_at'    => $now,
-                'updated_at'    => $now,
-            ]);
-
             $this->db->table('anggota_unit_rapat')
                 ->where('anggota_id', $memberId)
                 ->delete();
@@ -694,11 +696,6 @@ class CurrentSystemDataSeeder extends Seeder
             $this->db->table('jadwal_banmus_unit_rapat')
                 ->whereIn('jadwal_banmus_id', $itemIds)
                 ->delete();
-            if ($this->db->tableExists('jadwal_banmus_dokumen')) {
-                $this->db->table('jadwal_banmus_dokumen')
-                    ->whereIn('jadwal_banmus_id', $itemIds)
-                    ->delete();
-            }
         }
 
         $this->db->table('jadwal_banmus')

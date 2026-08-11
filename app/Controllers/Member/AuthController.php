@@ -3,10 +3,11 @@
 namespace App\Controllers\Member;
 
 use App\Controllers\BaseController;
+use App\Libraries\Otp\MemberOtpThrottle;
 use App\Libraries\Otp\OtpPendingSession;
 use App\Libraries\Otp\OtpService;
 use App\Libraries\PhoneNumberService;
-use App\Models\MemberAccountModel;
+use App\Models\AnggotaModel;
 use Config\Otp;
 
 class AuthController extends BaseController
@@ -35,7 +36,7 @@ class AuthController extends BaseController
             return $this->requestFailure('Terlalu banyak permintaan. Silakan coba kembali beberapa saat lagi.');
         }
 
-        $account = $phone !== null ? (new MemberAccountModel())->findLoginByPhone($phone) : null;
+        $account = $phone !== null ? (new AnggotaModel())->findLoginByPhone($phone) : null;
         $eligible = $account !== null && (int) $account['aktif'] === 1;
 
         $config = new Otp();
@@ -43,9 +44,8 @@ class AuthController extends BaseController
         $otpExpiresAt = time() + $config->ttlSeconds;
         if ($eligible) {
             $result = (new OtpService())->request(
-                (int) $account['account_id'],
+                (int) $account['anggota_id'],
                 '62' . $phone,
-                $ip,
             );
             $retryAfter = max(1, (int) ($result->retryAfter ?? $config->resendCooldownSeconds));
             $otpExpiresAt = $result->expiresAt ?? $otpExpiresAt;
@@ -55,7 +55,6 @@ class AuthController extends BaseController
         }
 
         (new OtpPendingSession())->begin(
-            $eligible ? (int) $account['account_id'] : 0,
             $eligible ? (int) $account['anggota_id'] : 0,
             $this->phoneHash($phone),
             $this->maskPhone($phone),
@@ -79,10 +78,10 @@ class AuthController extends BaseController
         }
 
         $code = trim((string) $this->request->getPost('otp'));
-        $accountId = (int) ($pending['account_id'] ?? 0);
-        $account = $accountId > 0 ? $this->currentPendingAccount($pending) : null;
+        $hasMemberIdentity = (int) ($pending['anggota_id'] ?? 0) > 0;
+        $account = $hasMemberIdentity ? $this->currentPendingAccount($pending) : null;
         $currentPhone = $account !== null ? $this->localPhone((string) $account['no_wa']) : null;
-        if ($accountId > 0 && ($account === null || $currentPhone === null)) {
+        if ($hasMemberIdentity && ($account === null || $currentPhone === null)) {
             $pendingSession->forget();
 
             return $this->requestFailure('Data akun berubah atau sudah tidak aktif. Silakan masukkan nomor kembali.');
@@ -90,10 +89,8 @@ class AuthController extends BaseController
 
         $verified = $account !== null
             ? (new OtpService())->verify(
-                $accountId,
+                (int) $account['anggota_id'],
                 $code,
-                $this->request->getIPAddress(),
-                '62' . $currentPhone,
             )
             : null;
         if ($account === null) {
@@ -112,12 +109,12 @@ class AuthController extends BaseController
         session()->remove('auth_user');
         $pendingSession->forget();
         session()->regenerate(true);
+        $anggotaId = (int) $account['anggota_id'];
         session()->set('member_auth', [
-            'account_id' => (int) $account['account_id'],
-            'anggota_id' => (int) $account['anggota_id'],
+            'anggota_id' => $anggotaId,
             'name'       => $account['name'],
         ]);
-        (new MemberAccountModel())->update($accountId, ['last_login_at' => date('Y-m-d H:i:s')]);
+        (new AnggotaModel())->update($anggotaId, ['last_login_at' => date('Y-m-d H:i:s')]);
 
         return redirect()->to(base_url('agenda'), 303);
     }
@@ -141,7 +138,7 @@ class AuthController extends BaseController
             );
         }
 
-        $accountId = (int) ($pending['account_id'] ?? 0);
+        $hasMemberIdentity = (int) ($pending['anggota_id'] ?? 0) > 0;
         $config = new Otp();
         $retryAfter = $config->resendCooldownSeconds;
         $otpExpiresAt = time() + $config->ttlSeconds;
@@ -158,7 +155,7 @@ class AuthController extends BaseController
             );
         }
 
-        if ($accountId > 0) {
+        if ($hasMemberIdentity) {
             $account = $this->currentPendingAccount($pending);
             $phone = $account !== null ? $this->localPhone((string) $account['no_wa']) : null;
             if ($account === null || $phone === null) {
@@ -168,9 +165,8 @@ class AuthController extends BaseController
             }
 
             $result = (new OtpService())->request(
-                $accountId,
+                (int) $account['anggota_id'],
                 '62' . $phone,
-                $ip,
             );
             $retryAfter = max(1, (int) ($result->retryAfter ?? $config->resendCooldownSeconds));
             $otpExpiresAt = $result->expiresAt ?? (int) ($pending['otp_expires_at'] ?? $otpExpiresAt);
@@ -200,38 +196,19 @@ class AuthController extends BaseController
 
     private function allowRequest(?string $phone, string $ip): bool
     {
-        $config = new Otp();
-        $ipAllowed = service('throttler')->check(
-            'member_otp_ip_' . hash('sha256', $ip),
-            $config->maxRequestsPerIp,
-            $config->requestWindowSeconds,
+        return (new MemberOtpThrottle())->allows(
+            $phone === null ? null : $this->phoneHash($phone),
+            $ip,
         );
-        $phoneAllowed = $phone === null
-            || service('throttler')->check(
-                'member_otp_phone_' . $this->phoneHash($phone),
-                $config->maxRequestsPerPhone,
-                $config->requestWindowSeconds,
-            );
-
-        return $ipAllowed && $phoneAllowed;
     }
 
     /** @param array<string, mixed> $pending */
     private function allowPendingRequest(array $pending, string $ip): bool
     {
-        $config = new Otp();
-        $ipAllowed = service('throttler')->check(
-            'member_otp_ip_' . hash('sha256', $ip),
-            $config->maxRequestsPerIp,
-            $config->requestWindowSeconds,
+        return (new MemberOtpThrottle())->allows(
+            (string) ($pending['phone_hash'] ?? 'invalid'),
+            $ip,
         );
-        $phoneAllowed = service('throttler')->check(
-            'member_otp_phone_' . (string) ($pending['phone_hash'] ?? 'invalid'),
-            $config->maxRequestsPerPhone,
-            $config->requestWindowSeconds,
-        );
-
-        return $ipAllowed && $phoneAllowed;
     }
 
     private function localPhone(string $phone): ?string
@@ -259,8 +236,7 @@ class AuthController extends BaseController
     /** @param array<string, mixed> $pending */
     private function currentPendingAccount(array $pending): ?array
     {
-        $account = (new MemberAccountModel())->findActiveSessionAccount(
-            (int) ($pending['account_id'] ?? 0),
+        $account = (new AnggotaModel())->findActiveSessionMember(
             (int) ($pending['anggota_id'] ?? 0),
         );
         if ($account === null) {

@@ -4,8 +4,8 @@ namespace App\Controllers;
 
 use App\Libraries\Schedule\Persistence\DatabaseScheduleReadRepository;
 use App\Models\BanmusDocumentModel;
+use App\Models\AnggotaModel;
 use App\Models\JadwalBanmusModel;
-use App\Models\MemberAccountModel;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -146,8 +146,7 @@ class AgendaController extends BaseController
             return null;
         }
 
-        $account = (new MemberAccountModel())->findActiveSessionAccount(
-            (int) ($auth['account_id'] ?? 0),
+        $account = (new AnggotaModel())->findActiveSessionMember(
             (int) ($auth['anggota_id'] ?? 0),
         );
         if ($account === null) {
@@ -157,7 +156,6 @@ class AgendaController extends BaseController
         }
 
         session()->set('member_auth', [
-            'account_id' => (int) $account['account_id'],
             'anggota_id' => (int) $account['anggota_id'],
             'name'       => (string) $account['name'],
         ]);

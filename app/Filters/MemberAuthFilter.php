@@ -2,7 +2,7 @@
 
 namespace App\Filters;
 
-use App\Models\MemberAccountModel;
+use App\Models\AnggotaModel;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -16,9 +16,8 @@ class MemberAuthFilter implements FilterInterface
             return $this->redirectToLogin();
         }
 
-        $accountId = (int) ($auth['account_id'] ?? 0);
         $anggotaId = (int) ($auth['anggota_id'] ?? 0);
-        $account = (new MemberAccountModel())->findActiveSessionAccount($accountId, $anggotaId);
+        $account = (new AnggotaModel())->findActiveSessionMember($anggotaId);
 
         if ($account === null) {
             session()->remove('member_auth');
@@ -26,7 +25,6 @@ class MemberAuthFilter implements FilterInterface
         }
 
         session()->set('member_auth', [
-            'account_id' => (int) $account['account_id'],
             'anggota_id' => (int) $account['anggota_id'],
             'name'       => $account['name'],
         ]);

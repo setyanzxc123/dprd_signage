@@ -3,12 +3,15 @@
 namespace App\Controllers\Webhook;
 
 use App\Controllers\BaseController;
+use App\Libraries\Otp\FazpassWebhookProcessor;
+use App\Libraries\Otp\Persistence\DatabaseOtpRepository;
+use Config\Otp;
 
 final class FazpassController extends BaseController
 {
     public function status()
     {
-        $secret = trim((string) env('FAZPASS_CALLBACK_SECRET', ''));
+        $secret = (new Otp())->fazpassCallbackSecret;
         $provided = trim($this->request->getHeaderLine('X-Fazpass-Callback-Secret'));
         if ($secret === '' || $provided === '' || ! hash_equals($secret, $provided)) {
             return $this->response->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Webhook tidak terautentikasi.']);
@@ -20,51 +23,35 @@ final class FazpassController extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['status' => false, 'message' => 'Payload webhook tidak valid.']);
         }
 
-        $transactionId = $this->string($payload['transaction_id'] ?? null);
         $otpId = $this->string($payload['otp_id'] ?? null);
+        $transactionId = $this->string($payload['transaction_id'] ?? null);
         $status = strtolower($this->string($payload['status'] ?? null) ?? '');
-        if ($transactionId === null && $otpId === null) {
-            return $this->response->setStatusCode(422)->setJSON(['status' => false, 'message' => 'ID transaksi tidak tersedia.']);
+        $service = strtolower($this->string($payload['service'] ?? null) ?? 'otp');
+        if ($otpId === null && $transactionId === null) {
+            return $this->response->setStatusCode(422)->setJSON(['status' => false, 'message' => 'ID OTP tidak tersedia.']);
+        }
+        if ($service !== 'otp') {
+            return $this->response->setStatusCode(422)->setJSON(['status' => false, 'message' => 'Service webhook tidak valid.']);
+        }
+        if (FazpassWebhookProcessor::normalizeStatus($status) === null) {
+            return $this->response->setStatusCode(422)->setJSON(['status' => false, 'message' => 'Status webhook tidak valid.']);
         }
 
         $db = db_connect();
         if (! $db->tableExists('member_otps')) {
             return $this->response->setStatusCode(503)->setJSON(['status' => false, 'message' => 'Penyimpanan OTP belum tersedia.']);
         }
-        $hash = hash('sha256', implode('|', ['fazpass', $transactionId ?? '', $otpId ?? '', $status]));
-        $now = date('Y-m-d H:i:s');
-        if ($db->tableExists('otp_webhook_events')) {
-            $db->table('otp_webhook_events')->ignore(true)->insert([
-                'provider' => 'fazpass', 'event_hash' => $hash,
-                'provider_message_id' => $otpId ?? $transactionId,
-                'status' => $status, 'raw_payload' => $raw,
-                'received_at' => $now,
+
+        $result = (new FazpassWebhookProcessor(new DatabaseOtpRepository($db)))
+            ->process($otpId, $transactionId, $status);
+        if ($result === FazpassWebhookProcessor::NOT_FOUND) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => false,
+                'result' => FazpassWebhookProcessor::NOT_FOUND,
             ]);
-            if ($db->affectedRows() === 0) {
-                return $this->response->setJSON(['status' => true, 'result' => 'duplicate']);
-            }
         }
 
-        $builder = $db->table('member_otps')->where('provider', 'fazpass');
-        if ($transactionId !== null && $otpId !== null) {
-            $builder->groupStart()->where('provider_transaction_id', $transactionId)->orWhere('provider_otp_id', $otpId)->groupEnd();
-        } elseif ($transactionId !== null) {
-            $builder->where('provider_transaction_id', $transactionId);
-        } else {
-            $builder->where('provider_otp_id', $otpId);
-        }
-        $normalized = match ($status) {
-            'delivered', 'verified' => 'delivered',
-            'sent' => 'sent',
-            'processing', 'pending' => 'pending',
-            'expired' => 'expired',
-            default => in_array($status, ['error', 'failed', 'rejected', 'undelivered'], true) ? 'failed' : null,
-        };
-        if ($normalized !== null) {
-            $builder->set(['delivery_status' => $normalized, 'updated_at' => $now])->update();
-        }
-
-        return $this->response->setJSON(['status' => true, 'result' => 'processed']);
+        return $this->response->setJSON(['status' => true, 'result' => $result]);
     }
 
     private function string(mixed $value): ?string

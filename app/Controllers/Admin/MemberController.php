@@ -5,12 +5,9 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\Otp\OtpService;
 use App\Models\AnggotaModel;
-use App\Models\MemberAccountModel;
 
 class MemberController extends BaseController
 {
-    private const EMERGENCY_OTP_REASON = 'OTP darurat dibuat admin melalui panel anggota.';
-
     private array $fraksiList = [
         'Amanat Nasional',
         'Bulan Bintang',
@@ -74,11 +71,10 @@ class MemberController extends BaseController
             'aktif'   => $input['aktif'],
         ], true);
 
-        $this->syncMemberAccount($memberId, $input);
         $db->transComplete();
 
         if (! $db->transStatus()) {
-            return $this->failForm('Gagal menyimpan anggota dan akun login.');
+            return $this->failForm('Gagal menyimpan anggota.');
         }
 
         return $this->formSuccessResponse('Anggota berhasil ditambahkan.', base_url('admin/anggota'));
@@ -129,11 +125,10 @@ class MemberController extends BaseController
             'aktif'   => $input['aktif'],
         ]);
 
-        $this->syncMemberAccount($id, $input);
         $db->transComplete();
 
         if (! $db->transStatus()) {
-            return $this->failForm('Gagal memperbarui anggota dan akun login.', $id);
+            return $this->failForm('Gagal memperbarui anggota.', $id);
         }
 
         return $this->formSuccessResponse('Data anggota berhasil diperbarui.', base_url('admin/anggota'));
@@ -162,20 +157,18 @@ class MemberController extends BaseController
 
     public function emergencyOtp(int $id)
     {
-        $account = (new MemberAccountModel())->findByAnggotaId($id);
         $member = (new AnggotaModel())->find($id);
         $admin = session()->get('auth_user');
 
-        if ($account === null || $member === null || ! is_array($admin) || empty($member['aktif'])) {
-            session()->setFlashdata('error', 'Akun anggota tidak aktif atau tidak ditemukan.');
+        if ($member === null || ! is_array($admin) || empty($member['aktif'])) {
+            session()->setFlashdata('error', 'Anggota tidak aktif atau tidak ditemukan.');
             return redirect()->to(base_url('admin/anggota'), 303);
         }
 
         try {
             $otp = (new OtpService())->createEmergency(
-                (int) $account['id'],
+                (int) $member['id'],
                 (int) $admin['id'],
-                self::EMERGENCY_OTP_REASON,
             );
         } catch (\InvalidArgumentException $exception) {
             session()->setFlashdata('error', $exception->getMessage());
@@ -258,6 +251,7 @@ class MemberController extends BaseController
 
         return $digits;
     }
+
     private function memberHasRelations(int $anggotaId): bool
     {
         $db = \Config\Database::connect();
@@ -299,8 +293,6 @@ class MemberController extends BaseController
     private function memberList(): array
     {
         return (new AnggotaModel())
-            ->select('anggota.*, ma.last_login_at')
-            ->join('member_accounts ma', 'ma.anggota_id = anggota.id', 'left')
             ->orderBy('name', 'ASC')
             ->findAll();
     }
@@ -316,16 +308,4 @@ class MemberController extends BaseController
 
         return $model->first() !== null;
     }
-
-    private function syncMemberAccount(int $memberId, array $input): void
-    {
-        $model = new MemberAccountModel();
-        $account = $model->findByAnggotaId($memberId);
-        $payload = ['anggota_id' => $memberId];
-
-        if ($account === null) {
-            $model->insert($payload);
-        }
-    }
-
 }
