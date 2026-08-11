@@ -22,7 +22,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('name="csrf_test_name"', $response->response()->getBody());
         $this->assertStringContainsString('login/anggota', $response->response()->getBody());
         $this->assertStringNotContainsString('login/anggota/otp', $response->response()->getBody());
-        $this->assertStringContainsString('data-max-digits="13"', $response->response()->getBody());
+        $this->assertStringContainsString('data-max-digits="12"', $response->response()->getBody());
     }
 
     public function testAdminLoginRejectsRequestWithoutCsrfToken(): void
@@ -58,7 +58,6 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $now = time();
         $this->withSession([
             'member_otp_pending' => [
-                'account_id'     => 0,
                 'anggota_id'     => 0,
                 'phone_hash'     => hash('sha256', 'invalid-member-phone'),
                 'masked'         => '+62 •••• ••••',
@@ -71,8 +70,14 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response = $this->get('/login?akses=admin');
 
         $response->assertOK();
-        $this->assertStringContainsString('Verifikasi Kode OTP', $response->response()->getBody());
-        $this->assertStringContainsString('data-login-panel="admin" class=""', $response->response()->getBody());
+        $body = $response->response()->getBody();
+        $this->assertStringContainsString('Verifikasi Kode OTP', $body);
+        $this->assertSame(1, preg_match(
+            '/<div data-login-panel="admin" class="([^"]*)">/',
+            $body,
+            $adminPanel,
+        ));
+        $this->assertStringNotContainsString('hidden', $adminPanel[1]);
     }
 
     public function testOldMemberOtpEndpointNoLongerExists(): void

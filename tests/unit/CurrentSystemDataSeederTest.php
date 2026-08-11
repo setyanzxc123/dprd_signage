@@ -152,19 +152,29 @@ final class CurrentSystemDataSeederTest extends CIUnitTestCase
     public function testSeederDoesNotWriteAdminUsers(): void
     {
         $resettableTables = $this->invokeArrayMethod('resettableTables');
+        $requiredTables = $this->invokeArrayMethod('requiredTables');
+        $requiredFields = $this->invokeArrayMethod('requiredFields');
         $source = file_get_contents(
             ROOTPATH . 'app/Database/Seeds/CurrentSystemDataSeeder.php'
         );
 
         $this->assertNotContains('users', $resettableTables);
         $this->assertNotContains('migrations', $resettableTables);
-        $this->assertContains('member_accounts', $resettableTables);
-        $this->assertContains('agenda_migration_state', $resettableTables);
+        $this->assertContains('member_otps', $resettableTables);
         $this->assertContains('jadwal_umum', $resettableTables);
         $this->assertContains('jadwal_umum_unit_rapat', $resettableTables);
+        $this->assertNotContains('member_accounts', $resettableTables);
+        $this->assertNotContains('notifikasi', $resettableTables);
+        $this->assertNotContains('agenda_audit_log', $resettableTables);
+        $this->assertNotContains('agenda_migration_state', $resettableTables);
         $this->assertNotContains('jadwal', $resettableTables);
         $this->assertNotContains('jadwal_unit_rapat', $resettableTables);
         $this->assertNotContains('agenda_umum', $resettableTables);
+        $this->assertContains('users', $requiredTables);
+        $this->assertContains('member_otps', $requiredTables);
+        $this->assertContains('last_login_at', $requiredFields['anggota']);
+        $this->assertContains('provider_transaction_id', $requiredFields['member_otps']);
+        $this->assertContains('created_by_admin_id', $requiredFields['member_otps']);
         $this->assertIsString($source);
         $this->assertStringNotContainsString("table('users')", $source);
         $this->assertStringNotContainsString('insertBatch($users', $source);

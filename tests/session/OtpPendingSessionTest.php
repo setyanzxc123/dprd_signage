@@ -28,7 +28,6 @@ final class OtpPendingSessionTest extends CIUnitTestCase
     {
         $pendingSession = $this->pendingSession();
         $pending = $pendingSession->begin(
-            10,
             20,
             hash('sha256', '628123456789'),
             '+62 812••••789',
@@ -45,7 +44,7 @@ final class OtpPendingSessionTest extends CIUnitTestCase
     public function testExpiredChallengeIsRemovedFromSession(): void
     {
         $pendingSession = $this->pendingSession();
-        $pendingSession->begin(10, 20, 'hash', '+62 812••••789', 60, $this->now + 300);
+        $pendingSession->begin(20, 'hash', '+62 812••••789', 60, $this->now + 300);
         $this->now += 901;
 
         $this->assertNull($pendingSession->get());
@@ -55,7 +54,7 @@ final class OtpPendingSessionTest extends CIUnitTestCase
     public function testRefreshPreservesFullServerRetryWindow(): void
     {
         $pendingSession = $this->pendingSession();
-        $pending = $pendingSession->begin(10, 20, 'hash', '+62 812••••789', 60, $this->now + 300);
+        $pending = $pendingSession->begin(20, 'hash', '+62 812••••789', 60, $this->now + 300);
         $pending = $pendingSession->refresh($pending, 3600, $this->now + 300);
 
         $this->assertSame(3600, $pendingSession->retryAfter($pending));
