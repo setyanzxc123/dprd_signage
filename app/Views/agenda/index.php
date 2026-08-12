@@ -585,7 +585,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: false,
-            }).replace('.', ':'));
+            }).replaceAll('.', ':'));
             const weatherLabel = computed(() => {
                 const temperature = weather.value.suhu || '';
                 const condition = weather.value.kondisi || 'Tidak tersedia';

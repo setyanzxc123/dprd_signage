@@ -759,7 +759,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                     clock.value = new Intl.DateTimeFormat('id-ID', {
                         ...opts, hour: '2-digit', minute: '2-digit', second: '2-digit'
-                    }).format(now);
+                    }).format(now).replaceAll('.', ':');
 
                     dateDay.value = new Intl.DateTimeFormat('id-ID', {
                         ...opts, weekday: 'long'
