@@ -57,10 +57,10 @@ $flashError = session()->getFlashdata('error');
 
 <body>
 
-    <div class="drawer lg:drawer-open" id="admin-shell">
+    <div class="drawer lg:drawer-open lg:h-dvh lg:overflow-hidden" id="admin-shell">
         <input id="admin-drawer" type="checkbox" class="drawer-toggle" aria-label="Buka navigasi utama" />
 
-        <div class="drawer-content flex min-h-screen min-w-0 flex-col bg-base-200">
+        <div class="drawer-content flex min-h-screen min-w-0 flex-col bg-base-200 lg:h-dvh lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
             <?= $this->include('admin/layouts/_topbar') ?>
 
             <main id="content" class="min-w-0 flex-1 px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-8">
