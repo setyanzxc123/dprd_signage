@@ -21,7 +21,7 @@
 
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
-            <table class="room-admin-table table table-zebra table-md w-full admin-data-table responsive-card-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+            <table class="table table-zebra table-md w-full admin-data-table" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>

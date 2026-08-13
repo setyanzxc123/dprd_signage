@@ -7,26 +7,12 @@
     }
     window.renderAdminIcons = renderAdminIcons;
 
-    /* ── Format helpers ─────────────────────────────────────────────────── */
-    function formatClock(date) {
-        return new Intl.DateTimeFormat('id-ID', {
-            hour: '2-digit', minute: '2-digit', second: '2-digit',
-            hour12: false, timeZone: 'Asia/Makassar'
-        }).format(date) + ' WITA';
-    }
-
-    function formatPageDate(date) {
-        return new Intl.DateTimeFormat('id-ID', {
-            weekday: 'long', day: 'numeric', month: 'long',
-            year: 'numeric', timeZone: 'Asia/Makassar'
-        }).format(date);
-    }
-
     function isActivePath(current, link) {
         return current === link || current.startsWith(link + '/');
     }
 
     const ADMIN_THEME_STORAGE_KEY = 'dprd-admin-theme';
+    const ADMIN_SIDEBAR_STORAGE_KEY = 'dprd-sidebar-collapsed';
 
     function getCurrentTheme() {
         return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -74,7 +60,7 @@
 
     function closeTransientShellUi() {
         document.body.classList.remove('mobile-agenda-open');
-        setMobileSidebarOpen(false);
+        if (window.matchMedia('(max-width: 1023px)').matches) setDrawerOpen(false);
     }
 
     function disableTurboFormSubmissions() {
@@ -141,14 +127,6 @@
     }
 
     /* ── Sidebar ────────────────────────────────────────────────────────── */
-    function setSidebarToggleLabel(collapsed) {
-        const btn = document.getElementById('sidebarToggle');
-        if (!btn) return;
-        btn.setAttribute('aria-expanded', String(!collapsed));
-        btn.setAttribute('aria-label', collapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar');
-        btn.setAttribute('title',       collapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar');
-    }
-
     function isMobilePrimaryPath(current, path) {
         if (path === '/admin/dashboard') {
             return current === '/admin' || isActivePath(current, path);
@@ -170,111 +148,102 @@
         });
     }
 
-    function syncMobileMenuButton(sidebarOpen) {
-        const shouldActivate = Boolean(sidebarOpen) || isCurrentMobileMenuSection();
+    function syncDrawerState() {
+        const drawer = document.getElementById('admin-drawer');
+        const isOpen = Boolean(drawer?.checked);
+        const shouldActivate = isOpen || isCurrentMobileMenuSection();
+
+        const desktopToggle = document.getElementById('sidebarToggle');
+        if (desktopToggle) {
+            desktopToggle.setAttribute('aria-expanded', String(isOpen));
+            desktopToggle.setAttribute('aria-label', isOpen ? 'Ciutkan sidebar' : 'Perluas sidebar');
+            desktopToggle.setAttribute('title', isOpen ? 'Ciutkan sidebar' : 'Perluas sidebar');
+        }
+
         document.querySelectorAll('[data-mobile-menu-toggle]').forEach(function (button) {
-            button.classList.toggle('active', shouldActivate);
-            button.setAttribute('aria-expanded', String(Boolean(sidebarOpen)));
-            button.setAttribute('aria-label', sidebarOpen ? 'Tutup menu lainnya' : 'Buka menu lainnya');
-            button.setAttribute('title', sidebarOpen ? 'Tutup menu lainnya' : 'Buka menu lainnya');
+            button.classList.toggle('dock-active', shouldActivate);
+            button.setAttribute('aria-expanded', String(isOpen));
+            button.setAttribute('aria-label', isOpen ? 'Tutup menu lainnya' : 'Buka menu lainnya');
         });
     }
 
-    function setMobileSidebarOpen(open) {
-        const isOpen = Boolean(open);
-        document.body.classList.toggle('mobile-sidebar-open', isOpen);
-        document.getElementById('sidebar')?.classList.toggle('mobile-open', isOpen);
-        document.getElementById('sidebar-overlay')?.classList.toggle('visible', isOpen);
-        document.querySelectorAll('.topbar-toggle').forEach(function (button) {
-            button.setAttribute('aria-expanded', String(isOpen));
-            button.setAttribute('aria-label', isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi');
-            button.setAttribute('title', isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi');
-        });
-        syncMobileMenuButton(isOpen);
+    function setDrawerOpen(open) {
+        const drawer = document.getElementById('admin-drawer');
+        if (drawer) drawer.checked = Boolean(open);
+        syncDrawerState();
+    }
+
+    function applyResponsiveDrawerState() {
+        const drawer = document.getElementById('admin-drawer');
+        if (!drawer) return;
+
+        drawer.checked = window.matchMedia('(min-width: 1024px)').matches
+            ? localStorage.getItem(ADMIN_SIDEBAR_STORAGE_KEY) !== 'collapsed'
+            : false;
+        syncDrawerState();
     }
 
     function initSidebar() {
-        const collapsed = localStorage.getItem('dprd-sidebar-collapsed') === 'collapsed';
-        document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
-        setSidebarToggleLabel(collapsed);
-        syncMobileMenuButton(document.getElementById('sidebar')?.classList.contains('mobile-open'));
+        applyResponsiveDrawerState();
 
         if (document.documentElement.dataset.adminSidebarBound === '1') return;
         document.documentElement.dataset.adminSidebarBound = '1';
 
-        document.addEventListener('click', function (e) {
-            const sidebar = document.getElementById('sidebar');
+        document.addEventListener('change', function (event) {
+            if (event.target.matches('#admin-drawer')) syncDrawerState();
+        });
 
-            const collapsedGroupToggle = e.target.closest('.nav-group-toggle');
-            if (collapsedGroupToggle && document.documentElement.classList.contains('sidebar-collapsed')) {
-                e.preventDefault();
-                document.documentElement.classList.remove('sidebar-collapsed');
-                localStorage.setItem('dprd-sidebar-collapsed', 'expanded');
-                setSidebarToggleLabel(false);
-                collapsedGroupToggle.closest('.nav-group').open = true;
+        document.addEventListener('click', function (event) {
+            const drawer = document.getElementById('admin-drawer');
+
+            if (event.target.closest('#sidebarToggle') && drawer) {
+                drawer.checked = !drawer.checked;
+                localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, drawer.checked ? 'expanded' : 'collapsed');
+                syncDrawerState();
                 return;
             }
 
-            if (e.target.closest('.topbar-toggle, [data-mobile-menu-toggle]')) {
-                setMobileSidebarOpen(!sidebar?.classList.contains('mobile-open'));
+            const collapsedGroup = event.target.closest('[data-admin-nav-group] > summary');
+            if (collapsedGroup && drawer && !drawer.checked && window.matchMedia('(min-width: 1024px)').matches) {
+                event.preventDefault();
+                drawer.checked = true;
+                localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, 'expanded');
+                collapsedGroup.parentElement.open = true;
+                syncDrawerState();
                 return;
             }
 
-            if (e.target.closest('#sidebarToggle')) {
-                const nowCollapsed = !document.documentElement.classList.contains('sidebar-collapsed');
-                document.documentElement.classList.toggle('sidebar-collapsed', nowCollapsed);
-                localStorage.setItem('dprd-sidebar-collapsed', nowCollapsed ? 'collapsed' : 'expanded');
-                setSidebarToggleLabel(nowCollapsed);
-                return;
-            }
-
-            if (e.target.closest('#sidebar-overlay')) {
-                closeTransientShellUi();
-            }
-
-            if (e.target.closest('#sidebar a') && window.matchMedia('(max-width: 1180px)').matches) {
-                setMobileSidebarOpen(false);
+            if (event.target.closest('#sidebar a') && window.matchMedia('(max-width: 1023px)').matches) {
+                setDrawerOpen(false);
             }
         });
 
-        // ESC → close mobile sidebar
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeTransientShellUi();
-            }
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeTransientShellUi();
         });
+
+        window.matchMedia('(min-width: 1024px)').addEventListener('change', applyResponsiveDrawerState);
     }
 
     /* ── Active navigation ──────────────────────────────────────────────── */
     function applyActiveNavigation() {
         const current = window.location.pathname.replace(/\/$/, '') || '/';
-        document.querySelectorAll('.nav-link-custom[data-path], .mobile-nav a[data-path]').forEach(function (link) {
+        document.querySelectorAll('[data-admin-nav][data-path], #mobile-nav a[data-path]').forEach(function (link) {
             const path = link.getAttribute('data-path');
             const active = isMobilePrimaryPath(current, path);
-            link.classList.toggle('active', active);
-            link.classList.toggle('menu-active', active && link.classList.contains('nav-link-custom'));
+            link.classList.toggle('menu-active', active && link.matches('[data-admin-nav]'));
+            link.classList.toggle('dock-active', active && Boolean(link.closest('#mobile-nav')));
+            if (active) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
         });
-        document.querySelectorAll('#sidebar .nav-group').forEach(function (group) {
-            const hasActiveChild = Boolean(group.querySelector('.nav-child-link.active'));
-            group.classList.toggle('nav-group-current', hasActiveChild);
+        document.querySelectorAll('[data-admin-nav-group]').forEach(function (group) {
+            const hasActiveChild = Boolean(group.querySelector('[data-admin-nav].menu-active'));
             group.open = hasActiveChild;
         });
-        syncMobileMenuButton(document.getElementById('sidebar')?.classList.contains('mobile-open'));
+        syncDrawerState();
     }
 
     /* ── Clock ──────────────────────────────────────────────────────────── */
-    function startClock() {
-        function tick() {
-            const now = new Date();
-            const clock = document.getElementById('topbar-clock');
-            if (clock) clock.textContent = formatClock(now);
-            const pageDate = document.getElementById('page-date');
-            if (pageDate) pageDate.textContent = formatPageDate(now);
-        }
-        tick();
-        setInterval(tick, 1000);
-    }
-
     /* ── WA status (topbar) ─────────────────────────────────────────────── */
     /* ── DataTables ─────────────────────────────────────────────────────── */
 
@@ -510,8 +479,6 @@
     bindFormConfirmations();
     bindAutoSubmitControls();
     refreshAdminPage();
-    startClock();
-
     document.addEventListener('turbo:load', function () {
         refreshAdminPage();
     });

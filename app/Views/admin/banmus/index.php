@@ -44,7 +44,7 @@
         </div>
     <?php else: ?>
         <div class="overflow-x-auto">
-            <table class="banmus-tablet-card-table table table-sm responsive-card-table banmus-document-table w-full">
+            <table class="table table-sm banmus-document-table w-full">
                 <thead>
                     <tr class="bg-base-200/60">
                         <th>Dokumen SK</th>

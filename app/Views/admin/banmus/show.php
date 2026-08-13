@@ -94,10 +94,10 @@ $scheduledCount = count($items) - $projectionCount;
         }
         ?>
         <div class="min-w-0">
-            <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
+            <div class="w-full overflow-x-auto">
                 <table
                     id="table-jadwal-banmus"
-                    class="banmus-tablet-card-table banmus-item-table table table-zebra table-sm w-full admin-data-table responsive-card-table"
+                    class="banmus-item-table table table-zebra table-sm w-full admin-data-table"
                     data-admin-datatable
                     data-dt-page-length="10"
                     data-dt-col-filters='[{"col":2,"label":"Jenis","all":"Semua Jenis"},{"col":5,"label":"Publikasi","all":"Semua Publikasi"},{"col":6,"label":"Status","all":"Semua Status"}]'>

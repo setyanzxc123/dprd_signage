@@ -20,8 +20,8 @@
     </div>
 
     <div class="min-w-0">
-        <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
-            <table class="admin-tablet-card-table general-schedule-table table table-zebra table-md w-full admin-data-table responsive-card-table"
+        <div class="w-full overflow-x-auto">
+            <table class="general-schedule-table table table-zebra table-md w-full admin-data-table"
                 data-admin-datatable
                 data-dt-order='[[1,"desc"]]'
                 data-dt-col-filters='[{"column":4,"label":"Status"},{"column":5,"label":"Publikasi"}]'>

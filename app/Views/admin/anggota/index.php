@@ -31,8 +31,8 @@
     </div>
 
     <div class="min-w-0">
-        <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
-            <table class="member-admin-table table table-zebra table-md w-full admin-data-table responsive-card-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+        <div class="w-full overflow-x-auto">
+            <table class="table table-zebra table-md w-full admin-data-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>

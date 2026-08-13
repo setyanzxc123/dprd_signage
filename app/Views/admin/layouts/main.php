@@ -17,7 +17,7 @@ $flashError = session()->getFlashdata('error');
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <script src="<?= base_url('assets/js/admin/theme-init.js?v=' . $adminThemeJsVersion) ?>"
         data-turbo-track="reload"></script>
 
@@ -57,24 +57,20 @@ $flashError = session()->getFlashdata('error');
 
 <body>
 
-    <div id="sidebar-overlay" data-turbo-permanent></div>
+    <div class="drawer lg:drawer-open" id="admin-shell">
+        <input id="admin-drawer" type="checkbox" class="drawer-toggle" aria-label="Buka navigasi utama" />
 
-    <div class="od-shell">
-
-        <?= $this->include('admin/layouts/_sidebar') ?>
-
-        <div id="main-wrapper">
-
+        <div class="drawer-content flex min-h-screen min-w-0 flex-col bg-base-200">
             <?= $this->include('admin/layouts/_topbar') ?>
 
-            <main id="content">
+            <main id="content" class="min-w-0 flex-1 px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-8">
 
                 <?php if ($flashSuccess): ?>
                     <div class="alert alert-success admin-flash-alert shadow-sm mb-4" role="alert" data-admin-alert data-auto-dismiss-ms="3500">
                         <i data-lucide="circle-check"></i>
                         <span><?= esc($flashSuccess) ?></span>
                         <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto"
-                            aria-label="Tutup notifikasi">✕</button>
+                            aria-label="Tutup notifikasi"><i data-lucide="x"></i></button>
                     </div>
                 <?php endif; ?>
 
@@ -83,40 +79,39 @@ $flashError = session()->getFlashdata('error');
                         <i data-lucide="triangle-alert"></i>
                         <span><?= esc($flashError) ?></span>
                         <button type="button" class="btn btn-ghost btn-xs btn-circle alert-close-btn ml-auto"
-                            aria-label="Tutup notifikasi">✕</button>
+                            aria-label="Tutup notifikasi"><i data-lucide="x"></i></button>
                     </div>
                 <?php endif; ?>
 
                 <?= $this->renderSection('content') ?>
 
             </main>
-
         </div>
 
+        <div class="drawer-side z-50 lg:overflow-visible">
+            <label for="admin-drawer" aria-label="Tutup navigasi utama" class="drawer-overlay"></label>
+            <?= $this->include('admin/layouts/_sidebar') ?>
+        </div>
     </div>
 
-    <!-- Mobile bottom nav -->
-    <nav id="mobile-nav" class="mobile-nav" aria-label="Navigasi mobile" data-turbo-permanent>
+    <nav id="mobile-nav" class="dock dock-sm border-t border-base-300 bg-base-100 lg:hidden" aria-label="Navigasi mobile">
         <a href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard">
             <i data-lucide="layout-dashboard"></i>
-            <span class="mobile-nav-label">Dashboard</span>
+            <span class="dock-label">Dashboard</span>
         </a>
         <a href="<?= base_url('admin/jadwal-banmus') ?>" data-path="/admin/jadwal-banmus">
             <i data-lucide="calendar-range"></i>
-            <span class="mobile-nav-label">Agenda Banmus</span>
+            <span class="dock-label">Banmus</span>
         </a>
         <a href="<?= base_url('admin/jadwal-umum') ?>" data-path="/admin/jadwal-umum">
             <i data-lucide="calendar-days"></i>
-            <span class="mobile-nav-label">Jadwal Umum</span>
+            <span class="dock-label">Umum</span>
         </a>
-        <button type="button" class="mobile-menu-toggle" aria-label="Buka menu lainnya" aria-controls="sidebar"
-            aria-expanded="false" data-mobile-menu-toggle>
+        <label for="admin-drawer" role="button" tabindex="0" aria-label="Buka menu lainnya" data-mobile-menu-toggle>
             <i data-lucide="menu"></i>
-            <span class="mobile-nav-label">Menu</span>
-        </button>
+            <span class="dock-label">Menu</span>
+        </label>
     </nav>
-
-    <div id="admin-vue-controller" hidden></div>
 
     <?= $this->renderSection('scripts') ?>
 

@@ -219,8 +219,8 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         </div>
     <?php else: ?>
         <div class="min-w-0">
-            <div class="w-full overflow-x-auto max-sm:overflow-x-visible">
-            <table class="admin-tablet-card-table calendar-agenda-table responsive-card-table table table-zebra table-md w-full admin-data-table"
+            <div class="w-full overflow-x-auto">
+            <table class="calendar-agenda-table table table-zebra table-md w-full admin-data-table"
                 id="table-agenda-terpadu"
                 data-admin-datatable
                 data-dt-order='[[0,"asc"]]'
