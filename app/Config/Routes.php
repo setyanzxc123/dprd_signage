@@ -156,6 +156,13 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
     $routes->put('unit-rapat/(:num)',     'UnitRapatController::update/$1');
     $routes->patch('unit-rapat/(:num)',   'UnitRapatController::update/$1');
     $routes->delete('unit-rapat/(:num)',  'UnitRapatController::delete/$1');
+
+    $routes->get('anggota',            'AnggotaController::index');
+    $routes->get('anggota/(:num)',     'AnggotaController::show/$1');
+    $routes->post('anggota',           'AnggotaController::create');
+    $routes->put('anggota/(:num)',     'AnggotaController::update/$1');
+    $routes->patch('anggota/(:num)',   'AnggotaController::update/$1');
+    $routes->delete('anggota/(:num)',  'AnggotaController::delete/$1');
 });
 
 // ── API Signage (backward compatible) ────────────────────────────────

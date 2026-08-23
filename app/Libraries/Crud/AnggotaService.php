@@ -79,7 +79,7 @@ class AnggotaService
             'fraksi'  => $fraksi,
             'komisi'  => trim((string) ($input['komisi'] ?? '')),
             'no_wa'   => $phone,
-            'aktif'   => ($input['aktif'] ?? null) === '0' ? 0 : 1,
+            'aktif'   => $this->normalizedAktif($input['aktif'] ?? null),
         ];
     }
 
@@ -136,6 +136,17 @@ class AnggotaService
     {
         return $this->db->tableExists('anggota_unit_rapat')
             && $this->db->table('anggota_unit_rapat')->where('anggota_id', $memberId)->countAllResults() > 0;
+    }
+
+    /**
+     * Web selalu mengirim string '1'/'0' (select); API dapat mengirim
+     * bool/int/string apa pun yang telah dinormalisasi requestBodyArray.
+     * Nilai eksplisit nonaktif: '0', 0, false, '', 'false'; selain itu
+     * (termasuk kosong/null) dianggap aktif — identik perilaku lama.
+     */
+    private function normalizedAktif(mixed $value): int
+    {
+        return in_array($value, ['0', 0, false, '', 'false'], true) ? 0 : 1;
     }
 
     private function normalizedPhone(string $phone): ?string
