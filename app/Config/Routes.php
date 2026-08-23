@@ -141,6 +141,16 @@ $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1'], static 
     $routes->get('me',           'AuthController::me');
 });
 
+// ── API v1 CRUD admin (bearer token + grup admin) ──────────────────
+$routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'apiadmin'], static function ($routes) {
+    $routes->get('ruangan',            'RuanganController::index');
+    $routes->get('ruangan/(:num)',     'RuanganController::show/$1');
+    $routes->post('ruangan',           'RuanganController::create');
+    $routes->put('ruangan/(:num)',     'RuanganController::update/$1');
+    $routes->patch('ruangan/(:num)',   'RuanganController::update/$1');
+    $routes->delete('ruangan/(:num)',  'RuanganController::delete/$1');
+});
+
 // ── API Signage (backward compatible) ────────────────────────────────
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
 $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');

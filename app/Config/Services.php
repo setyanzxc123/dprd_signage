@@ -19,7 +19,13 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    public static function requestIdentity(bool $getShared = true): \App\Libraries\Auth\RequestIdentityService
+    /**
+     * Resolver identitas per-permintaan. Sengaja TIDAK shared secara
+     * default: hasil resolusi dicache di instance, dan satu proses
+     * (test/worker) dapat menangani beberapa permintaan dengan token
+     * berbeda.
+     */
+    public static function requestIdentity(bool $getShared = false): \App\Libraries\Auth\RequestIdentityService
     {
         if ($getShared) {
             return static::getSharedInstance('requestIdentity');

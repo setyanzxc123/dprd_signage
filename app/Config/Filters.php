@@ -43,6 +43,8 @@ class Filters extends BaseFilters
         'chain'         => \CodeIgniter\Shield\Filters\ChainAuth::class,
         'token'         => \CodeIgniter\Shield\Filters\TokenAuth::class,
         'auth-rates'    => \CodeIgniter\Shield\Filters\AuthRates::class,
+        // Endpoint API tulis admin: bearer token + grup superadmin/operator.
+        'apiadmin'      => \App\Filters\ApiAdminFilter::class,
     ];
 
     /**

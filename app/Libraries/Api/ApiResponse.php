@@ -48,15 +48,62 @@ trait ApiResponse
      */
     protected function input(string $key): mixed
     {
-        $body = (string) service('request')->getBody();
+        $body = $this->requestBodyArray();
+
+        return $body[$key] ?? service('request')->getPost($key);
+    }
+
+    /**
+     * Seluruh body permintaan sebagai array — untuk diteruskan ke
+     * service CRUD. Nilai skalar dinormalisasi menjadi string agar
+     * semantik validasi identik dengan form web (mis. kapasitas int
+     * dari JSON tetap lolos ctype_digit).
+     *
+     * @return array<string, mixed>
+     */
+    protected function requestBodyArray(): array
+    {
+        $request = service('request');
+        $body = (string) $request->getBody();
 
         if ($body !== '') {
             $json = json_decode($body, true);
-            if (is_array($json) && array_key_exists($key, $json)) {
-                return $json[$key];
+            if (is_array($json) && $json !== []) {
+                return $this->stringifyScalars($json);
+            }
+
+            // Method selain POST (mis. PUT/DELETE) membawa data form di
+            // body, bukan di $_POST.
+            $parsed = [];
+            parse_str($body, $parsed);
+            if ($parsed !== []) {
+                return $this->stringifyScalars($parsed);
             }
         }
 
-        return service('request')->getPost($key);
+        return $this->stringifyScalars($request->getPost() ?? []);
+    }
+
+    /**
+     * @param array<string, mixed> $values
+     * @return array<string, mixed>
+     */
+    private function stringifyScalars(array $values): array
+    {
+        $result = [];
+
+        foreach ($values as $key => $value) {
+            if (is_array($value)) {
+                $result[$key] = $this->stringifyScalars($value);
+            } elseif (is_bool($value)) {
+                $result[$key] = $value ? '1' : '';
+            } elseif (is_scalar($value)) {
+                $result[$key] = (string) $value;
+            } else {
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
     }
 }
