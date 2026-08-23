@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Crud\RuanganService;
 use App\Models\RuanganModel;
 
 class RoomController extends BaseController
@@ -33,14 +34,14 @@ class RoomController extends BaseController
 
     public function store()
     {
-        $model = new RuanganModel();
-        $input = $this->validatedInput();
+        $service = new RuanganService();
+        $input = $service->validatedInput($this->request->getPost());
 
         if (isset($input['error'])) {
             return $this->failForm($input['error']);
         }
 
-        $model->insert($input);
+        $service->create($input);
 
         return $this->formSuccessResponse('Ruangan berhasil ditambahkan.', base_url('admin/ruangan'));
     }
@@ -64,79 +65,36 @@ class RoomController extends BaseController
 
     public function update(int $id)
     {
-        $model = new RuanganModel();
-        if (! $model->find($id)) {
+        $service = new RuanganService();
+        if (! (new RuanganModel())->find($id)) {
             session()->setFlashdata('error', 'Ruangan tidak ditemukan.');
             return redirect()->to(base_url('admin/ruangan'));
         }
 
-        $input = $this->validatedInput();
+        $input = $service->validatedInput($this->request->getPost());
 
         if (isset($input['error'])) {
             return $this->failForm($input['error'], $id);
         }
 
-        $model->update($id, $input);
+        $service->update($id, $input);
 
         return $this->formSuccessResponse('Ruangan berhasil diperbarui.', base_url('admin/ruangan'));
     }
 
     public function delete(int $id)
     {
-        $model = new RuanganModel();
-        if (! $model->find($id)) {
+        $outcome = (new RuanganService())->delete($id);
+
+        if ($outcome === 'missing') {
             session()->setFlashdata('error', 'Ruangan tidak ditemukan.');
-            return redirect()->to(base_url('admin/ruangan'));
-        }
-
-        if ($this->roomHasSchedules($id)) {
-            $model->update($id, ['tersedia' => 0]);
-
+        } elseif ($outcome === 'deactivated') {
             session()->setFlashdata('success', 'Ruangan sudah pernah dipakai jadwal, sehingga hanya dinonaktifkan.');
-            return redirect()->to(base_url('admin/ruangan'));
+        } else {
+            session()->setFlashdata('success', 'Ruangan berhasil dihapus.');
         }
 
-        $model->delete($id);
-
-        session()->setFlashdata('success', 'Ruangan berhasil dihapus.');
         return redirect()->to(base_url('admin/ruangan'));
-    }
-
-    private function validatedInput(): array
-    {
-        $name = trim((string) $this->request->getPost('name'));
-        if ($name === '') {
-            return ['error' => 'Nama ruangan wajib diisi.'];
-        }
-
-        if (mb_strlen($name) > 150) {
-            return ['error' => 'Nama ruangan maksimal 150 karakter.'];
-        }
-
-        $kapasitasRaw = $this->request->getPost('kapasitas');
-        if ($kapasitasRaw === null || ! ctype_digit((string) $kapasitasRaw) || (int) $kapasitasRaw < 1) {
-            return ['error' => 'Kapasitas ruangan wajib minimal 1 orang.'];
-        }
-
-        return [
-            'name'       => $name,
-            'keterangan' => trim((string) $this->request->getPost('keterangan')),
-            'kapasitas'  => (int) $kapasitasRaw,
-            'tersedia'   => $this->request->getPost('tersedia') === '0' ? 0 : 1,
-        ];
-    }
-
-    private function roomHasSchedules(int $id): bool
-    {
-        $db = \Config\Database::connect();
-        foreach (['jadwal_umum', 'jadwal_banmus'] as $table) {
-            if ($db->tableExists($table)
-                && $db->table($table)->where('ruangan_id', $id)->countAllResults() > 0) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function failForm(string $message, ?int $id = null)
@@ -152,12 +110,14 @@ class RoomController extends BaseController
 
     private function postedRoom(?int $id = null): array
     {
+        $post = $this->request->getPost();
+
         return [
             'id'         => $id,
-            'name'       => trim((string) $this->request->getPost('name')),
-            'keterangan' => trim((string) $this->request->getPost('keterangan')),
-            'kapasitas'  => trim((string) $this->request->getPost('kapasitas')),
-            'tersedia'   => $this->request->getPost('tersedia') === '0' ? 0 : 1,
+            'name'       => trim((string) ($post['name'] ?? '')),
+            'keterangan' => trim((string) ($post['keterangan'] ?? '')),
+            'kapasitas'  => trim((string) ($post['kapasitas'] ?? '')),
+            'tersedia'   => ($post['tersedia'] ?? null) === '0' ? 0 : 1,
         ];
     }
 }
