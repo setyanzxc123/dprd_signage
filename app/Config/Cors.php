@@ -26,77 +26,59 @@ class Cors extends BaseConfig
      */
     public array $default = [
         /**
-         * Origins for the `Access-Control-Allow-Origin` header.
+         * Origins untuk header `Access-Control-Allow-Origin`.
+         *
+         * Konsumen utama API adalah aplikasi mobile (Flutter/native) yang tidak
+         * mengirim header Origin sehingga tidak terdampak CORS. Wildcard `*`
+         * dipilih agar API tetap bisa diakui dari klien browser mana pun untuk
+         * pengujian/debug; aman karena autentikasi memakai bearer token di
+         * header Authorization (bukan cookie — supportsCredentials=false).
+         * Bila kelak ada dashboard web di origin tetap, ganti ke daftar eksplisit.
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-         *
-         * E.g.:
-         *   - ['http://localhost:8080']
-         *   - ['https://www.example.com']
          */
-        'allowedOrigins' => [],
+        'allowedOrigins' => ['*'],
 
         /**
-         * Origin regex patterns for the `Access-Control-Allow-Origin` header.
+         * Pola regex origin untuk header `Access-Control-Allow-Origin`.
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-         *
-         * NOTE: A pattern specified here is part of a regular expression. It will
-         *       be actually `#\A<pattern>\z#`.
-         *
-         * E.g.:
-         *   - ['https://\w+\.example\.com']
          */
         'allowedOriginsPatterns' => [],
 
         /**
-         * Weather to send the `Access-Control-Allow-Credentials` header.
+         * Apakah mengirim header `Access-Control-Allow-Credentials`.
          *
-         * The Access-Control-Allow-Credentials response header tells browsers whether
-         * the server allows cross-origin HTTP requests to include credentials.
+         * Tetap false: API mobile memakai bearer token, bukan cookie sesi,
+         * sehingga permintaan lintas origin tidak perlu membawa kredensial.
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
          */
         'supportsCredentials' => false,
 
         /**
-         * Set headers to allow.
-         *
-         * The Access-Control-Allow-Headers response header is used in response to
-         * a preflight request which includes the Access-Control-Request-Headers to
-         * indicate which HTTP headers can be used during the actual request.
+         * Header yang diizinkan pada preflight request.
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
          */
-        'allowedHeaders' => [],
+        'allowedHeaders' => ['Authorization', 'Content-Type', 'Accept', 'X-Requested-With'],
 
         /**
-         * Set headers to expose.
-         *
-         * The Access-Control-Expose-Headers response header allows a server to
-         * indicate which response headers should be made available to scripts running
-         * in the browser, in response to a cross-origin request.
+         * Header respons yang diekspos ke skrip browser.
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
          */
         'exposedHeaders' => [],
 
         /**
-         * Set methods to allow.
-         *
-         * The Access-Control-Allow-Methods response header specifies one or more
-         * methods allowed when accessing a resource in response to a preflight
-         * request.
-         *
-         * E.g.:
-         *   - ['GET', 'POST', 'PUT', 'DELETE']
+         * Metode HTTP yang diizinkan pada preflight request.
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
          */
-        'allowedMethods' => [],
+        'allowedMethods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
         /**
-         * Set how many seconds the results of a preflight request can be cached.
+         * Berapa detik hasil preflight request boleh di-cache browser.
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age
          */

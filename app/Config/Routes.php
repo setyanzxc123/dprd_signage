@@ -123,26 +123,34 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('profile/update', 'Admin\ProfileController::update');
 });
 
+// ── API v1 CORS (lihat Config\Cors) ──────────────────────────────────
+// Filter cors didaftukan paling awal di tiap grup api/v1 agar header CORS
+// terpasang sebelum filter auth memutus permintaan — respons 401/403 pun
+// tetap terbaca klien browser. Preflight OPTIONS dijawab oleh filter cors
+// (204); rute catch-all diperlukan karena auto-routing mati — tanpa ini
+// OPTIONS ke path API akan 404 sebelum filter sempat berjalan.
+$routes->options('api/v1/(:any)', static fn () => service('response')->setStatusCode(204), ['filter' => 'cors']);
+
 // ── API v1 Publik (tanpa auth) ───────────────────────────────────────
-$routes->group('api/v1/publik', function ($routes) {
+$routes->group('api/v1/publik', ['filter' => 'cors'], function ($routes) {
     $routes->get('jadwal', 'Api\PublicController::jadwal');
 });
 
-$routes->group('api/v1/anggota', ['filter' => 'memberapi'], function ($routes) {
+$routes->group('api/v1/anggota', ['filter' => ['cors', 'memberapi']], function ($routes) {
     $routes->get('jadwal', 'Api\MemberScheduleController::jadwal');
 });
 
 // ── API v1 Resolve resource jadwal (sesi web / bearer anggota) ──────
-$routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'memberapi'], static function ($routes) {
+$routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'memberapi']], static function ($routes) {
     $routes->get('(:segment)/(:num)/(materi|stream)', 'ScheduleResourceController::resolve/$1/$2/$3');
     $routes->get('(:segment)/(:num)/undangan', 'ScheduleDocumentController::undangan/$1/$2');
 });
 
 // ── API v1 Dokumen SK banmus (publik bila is_publik, selain itu anggota) ──
-$routes->get('api/v1/dokumen-banmus/(:num)', 'ScheduleDocumentController::sk/$1', ['namespace' => 'App\Controllers\Api\V1']);
+$routes->get('api/v1/dokumen-banmus/(:num)', 'ScheduleDocumentController::sk/$1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'cors']);
 
 // ── API v1 Auth mobile (bearer token) ───────────────────────────────
-$routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1'], static function ($routes) {
+$routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'cors'], static function ($routes) {
     $routes->post('login',       'AuthController::login');
     $routes->post('otp/request', 'AuthController::otpRequest');
     $routes->post('otp/verify',  'AuthController::otpVerify');
@@ -151,7 +159,7 @@ $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1'], static 
 });
 
 // ── API v1 CRUD admin (bearer token + grup admin) ──────────────────
-$routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'apiadmin'], static function ($routes) {
+$routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'apiadmin']], static function ($routes) {
     $routes->get('admin/agenda', 'AdminAgendaController::index');
     $routes->get('admin/profil', 'AdminProfileController::index');
     $routes->put('admin/profil', 'AdminProfileController::update');
