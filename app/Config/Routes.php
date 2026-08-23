@@ -153,6 +153,9 @@ $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1'], static 
 // ── API v1 CRUD admin (bearer token + grup admin) ──────────────────
 $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'apiadmin'], static function ($routes) {
     $routes->get('admin/agenda', 'AdminAgendaController::index');
+    $routes->get('admin/profil', 'AdminProfileController::index');
+    $routes->put('admin/profil', 'AdminProfileController::update');
+    $routes->patch('admin/profil', 'AdminProfileController::update');
 
     $routes->get('ruangan',            'RuanganController::index');
     $routes->get('ruangan/(:num)',     'RuanganController::show/$1');
