@@ -132,6 +132,15 @@ $routes->group('api/v1/anggota', ['filter' => 'memberapi'], function ($routes) {
     $routes->get('jadwal', 'Api\MemberScheduleController::jadwal');
 });
 
+// ── API v1 Auth mobile (bearer token) ───────────────────────────────
+$routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1'], static function ($routes) {
+    $routes->post('login',       'AuthController::login');
+    $routes->post('otp/request', 'AuthController::otpRequest');
+    $routes->post('otp/verify',  'AuthController::otpVerify');
+    $routes->post('logout',      'AuthController::logout');
+    $routes->get('me',           'AuthController::me');
+});
+
 // ── API Signage (backward compatible) ────────────────────────────────
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
 $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
