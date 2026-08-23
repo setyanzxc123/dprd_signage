@@ -163,6 +163,13 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
     $routes->put('anggota/(:num)',     'AnggotaController::update/$1');
     $routes->patch('anggota/(:num)',   'AnggotaController::update/$1');
     $routes->delete('anggota/(:num)',  'AnggotaController::delete/$1');
+
+    $routes->get('jadwal-umum',            'JadwalUmumController::index');
+    $routes->get('jadwal-umum/(:num)',     'JadwalUmumController::show/$1');
+    $routes->post('jadwal-umum',           'JadwalUmumController::create');
+    $routes->put('jadwal-umum/(:num)',     'JadwalUmumController::update/$1');
+    $routes->patch('jadwal-umum/(:num)',   'JadwalUmumController::update/$1');
+    $routes->delete('jadwal-umum/(:num)',  'JadwalUmumController::delete/$1');
 });
 
 // ── API Signage (backward compatible) ────────────────────────────────
