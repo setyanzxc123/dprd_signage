@@ -130,6 +130,41 @@ class JadwalUmumController extends BaseController
         ]);
     }
 
+    /**
+     * Unggah/ganti PDF undangan — multipart POST (PHP tidak memparsing
+     * multipart untuk PUT/PATCH, sehingga undangan jadi sub-resource).
+     */
+    public function storeInvitation(int $id)
+    {
+        $model = new JadwalUmumModel();
+        if ($model->find($id) === null) {
+            return $this->apiError('Jadwal Umum tidak ditemukan.', 404);
+        }
+
+        $error = (new JadwalUmumService())->replaceInvitation($id, $this->request->getFile('undangan_file'));
+        if ($error !== null) {
+            return $this->apiError($error, 422);
+        }
+
+        return $this->apiSuccess(
+            $this->schedulePayload($model->find($id)) + ['message' => 'Undangan berhasil diunggah.']
+        );
+    }
+
+    public function deleteInvitation(int $id)
+    {
+        if ((new JadwalUmumModel())->find($id) === null) {
+            return $this->apiError('Jadwal Umum tidak ditemukan.', 404);
+        }
+
+        (new JadwalUmumService())->removeInvitation($id);
+
+        return $this->apiSuccess([
+            'message' => 'Undangan berhasil dihapus.',
+            'outcome' => 'deleted',
+        ]);
+    }
+
     /** Baris jadwal + status lifecycle, dengan id unit terhubung sebagai sibling. */
     private function schedulePayload(array $schedule): array
     {

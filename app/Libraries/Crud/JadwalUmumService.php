@@ -235,6 +235,61 @@ class JadwalUmumService
         (new ScheduleInvitationStorage())->delete($existing['undangan_file'] ?? null);
     }
 
+    /**
+     * Ganti berkas undangan jadwal — dipakai endpoint undangan API mobile
+     * (multipart hanya terparsing untuk POST, bukan PUT/PATCH).
+     *
+     * @return ?string pesan error bila gagal
+     */
+    public function replaceInvitation(int $scheduleId, ?UploadedFile $invitation): ?string
+    {
+        if ($invitation === null || $invitation->getError() === UPLOAD_ERR_NO_FILE) {
+            return 'Berkas undangan wajib diunggah.';
+        }
+
+        $storage = new ScheduleInvitationStorage();
+        $invitationCheck = $storage->validate($invitation);
+        if (isset($invitationCheck['error'])) {
+            return $invitationCheck['error'];
+        }
+
+        try {
+            $stored = $storage->store($invitation);
+        } catch (\Throwable $exception) {
+            log_message('error', 'Gagal menyimpan undangan Jadwal Umum: {message}', ['message' => $exception->getMessage()]);
+
+            return 'PDF undangan gagal disimpan. Silakan coba kembali.';
+        }
+
+        $existing = (new JadwalUmumModel())->find($scheduleId);
+        (new JadwalUmumModel())->update($scheduleId, [
+            'undangan_file'      => $stored['file'],
+            'undangan_nama_asli' => $stored['original_name'],
+        ]);
+
+        $storage->delete($existing['undangan_file'] ?? null);
+
+        return null;
+    }
+
+    /**
+     * Hapus berkas undangan jadwal — dipakai endpoint undangan API mobile.
+     */
+    public function removeInvitation(int $scheduleId): void
+    {
+        $existing = (new JadwalUmumModel())->find($scheduleId);
+        if ($existing === null) {
+            return;
+        }
+
+        (new JadwalUmumModel())->update($scheduleId, [
+            'undangan_file'      => null,
+            'undangan_nama_asli' => null,
+        ]);
+
+        (new ScheduleInvitationStorage())->delete($existing['undangan_file'] ?? null);
+    }
+
     /** @return list<int> */
     public function unitIdsForSchedule(int $scheduleId): array
     {

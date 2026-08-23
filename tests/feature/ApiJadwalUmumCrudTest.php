@@ -1,7 +1,10 @@
 <?php
 
+use App\Libraries\Crud\JadwalUmumService;
+use App\Libraries\Schedule\ScheduleInvitationStorage;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Forge;
+use CodeIgniter\HTTP\Files\UploadedFile;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Database;
@@ -22,6 +25,8 @@ final class ApiJadwalUmumCrudTest extends CIUnitTestCase
 
     private BaseConnection $apiDb;
     private Forge $apiForge;
+    /** @var list<string> */
+    private array $filesToClean = [];
 
     protected function setUp(): void
     {
@@ -44,6 +49,14 @@ final class ApiJadwalUmumCrudTest extends CIUnitTestCase
         if (isset($this->apiForge)) {
             $this->dropTables();
         }
+
+        service('superglobals')->setFilesArray([]);
+        foreach ($this->filesToClean as $path) {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+        $this->filesToClean = [];
 
         parent::tearDown();
     }
@@ -209,6 +222,144 @@ final class ApiJadwalUmumCrudTest extends CIUnitTestCase
             ]);
         $conflict->assertStatus(422);
         $this->assertSame(2, $this->apiDb->table('jadwal_umum')->countAllResults());
+    }
+
+    public function testInvitationEndpointsValidateUploadAndMissingSchedule(): void
+    {
+        $bearer = ['Authorization' => 'Bearer ' . self::ADMIN_TOKEN];
+        $tempPath = (string) tempnam(sys_get_temp_dir(), 'undangan-api-');
+        file_put_contents($tempPath, '%PDF-1.4 pengujian');
+
+        // Jadwal tidak ada → 404 sebelum menyentuh berkas.
+        $this->setFakeUpload($tempPath, 'undangan.pdf');
+        $this->withHeaders($bearer)->post('/api/v1/jadwal-umum/999/undangan')->assertStatus(404);
+
+        // Berkas tidak disertakan.
+        $this->setFakeUpload(null);
+        $missingFile = $this->withHeaders($bearer)->post('/api/v1/jadwal-umum/1/undangan');
+        $missingFile->assertStatus(422);
+        $this->assertSame(
+            'Berkas undangan wajib diunggah.',
+            json_decode((string) $missingFile->response()->getBody(), true)['message']
+        );
+
+        // Unggahan tidak valid ditolak penyimpanan (isValid gagal untuk file
+        // yang bukan hasil upload HTTP asli — sama seperti produksi).
+        $this->setFakeUpload($tempPath, 'undangan.txt', 'text/plain');
+        $invalid = $this->withHeaders($bearer)->post('/api/v1/jadwal-umum/1/undangan');
+        $invalid->assertStatus(422);
+        $this->assertSame(
+            'Unggahan undangan gagal diproses. Silakan pilih ulang file.',
+            json_decode((string) $invalid->response()->getBody(), true)['message']
+        );
+        $this->assertNull(
+            $this->apiDb->table('jadwal_umum')->where('id', 1)->get()->getRowArray()['undangan_file']
+        );
+
+        // Hapus undangan: 404 untuk jadwal hilang, happy path membersihkan referensi.
+        $this->apiDb->table('jadwal_umum')->where('id', 1)->update([
+            'undangan_file'      => str_repeat('a', 40) . '.pdf',
+            'undangan_nama_asli' => 'undangan-lama.pdf',
+        ]);
+        $this->withHeaders($bearer)->delete('/api/v1/jadwal-umum/999/undangan')->assertStatus(404);
+
+        $removed = $this->withHeaders($bearer)->delete('/api/v1/jadwal-umum/1/undangan');
+        $removed->assertOK();
+        $this->assertSame('deleted', json_decode((string) $removed->response()->getBody(), true)['outcome']);
+        $row = $this->apiDb->table('jadwal_umum')->where('id', 1)->get()->getRowArray();
+        $this->assertNull($row['undangan_file']);
+        $this->assertNull($row['undangan_nama_asli']);
+
+        unlink($tempPath);
+    }
+
+    public function testReplaceAndRemoveInvitationManageFileLifecycle(): void
+    {
+        $storageDir = (new ScheduleInvitationStorage())->directory();
+        $service = new JadwalUmumService($this->apiDb);
+
+        $first = $this->invitationUploadDouble('rapat-awal.pdf');
+        $this->assertNull($service->replaceInvitation(1, $first['file']));
+
+        $row = $this->apiDb->table('jadwal_umum')->where('id', 1)->get()->getRowArray();
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{40}\.pdf$/', (string) $row['undangan_file']);
+        $this->assertSame('rapat-awal.pdf', $row['undangan_nama_asli']);
+        $firstPath = $storageDir . DIRECTORY_SEPARATOR . $row['undangan_file'];
+        $this->filesToClean[] = $firstPath;
+        $this->assertFileExists($firstPath);
+
+        // Ganti undangan: berkas lama dihapus setelah yang baru tersimpan.
+        $second = $this->invitationUploadDouble('rapat-pengganti.pdf');
+        $this->assertNull($service->replaceInvitation(1, $second['file']));
+
+        $row = $this->apiDb->table('jadwal_umum')->where('id', 1)->get()->getRowArray();
+        $this->assertSame('rapat-pengganti.pdf', $row['undangan_nama_asli']);
+        $secondPath = $storageDir . DIRECTORY_SEPARATOR . $row['undangan_file'];
+        $this->filesToClean[] = $secondPath;
+        $this->assertNotSame($firstPath, $secondPath);
+        $this->assertFileExists($secondPath);
+        $this->assertFileDoesNotExist($firstPath);
+
+        $service->removeInvitation(1);
+        $row = $this->apiDb->table('jadwal_umum')->where('id', 1)->get()->getRowArray();
+        $this->assertNull($row['undangan_file']);
+        $this->assertNull($row['undangan_nama_asli']);
+        $this->assertFileDoesNotExist($secondPath);
+    }
+
+    /**
+     * Menyuntikkan berkas palsu ke superglobal files — FileCollection CI4
+     * membacanya secara lazy saat controller memanggil getFile().
+     */
+    private function setFakeUpload(?string $tempPath, string $clientName = 'undangan.pdf', string $mime = 'application/pdf'): void
+    {
+        service('superglobals')->setFilesArray($tempPath === null ? [] : [
+            'undangan_file' => [
+                'name'     => $clientName,
+                'type'     => $mime,
+                'tmp_name' => $tempPath,
+                'error'    => UPLOAD_ERR_OK,
+                'size'     => (int) filesize($tempPath),
+            ],
+        ]);
+    }
+
+    /**
+     * UploadedFile test-double: isValid tanpa is_uploaded_file (berkas lokal)
+     * dan move() memakai rename — move_uploaded_file hanya berlaku untuk
+     * upload HTTP asli. Pola yang sama dengan SettingMediaUploadTest.
+     *
+     * @return array{file: UploadedFile, path: string}
+     */
+    private function invitationUploadDouble(string $clientName): array
+    {
+        $path = (string) tempnam(sys_get_temp_dir(), 'undangan-dbl-');
+        file_put_contents($path, '%PDF-1.4 ' . $clientName);
+
+        $file = new class(
+            $path,
+            $clientName,
+            'application/pdf',
+            (int) filesize($path),
+            UPLOAD_ERR_OK
+        ) extends UploadedFile {
+            public function isValid(): bool
+            {
+                return $this->getError() === UPLOAD_ERR_OK && is_file($this->getTempName());
+            }
+
+            public function move(string $targetPath, ?string $name = null, bool $overwrite = false)
+            {
+                if (! is_dir($targetPath)) {
+                    mkdir($targetPath, 0750, true);
+                }
+                $this->hasMoved = true;
+
+                return rename($this->getTempName(), rtrim($targetPath, '/\\') . DIRECTORY_SEPARATOR . $name);
+            }
+        };
+
+        return ['file' => $file, 'path' => $path];
     }
 
     /** Tanggal dinamis n hari ke depan — status lifecycle dihitung dari waktu sekarang. */
