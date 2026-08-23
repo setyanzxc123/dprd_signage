@@ -526,6 +526,62 @@ class JadwalBanmusService
         (new ScheduleInvitationStorage())->delete($item['undangan_file'] ?? null);
     }
 
+    /**
+     * Ganti berkas undangan milik item agenda — dipakai endpoint
+     * undangan API mobile (multipart hanya terparsing untuk POST).
+     *
+     * @return ?string pesan error bila gagal
+     */
+    public function replaceItemInvitation(int $itemId, ?UploadedFile $invitation): ?string
+    {
+        if ($invitation === null || $invitation->getError() === UPLOAD_ERR_NO_FILE) {
+            return 'Berkas undangan wajib diunggah.';
+        }
+
+        $storage = new ScheduleInvitationStorage();
+        $invitationCheck = $storage->validate($invitation);
+        if (isset($invitationCheck['error'])) {
+            return $invitationCheck['error'];
+        }
+
+        try {
+            $stored = $storage->store($invitation);
+        } catch (Throwable $exception) {
+            log_message('error', 'Gagal menyimpan undangan Banmus: {message}', ['message' => $exception->getMessage()]);
+
+            return 'PDF undangan gagal disimpan. Silakan coba kembali.';
+        }
+
+        $existing = (new JadwalBanmusModel())->find($itemId);
+        (new JadwalBanmusModel())->update($itemId, [
+            'undangan_file'      => $stored['file'],
+            'undangan_nama_asli' => $stored['original_name'],
+        ]);
+
+        $storage->delete($existing['undangan_file'] ?? null);
+
+        return null;
+    }
+
+    /**
+     * Hapus berkas undangan milik item agenda — dipakai endpoint
+     * undangan API mobile.
+     */
+    public function removeItemInvitation(int $itemId): void
+    {
+        $existing = (new JadwalBanmusModel())->find($itemId);
+        if ($existing === null) {
+            return;
+        }
+
+        (new JadwalBanmusModel())->update($itemId, [
+            'undangan_file'      => null,
+            'undangan_nama_asli' => null,
+        ]);
+
+        (new ScheduleInvitationStorage())->delete($existing['undangan_file'] ?? null);
+    }
+
     // ── HELPER ───────────────────────────────────────────────────────
 
     /** @return array{payload?: array<string, mixed>, new_file?: ?string, error?: string} */

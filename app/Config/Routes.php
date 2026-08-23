@@ -180,6 +180,15 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
     $routes->patch('jadwal-banmus/(:num)',     'JadwalBanmusController::update/$1');
     $routes->delete('jadwal-banmus/(:num)',    'JadwalBanmusController::delete/$1');
     $routes->post('jadwal-banmus/(:num)/dokumen', 'JadwalBanmusController::storeDocument/$1');
+
+    $routes->get('jadwal-banmus/(:num)/item',            'JadwalBanmusController::indexItems/$1');
+    $routes->get('jadwal-banmus/(:num)/item/(:num)',     'JadwalBanmusController::showItem/$1/$2');
+    $routes->post('jadwal-banmus/(:num)/item',           'JadwalBanmusController::storeItem/$1');
+    $routes->put('jadwal-banmus/(:num)/item/(:num)',     'JadwalBanmusController::updateItem/$1/$2');
+    $routes->patch('jadwal-banmus/(:num)/item/(:num)',   'JadwalBanmusController::updateItem/$1/$2');
+    $routes->delete('jadwal-banmus/(:num)/item/(:num)',  'JadwalBanmusController::deleteItem/$1/$2');
+    $routes->post('jadwal-banmus/(:num)/item/(:num)/undangan',   'JadwalBanmusController::storeItemInvitation/$1/$2');
+    $routes->delete('jadwal-banmus/(:num)/item/(:num)/undangan', 'JadwalBanmusController::deleteItemInvitation/$1/$2');
 });
 
 // ── API Signage (backward compatible) ────────────────────────────────

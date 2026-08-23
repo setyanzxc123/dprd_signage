@@ -42,6 +42,7 @@ final class ApiJadwalBanmusCrudTest extends CIUnitTestCase
         $this->createTables();
         $this->seedIdentities();
         $this->seedDocuments();
+        $this->seedMasterData();
     }
 
     protected function tearDown(): void
@@ -246,14 +247,179 @@ final class ApiJadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertFileDoesNotExist($secondPath);
     }
 
+    public function testItemCrudFlowViaApi(): void
+    {
+        $bearer = ['Authorization' => 'Bearer ' . self::ADMIN_TOKEN];
+        $tanggal = date('Y-m-d', strtotime('+30 days'));
+
+        // List item terlingkupi dokumen; item tanpa pivot tidak punya unit.
+        $this->withHeaders($bearer)->get('/api/v1/jadwal-banmus/999/item')->assertStatus(404);
+        $list = $this->withHeaders($bearer)->get('/api/v1/jadwal-banmus/1/item');
+        $list->assertOK();
+        $listBody = json_decode((string) $list->response()->getBody(), true);
+        $this->assertCount(2, $listBody['data']);
+        $this->assertSame([], $listBody['data'][0]['unit_ids']);
+
+        // Item proyeksi (data pelaksanaan belum lengkap).
+        $projection = $this->withHeaders($bearer)->withBodyFormat('json')->post('/api/v1/jadwal-banmus/1/item', [
+            'agenda'        => 'Rapat Dengar Pendapat Publik',
+            'periode_label' => 'September 2026',
+        ]);
+        $projection->assertStatus(201);
+        $projectionBody = json_decode((string) $projection->response()->getBody(), true);
+        $this->assertSame('proyeksi', $projectionBody['data']['status']);
+        $this->assertSame(3, (int) $projectionBody['data']['urutan']);
+
+        // Item terjadwal penuh → status menunggu + pivot unit tersimpan.
+        $scheduled = $this->withHeaders($bearer)->withBodyFormat('json')->post('/api/v1/jadwal-banmus/1/item', [
+            'agenda'     => 'Rapat Pleno Pembahasan Hasil Banmus',
+            'tanggal'    => $tanggal,
+            'jam_mulai'  => '09:00',
+            'jam_selesai' => '10:00',
+            'ruangan_id' => 1,
+            'unit_ids'   => [1],
+            'publikasi'  => 'publik',
+        ]);
+        $scheduled->assertStatus(201);
+        $scheduledBody = json_decode((string) $scheduled->response()->getBody(), true);
+        $this->assertSame('menunggu', $scheduledBody['data']['status']);
+        $this->assertSame([1], $scheduledBody['data']['unit_ids']);
+        $itemId = (int) $scheduledBody['data']['id'];
+        $pivot = $this->apiDb->table('jadwal_banmus_unit_rapat')
+            ->where('jadwal_banmus_id', $itemId)->get()->getRowArray();
+        $this->assertSame(1, (int) $pivot['unit_rapat_id']);
+
+        // Validasi: jam terbalik, unit tidak valid, konflik ruangan sesama item banmus.
+        $this->withHeaders($bearer)->withBodyFormat('json')->post('/api/v1/jadwal-banmus/1/item', [
+            'agenda'     => 'Jam terbalik',
+            'tanggal'    => $tanggal,
+            'jam_mulai'  => '11:00',
+            'jam_selesai' => '10:00',
+        ])->assertStatus(422);
+
+        $this->withHeaders($bearer)->withBodyFormat('json')->post('/api/v1/jadwal-banmus/1/item', [
+            'agenda'     => 'Unit tidak ada',
+            'unit_ids'   => [99],
+        ])->assertStatus(422);
+
+        $this->withHeaders($bearer)->withBodyFormat('json')->post('/api/v1/jadwal-banmus/1/item', [
+            'agenda'     => 'Bentrok ruangan',
+            'tanggal'    => $tanggal,
+            'jam_mulai'  => '09:30',
+            'jam_selesai' => '10:30',
+            'ruangan_id' => 1,
+            'unit_ids'   => [1],
+        ])->assertStatus(422);
+
+        // Show/update item terlingkupi dokumen; doc lain → 404.
+        $this->withHeaders($bearer)->get("/api/v1/jadwal-banmus/1/item/{$itemId}")->assertOK();
+        $this->withHeaders($bearer)->get('/api/v1/jadwal-banmus/2/item/' . $itemId)->assertStatus(404);
+
+        $updated = $this->withHeaders($bearer)->withBodyFormat('json')
+            ->put("/api/v1/jadwal-banmus/1/item/{$itemId}", [
+                'agenda'     => 'Rapat Pleno Pembahasan (Revisi)',
+                'tanggal'    => $tanggal,
+                'jam_mulai'  => '13:00',
+                'jam_selesai' => '14:00',
+                'ruangan_id' => 1,
+                'unit_ids'   => [1],
+                'publikasi'  => 'publik',
+            ]);
+        $updated->assertOK();
+        $updatedBody = json_decode((string) $updated->response()->getBody(), true);
+        $this->assertSame('Rapat Pleno Pembahasan (Revisi)', $updatedBody['data']['agenda']);
+        $this->assertSame('menunggu', $updatedBody['data']['status']);
+
+        // Delete item → soft delete (baris tetap, deleted_at terisi).
+        $deleted = $this->withHeaders($bearer)->delete("/api/v1/jadwal-banmus/1/item/{$itemId}");
+        $deleted->assertOK();
+        $this->assertSame('deleted', json_decode((string) $deleted->response()->getBody(), true)['outcome']);
+        $row = $this->apiDb->table('jadwal_banmus')->where('id', $itemId)->get()->getRowArray();
+        $this->assertNotNull($row['deleted_at']);
+    }
+
+    public function testItemInvitationEndpointsValidateAndClear(): void
+    {
+        $bearer = ['Authorization' => 'Bearer ' . self::ADMIN_TOKEN];
+        $tempPath = (string) tempnam(sys_get_temp_dir(), 'undangan-banmus-');
+        file_put_contents($tempPath, '%PDF-1.4 pengujian');
+
+        $this->setFakeUpload($tempPath, 'undangan.pdf', 'application/pdf', 'undangan_file');
+        $this->withHeaders($bearer)->post('/api/v1/jadwal-banmus/1/item/999/undangan')->assertStatus(404);
+        $this->withHeaders($bearer)->post('/api/v1/jadwal-banmus/999/item/1/undangan')->assertStatus(404);
+
+        $this->setFakeUpload(null, 'undangan.pdf', 'application/pdf', 'undangan_file');
+        $missing = $this->withHeaders($bearer)->post('/api/v1/jadwal-banmus/1/item/1/undangan');
+        $missing->assertStatus(422);
+        $this->assertSame(
+            'Berkas undangan wajib diunggah.',
+            json_decode((string) $missing->response()->getBody(), true)['message']
+        );
+
+        $this->setFakeUpload($tempPath, 'undangan.txt', 'text/plain', 'undangan_file');
+        $invalid = $this->withHeaders($bearer)->post('/api/v1/jadwal-banmus/1/item/1/undangan');
+        $invalid->assertStatus(422);
+        $this->assertSame(
+            'Unggahan undangan gagal diproses. Silakan pilih ulang file.',
+            json_decode((string) $invalid->response()->getBody(), true)['message']
+        );
+
+        $this->apiDb->table('jadwal_banmus')->where('id', 1)->update([
+            'undangan_file'      => str_repeat('e', 40) . '.pdf',
+            'undangan_nama_asli' => 'undangan-lama.pdf',
+        ]);
+        $removed = $this->withHeaders($bearer)->delete('/api/v1/jadwal-banmus/1/item/1/undangan');
+        $removed->assertOK();
+        $this->assertSame('deleted', json_decode((string) $removed->response()->getBody(), true)['outcome']);
+        $row = $this->apiDb->table('jadwal_banmus')->where('id', 1)->get()->getRowArray();
+        $this->assertNull($row['undangan_file']);
+        $this->assertNull($row['undangan_nama_asli']);
+
+        unlink($tempPath);
+    }
+
+    public function testServiceReplacesAndRemovesItemInvitation(): void
+    {
+        $service = new JadwalBanmusService($this->apiDb);
+        $storageDir = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'agenda-invitations';
+
+        $first = $this->documentUploadDouble('undangan-rapat.pdf');
+        $this->assertNull($service->replaceItemInvitation(1, $first['file']));
+
+        $row = $this->apiDb->table('jadwal_banmus')->where('id', 1)->get()->getRowArray();
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{40}\.pdf$/', (string) $row['undangan_file']);
+        $this->assertSame('undangan-rapat.pdf', $row['undangan_nama_asli']);
+        $firstPath = $storageDir . DIRECTORY_SEPARATOR . $row['undangan_file'];
+        $this->filesToClean[] = $firstPath;
+        $this->assertFileExists($firstPath);
+
+        $second = $this->documentUploadDouble('undangan-rapat-revisi.pdf');
+        $this->assertNull($service->replaceItemInvitation(1, $second['file']));
+
+        $row = $this->apiDb->table('jadwal_banmus')->where('id', 1)->get()->getRowArray();
+        $secondPath = $storageDir . DIRECTORY_SEPARATOR . $row['undangan_file'];
+        $this->filesToClean[] = $secondPath;
+        $this->assertFileExists($secondPath);
+        $this->assertFileDoesNotExist($firstPath);
+
+        $service->removeItemInvitation(1);
+        $row = $this->apiDb->table('jadwal_banmus')->where('id', 1)->get()->getRowArray();
+        $this->assertNull($row['undangan_file']);
+        $this->assertFileDoesNotExist($secondPath);
+    }
+
     /**
      * Menyuntikkan berkas palsu ke superglobal files — FileCollection CI4
      * membacanya secara lazy saat controller memanggil getFile().
      */
-    private function setFakeUpload(?string $tempPath, string $clientName = 'dokumen.pdf', string $mime = 'application/pdf'): void
-    {
+    private function setFakeUpload(
+        ?string $tempPath,
+        string $clientName = 'dokumen.pdf',
+        string $mime = 'application/pdf',
+        string $field = 'dokumen_file',
+    ): void {
         service('superglobals')->setFilesArray($tempPath === null ? [] : [
-            'dokumen_file' => [
+            $field => [
                 'name'     => $clientName,
                 'type'     => $mime,
                 'tmp_name' => $tempPath,
@@ -299,6 +465,17 @@ final class ApiJadwalBanmusCrudTest extends CIUnitTestCase
         };
 
         return ['file' => $file, 'path' => $path];
+    }
+
+    private function seedMasterData(): void
+    {
+        $this->apiDb->table('ruangan')->insert([
+            'name' => 'Ruang Rapat Utama', 'kapasitas' => 50, 'tersedia' => 1,
+        ]);
+        $this->apiDb->table('unit_rapat')->insertBatch([
+            ['nama' => 'Komisi I', 'aktif' => 1, 'urutan' => 1],
+            ['nama' => 'Komisi II', 'aktif' => 1, 'urutan' => 2],
+        ]);
     }
 
     /** Menerbitkan access token Shield untuk pengujian. */
@@ -509,11 +686,43 @@ final class ApiJadwalBanmusCrudTest extends CIUnitTestCase
         ]);
         $this->apiForge->addPrimaryKey('id');
         $this->apiForge->createTable('jadwal_banmus');
+
+        $this->apiForge->addField([
+            'jadwal_banmus_id' => ['type' => 'INTEGER'],
+            'unit_rapat_id'    => ['type' => 'INTEGER'],
+            'created_at'       => ['type' => 'DATETIME', 'null' => true],
+        ]);
+        $this->apiForge->addPrimaryKey(['jadwal_banmus_id', 'unit_rapat_id']);
+        $this->apiForge->createTable('jadwal_banmus_unit_rapat');
+
+        $this->apiForge->addField([
+            'id'         => ['type' => 'INTEGER', 'auto_increment' => true],
+            'name'       => ['type' => 'VARCHAR', 'constraint' => 150],
+            'keterangan' => ['type' => 'TEXT', 'null' => true],
+            'kapasitas'  => ['type' => 'INTEGER', 'default' => 0],
+            'tersedia'   => ['type' => 'INTEGER', 'default' => 1],
+        ]);
+        $this->apiForge->addPrimaryKey('id');
+        $this->apiForge->createTable('ruangan');
+
+        $this->apiForge->addField([
+            'id'         => ['type' => 'INTEGER', 'auto_increment' => true],
+            'nama'       => ['type' => 'VARCHAR', 'constraint' => 150],
+            'aktif'      => ['type' => 'INTEGER', 'default' => 1],
+            'urutan'     => ['type' => 'INTEGER', 'default' => 0],
+            'created_at' => ['type' => 'DATETIME', 'null' => true],
+            'updated_at' => ['type' => 'DATETIME', 'null' => true],
+        ]);
+        $this->apiForge->addPrimaryKey('id');
+        $this->apiForge->createTable('unit_rapat');
     }
 
     private function dropTables(): void
     {
-        foreach (['jadwal_banmus', 'dokumen_banmus', 'anggota', 'auth_token_logins', 'auth_identities', 'auth_groups_users', 'users'] as $table) {
+        foreach ([
+            'jadwal_banmus_unit_rapat', 'jadwal_banmus', 'dokumen_banmus', 'unit_rapat', 'ruangan',
+            'anggota', 'auth_token_logins', 'auth_identities', 'auth_groups_users', 'users',
+        ] as $table) {
             $this->apiForge->dropTable($table, true);
         }
     }
