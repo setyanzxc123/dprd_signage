@@ -206,6 +206,59 @@ class JadwalBanmusService
         return true;
     }
 
+    /**
+     * Ganti berkas PDF SK tanpa menyentuh metadata — dipakai endpoint
+     * dokumen API mobile (multipart hanya terparsing untuk POST).
+     *
+     * @return ?string pesan error bila gagal
+     */
+    public function replaceDocument(int $documentId, ?UploadedFile $upload): ?string
+    {
+        if ($upload === null || $upload->getError() === UPLOAD_ERR_NO_FILE) {
+            return 'Berkas dokumen SK wajib diunggah.';
+        }
+
+        $uploadResult = $this->validatedPdfUpload($upload);
+        if (isset($uploadResult['error'])) {
+            return $uploadResult['error'];
+        }
+
+        $document = (new BanmusDocumentModel())->find($documentId);
+        if ($document === null) {
+            return 'Dokumen SK Banmus tidak ditemukan.';
+        }
+
+        $newFileName = null;
+
+        try {
+            $newFileName = bin2hex(random_bytes(20)) . '.pdf';
+            $uploadDirectory = $this->uploadDirectory();
+            if (! is_dir($uploadDirectory) && ! mkdir($uploadDirectory, 0750, true) && ! is_dir($uploadDirectory)) {
+                throw new RuntimeException('Direktori penyimpanan dokumen tidak dapat dibuat.');
+            }
+            $upload->move($uploadDirectory, $newFileName);
+            if (! $upload->hasMoved()) {
+                throw new RuntimeException('Dokumen PDF tidak dapat disimpan.');
+            }
+
+            (new BanmusDocumentModel())->update($documentId, [
+                'dokumen_file'      => $newFileName,
+                'dokumen_nama_asli' => mb_substr(basename($upload->getClientName()), 0, 255),
+            ]);
+
+            $this->deleteStoredPdf($document['dokumen_file'] ?? null);
+
+            return null;
+        } catch (Throwable $exception) {
+            $this->deleteStoredPdf($newFileName);
+            log_message('error', 'Gagal mengganti dokumen SK Banmus: {message}', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            return 'Dokumen SK Banmus gagal disimpan. Periksa data dan coba kembali.';
+        }
+    }
+
     // ── ITEM AGENDA ──────────────────────────────────────────────────
 
     /**

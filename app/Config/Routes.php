@@ -172,6 +172,14 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
     $routes->delete('jadwal-umum/(:num)',  'JadwalUmumController::delete/$1');
     $routes->post('jadwal-umum/(:num)/undangan',   'JadwalUmumController::storeInvitation/$1');
     $routes->delete('jadwal-umum/(:num)/undangan', 'JadwalUmumController::deleteInvitation/$1');
+
+    $routes->get('jadwal-banmus',              'JadwalBanmusController::index');
+    $routes->get('jadwal-banmus/(:num)',       'JadwalBanmusController::show/$1');
+    $routes->post('jadwal-banmus',             'JadwalBanmusController::create');
+    $routes->put('jadwal-banmus/(:num)',       'JadwalBanmusController::update/$1');
+    $routes->patch('jadwal-banmus/(:num)',     'JadwalBanmusController::update/$1');
+    $routes->delete('jadwal-banmus/(:num)',    'JadwalBanmusController::delete/$1');
+    $routes->post('jadwal-banmus/(:num)/dokumen', 'JadwalBanmusController::storeDocument/$1');
 });
 
 // ── API Signage (backward compatible) ────────────────────────────────
