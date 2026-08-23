@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\Schedule\Persistence\DatabaseScheduleReadRepository;
+use App\Libraries\Schedule\ScheduleDocumentService;
 use App\Models\BanmusDocumentModel;
 use App\Models\AnggotaModel;
 use App\Models\JadwalBanmusModel;
@@ -77,8 +78,7 @@ class AgendaController extends BaseController
             throw PageNotFoundException::forPageNotFound();
         }
 
-        $model = new BanmusDocumentModel();
-        $document = $model->find($id);
+        $document = (new BanmusDocumentModel())->find($id);
         if ($document === null) {
             throw PageNotFoundException::forPageNotFound();
         }
@@ -88,40 +88,23 @@ class AgendaController extends BaseController
             throw PageNotFoundException::forPageNotFound();
         }
 
-        $externalUrl = trim((string) ($document['dokumen_url'] ?? ''));
-        if ($externalUrl !== '') {
-            $scheme = strtolower((string) parse_url($externalUrl, PHP_URL_SCHEME));
-            if (filter_var($externalUrl, FILTER_VALIDATE_URL) === false
-                || ! in_array($scheme, ['http', 'https'], true)) {
-                throw PageNotFoundException::forPageNotFound();
-            }
-
-            return $this->privateResponse()->redirect($externalUrl, 'auto', 302);
-        }
-
-        $fileName = (string) ($document['dokumen_file'] ?? '');
-        $safeFileName = basename($fileName);
-        if ($safeFileName === ''
-            || $safeFileName !== $fileName
-            || preg_match('/^[a-f0-9]{40}\.pdf$/', $safeFileName) !== 1) {
+        $resolved = (new ScheduleDocumentService())->resolveSkDocument($document);
+        if ($resolved === null) {
             throw PageNotFoundException::forPageNotFound();
         }
 
-        $path = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'sk-banmus' . DIRECTORY_SEPARATOR . $safeFileName;
-        if (! is_file($path)) {
-            throw PageNotFoundException::forPageNotFound();
+        if (isset($resolved['url'])) {
+            return $this->privateResponse()->redirect($resolved['url'], 'auto', 302);
         }
 
-        $downloadName = basename((string) ($document['dokumen_nama_asli'] ?: 'SK-Banmus.pdf'));
-        $downloadName = str_replace(['"', "\r", "\n"], '', $downloadName);
-        $contents = file_get_contents($path);
+        $contents = file_get_contents($resolved['path']);
         if ($contents === false) {
             throw PageNotFoundException::forPageNotFound();
         }
 
         return $this->privateResponse()
             ->setContentType('application/pdf')
-            ->setHeader('Content-Disposition', 'inline; filename="' . $downloadName . '"')
+            ->setHeader('Content-Disposition', 'inline; filename="' . $resolved['download_name'] . '"')
             ->setHeader('Content-Length', (string) strlen($contents))
             ->setBody($contents);
     }

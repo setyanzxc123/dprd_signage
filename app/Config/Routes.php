@@ -135,7 +135,11 @@ $routes->group('api/v1/anggota', ['filter' => 'memberapi'], function ($routes) {
 // ── API v1 Resolve resource jadwal (sesi web / bearer anggota) ──────
 $routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'memberapi'], static function ($routes) {
     $routes->get('(:segment)/(:num)/(materi|stream)', 'ScheduleResourceController::resolve/$1/$2/$3');
+    $routes->get('(:segment)/(:num)/undangan', 'ScheduleDocumentController::undangan/$1/$2');
 });
+
+// ── API v1 Dokumen SK banmus (publik bila is_publik, selain itu anggota) ──
+$routes->get('api/v1/dokumen-banmus/(:num)', 'ScheduleDocumentController::sk/$1', ['namespace' => 'App\Controllers\Api\V1']);
 
 // ── API v1 Auth mobile (bearer token) ───────────────────────────────
 $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1'], static function ($routes) {
