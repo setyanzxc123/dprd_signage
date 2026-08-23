@@ -32,6 +32,10 @@ final class DatabaseOtpRepository implements OtpRepositoryInterface, OtpWebhookR
             return $result;
         } catch (\Throwable $exception) {
             $db->transRollback();
+            // Mode ketat transaksi CI4 membiarkan transStatus bernilai false
+            // sampai di-reset; kegagalan yang sudah ditangani tidak boleh
+            // meracuni transaksi berikutnya pada koneksi yang sama.
+            $db->resetTransStatus();
             throw $exception;
         }
     }
@@ -39,6 +43,13 @@ final class DatabaseOtpRepository implements OtpRepositoryInterface, OtpWebhookR
     public function lockAccount(int $anggotaId): void
     {
         $db = $this->db();
+        // SQLite (dipakai pengujian) tidak mendukung FOR UPDATE, dan
+        // seluruh database sudah terkunci eksplisit saat transaksi
+        // berjalan sehingga lock baris tidak diperlukan.
+        if ($db->DBDriver === 'SQLite3') {
+            return;
+        }
+
         $table = $db->prefixTable('anggota');
         $db->query("SELECT id FROM {$table} WHERE id = ? FOR UPDATE", [$anggotaId]);
     }
