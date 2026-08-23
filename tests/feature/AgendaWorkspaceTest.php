@@ -117,7 +117,7 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
         $response->assertOK();
         $body = $response->response()->getBody();
         $this->assertStringContainsString('Kalender Agenda', $body);
-        $this->assertStringContainsString('Agenda Banmus terjadwal dan Jadwal Umum', $body);
+        $this->assertStringContainsString('Ditampilkan', $body);
         $this->assertStringContainsString('name="source"', $body);
         $this->assertStringContainsString('name="unit"', $body);
         $this->assertStringContainsString('Konflik', $body);

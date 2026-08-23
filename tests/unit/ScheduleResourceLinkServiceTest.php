@@ -155,11 +155,23 @@ final class ScheduleResourceLinkServiceTest extends CIUnitTestCase
             'unit_rapat_id'    => ['type' => 'INTEGER'],
         ]);
         $this->resourceForge->createTable('jadwal_banmus_unit_rapat');
+
+        $this->resourceForge->addField([
+            'id'           => ['type' => 'INTEGER', 'auto_increment' => true],
+            'materi_url'   => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'materi_akses' => ['type' => 'VARCHAR', 'constraint' => 20],
+            'stream_url'   => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_akses' => ['type' => 'VARCHAR', 'constraint' => 20],
+            'is_publik'    => ['type' => 'INTEGER', 'default' => 0],
+        ]);
+        $this->resourceForge->addPrimaryKey('id');
+        $this->resourceForge->createTable('jadwal_umum');
     }
 
     private function dropTables(): void
     {
         foreach ([
+            'jadwal_umum',
             'jadwal_banmus_unit_rapat',
             'jadwal_banmus',
             'dokumen_banmus',

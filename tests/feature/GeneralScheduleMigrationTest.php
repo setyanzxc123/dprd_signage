@@ -55,6 +55,10 @@ final class GeneralScheduleMigrationTest extends CIUnitTestCase
         $resourceMigration->up();
         $invitationMigration->up();
 
+        // Cache metadata kolom harus di-reset setelah perubahan schema,
+        // jika tidak fieldExists() membaca daftar kolom yang basi.
+        $this->testDb->resetDataCache();
+
         $this->assertTrue($this->testDb->tableExists('jadwal_umum'));
         $this->assertTrue($this->testDb->tableExists('jadwal_umum_unit_rapat'));
         foreach ([
@@ -63,23 +67,29 @@ final class GeneralScheduleMigrationTest extends CIUnitTestCase
             'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
             'undangan_file', 'undangan_nama_asli',
         ] as $field) {
-            $this->assertTrue($this->testDb->fieldExists($field, 'jadwal_umum'));
+            $this->assertTrue(
+                $this->testDb->fieldExists($field, 'jadwal_umum'),
+                "Kolom jadwal_umum.{$field} tidak ditemukan setelah migration up().",
+            );
         }
         $this->assertFalse($this->testDb->fieldExists('lingkup', 'jadwal_umum'));
         $this->assertFalse($this->testDb->fieldExists('kategori', 'jadwal_umum'));
 
         $invitationMigration->down();
+        $this->testDb->resetDataCache();
         foreach (['undangan_file', 'undangan_nama_asli'] as $field) {
             $this->assertFalse($this->testDb->fieldExists($field, 'jadwal_umum'));
         }
 
         $resourceMigration->down();
+        $this->testDb->resetDataCache();
         foreach (['materi_url', 'materi_akses', 'stream_url', 'stream_akses'] as $field) {
             $this->assertFalse($this->testDb->fieldExists($field, 'jadwal_umum'));
         }
 
         $unitMigration->down();
         $scheduleMigration->down();
+        $this->testDb->resetDataCache();
 
         $this->assertFalse($this->testDb->tableExists('jadwal_umum_unit_rapat'));
         $this->assertFalse($this->testDb->tableExists('jadwal_umum'));

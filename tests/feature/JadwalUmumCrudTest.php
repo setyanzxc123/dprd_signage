@@ -259,7 +259,7 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
 
         $this->forge->addField([
             'id'    => ['type' => 'INTEGER', 'auto_increment' => true],
-            'nama'  => ['type' => 'VARCHAR', 'constraint' => 150],
+            'name'  => ['type' => 'VARCHAR', 'constraint' => 150],
             'aktif' => ['type' => 'INTEGER', 'default' => 1],
         ]);
         $this->forge->addPrimaryKey('id');
@@ -273,18 +273,24 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
         $this->forge->createTable('anggota_unit_rapat');
 
         $this->forge->addField([
-            'id'               => ['type' => 'INTEGER', 'auto_increment' => true],
-            'judul'            => ['type' => 'VARCHAR', 'constraint' => 255],
-            'tanggal'          => ['type' => 'DATE'],
-            'waktu_mulai'      => ['type' => 'TIME', 'null' => true],
-            'waktu_selesai'    => ['type' => 'TIME', 'null' => true],
-            'ruangan_id'       => ['type' => 'INTEGER', 'null' => true],
-            'lokasi_lainnya'   => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
-            'pihak_eksternal'  => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
-            'is_publik'        => ['type' => 'INTEGER', 'default' => 0],
-            'keterangan'       => ['type' => 'TEXT', 'null' => true],
-            'created_at'       => ['type' => 'DATETIME', 'null' => true],
-            'updated_at'       => ['type' => 'DATETIME', 'null' => true],
+            'id'              => ['type' => 'INTEGER', 'auto_increment' => true],
+            'judul'           => ['type' => 'VARCHAR', 'constraint' => 255],
+            'tanggal'         => ['type' => 'DATE'],
+            'waktu_mulai'     => ['type' => 'TIME', 'null' => true],
+            'waktu_selesai'   => ['type' => 'TIME', 'null' => true],
+            'ruangan_id'      => ['type' => 'INTEGER', 'null' => true],
+            'lokasi_lainnya'  => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'pihak_eksternal' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'is_publik'       => ['type' => 'INTEGER', 'default' => 0],
+            'keterangan'      => ['type' => 'TEXT', 'null' => true],
+            'materi_url'      => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'materi_akses'    => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
+            'stream_url'      => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
+            'stream_akses'    => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
+            'undangan_file'   => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'undangan_nama_asli' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'created_at'      => ['type' => 'DATETIME', 'null' => true],
+            'updated_at'      => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('jadwal_umum');
@@ -308,7 +314,7 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
             ['nama' => 'Komisi II', 'aktif' => 1, 'urutan' => 2],
         ]);
         $this->testDb->table('anggota')->insert([
-            'nama' => 'Anggota Pengujian', 'aktif' => 1,
+            'name' => 'Anggota Pengujian', 'aktif' => 1,
         ]);
         $this->testDb->table('anggota_unit_rapat')->insert([
             'anggota_id' => 1, 'unit_rapat_id' => 1,

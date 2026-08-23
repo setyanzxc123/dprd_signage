@@ -265,10 +265,14 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
 
     public function testCompleteOperationalDataAutomaticallyBecomesSchedule(): void
     {
+        // Tanggal masa depan dinamis agar status lifecycle tetap 'menunggu'
+        // kapan pun test dijalankan (tanggal statis akan membusuk seiring waktu).
+        $tanggal = $this->futureDate('+30 days');
+
         $response = $this->postItem([
             'agenda'        => 'Rapat Banmus terjadwal',
             'periode_label' => 'Agustus 2026',
-            'tanggal'       => '2026-08-12',
+            'tanggal'       => $tanggal,
             'jam_mulai'     => '09:00',
             'jam_selesai'   => '11:00',
             'ruangan_id'    => '1',
@@ -294,7 +298,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             ->response()
             ->getBody();
         $this->assertStringNotContainsString('Periode SK: Agustus 2026', $body);
-        $this->assertStringContainsString('12/08/2026', $body);
+        $this->assertStringContainsString(date('d/m/Y', strtotime($tanggal)), $body);
         $this->assertStringNotContainsString('Ubah status pelaksanaan', $body);
         $this->assertStringNotContainsString("/item/{$row['id']}/status", $body);
     }
@@ -303,7 +307,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
     {
         $this->postItem([
             'agenda'       => 'Rapat Banmus terjadwal',
-            'tanggal'      => '2026-08-12',
+            'tanggal'      => $this->futureDate('+31 days'),
             'jam_mulai'    => '09:00',
             'jam_selesai'  => '11:00',
             'ruangan_id'   => '1',
@@ -339,7 +343,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
     {
         $this->postItem([
             'agenda'      => 'Rapat Banmus selesai',
-            'tanggal'     => '2026-08-12',
+            'tanggal'     => $this->futureDate('+32 days'),
             'jam_mulai'   => '09:00',
             'jam_selesai' => '11:00',
             'ruangan_id'  => '1',
@@ -359,7 +363,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
                 csrf_token()    => csrf_hash(),
                 'agenda'        => 'Rapat Banmus dijadwalkan ulang',
                 'periode_label' => 'Agustus 2026',
-                'tanggal'       => '2026-08-13',
+                'tanggal'       => $this->futureDate('+33 days'),
                 'jam_mulai'     => '09:00',
                 'jam_selesai'   => '11:00',
                 'ruangan_id'    => '1',
@@ -448,6 +452,11 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
                 csrf_token() => csrf_hash(),
                 ...$payload,
             ]);
+    }
+
+    private function futureDate(string $modifier): string
+    {
+        return date('Y-m-d', strtotime($modifier));
     }
 
     /**

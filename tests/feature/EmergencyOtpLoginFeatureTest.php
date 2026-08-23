@@ -23,14 +23,15 @@ final class EmergencyOtpLoginFeatureTest extends CIUnitTestCase
     {
         parent::setUp();
 
-        try {
-            $this->otpDb = Database::connect('tests', false);
-            $this->otpDb->initialize();
-        } catch (Throwable $exception) {
-            $this->markTestSkipped('Database test tidak tersedia: ' . $exception->getMessage());
+        if (! extension_loaded('sqlite3')) {
+            $this->markTestSkipped('Ekstensi sqlite3 diperlukan untuk pengujian OTP darurat.');
         }
 
-        $this->forge = Database::forge($this->otpDb);
+        // Wajib memakai koneksi shared: database tests adalah :memory:
+        // sehingga setiap koneksi baru berarti database kosong yang
+        // terpisah dan tidak terlihat oleh model aplikasi.
+        $this->otpDb = Database::connect('tests');
+        $this->forge = Database::forge('tests');
         $this->dropTables();
         $this->createParentTables();
         (new RefactorAndSimplifyDatabase($this->forge))->up();
@@ -42,9 +43,11 @@ final class EmergencyOtpLoginFeatureTest extends CIUnitTestCase
         if (isset($this->forge)) {
             $this->dropTables();
         }
-        if (isset($this->otpDb)) {
-            $this->otpDb->close();
-        }
+
+        // Alur test ini menuntaskan login anggota sampai session
+        // regenerate; sisa state dibersihkan lewat $_SESSION per request
+        // oleh FeatureTestTrait, tidak perlu pembersihan tambahan.
+        $_SESSION = [];
 
         parent::tearDown();
     }
@@ -99,27 +102,61 @@ final class EmergencyOtpLoginFeatureTest extends CIUnitTestCase
 
     private function createParentTables(): void
     {
+        // Schema identitas Shield (lihat AdminProfileTest) menggantikan
+        // tabel users lama; verifikasi OTP kini menyiapkan user Shield
+        // untuk anggota saat login pertama.
         $this->forge->addField([
-            'id' => ['type' => 'INT', 'auto_increment' => true],
-            'name' => ['type' => 'VARCHAR', 'constraint' => 100],
-            'username' => ['type' => 'VARCHAR', 'constraint' => 50],
-            'email' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-            'password' => ['type' => 'VARCHAR', 'constraint' => 255],
-            'role' => ['type' => 'VARCHAR', 'constraint' => 32],
-            'created_at' => ['type' => 'DATETIME', 'null' => true],
+            'id'             => ['type' => 'INTEGER', 'auto_increment' => true],
+            'username'       => ['type' => 'VARCHAR', 'constraint' => 30],
+            'name'           => ['type' => 'VARCHAR', 'constraint' => 100],
+            'status'         => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'status_message' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'active'         => ['type' => 'INTEGER', 'default' => 0],
+            'last_active'    => ['type' => 'DATETIME', 'null' => true],
+            'created_at'     => ['type' => 'DATETIME', 'null' => true],
+            'updated_at'     => ['type' => 'DATETIME', 'null' => true],
+            'deleted_at'     => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('users');
 
         $this->forge->addField([
-            'id' => ['type' => 'INT', 'auto_increment' => true],
-            'name' => ['type' => 'VARCHAR', 'constraint' => 150],
-            'jabatan' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-            'fraksi' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-            'komisi' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-            'no_wa' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
-            'aktif' => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 1],
-            'foto' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'id'         => ['type' => 'INTEGER', 'auto_increment' => true],
+            'user_id'    => ['type' => 'INTEGER'],
+            'group'      => ['type' => 'VARCHAR', 'constraint' => 255],
+            'created_at' => ['type' => 'DATETIME', 'null' => true],
+        ]);
+        $this->forge->addPrimaryKey('id');
+        $this->forge->createTable('auth_groups_users');
+
+        $this->forge->addField([
+            'id'           => ['type' => 'INTEGER', 'auto_increment' => true],
+            'user_id'      => ['type' => 'INTEGER'],
+            'type'         => ['type' => 'VARCHAR', 'constraint' => 255],
+            'name'         => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'secret'       => ['type' => 'VARCHAR', 'constraint' => 255],
+            'secret2'      => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'expires'      => ['type' => 'DATETIME', 'null' => true],
+            'extra'        => ['type' => 'TEXT', 'null' => true],
+            'force_reset'  => ['type' => 'INTEGER', 'default' => 0],
+            'last_used_at' => ['type' => 'DATETIME', 'null' => true],
+            'created_at'   => ['type' => 'DATETIME', 'null' => true],
+            'updated_at'   => ['type' => 'DATETIME', 'null' => true],
+        ]);
+        $this->forge->addPrimaryKey('id');
+        $this->forge->createTable('auth_identities');
+
+        $this->forge->addField([
+            'id'            => ['type' => 'INT', 'auto_increment' => true],
+            'name'          => ['type' => 'VARCHAR', 'constraint' => 150],
+            'jabatan'       => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
+            'fraksi'        => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
+            'komisi'        => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
+            'no_wa'         => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
+            'aktif'         => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 1],
+            'foto'          => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'user_id'       => ['type' => 'INT', 'null' => true],
+            'last_login_at' => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('anggota');
@@ -128,16 +165,18 @@ final class EmergencyOtpLoginFeatureTest extends CIUnitTestCase
     private function insertIdentities(): void
     {
         $this->otpDb->table('users')->insert([
-            'name' => 'Admin Test',
             'username' => 'admin-test',
-            'password' => password_hash('test-password', PASSWORD_DEFAULT),
-            'role' => 'superadmin',
-            'created_at' => date('Y-m-d H:i:s'),
+            'name'     => 'Admin Test',
+            'active'   => 1,
         ]);
         $this->adminId = (int) $this->otpDb->insertID();
+        $this->otpDb->table('auth_groups_users')->insert([
+            'user_id' => $this->adminId,
+            'group'   => 'superadmin',
+        ]);
 
         $this->otpDb->table('anggota')->insert([
-            'name' => 'Anggota OTP Darurat',
+            'name'  => 'Anggota OTP Darurat',
             'no_wa' => $this->phone,
             'aktif' => 1,
         ]);
@@ -146,7 +185,7 @@ final class EmergencyOtpLoginFeatureTest extends CIUnitTestCase
 
     private function dropTables(): void
     {
-        foreach (['member_otps', 'anggota', 'users'] as $table) {
+        foreach (['member_otps', 'auth_identities', 'auth_groups_users', 'anggota', 'users'] as $table) {
             $this->forge->dropTable($table, true);
         }
     }
