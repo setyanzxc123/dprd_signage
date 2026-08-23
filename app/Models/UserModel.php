@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use CodeIgniter\Shield\Models\UserModel as ShieldUserModel;
 
-class UserModel extends Model
+class UserModel extends ShieldUserModel
 {
-    protected $table         = 'users';
-    protected $primaryKey    = 'id';
-    protected $allowedFields = ['name', 'username', 'email', 'password', 'role'];
-    protected $useTimestamps = false;
+    protected function initialize(): void
+    {
+        parent::initialize();
 
-    // Kolom created_at diisi manual saat insert
-    protected $returnType = 'array';
+        // Kolom nama tampilan admin (lihat migration AdoptShieldIdentity).
+        $this->allowedFields[] = 'name';
+    }
 }

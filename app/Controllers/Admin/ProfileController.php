@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\UserModel;
+use CodeIgniter\Shield\Entities\User;
 
 class ProfileController extends BaseController
 {
@@ -52,12 +53,13 @@ class ProfileController extends BaseController
                 ->setBody(view('admin/profile/index', $this->viewData($user, $error, $name)));
         }
 
-        $updateData = ['name' => $name];
+        $user->name = $name;
         if ($passwordChanged) {
-            $updateData['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+            // Hash baru dibuat oleh Shield saat identitas disimpan.
+            $user->password = $newPassword;
         }
 
-        $updated = (new UserModel())->update((int) $user['id'], $updateData);
+        $updated = (new UserModel())->save($user);
 
         if (! $updated) {
             return $this->response
@@ -93,11 +95,8 @@ class ProfileController extends BaseController
         return null;
     }
 
-    /**
-     * @param array<string, mixed> $user
-     */
     private function validatePasswordChange(
-        array $user,
+        User $user,
         string $currentPassword,
         string $newPassword,
         string $passwordConfirmation,
@@ -106,7 +105,9 @@ class ProfileController extends BaseController
             return 'Semua kolom password wajib diisi.';
         }
 
-        if (! password_verify($currentPassword, (string) $user['password'])) {
+        $currentHash = $this->passwordHash($user);
+
+        if (! password_verify($currentPassword, $currentHash)) {
             return 'Password saat ini tidak sesuai.';
         }
 
@@ -123,38 +124,44 @@ class ProfileController extends BaseController
             return 'Konfirmasi password baru tidak sesuai.';
         }
 
-        if (password_verify($newPassword, (string) $user['password'])) {
+        if (password_verify($newPassword, $currentHash)) {
             return 'Password baru harus berbeda dari password saat ini.';
         }
 
         return null;
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function authenticatedUser(): ?array
+    private function passwordHash(User $user): string
+    {
+        $identity = $user->getEmailIdentity();
+
+        return (string) ($identity->secret2 ?? '');
+    }
+
+    private function authenticatedUser(): ?User
     {
         $authUser = session()->get('auth_user');
         if (! is_array($authUser) || empty($authUser['id'])) {
             return null;
         }
 
-        return (new UserModel())->find((int) $authUser['id']);
+        $user = (new UserModel())->withIdentities()->find((int) $authUser['id']);
+
+        return $user instanceof User ? $user : null;
     }
 
-    /**
-     * @param array<string, mixed> $user
-     * @return array<string, mixed>
-     */
-    private function viewData(array $user, ?string $formError = null, ?string $submittedName = null): array
+    private function viewData(User $user, ?string $formError = null, ?string $submittedName = null): array
     {
         return [
             'pageTitle'   => 'Profil Admin',
             'breadcrumbs' => [],
-            'user'        => $user,
+            'user'        => [
+                'id'       => $user->id,
+                'username' => $user->username,
+                'name'     => (string) $user->name,
+            ],
             'form_error'  => $formError,
-            'form_name'   => $submittedName ?? (string) $user['name'],
+            'form_name'   => $submittedName ?? (string) $user->name,
         ];
     }
 

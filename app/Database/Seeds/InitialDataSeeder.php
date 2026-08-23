@@ -2,7 +2,9 @@
 
 namespace App\Database\Seeds;
 
+use App\Models\UserModel;
 use CodeIgniter\Database\Seeder;
+use CodeIgniter\Shield\Entities\User;
 
 class InitialDataSeeder extends Seeder
 {
@@ -24,14 +26,38 @@ class InitialDataSeeder extends Seeder
             ['key_name' => 'media_file',         'value' => ''],
         ]);
 
-        $this->insertMissing('users', 'username', [[
-            'name'       => 'Administrator',
-            'username'   => 'admin',
-            'email'      => 'admin@gmail.com',
-            'password'   => password_hash('admin123$', PASSWORD_BCRYPT),
-            'role'       => 'superadmin',
-            'created_at' => date('Y-m-d H:i:s'),
-        ]]);
+        $this->seedAdminUser();
+    }
+
+    /**
+     * Akun admin hidup sebagai user CodeIgniter Shield: identitas
+     * email/password di tabel auth_identities dan peran via grup.
+     */
+    private function seedAdminUser(): void
+    {
+        $users = new UserModel();
+
+        if ($this->findByUsername($users, 'admin') !== null) {
+            return;
+        }
+
+        $user = new User([
+            'username' => 'admin',
+            'name'     => 'Administrator',
+            'email'    => 'admin@gmail.com',
+            'password' => 'admin123$',
+            'active'   => 1,
+        ]);
+
+        $users->save($user);
+
+        $user = $this->findByUsername($users, 'admin');
+        $user->addGroup('superadmin');
+    }
+
+    private function findByUsername(UserModel $users, string $username): ?User
+    {
+        return $users->where('username', $username)->first();
     }
 
     private function insertMissing(string $table, string $uniqueField, array $rows): void

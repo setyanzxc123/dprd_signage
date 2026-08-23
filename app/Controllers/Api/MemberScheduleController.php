@@ -9,8 +9,9 @@ class MemberScheduleController extends BaseController
 {
     public function jadwal()
     {
-        $auth = session()->get('member_auth');
-        $memberId = is_array($auth) ? (int) ($auth['anggota_id'] ?? 0) : 0;
+        $anggota = service('requestIdentity')->currentAnggota();
+        $memberId = (int) ($anggota['anggota_id'] ?? 0);
+
         if ($memberId < 1) {
             return $this->response
                 ->setStatusCode(401)

@@ -3,6 +3,7 @@
 namespace App\Controllers\Member;
 
 use App\Controllers\BaseController;
+use App\Libraries\Auth\MemberAccountService;
 use App\Libraries\Otp\MemberOtpThrottle;
 use App\Libraries\Otp\OtpPendingSession;
 use App\Libraries\Otp\OtpService;
@@ -110,6 +111,12 @@ class AuthController extends BaseController
         $pendingSession->forget();
         session()->regenerate(true);
         $anggotaId = (int) $account['anggota_id'];
+
+        // Pastikan anggota memiliki user Shield (identitas API mobile).
+        if ((new MemberAccountService())->ensureUserForAnggota($anggotaId) === null) {
+            log_message('error', 'Gagal menyiapkan user Shield untuk anggota id={id}', ['id' => $anggotaId]);
+        }
+
         session()->set('member_auth', [
             'anggota_id' => $anggotaId,
             'name'       => $account['name'],

@@ -38,6 +38,11 @@ class Filters extends BaseFilters
         'memberauth'    => \App\Filters\MemberAuthFilter::class,
         'memberapi'     => \App\Filters\MemberApiAuthFilter::class,
         'appsecurity'   => \App\Filters\SecurityHeadersFilter::class,
+        // Filter bawaan CodeIgniter Shield.
+        'session'       => \CodeIgniter\Shield\Filters\SessionAuth::class,
+        'chain'         => \CodeIgniter\Shield\Filters\ChainAuth::class,
+        'token'         => \CodeIgniter\Shield\Filters\TokenAuth::class,
+        'auth-rates'    => \CodeIgniter\Shield\Filters\AuthRates::class,
     ];
 
     /**
@@ -79,6 +84,9 @@ class Filters extends BaseFilters
             // 'honeypot',
             'csrf' => ['except' => [
                 'webhooks/otp/fazpass',
+                // API mobile memakai bearer token, bukan cookie session,
+                // sehingga tidak tunduk pada proteksi CSRF.
+                'api/*',
                 // Tetap dilindungi filter auth dan token acak milik sesi admin.
                 // Dikecualikan dari CSRF agar retry POST chunk tetap idempoten.
                 'admin/pengaturan/media-upload/start',

@@ -13,8 +13,8 @@ final class AdminProfileTest extends CIUnitTestCase
 {
     use FeatureTestTrait;
 
-    private BaseConnection $passwordDb;
-    private Forge $passwordForge;
+    private BaseConnection $profileDb;
+    private Forge $profileForge;
     private string $currentPassword = 'Password-Lama-123';
 
     protected function setUp(): void
@@ -25,23 +25,29 @@ final class AdminProfileTest extends CIUnitTestCase
             $this->markTestSkipped('Ekstensi sqlite3 diperlukan untuk pengujian profil admin.');
         }
 
-        $this->passwordDb = Database::connect('tests');
-        $this->passwordForge = Database::forge('tests');
-        $this->passwordForge->dropTable('users', true);
-        $this->createUsersTable();
-        $this->passwordDb->table('users')->insert([
-            'name'     => 'Admin Pengujian',
+        $this->profileDb = Database::connect('tests');
+        $this->profileForge = Database::forge('tests');
+        $this->profileForge->dropTable('auth_identities', true);
+        $this->profileForge->dropTable('users', true);
+        $this->createShieldUserTables();
+        $this->profileDb->table('users')->insert([
             'username' => 'admin-test',
-            'email'    => 'admin@example.com',
-            'password' => password_hash($this->currentPassword, PASSWORD_DEFAULT),
-            'role'     => 'superadmin',
+            'name'     => 'Admin Pengujian',
+            'active'   => 1,
+        ]);
+        $this->profileDb->table('auth_identities')->insert([
+            'user_id' => 1,
+            'type'    => 'email_password',
+            'secret'  => 'admin@example.com',
+            'secret2' => password_hash($this->currentPassword, PASSWORD_DEFAULT),
         ]);
     }
 
     protected function tearDown(): void
     {
-        if (isset($this->passwordForge)) {
-            $this->passwordForge->dropTable('users', true);
+        if (isset($this->forge)) {
+            $this->profileForge->dropTable('auth_identities', true);
+            $this->profileForge->dropTable('users', true);
         }
 
         parent::tearDown();
@@ -121,9 +127,9 @@ final class AdminProfileTest extends CIUnitTestCase
 
         $response->assertStatus(303);
         $response->assertRedirectTo(base_url('admin/profile'));
-        $user = $this->passwordDb->table('users')->where('id', 1)->get()->getRowArray();
+        $user = $this->profileDb->table('users')->where('id', 1)->get()->getRowArray();
         $this->assertSame('Nama Admin Baru', $user['name']);
-        $this->assertTrue(password_verify($this->currentPassword, (string) $user['password']));
+        $this->assertTrue(password_verify($this->currentPassword, $this->storedPassword()));
     }
 
     private function submitPasswordChange(
@@ -157,23 +163,52 @@ final class AdminProfileTest extends CIUnitTestCase
 
     private function storedPassword(): string
     {
-        return (string) $this->passwordDb->table('users')
-            ->where('id', 1)
+        $identity = $this->profileDb->table('auth_identities')
+            ->select('secret2')
+            ->where('user_id', 1)
+            ->where('type', 'email_password')
             ->get()
-            ->getRow('password');
+            ->getRow();
+
+        return (string) ($identity->secret2 ?? '');
     }
 
-    private function createUsersTable(): void
+    /**
+     * Schema identitas Shield: users + auth_identities seperti yang
+     * dibuat migration Shield ditambah kolom `name` aplikasi.
+     */
+    private function createShieldUserTables(): void
     {
-        $this->passwordForge->addField([
-            'id'       => ['type' => 'INTEGER', 'auto_increment' => true],
-            'name'     => ['type' => 'VARCHAR', 'constraint' => 100],
-            'username' => ['type' => 'VARCHAR', 'constraint' => 50],
-            'email'    => ['type' => 'VARCHAR', 'constraint' => 100],
-            'password' => ['type' => 'VARCHAR', 'constraint' => 255],
-            'role'     => ['type' => 'VARCHAR', 'constraint' => 20],
+        $this->profileForge->addField([
+            'id'             => ['type' => 'INTEGER', 'auto_increment' => true],
+            'username'       => ['type' => 'VARCHAR', 'constraint' => 30],
+            'name'           => ['type' => 'VARCHAR', 'constraint' => 100],
+            'status'         => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'status_message' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'active'         => ['type' => 'INTEGER', 'default' => 0],
+            'last_active'    => ['type' => 'DATETIME', 'null' => true],
+            'created_at'     => ['type' => 'DATETIME', 'null' => true],
+            'updated_at'     => ['type' => 'DATETIME', 'null' => true],
+            'deleted_at'     => ['type' => 'DATETIME', 'null' => true],
         ]);
-        $this->passwordForge->addPrimaryKey('id');
-        $this->passwordForge->createTable('users');
+        $this->profileForge->addPrimaryKey('id');
+        $this->profileForge->createTable('users');
+
+        $this->profileForge->addField([
+            'id'           => ['type' => 'INTEGER', 'auto_increment' => true],
+            'user_id'      => ['type' => 'INTEGER'],
+            'type'         => ['type' => 'VARCHAR', 'constraint' => 255],
+            'name'         => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'secret'       => ['type' => 'VARCHAR', 'constraint' => 255],
+            'secret2'      => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'expires'      => ['type' => 'DATETIME', 'null' => true],
+            'extra'        => ['type' => 'TEXT', 'null' => true],
+            'force_reset'  => ['type' => 'INTEGER', 'default' => 0],
+            'last_used_at' => ['type' => 'DATETIME', 'null' => true],
+            'created_at'   => ['type' => 'DATETIME', 'null' => true],
+            'updated_at'   => ['type' => 'DATETIME', 'null' => true],
+        ]);
+        $this->profileForge->addPrimaryKey('id');
+        $this->profileForge->createTable('auth_identities');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\Security\AdminLoginThrottle;
 use App\Models\UserModel;
+use CodeIgniter\Shield\Entities\User;
 
 class AuthController extends BaseController
 {
@@ -32,20 +33,27 @@ class AuthController extends BaseController
             return $this->loginFailure('Terlalu banyak percobaan login. Silakan tunggu beberapa saat.', $username);
         }
 
+        // Kredensial diverifikasi terhadap identitas Shield; hash dummy
+        // dipakai saat username tidak ditemukan agar biaya verifikasi
+        // sama dan status akun tidak mudah ditebak.
         $model = new UserModel();
-        $user = $username !== '' ? $model->where('username', $username)->first() : null;
-        $storedHash = (string) ($user['password'] ?? self::DUMMY_PASSWORD_HASH);
+        $user = $username !== ''
+            ? $model->withIdentities()->withGroups()->where('username', $username)->first()
+            : null;
+
+        $identity = $user instanceof User ? $user->getEmailIdentity() : null;
+        $storedHash = (string) ($identity?->secret2 ?? self::DUMMY_PASSWORD_HASH);
         $passwordValid = password_verify((string) $password, $storedHash);
 
-        if ($user && $passwordValid) {
+        if ($user instanceof User && $passwordValid && $user->isActivated()) {
             $throttle->clearUsername($username);
             session()->remove(['member_auth', 'member_intended_path', 'member_otp_pending']);
             session()->regenerate(true);
             session()->set('auth_user', [
-                'id'       => $user['id'],
-                'name'     => $user['name'],
-                'username' => $user['username'],
-                'role'     => $user['role'],
+                'id'       => $user->id,
+                'name'     => (string) $user->name,
+                'username' => $user->username,
+                'role'     => $user->inGroup('superadmin') ? 'superadmin' : 'operator',
             ]);
             return redirect()->to(base_url('admin/dashboard'), 303);
         }

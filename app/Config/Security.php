@@ -15,7 +15,11 @@ class Security extends BaseConfig
      *
      * @var string 'cookie' or 'session'
      */
-    public string $csrfProtection = 'cookie';
+    /**
+     * Mode 'session' mengikuti rekomendasi keamanan CodeIgniter Shield
+     * (lihat GHSA-5hm8-vh6r-2cjq pada dokumentasi Shield).
+     */
+    public string $csrfProtection = 'session';
 
     /**
      * --------------------------------------------------------------------------

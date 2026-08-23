@@ -9,7 +9,7 @@ class AnggotaModel extends Model
     protected $table         = 'anggota';
     protected $primaryKey    = 'id';
     protected $allowedFields = [
-        'name', 'jabatan', 'fraksi', 'komisi', 'no_wa', 'aktif', 'foto', 'last_login_at',
+        'name', 'jabatan', 'fraksi', 'komisi', 'no_wa', 'aktif', 'foto', 'last_login_at', 'user_id',
     ];
     protected $useTimestamps = false;
     protected $returnType    = 'array';
