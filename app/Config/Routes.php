@@ -132,6 +132,11 @@ $routes->group('api/v1/anggota', ['filter' => 'memberapi'], function ($routes) {
     $routes->get('jadwal', 'Api\MemberScheduleController::jadwal');
 });
 
+// ── API v1 Resolve resource jadwal (sesi web / bearer anggota) ──────
+$routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'memberapi'], static function ($routes) {
+    $routes->get('(:segment)/(:num)/(materi|stream)', 'ScheduleResourceController::resolve/$1/$2/$3');
+});
+
 // ── API v1 Auth mobile (bearer token) ───────────────────────────────
 $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1'], static function ($routes) {
     $routes->post('login',       'AuthController::login');
