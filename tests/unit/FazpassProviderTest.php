@@ -22,7 +22,7 @@ final class FazpassProviderTest extends CIUnitTestCase
         $this->assertTrue($result->success);
         $this->assertSame('otp-1', $result->otpId);
         $this->assertSame('tx-1', $result->transactionId);
-        $this->assertSame('https://api.example.test/api/v1/otp/request', $transport->url);
+        $this->assertSame('https://api.example.test/v1/otp/request', $transport->url);
         $this->assertSame('Bearer merchant', $transport->headers['Authorization']);
         $this->assertSame('gateway', $transport->payload['gateway_key']);
     }
@@ -35,7 +35,7 @@ final class FazpassProviderTest extends CIUnitTestCase
         $result = $provider->verify('otp-1', '123456');
 
         $this->assertTrue($result->success);
-        $this->assertSame('https://api.example.test/api/v1/otp/verify', $transport->url);
+        $this->assertSame('https://api.example.test/v1/otp/verify', $transport->url);
         $this->assertSame('otp-1', $transport->payload['otp_id']);
         $this->assertSame('123456', $transport->payload['otp']);
     }
