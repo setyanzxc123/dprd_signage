@@ -81,6 +81,22 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     </div>
                 </div>
             </div>
+
+            <div class="ondebox" aria-hidden="true">
+                <svg class="onde" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28"
+                    preserveAspectRatio="none" shape-rendering="auto">
+                    <defs>
+                        <path id="onda"
+                            d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352Z" />
+                    </defs>
+                    <g class="parallaxonde">
+                        <use href="#onda" x="48" y="0" fill="rgba(17,170,159,0.6)" />
+                        <use href="#onda" x="48" y="3" fill="rgba(17,170,159,0.4)" />
+                        <use href="#onda" x="48" y="5" fill="rgba(17,170,159,0.1)" />
+                        <use href="#onda" x="48" y="7" fill="#0b6e67" />
+                    </g>
+                </svg>
+            </div>
         </header>
 
         <section id="panel-media" class="card rounded-none bg-neutral">

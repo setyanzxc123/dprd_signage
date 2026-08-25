@@ -39,8 +39,11 @@ body {
 }
 
 #panel-header {
+    --onde-height: clamp(38px, 6vh, 90px);
     grid-area: header;
     padding: 0.8vh 2.5vw;
+    /* ruang untuk gelombang animasi di tepi bawah header */
+    padding-bottom: calc(0.8vh + var(--onde-height));
 }
 
 #panel-media {
@@ -176,5 +179,95 @@ body {
     50% {
         opacity: 0.3;
         transform: scale(1.5);
+    }
+}
+
+/* Gelombang animasi di tepi bawah header */
+.ondebox {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 2;
+    height: var(--onde-height);
+    pointer-events: none;
+}
+
+.onde {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Lapisan wave sesuai tema */
+[data-theme="light"] .parallaxonde > use:nth-child(1) {
+    fill: rgba(17, 170, 159, 0.6);
+}
+
+[data-theme="light"] .parallaxonde > use:nth-child(2) {
+    fill: rgba(17, 170, 159, 0.4);
+}
+
+[data-theme="light"] .parallaxonde > use:nth-child(3) {
+    fill: rgba(17, 170, 159, 0.1);
+}
+
+[data-theme="light"] .parallaxonde > use:nth-child(4) {
+    fill: rgba(17, 170, 159, 0.9);
+}
+
+/* Tema dark: Bioluminescent Deep Teal (bercahaya & berdimensi) */
+[data-theme="dark"] .parallaxonde > use:nth-child(1) {
+    fill: rgba(6, 182, 212, 0.22);
+}
+
+[data-theme="dark"] .parallaxonde > use:nth-child(2) {
+    fill: rgba(20, 184, 166, 0.42);
+}
+
+[data-theme="dark"] .parallaxonde > use:nth-child(3) {
+    fill: rgba(13, 148, 136, 0.68);
+}
+
+[data-theme="dark"] .parallaxonde > use:nth-child(4) {
+    fill: rgba(15, 76, 73, 0.92);
+}
+
+.parallaxonde > use {
+    animation: move-forever 25s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+}
+
+.parallaxonde > use:nth-child(1) {
+    animation-delay: -2s;
+    animation-duration: 7s;
+}
+
+.parallaxonde > use:nth-child(2) {
+    animation-delay: -3s;
+    animation-duration: 10s;
+}
+
+.parallaxonde > use:nth-child(3) {
+    animation-delay: -4s;
+    animation-duration: 13s;
+}
+
+.parallaxonde > use:nth-child(4) {
+    animation-delay: -5s;
+    animation-duration: 20s;
+}
+
+@keyframes move-forever {
+    0% {
+        transform: translate3d(-90px, 0, 0);
+    }
+
+    100% {
+        transform: translate3d(85px, 0, 0);
+    }
+}
+
+@media (max-width: 768px) {
+    #panel-header {
+        --onde-height: 40px;
     }
 }
