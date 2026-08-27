@@ -227,6 +227,9 @@ class JadwalUmumService
     {
         $id = (int) $existing['id'];
 
+        // Bersihkan notulen dan berkas rekaman AI terkait bila ada
+        (new \App\Libraries\Notulen\NotulenService($this->db))->purgeBySchedule('umum', $id);
+
         $this->db->transStart();
         $this->db->table('jadwal_umum_unit_rapat')->where('jadwal_umum_id', $id)->delete();
         (new JadwalUmumModel())->delete($id);

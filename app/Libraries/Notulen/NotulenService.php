@@ -392,6 +392,10 @@ class NotulenService
      */
     public function purgeBySchedule(string $jadwalType, int $jadwalId): void
     {
+        if (! $this->db->tableExists('meeting_transcription_jobs')) {
+            return;
+        }
+
         $jobModel = new MeetingTranscriptionJobModel($this->db);
         $jobs = $jobModel->where('jadwal_type', $jadwalType)
             ->where('jadwal_id', $jadwalId)
