@@ -1,0 +1,27 @@
+{
+  "name": "dprd-signage-ai-worker",
+  "version": "1.0.0",
+  "description": "Background Worker untuk Transkripsi Audio Rapat dan Pembuatan Risalah DPRD Sulawesi Tengah via Google Gemini AI",
+  "main": "worker.js",
+  "type": "module",
+  "scripts": {
+    "start": "node worker.js --daemon",
+    "smoke": "node scripts/smoke.js"
+  },
+  "keywords": [
+    "gemini",
+    "transcription",
+    "dprd",
+    "ffmpeg"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "@google/genai": "^2.19.0",
+    "dotenv": "^16.4.7",
+    "fluent-ffmpeg": "^2.1.3",
+    "mysql2": "^3.12.0"
+  }
+}
