@@ -69,27 +69,57 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
     </div>
 </div>
 
-<!-- Widget Pemantau Progres Real-time (Live Polling) -->
-<div id="live_progress_card" class="card card-border mb-5 <?= $isInProgress || $job['status'] === 'queued' ? '' : 'hidden' ?> bg-base-100 shadow-sm border-warning/40">
+<!-- Widget Pemantau Progres Real-time & Live Log (Selalu Ditampilkan) -->
+<div id="live_progress_card" class="card card-border mb-5 bg-base-100 shadow-sm <?= $job['status'] === 'completed' ? 'border-success/40' : ($job['status'] === 'failed' ? 'border-error/40' : ($job['status'] === 'cancelled' ? 'border-neutral/40' : 'border-warning/40')) ?>">
     <div class="card-body p-4 sm:p-5">
         <div class="flex flex-col gap-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="loading loading-spinner loading-sm text-warning"></span>
+                    <?php if ($isInProgress || $job['status'] === 'queued'): ?>
+                        <span class="loading loading-spinner loading-sm text-warning"></span>
+                    <?php elseif ($job['status'] === 'completed'): ?>
+                        <i data-lucide="check-circle-2" class="h-5 w-5 text-success"></i>
+                    <?php elseif ($job['status'] === 'failed'): ?>
+                        <i data-lucide="alert-triangle" class="h-5 w-5 text-error"></i>
+                    <?php else: ?>
+                        <i data-lucide="ban" class="h-5 w-5 text-base-content/50"></i>
+                    <?php endif; ?>
+
                     <span class="font-bold text-sm text-base-content" id="live_status_title">
-                        <?= $job['status'] === 'chunking' ? 'Memotong Audio Rekaman...' : ($job['status'] === 'transcribing' ? 'Transkripsi Audio Berjalan...' : ($job['status'] === 'summarizing' ? 'Menyusun Risalah Rapat...' : 'Dalam Antrean Pemrosesan...')) ?>
+                        <?= $job['status'] === 'completed' ? 'Transkripsi & Risalah Selesai' : ($job['status'] === 'failed' ? 'Pemrosesan Mengalami Kendala' : ($job['status'] === 'cancelled' ? 'Proses Dibatalkan' : ($job['status'] === 'chunking' ? 'Memotong Audio Rekaman...' : ($job['status'] === 'transcribing' ? 'Transkripsi Audio Berjalan...' : ($job['status'] === 'summarizing' ? 'Menyusun Risalah Rapat...' : 'Dalam Antrean Pemrosesan...'))))) ?>
                     </span>
                 </div>
-                <span class="font-mono font-bold text-sm text-warning" id="live_progress_percent"><?= (int) $job['progress_percent'] ?>%</span>
+                <span class="font-mono font-bold text-sm <?= $job['status'] === 'completed' ? 'text-success' : ($job['status'] === 'failed' ? 'text-error' : 'text-warning') ?>" id="live_progress_percent"><?= (int) $job['progress_percent'] ?>%</span>
             </div>
 
-            <progress id="live_progress_bar" class="progress progress-warning w-full h-2.5" value="<?= (int) $job['progress_percent'] ?>" max="100"></progress>
+            <progress id="live_progress_bar" class="progress <?= $job['status'] === 'completed' ? 'progress-success' : ($job['status'] === 'failed' ? 'progress-error' : ($job['status'] === 'cancelled' ? 'progress-neutral' : 'progress-warning')) ?> w-full h-2.5" value="<?= (int) $job['progress_percent'] ?>" max="100"></progress>
 
             <div class="flex items-center justify-between text-xs text-base-content/60">
-                <span id="live_current_step" class="truncate"><?= esc($job['current_step']) ?></span>
+                <span id="live_current_step" class="truncate"><?= esc($job['current_step']) ?: '-' ?></span>
                 <span id="live_chunk_info" class="font-mono shrink-0 ml-2">
                     <?= (int) $job['completed_chunks'] ?> / <?= (int) $job['total_chunks'] ?> segmen
                 </span>
+            </div>
+
+            <!-- Live Process Log Console -->
+            <div class="rounded-box bg-neutral text-neutral-content p-3 font-mono text-xs space-y-1 overflow-hidden">
+                <div class="flex items-center justify-between border-b border-neutral-content/15 pb-2 text-[11px] text-neutral-content/70">
+                    <span class="flex items-center gap-1.5">
+                        <span id="live_log_dot" class="h-2 w-2 rounded-full <?= $isInProgress || $job['status'] === 'queued' ? 'bg-warning animate-pulse' : ($job['status'] === 'completed' ? 'bg-success' : 'bg-error') ?>"></span>
+                        LOG AKTIVITAS PROSES AI
+                    </span>
+                    <span id="live_log_time" class="font-mono"><?= date('H:i:s') ?> WITA</span>
+                </div>
+                <div id="live_log_stream" class="space-y-1 pt-1 max-h-32 overflow-y-auto leading-relaxed text-[11.5px]">
+                    <div class="text-neutral-content/60">[<?= date('H:i:s') ?>] Berkas: <?= esc($job['audio_filename']) ?> (<?= round($job['audio_size'] / (1024 * 1024), 2) ?> MB)</div>
+                    <?php if ($job['status'] === 'completed'): ?>
+                        <div class="text-success">[<?= date('H:i:s') ?>] Transkripsi <?= (int) $job['total_chunks'] ?> segmen dan risalah selesai.</div>
+                    <?php elseif ($job['status'] === 'failed'): ?>
+                        <div class="text-error">[<?= date('H:i:s') ?>] Error: <?= esc($job['error_message'] ?? 'Proses gagal.') ?></div>
+                    <?php elseif (! empty($job['current_step'])): ?>
+                        <div class="text-info">[<?= date('H:i:s') ?>] <?= esc($job['current_step']) ?></div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -285,45 +315,83 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
     </div>
 </div>
 
-<!-- Script Polling Real-time -->
-<?php if ($isInProgress || $job['status'] === 'queued'): ?>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const jobId = <?= (int) $job['id'] ?>;
-    const pollIntervalMs = 3500;
+<!-- Script Polling Real-time & Live Log (selalu dimuat, cek via JS) -->
 
-    const intervalId = setInterval(async () => {
-        try {
-            const res = await fetch(`<?= base_url('admin/notulen/status/') ?>${jobId}`);
-            if (!res.ok) return;
+<?= $this->endSection() ?>
 
-            const json = await res.json();
-            if (json.status === 'success' && json.data) {
-                const data = json.data;
+<?= $this->section('scripts') ?>
+<script {csp-script-nonce}>
+(function() {
+    var JOB_ID = <?= (int) $job['id'] ?>;
+    var STATUS_URL = '<?= base_url('admin/notulen/status/') ?>' + JOB_ID;
+    var INITIAL_STATUS = '<?= esc($job['status']) ?>';
+    var POLL_MS = 3500;
+    var ACTIVE = ['queued', 'chunking', 'transcribing', 'summarizing'];
+    var lastStep = '<?= esc($job['current_step'] ?? '', 'js') ?>';
+    var timerId = null;
 
-                // Update UI elements
-                const percentElem = document.getElementById('live_progress_percent');
-                const barElem = document.getElementById('live_progress_bar');
-                const stepElem = document.getElementById('live_current_step');
-                const chunkInfoElem = document.getElementById('live_chunk_info');
+    var STATUS_LABELS = {
+        chunking: 'Memotong Audio Rekaman...',
+        transcribing: 'Transkripsi Audio Berjalan...',
+        summarizing: 'Menyusun Risalah Rapat...',
+        completed: 'Transkripsi & Risalah Selesai',
+        failed: 'Pemrosesan Mengalami Kendala',
+        cancelled: 'Proses Dibatalkan'
+    };
 
-                if (percentElem) percentElem.textContent = `${data.progress_percent}%`;
-                if (barElem) barElem.value = data.progress_percent;
-                if (stepElem) stepElem.textContent = data.current_step || '';
-                if (chunkInfoElem) chunkInfoElem.textContent = `${data.completed_chunks} / ${data.total_chunks} segmen`;
+    function timeStr() {
+        return new Date().toLocaleTimeString('id-ID', { hour12: false });
+    }
 
-                // Jika sudah selesai atau gagal, reload halaman sekali untuk memuat data lengkap
-                if (data.status === 'completed' || data.status === 'failed' || data.status === 'cancelled') {
-                    clearInterval(intervalId);
-                    window.location.reload();
+    function addLog(msg, cls) {
+        var el = document.getElementById('live_log_stream');
+        if (!el) return;
+        var d = document.createElement('div');
+        d.className = cls || 'text-warning';
+        d.textContent = '[' + timeStr() + '] ' + msg;
+        el.appendChild(d);
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function poll() {
+        fetch(STATUS_URL)
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(json) {
+                if (!json || json.status !== 'success' || !json.data) return;
+                var d = json.data;
+
+                var pct    = document.getElementById('live_progress_percent');
+                var bar    = document.getElementById('live_progress_bar');
+                var step   = document.getElementById('live_current_step');
+                var chunks = document.getElementById('live_chunk_info');
+                var title  = document.getElementById('live_status_title');
+
+                if (pct)    pct.textContent    = d.progress_percent + '%';
+                if (bar)    bar.value          = d.progress_percent;
+                if (step)   step.textContent   = d.current_step || '-';
+                if (chunks) chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
+                if (title && STATUS_LABELS[d.status]) title.textContent = STATUS_LABELS[d.status];
+
+                if (d.current_step && d.current_step !== lastStep) {
+                    lastStep = d.current_step;
+                    addLog(d.current_step + ' (' + d.progress_percent + '%)', 'text-warning');
                 }
-            }
-        } catch (e) {
-            console.warn('Error polling status:', e);
-        }
-    }, pollIntervalMs);
-});
-</script>
-<?php endif; ?>
 
+                if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
+                    clearInterval(timerId);
+                    timerId = null;
+                    var cls = d.status === 'completed' ? 'text-success font-bold' : 'text-error font-bold';
+                    addLog('Proses ' + d.status.toUpperCase() + '! Memuat ulang halaman...', cls);
+                    setTimeout(function() { window.location.reload(); }, 1500);
+                }
+            })
+            .catch(function(e) { console.warn('Poll error:', e); });
+    }
+
+    if (ACTIVE.indexOf(INITIAL_STATUS) !== -1) {
+        poll();
+        timerId = setInterval(poll, POLL_MS);
+    }
+})();
+</script>
 <?= $this->endSection() ?>

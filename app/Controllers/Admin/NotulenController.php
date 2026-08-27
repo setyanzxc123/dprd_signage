@@ -3,7 +3,9 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Media\MediaUploadException;
 use App\Libraries\Notulen\NotulenService;
+use App\Libraries\Notulen\PostChunkAudioUpload;
 use App\Models\JadwalBanmusModel;
 use App\Models\JadwalUmumModel;
 use App\Models\MeetingMinutesModel;
@@ -13,6 +15,8 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class NotulenController extends BaseController
 {
+    private const AUDIO_UPLOAD_SESSION_KEY = 'notulen_audio_chunk_token';
+
     private NotulenService $service;
 
     public function __construct()
@@ -90,6 +94,9 @@ class NotulenController extends BaseController
             'searchQuery'      => $searchQuery,
             'generalSchedules' => $generalSchedules,
             'banmusItems'      => $banmusItems,
+            'audioUploadToken' => $this->audioUploadToken(),
+            'audioChunkSize'   => PostChunkAudioUpload::CHUNK_BYTES,
+            'audioMaxSize'     => PostChunkAudioUpload::MAX_BYTES,
         ]);
     }
 
@@ -118,12 +125,14 @@ class NotulenController extends BaseController
     }
 
     /**
-     * Handler form unggah rekaman rapat baru.
+     * Handler commit upload audio setelah chunked upload selesai.
+     * Menerima upload_id dari sesi chunk, memindahkan file ke storage job,
+     * lalu membuat job transkripsi di database.
      */
-    public function upload(): RedirectResponse
+    public function upload(): ResponseInterface
     {
-        $file = $this->request->getFile('audio_file');
-        $userId = $this->getCurrentUserId();
+        $uploadId = trim((string) $this->request->getPost('upload_id'));
+        $userId   = $this->getCurrentUserId();
 
         $input = [
             'jadwal_type' => $this->request->getPost('jadwal_type'),
@@ -131,15 +140,107 @@ class NotulenController extends BaseController
             'judul_rapat' => $this->request->getPost('judul_rapat'),
         ];
 
-        $result = $this->service->createJob($input, $file, $userId);
-
-        if (isset($result['error'])) {
-            session()->setFlashdata('error', $result['error']);
-            return redirect()->back()->withInput();
+        if ($uploadId === '') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status'  => 'error',
+                'message' => 'Upload ID tidak ditemukan. Silakan unggah file kembali.',
+            ]);
         }
 
+        try {
+            $ownerToken = $this->audioUploadToken();
+            $result     = $this->service->createJobFromChunk($input, $ownerToken, $uploadId, $userId);
+        } catch (MediaUploadException $e) {
+            return $this->response->setStatusCode($e->getStatusCode())->setJSON([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        if (isset($result['error'])) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status'  => 'error',
+                'message' => $result['error'],
+            ]);
+        }
+
+        $redirectUrl = base_url('admin/notulen/' . $result['job_id']);
         session()->setFlashdata('success', 'Rekaman berhasil diunggah dan sedang diproses oleh worker AI.');
-        return redirect()->to(base_url('admin/notulen/' . $result['job_id']));
+
+        return $this->response->setJSON([
+            'status'   => 'success',
+            'message'  => 'Rekaman berhasil diunggah dan sedang diproses oleh worker AI.',
+            'job_id'   => $result['job_id'],
+            'redirect' => $redirectUrl,
+        ]);
+    }
+
+    /** Mulai sesi chunked upload audio. */
+    public function startAudioUpload(): ResponseInterface
+    {
+        try {
+            $payload = $this->audioUploader()->start(
+                $this->validatedRequestAudioToken(),
+                trim((string) $this->request->getPost('client_key')),
+                (string) $this->request->getPost('file_name'),
+                (int) $this->request->getPost('file_size'),
+                (string) $this->request->getPost('file_type'),
+            );
+
+            return $this->response->setJSON(['status' => 'success'] + $payload);
+        } catch (MediaUploadException $e) {
+            return $this->audioUploadError($e);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal memulai chunk upload audio: {message}', ['message' => $e->getMessage()]);
+
+            return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'Server gagal menyiapkan upload audio.']);
+        }
+    }
+
+    /** Terima satu chunk audio. */
+    public function appendAudioChunk(): ResponseInterface
+    {
+        try {
+            $chunk = $this->request->getFile('chunk');
+            if ($chunk === null) {
+                throw new MediaUploadException('Chunk upload tidak ditemukan.');
+            }
+
+            $payload = $this->audioUploader()->append(
+                $this->validatedRequestAudioToken(),
+                trim((string) $this->request->getPost('upload_id')),
+                (int) $this->request->getPost('offset'),
+                trim((string) $this->request->getPost('checksum')),
+                $chunk,
+            );
+
+            return $this->response->setJSON(['status' => 'success'] + $payload);
+        } catch (MediaUploadException $e) {
+            return $this->audioUploadError($e);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal menerima chunk audio: {message}', ['message' => $e->getMessage()]);
+
+            return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'Server gagal menerima bagian file.']);
+        }
+    }
+
+    /** Batalkan sesi chunked upload audio. */
+    public function cancelAudioUpload(): ResponseInterface
+    {
+        try {
+            $this->audioUploader()->cancel(
+                $this->validatedRequestAudioToken(),
+                trim((string) $this->request->getPost('upload_id')),
+            );
+
+            return $this->response->setJSON(['status' => 'success']);
+        } catch (MediaUploadException $e) {
+            return $this->audioUploadError($e);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal membatalkan chunk upload audio: {message}', ['message' => $e->getMessage()]);
+
+            return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'Server gagal membatalkan upload.']);
+        }
     }
 
     /**
@@ -327,6 +428,46 @@ class NotulenController extends BaseController
             'kesimpulanItems'   => is_array($decodedKesimpulan) ? $decodedKesimpulan : [],
             'tindakLanjutItems' => is_array($decodedTindakLanjut) ? $decodedTindakLanjut : [],
             'pesertaItems'      => is_array($decodedPeserta) ? $decodedPeserta : [],
+        ]);
+    }
+
+    private function audioUploader(): PostChunkAudioUpload
+    {
+        return new PostChunkAudioUpload();
+    }
+
+    private function audioUploadToken(): string
+    {
+        $token = (string) session()->get(self::AUDIO_UPLOAD_SESSION_KEY);
+        if (! preg_match('/^[a-f0-9]{64}$/', $token)) {
+            $token = bin2hex(random_bytes(32));
+            session()->set(self::AUDIO_UPLOAD_SESSION_KEY, $token);
+        }
+
+        return $token;
+    }
+
+    private function validatedRequestAudioToken(): string
+    {
+        $requestToken = trim((string) $this->request->getPost('upload_token'));
+        $sessionToken = $this->audioUploadToken();
+        if (! hash_equals($sessionToken, $requestToken)) {
+            throw new MediaUploadException('Sesi upload tidak valid. Muat ulang halaman.', 403);
+        }
+
+        return $sessionToken;
+    }
+
+    private function audioUploadError(MediaUploadException $e): ResponseInterface
+    {
+        $code = $e->getStatusCode();
+        if (! in_array($code, [400, 403, 404, 409, 413, 422, 500, 503], true)) {
+            $code = 422;
+        }
+
+        return $this->response->setStatusCode($code)->setJSON([
+            'status'  => 'error',
+            'message' => $e->getMessage(),
         ]);
     }
 

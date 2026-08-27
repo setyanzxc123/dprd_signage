@@ -26,7 +26,7 @@ export async function uploadToFilesApi(filePath, mimeType = 'audio/mp3') {
   const ai = getAiClient();
   const fileUpload = await ai.files.upload({
     file: filePath,
-    mimeType,
+    config: { mimeType },
   });
 
   return fileUpload;
@@ -121,7 +121,13 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
           async (attempt) => {
             onLog(`[Transcribe] Memanggil model ${modelName} (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
 
-            const response = await ai.models.generateContent({
+            const startTime = Date.now();
+            let accumulated = '';
+            let wordCount = 0;
+            let lastLogTime = startTime;
+            const LOG_INTERVAL_MS = 10_000; // log progress tiap 10 detik
+
+            const stream = await ai.models.generateContentStream({
               model: modelName,
               contents: [
                 {
@@ -139,11 +145,31 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
               ],
             });
 
-            const text = response?.text?.() || response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            if (!text || text.trim().length === 0) {
+            for await (const chunk of stream) {
+              const textChunk = chunk.text ?? '';
+              accumulated += textChunk;
+
+              // Hitung kata secara efisien: tambah jumlah kata dari chunk baru
+              if (textChunk.trim()) {
+                wordCount += textChunk.trim().split(/\s+/).length;
+              }
+
+              // Log progress tiap LOG_INTERVAL_MS agar tidak spam
+              const now = Date.now();
+              if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                const elapsedSec = Math.round((now - startTime) / 1000);
+                onLog(`[Transcribe] ⏳ chunk_${chunkNum} streaming... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.length.toLocaleString('id-ID')} karakter]`);
+                lastLogTime = now;
+              }
+            }
+
+            const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
+            if (!accumulated || accumulated.trim().length === 0) {
               throw new Error(`Respons model ${modelName} kosong.`);
             }
-            return text.trim();
+
+            onLog(`[Transcribe] ✅ Stream selesai: chunk_${chunkNum} via ${modelName} [${elapsedTotal}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
+            return accumulated.trim();
           },
           {
             maxRetries: config.worker.maxRetriesPerModel,
@@ -157,7 +183,6 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
         );
 
         modelSuccess = true;
-        onLog(`[Transcribe] Berhasil memperoleh transkrip chunk_${chunkNum} via model ${modelName} (${transcriptText.length} karakter).`);
         break;
       } catch (err) {
         lastError = err;
@@ -260,7 +285,12 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
         async (attempt) => {
           onLog(`[Minutes] Memanggil model ${modelName} untuk menyusun risalah (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
 
-          const response = await ai.models.generateContent({
+          const startTime = Date.now();
+          let accumulated = '';
+          let lastLogTime = startTime;
+          const LOG_INTERVAL_MS = 10_000;
+
+          const stream = await ai.models.generateContentStream({
             model: modelName,
             contents: promptText,
             config: {
@@ -268,11 +298,24 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
             },
           });
 
-          const text = response?.text?.() || response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          if (!text || text.trim().length === 0) {
+          for await (const chunk of stream) {
+            accumulated += chunk.text ?? '';
+
+            const now = Date.now();
+            if (now - lastLogTime >= LOG_INTERVAL_MS) {
+              const elapsedSec = Math.round((now - startTime) / 1000);
+              onLog(`[Minutes] ⏳ Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
+              lastLogTime = now;
+            }
+          }
+
+          const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
+          if (!accumulated || accumulated.trim().length === 0) {
             throw new Error(`Respons risalah model ${modelName} kosong.`);
           }
-          return text.trim();
+
+          onLog(`[Minutes] ✅ Stream selesai: risalah via ${modelName} [${elapsedTotal}s | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
+          return accumulated.trim();
         },
         {
           maxRetries: config.worker.maxRetriesPerModel,

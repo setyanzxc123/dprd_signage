@@ -114,6 +114,9 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'notulen',                            'Admin\NotulenController::index');
     $routes->get( 'notulen/(:num)',                     'Admin\NotulenController::show/$1');
     $routes->post('notulen/upload',                     'Admin\NotulenController::upload');
+    $routes->post('notulen/audio-upload/start',         'Admin\NotulenController::startAudioUpload');
+    $routes->post('notulen/audio-upload/chunk',         'Admin\NotulenController::appendAudioChunk');
+    $routes->post('notulen/audio-upload/cancel',        'Admin\NotulenController::cancelAudioUpload');
     $routes->get( 'notulen/status/(:num)',              'Admin\NotulenController::status/$1');
     $routes->post('notulen/retry/(:num)',               'Admin\NotulenController::retry/$1');
     $routes->post('notulen/cancel/(:num)',              'Admin\NotulenController::cancel/$1');

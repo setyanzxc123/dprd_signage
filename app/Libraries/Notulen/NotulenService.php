@@ -2,6 +2,7 @@
 
 namespace App\Libraries\Notulen;
 
+use App\Libraries\Media\MediaUploadException;
 use App\Models\JadwalBanmusItemModel;
 use App\Models\JadwalUmumModel;
 use App\Models\MeetingMinutesModel;
@@ -250,6 +251,165 @@ class NotulenService
         } catch (\Throwable $e) {
             $this->db->transRollback();
             $this->db->resetTransStatus();
+            return ['error' => 'Gagal memproses rekaman: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Buat Job Transkripsi dari hasil chunked upload yang sudah selesai.
+     *
+     * Setelah semua chunk dikirim via PostChunkAudioUpload, controller memanggil
+     * method ini dengan upload_id. File dipindahkan dari temp chunk ke folder job.
+     *
+     * @param array<string, mixed> $input
+     * @return array<string, mixed>
+     *
+     * @throws MediaUploadException
+     */
+    public function createJobFromChunk(
+        array $input,
+        string $ownerToken,
+        string $uploadId,
+        ?int $userId = null
+    ): array {
+        $jadwalType = trim((string) ($input['jadwal_type'] ?? 'umum'));
+        if (! in_array($jadwalType, [MeetingTranscriptionJobModel::TYPE_UMUM, MeetingTranscriptionJobModel::TYPE_BANMUS], true)) {
+            $jadwalType = MeetingTranscriptionJobModel::TYPE_UMUM;
+        }
+
+        $jadwalIdRaw = $input['jadwal_id'] ?? null;
+        $jadwalId    = ($jadwalIdRaw !== null && is_numeric($jadwalIdRaw) && (int) $jadwalIdRaw > 0)
+            ? (int) $jadwalIdRaw
+            : null;
+
+        $judulRapat = trim((string) ($input['judul_rapat'] ?? ''));
+
+        $uploader = new PostChunkAudioUpload();
+
+        // Buat job terlebih dahulu untuk mendapat job_id (diperlukan untuk path folder)
+        $this->db->transBegin();
+
+        try {
+            $jobModel = new MeetingTranscriptionJobModel($this->db);
+
+            // Placeholder job, audio_path diisi setelah file dipindahkan
+            $jobId = (int) $jobModel->insert([
+                'jadwal_type'      => $jadwalType,
+                'jadwal_id'        => $jadwalId,
+                'audio_filename'   => '', // diisi setelah consume
+                'audio_path'       => '',
+                'audio_size'       => 0,
+                'audio_duration'   => null,
+                'status'           => MeetingTranscriptionJobModel::STATUS_QUEUED,
+                'cancel_requested' => 0,
+                'total_chunks'     => 0,
+                'completed_chunks' => 0,
+                'progress_percent' => 0,
+                'current_step'     => 'Menunggu antrean pemrosesan worker AI...',
+                'error_message'    => null,
+                'created_by'       => $userId,
+            ], true);
+
+            if ($jobId <= 0) {
+                $this->db->transRollback();
+                $this->db->resetTransStatus();
+                return ['error' => 'Gagal membuat antrean job transkripsi di database.'];
+            }
+
+            // Siapkan direktori job
+            $jobDir        = $this->getJobDir($jobId);
+            $audioDir      = $jobDir . DIRECTORY_SEPARATOR . 'audio';
+            $transcriptsDir = $jobDir . DIRECTORY_SEPARATOR . 'transcripts';
+
+            if (! is_dir($audioDir)) {
+                mkdir($audioDir, 0777, true);
+            }
+            if (! is_dir($transcriptsDir)) {
+                mkdir($transcriptsDir, 0777, true);
+            }
+
+            // Pindahkan file chunk ke folder audio job
+            // Nama file sementara untuk consume, akan kita rename sesuai ekstensi asli
+            $tempDest = $audioDir . DIRECTORY_SEPARATOR . 'original.tmp';
+            $uploader->consume($ownerToken, $uploadId, $tempDest);
+
+            // Deteksi ekstensi dari MIME aktual file
+            $finfo     = new \finfo(FILEINFO_MIME_TYPE);
+            $detectedMime = strtolower((string) $finfo->file($tempDest));
+            $extMap    = [
+                'audio/mpeg'   => 'mp3',
+                'audio/mp3'    => 'mp3',
+                'audio/x-m4a'  => 'm4a',
+                'audio/mp4'    => 'm4a',
+                'audio/wav'    => 'wav',
+                'audio/x-wav'  => 'wav',
+                'audio/ogg'    => 'ogg',
+                'audio/aac'    => 'aac',
+                'audio/x-aac'  => 'aac',
+                'audio/flac'   => 'flac',
+                'audio/x-flac' => 'flac',
+                'video/mp4'    => 'mp4',
+            ];
+            $ext      = $extMap[$detectedMime] ?? 'mp3';
+            $filename = 'original.' . $ext;
+            $finalDest = $audioDir . DIRECTORY_SEPARATOR . $filename;
+
+            rename($tempDest, $finalDest);
+
+            $fileSize            = filesize($finalDest) ?: 0;
+            $relativeAudioPath   = 'writable/uploads/recordings/job_' . $jobId . '/audio/' . $filename;
+
+            if ($judulRapat === '') {
+                if ($jadwalId !== null) {
+                    $judulRapat = $this->resolveScheduleTitle($jadwalType, $jadwalId);
+                }
+                if ($judulRapat === '') {
+                    $judulRapat = 'Rekaman Rapat ' . date('d-m-Y');
+                }
+            }
+
+            $jobModel->update($jobId, [
+                'audio_filename' => $filename,
+                'audio_path'     => $relativeAudioPath,
+                'audio_size'     => $fileSize,
+            ]);
+
+            // Inisialisasi draft meeting_minutes
+            $minutesModel   = new MeetingMinutesModel($this->db);
+            $existingMinutes = $minutesModel->where('job_id', $jobId)->first();
+
+            if (! $existingMinutes) {
+                $minutesModel->insert([
+                    'job_id'              => $jobId,
+                    'jadwal_type'         => $jadwalType,
+                    'jadwal_id'           => $jadwalId,
+                    'judul_rapat'         => $judulRapat,
+                    'tanggal_rapat'       => $this->resolveScheduleDate($jadwalType, $jadwalId),
+                    'transcripts_dir'     => 'recordings/job_' . $jobId . '/transcripts',
+                    'ringkasan_eksekutif' => null,
+                    'agenda_pembahasan'   => null,
+                    'kesimpulan'          => null,
+                    'tindak_lanjut'       => null,
+                    'peserta_terdeteksi'  => null,
+                    'status_verifikasi'   => 'draft',
+                ]);
+            }
+
+            $this->db->transCommit();
+
+            return [
+                'job_id'  => $jobId,
+                'status'  => MeetingTranscriptionJobModel::STATUS_QUEUED,
+                'message' => 'Rekaman rapat berhasil diunggah dan masuk dalam antrean pemrosesan AI.',
+            ];
+        } catch (\Throwable $e) {
+            $this->db->transRollback();
+            $this->db->resetTransStatus();
+
+            if ($e instanceof MediaUploadException) {
+                throw $e;
+            }
+
             return ['error' => 'Gagal memproses rekaman: ' . $e->getMessage()];
         }
     }
@@ -588,12 +748,12 @@ class NotulenService
                 return;
             }
 
-            $command = 'node ' . escapeshellarg($workerScript) . ' --job-id=' . (int) $jobId;
-
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                pclose(popen('start /B ' . $command, 'r'));
+                $command = 'cmd /c start "" /B node ' . escapeshellarg($workerScript) . ' --job-id=' . (int) $jobId;
+                pclose(popen($command, 'r'));
             } else {
-                exec($command . ' > /dev/null 2>&1 &');
+                $command = 'node ' . escapeshellarg($workerScript) . ' --job-id=' . (int) $jobId . ' > /dev/null 2>&1 &';
+                exec($command);
             }
         } catch (\Throwable) {
             // Jangan gagalkan alur jika background trigger gagal dipanggil
