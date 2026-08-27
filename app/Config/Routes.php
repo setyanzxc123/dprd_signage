@@ -110,6 +110,20 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     // Workspace Seluruh Agenda (Fase 5)
     $routes->get('kalender', 'Admin\AgendaWorkspaceController::kalender');
 
+    // Modul Notulensi & Risalah AI
+    $routes->get( 'notulen',                            'Admin\NotulenController::index');
+    $routes->get( 'notulen/(:num)',                     'Admin\NotulenController::show/$1');
+    $routes->post('notulen/upload',                     'Admin\NotulenController::upload');
+    $routes->get( 'notulen/status/(:num)',              'Admin\NotulenController::status/$1');
+    $routes->post('notulen/retry/(:num)',               'Admin\NotulenController::retry/$1');
+    $routes->post('notulen/cancel/(:num)',              'Admin\NotulenController::cancel/$1');
+    $routes->post('notulen/delete-audio/(:num)',        'Admin\NotulenController::deleteRecording/$1');
+    $routes->post('notulen/destroy/(:num)',             'Admin\NotulenController::destroy/$1');
+    $routes->get( 'notulen/download-transcript/(:num)', 'Admin\NotulenController::downloadTranscript/$1');
+    $routes->post('notulen/update-minutes/(:num)',      'Admin\NotulenController::updateMinutes/$1');
+    $routes->post('notulen/finalize/(:num)',            'Admin\NotulenController::finalizeMinutes/$1');
+    $routes->get( 'notulen/export-pdf/(:num)',          'Admin\NotulenController::exportPdf/$1');
+
     // Pengaturan Signage
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');

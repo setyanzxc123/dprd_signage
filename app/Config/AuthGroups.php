@@ -46,6 +46,7 @@ class AuthGroups extends ShieldAuthGroups
         'otp.emergency'     => 'Menerbitkan OTP darurat untuk anggota',
         'pengaturan.manage' => 'Mengelola pengaturan dan media signage',
         'resource.read'     => 'Mengakses materi, stream, undangan, dan dokumen SK',
+        'notulen.manage'    => 'Mengelola rekaman rapat, transkripsi AI, dan risalah',
     ];
 
     /**
@@ -63,6 +64,7 @@ class AuthGroups extends ShieldAuthGroups
             'otp.emergency',
             'pengaturan.manage',
             'resource.read',
+            'notulen.manage',
         ],
         'operator' => [
             'agenda.read',
@@ -73,6 +75,7 @@ class AuthGroups extends ShieldAuthGroups
             'otp.emergency',
             'pengaturan.manage',
             'resource.read',
+            'notulen.manage',
         ],
         'anggota' => [
             'agenda.read',
