@@ -4,7 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\Notulen\NotulenService;
-use App\Models\JadwalBanmusItemModel;
+use App\Models\JadwalBanmusModel;
 use App\Models\JadwalUmumModel;
 use App\Models\MeetingMinutesModel;
 use App\Models\MeetingTranscriptionJobModel;
@@ -72,7 +72,7 @@ class NotulenController extends BaseController
             ->limit(20)
             ->findAll();
 
-        $banmusItems = (new JadwalBanmusItemModel())
+        $banmusItems = (new JadwalBanmusModel())
             ->select('id, agenda, tanggal, waktu_mulai')
             ->orderBy('tanggal', 'DESC')
             ->limit(20)
