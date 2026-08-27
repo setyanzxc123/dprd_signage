@@ -96,7 +96,6 @@ class RedirectController extends BaseController
         </head>
         <body>
             <div class="card">
-                <div class="icon">📭</div>
                 <h1>{$judul}</h1>
                 <p>{$pesan}</p>
             </div>

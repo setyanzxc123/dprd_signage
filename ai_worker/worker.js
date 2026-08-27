@@ -362,7 +362,7 @@ export async function processJob(pool, job) {
 
   cleanLocalAudioChunks(audioDir);
 
-  console.log(`\n[Worker] 🎉 SUKSES: Job #${jobId} (${meetingContext.judulRapat}) telah selesai 100%!\n`);
+  console.log(`\n[Worker] SUKSES: Job #${jobId} (${meetingContext.judulRapat}) telah selesai 100%!\n`);
 }
 
 /**
@@ -374,7 +374,7 @@ async function main() {
   const jobIdArg = args.find((a) => a.startsWith('--job-id='));
 
   console.log('------------------------------------------------------------');
-  console.log('🤖 DPRD Signage AI Background Worker Engine');
+  console.log('[Worker] DPRD Signage AI Background Worker Engine');
   console.log(`Model Chain: ${config.gemini.modelChain.join(' -> ')}`);
   console.log(`Database: ${config.db.user}@${config.db.host}:${config.db.port}/${config.db.database}`);
   console.log('------------------------------------------------------------');
