@@ -137,3 +137,5 @@ _modules/*
 dprd_signage.sql
 .agents
 .claude
+googleai_studio_docs/
+js_genai_docs/
