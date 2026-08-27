@@ -158,6 +158,7 @@ $routes->group('api/v1/anggota', ['filter' => ['cors', 'memberapi']], function (
 $routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'memberapi']], static function ($routes) {
     $routes->get('(:segment)/(:num)/(materi|stream)', 'ScheduleResourceController::resolve/$1/$2/$3');
     $routes->get('(:segment)/(:num)/undangan', 'ScheduleDocumentController::undangan/$1/$2');
+    $routes->get('(:segment)/(:num)/risalah', 'ScheduleMinutesController::show/$1/$2');
 });
 
 // ── API v1 Dokumen SK banmus (publik bila is_publik, selain itu anggota) ──

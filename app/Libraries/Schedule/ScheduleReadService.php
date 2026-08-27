@@ -125,10 +125,28 @@ final class ScheduleReadService
             $rows,
         ));
 
-        return array_map(function (array $row) use ($unitMap, $memberUnitIds, $isMember): array {
+        $minutesMap = [];
+        $db = \Config\Database::connect();
+        if (! empty($rows) && $db->tableExists('meeting_minutes')) {
+            $scheduleIds = array_map(static fn (array $row): int => (int) $row['id'], $rows);
+            $minutesRows = $db->table('meeting_minutes')
+                ->select('jadwal_type, jadwal_id, status_verifikasi')
+                ->whereIn('jadwal_id', $scheduleIds)
+                ->get()
+                ->getResultArray();
+            foreach ($minutesRows as $m) {
+                $key = ($m['jadwal_type'] ?? 'umum') . '_' . $m['jadwal_id'];
+                $minutesMap[$key] = $m['status_verifikasi'] ?? 'draft';
+            }
+        }
+
+        return array_map(function (array $row) use ($unitMap, $memberUnitIds, $isMember, $minutesMap): array {
             $id = (int) $row['id'];
             $units = $unitMap[$id] ?? [];
             $unitIds = array_column($units, 'id');
+            $minutesKey = ($row['source'] ?? 'umum') . '_' . $id;
+            $statusVerifikasi = $minutesMap[$minutesKey] ?? null;
+
             $row['id'] = $id;
             $row['waktu_mulai'] = substr((string) $row['waktu_mulai'], 0, 5);
             $row['waktu_selesai'] = substr((string) $row['waktu_selesai'], 0, 5);
@@ -143,6 +161,8 @@ final class ScheduleReadService
             $this->formatResourceAccess($row, 'materi', $isMember);
             $this->formatResourceAccess($row, 'stream', $isMember);
             $row['has_undangan'] = $isMember && trim((string) ($row['undangan_file'] ?? '')) !== '';
+            $row['has_risalah'] = $statusVerifikasi === 'final';
+            $row['risalah_status'] = $statusVerifikasi;
             unset(
                 $row['nama_ruangan'],
                 $row['lokasi_lainnya'],
