@@ -73,7 +73,7 @@ class NotulenController extends BaseController
             ->findAll();
 
         $banmusItems = (new JadwalBanmusModel())
-            ->select('id, agenda, tanggal, waktu_mulai')
+            ->select('id, agenda, tanggal, jam_mulai AS waktu_mulai')
             ->orderBy('tanggal', 'DESC')
             ->limit(20)
             ->findAll();

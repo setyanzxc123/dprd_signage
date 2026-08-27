@@ -426,7 +426,8 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'id'          => ['type' => 'INTEGER', 'auto_increment' => true],
             'agenda'      => ['type' => 'VARCHAR', 'constraint' => 255],
             'tanggal'     => ['type' => 'DATE', 'null' => true],
-            'waktu_mulai' => ['type' => 'TIME', 'null' => true],
+            'jam_mulai'   => ['type' => 'TIME', 'null' => true],
+            'jam_selesai' => ['type' => 'TIME', 'null' => true],
             'deleted_at'  => ['type' => 'DATETIME', 'null' => true],
             'created_at'  => ['type' => 'DATETIME', 'null' => true],
         ]);
