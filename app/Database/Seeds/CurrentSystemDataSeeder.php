@@ -1853,7 +1853,7 @@ class CurrentSystemDataSeeder extends Seeder
             'updated_at'          => $now,
         ]);
 
-        // 3. Job Sedang Berjalan (Transcribing - In Progress)
+        // 3. Job Contoh Dibatalkan (Cancelled)
         $this->db->table('meeting_transcription_jobs')->insert([
             'jadwal_type'      => 'umum',
             'jadwal_id'        => null,
@@ -1861,9 +1861,9 @@ class CurrentSystemDataSeeder extends Seeder
             'audio_path'       => 'recordings/job_3/audio/original.mp3',
             'audio_size'       => 42000000,
             'audio_duration'   => 5300,
-            'status'           => 'transcribing',
-            'progress_percent' => 65,
-            'current_step'     => 'Mentranskripsikan chunk 2/3 (gemini-3.5-flash-lite)...',
+            'status'           => 'cancelled',
+            'progress_percent' => 30,
+            'current_step'     => 'Dibatalkan oleh operator (contoh data)',
             'total_chunks'     => 3,
             'completed_chunks' => 1,
             'cancel_requested' => 0,
@@ -1871,7 +1871,7 @@ class CurrentSystemDataSeeder extends Seeder
             'updated_at'       => $now,
         ]);
 
-        // 4. Job Dalam Antrean (Queued)
+        // 4. Job Contoh Gagal (Failed)
         $this->db->table('meeting_transcription_jobs')->insert([
             'jadwal_type'      => 'umum',
             'jadwal_id'        => null,
@@ -1879,12 +1879,13 @@ class CurrentSystemDataSeeder extends Seeder
             'audio_path'       => 'recordings/job_4/audio/original.mp3',
             'audio_size'       => 21000000,
             'audio_duration'   => 2600,
-            'status'           => 'queued',
-            'progress_percent' => 0,
-            'current_step'     => 'Menunggu antrean pemrosesan AI...',
-            'total_chunks'     => 0,
+            'status'           => 'failed',
+            'progress_percent' => 10,
+            'current_step'     => 'Gagal: Format audio tidak dikenali (contoh data)',
+            'total_chunks'     => 1,
             'completed_chunks' => 0,
             'cancel_requested' => 0,
+            'error_message'    => 'Format berkas audio tidak dikenali atau rusak.',
             'created_at'       => $now,
             'updated_at'       => $now,
         ]);

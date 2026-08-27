@@ -157,9 +157,17 @@ export async function processJob(pool, job) {
   fs.mkdirSync(transcriptsDir, { recursive: true });
 
   // Tentukan path file input rekaman
-  let inputAudioPath = job.audio_path;
+  let inputAudioPath = job.audio_path || '';
   if (!path.isAbsolute(inputAudioPath)) {
-    inputAudioPath = path.resolve(config.paths.root, inputAudioPath);
+    const writableUploadsPath = path.resolve(config.paths.root, 'writable/uploads', inputAudioPath);
+    const directRootPath = path.resolve(config.paths.root, inputAudioPath);
+    if (fs.existsSync(writableUploadsPath)) {
+      inputAudioPath = writableUploadsPath;
+    } else if (fs.existsSync(directRootPath)) {
+      inputAudioPath = directRootPath;
+    } else {
+      inputAudioPath = writableUploadsPath;
+    }
   }
 
   if (!fs.existsSync(inputAudioPath)) {
