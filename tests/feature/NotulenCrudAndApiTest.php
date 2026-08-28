@@ -387,6 +387,48 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertStringContainsString('KESIMPULAN', $json['ringkasan_eksekutif']);
     }
 
+    public function testIndexRedirectsToExistingJobWhenScheduleReferenced(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 33,
+            'judul'       => 'Rapat Komisi IV',
+            'tanggal'     => '2026-08-28',
+            'waktu_mulai' => '10:00:00',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 77,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 33,
+            'audio_filename' => 'komisi4.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->adminGet('/admin/notulen?jadwal_type=umum&jadwal_id=33');
+        $response->assertRedirectTo(base_url('admin/notulen/77'));
+    }
+
+    public function testIndexPresetsModalWhenScheduleNotYetRecorded(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 44,
+            'judul'       => 'Rapat Paripurna Istimewa HUT Sulteng',
+            'tanggal'     => '2026-08-29',
+            'waktu_mulai' => '08:30:00',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->adminGet('/admin/notulen?jadwal_type=umum&jadwal_id=44');
+        $response->assertOK();
+        $response->assertSee('data-preset-id="44"');
+        $response->assertSee('data-preset-type="umum"');
+        $response->assertSee('Rapat Paripurna Istimewa HUT Sulteng');
+        $response->assertSee('Terkunci');
+    }
+
     private function adminGet(string $path)
     {
         return $this->withSession(['auth_user' => ['id' => 1, 'name' => 'Administrator', 'username' => 'admin']])->get($path);

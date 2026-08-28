@@ -3,10 +3,11 @@
 namespace App\Libraries\Notulen;
 
 use App\Libraries\Media\MediaUploadException;
-use App\Models\JadwalBanmusItemModel;
+use App\Models\JadwalBanmusModel;
 use App\Models\JadwalUmumModel;
 use App\Models\MeetingMinutesModel;
 use App\Models\MeetingTranscriptionJobModel;
+use App\Models\RuanganModel;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\HTTP\Files\UploadedFile;
 
@@ -878,7 +879,7 @@ class NotulenService
     /**
      * Dapatkan judul, tanggal, dan metadata rapat dari SSOT jadwal.
      *
-     * @return array{judul: string, tanggal: string, waktu_mulai: string, lokasi: string}
+     * @return array{judul: string, tanggal: string, waktu_mulai: string, lokasi: string, ruangan: string}
      */
     public function resolveScheduleInfo(string $type, ?int $id): array
     {
@@ -888,6 +889,7 @@ class NotulenService
                 'tanggal'      => date('Y-m-d'),
                 'waktu_mulai'  => '-',
                 'lokasi'       => '-',
+                'ruangan'      => 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah',
             ];
         }
 
@@ -895,23 +897,37 @@ class NotulenService
             if ($type === MeetingTranscriptionJobModel::TYPE_UMUM) {
                 $item = (new JadwalUmumModel($this->db))->find($id);
                 if ($item) {
+                    $ruanganName = null;
+                    if (! empty($item['ruangan_id'])) {
+                        $room = (new RuanganModel($this->db))->find((int) $item['ruangan_id']);
+                        $ruanganName = $room['nama'] ?? null;
+                    }
+                    $lokasi = (string) ($item['lokasi_lainnya'] ?? '');
                     return [
                         'judul'        => (string) ($item['judul'] ?? 'Rapat Umum DPRD'),
                         'tanggal'      => (string) ($item['tanggal'] ?? date('Y-m-d')),
                         'waktu_mulai'  => (string) ($item['waktu_mulai'] ?? '-'),
-                        'lokasi'       => (string) ($item['lokasi_lainnya'] ?? '-'),
+                        'lokasi'       => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
+                        'ruangan'      => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
                     ];
                 }
             }
 
             if ($type === MeetingTranscriptionJobModel::TYPE_BANMUS) {
-                $item = (new JadwalBanmusItemModel($this->db))->find($id);
+                $item = (new JadwalBanmusModel($this->db))->find($id);
                 if ($item) {
+                    $ruanganName = null;
+                    if (! empty($item['ruangan_id'])) {
+                        $room = (new RuanganModel($this->db))->find((int) $item['ruangan_id']);
+                        $ruanganName = $room['nama'] ?? null;
+                    }
+                    $lokasi = (string) ($item['lokasi_lainnya'] ?? '');
                     return [
                         'judul'        => (string) ($item['agenda'] ?? 'Rapat Badan Musyawarah'),
                         'tanggal'      => (string) ($item['tanggal'] ?? date('Y-m-d')),
                         'waktu_mulai'  => (string) ($item['jam_mulai'] ?? '-'),
-                        'lokasi'       => (string) ($item['lokasi_lainnya'] ?? '-'),
+                        'lokasi'       => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
+                        'ruangan'      => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
                     ];
                 }
             }
@@ -924,7 +940,67 @@ class NotulenService
             'tanggal'      => date('Y-m-d'),
             'waktu_mulai'  => '-',
             'lokasi'       => '-',
+            'ruangan'      => 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah',
         ];
+    }
+
+    /**
+     * Mengambil peta jadwal (SSOT) untuk daftar jobs transkripsi.
+     *
+     * @param list<array<string, mixed>> $jobs
+     * @return array<string, array<int, array{judul: string, tanggal: string, waktu_mulai: string, lokasi: string}>>
+     */
+    public function resolveSchedulesForJobs(array $jobs): array
+    {
+        $umumIds = [];
+        $banmusIds = [];
+
+        foreach ($jobs as $job) {
+            $jid = ! empty($job['jadwal_id']) ? (int) $job['jadwal_id'] : null;
+            if ($jid === null) {
+                continue;
+            }
+            if (($job['jadwal_type'] ?? 'umum') === MeetingTranscriptionJobModel::TYPE_BANMUS) {
+                $banmusIds[$jid] = true;
+            } else {
+                $umumIds[$jid] = true;
+            }
+        }
+
+        $schedulesMap = [
+            'umum'   => [],
+            'banmus' => [],
+        ];
+
+        if (! empty($umumIds)) {
+            $items = (new JadwalUmumModel($this->db))
+                ->whereIn('id', array_keys($umumIds))
+                ->findAll();
+            foreach ($items as $item) {
+                $schedulesMap['umum'][(int) $item['id']] = [
+                    'judul'       => (string) ($item['judul'] ?? 'Rapat Umum DPRD'),
+                    'tanggal'     => (string) ($item['tanggal'] ?? date('Y-m-d')),
+                    'waktu_mulai' => (string) ($item['waktu_mulai'] ?? '-'),
+                    'lokasi'      => (string) ($item['lokasi_lainnya'] ?? '-'),
+                ];
+            }
+        }
+
+        if (! empty($banmusIds)) {
+            $items = (new JadwalBanmusModel($this->db))
+                ->whereIn('id', array_keys($banmusIds))
+                ->findAll();
+            foreach ($items as $item) {
+                $schedulesMap['banmus'][(int) $item['id']] = [
+                    'judul'       => (string) ($item['agenda'] ?? 'Rapat Badan Musyawarah'),
+                    'tanggal'     => (string) ($item['tanggal'] ?? date('Y-m-d')),
+                    'waktu_mulai' => (string) ($item['jam_mulai'] ?? '-'),
+                    'lokasi'      => (string) ($item['lokasi_lainnya'] ?? '-'),
+                ];
+            }
+        }
+
+        return $schedulesMap;
     }
 
     private function resolveScheduleTitle(string $type, int $id): string

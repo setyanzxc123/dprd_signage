@@ -43,8 +43,9 @@
                     <?php foreach ($jobs as $job): ?>
                         <?php
                         $minutes      = $minutesMap[$job['id']] ?? null;
-                        $judulRapat   = ! empty($minutes['judul_rapat']) ? $minutes['judul_rapat'] : $job['audio_filename'];
-                        $tanggalRapat = ! empty($minutes['tanggal_rapat']) ? $minutes['tanggal_rapat'] : substr((string) $job['created_at'], 0, 10);
+                        $scheduleInfo = $schedulesMap[$job['jadwal_type'] ?? 'umum'][$job['jadwal_id'] ?? 0] ?? null;
+                        $judulRapat   = ! empty($scheduleInfo['judul']) ? $scheduleInfo['judul'] : pathinfo($job['audio_filename'], PATHINFO_FILENAME);
+                        $tanggalRapat = ! empty($scheduleInfo['tanggal']) ? $scheduleInfo['tanggal'] : substr((string) $job['created_at'], 0, 10);
                         $isInProgress = in_array($job['status'], ['chunking', 'transcribing', 'summarizing'], true);
 
                         $statusLabel = match ($job['status']) {
@@ -147,7 +148,11 @@
     data-chunk-size="<?= (int) $audioChunkSize ?>"
     data-csrf-name="<?= csrf_token() ?>"
     data-csrf-value="<?= csrf_hash() ?>"
-    data-max-size="314572800">
+    data-max-size="314572800"
+    data-preset-type="<?= esc($presetSchedule['type'] ?? '') ?>"
+    data-preset-id="<?= (int) ($presetSchedule['id'] ?? 0) ?>"
+    data-preset-title="<?= esc($presetSchedule['judul'] ?? '', 'attr') ?>"
+    data-preset-label="<?= esc($presetSchedule['label'] ?? '', 'attr') ?>">
     <div class="modal-box w-full max-w-lg">
 
         <!-- Header modal -->
@@ -176,7 +181,20 @@
             <div class="rounded-box border border-base-300 bg-base-100 divide-y divide-base-200">
 
                 <div class="px-3.5 py-2.5">
-                    <p class="text-[11px] font-bold uppercase tracking-wider text-base-content/50 mb-2.5">Data Agenda &amp; Topik <span class="normal-case font-normal text-base-content/40">(opsional)</span></p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-base-content/50 mb-2.5">Data Agenda &amp; Topik <span class="normal-case font-normal text-base-content/40">(SSOT)</span></p>
+
+                    <?php if (! empty($presetSchedule)): ?>
+                        <div class="alert alert-info/10 border border-info/30 py-2 px-3 text-xs flex items-center justify-between rounded-lg mb-2.5">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i data-lucide="link" class="h-4 w-4 text-info shrink-0"></i>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-base-content truncate"><?= esc($presetSchedule['judul']) ?></p>
+                                    <p class="text-[10px] text-base-content/60 font-mono"><?= esc(strtoupper($presetSchedule['type'])) ?> &bull; <?= esc($presetSchedule['tanggal']) ?></p>
+                                </div>
+                            </div>
+                            <span class="badge badge-info badge-xs shrink-0 font-semibold">Terkunci</span>
+                        </div>
+                    <?php endif; ?>
 
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 mb-2">
                         <div>
@@ -233,9 +251,6 @@
                             </div>
                         </div>
                     </div>
-
-
-
 
                     <div>
                         <label for="modal_judul_rapat" class="label py-0 mb-1 flex items-center justify-between">

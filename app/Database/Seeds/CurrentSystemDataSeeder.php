@@ -156,7 +156,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'jadwal_type', 'audio_filename', 'status', 'progress_percent',
             ],
             'meeting_minutes' => [
-                'job_id', 'jadwal_type', 'judul_rapat', 'ringkasan_eksekutif', 'status_verifikasi',
+                'job_id', 'ringkasan_eksekutif', 'status_verifikasi',
             ],
         ];
     }
@@ -1749,39 +1749,8 @@ class CurrentSystemDataSeeder extends Seeder
 
         $this->db->table('meeting_minutes')->insert([
             'job_id'              => $job1Id,
-            'jadwal_type'         => 'umum',
-            'jadwal_id'           => $generalScheduleId,
-            'judul_rapat'         => self::DUMMY_PREFIX . ($generalSchedule['judul'] ?? 'Rapat Dengar Pendapat Komisi I terkait Evaluasi Kinerja OPD'),
-            'tanggal_rapat'       => $generalSchedule['tanggal'] ?? date('Y-m-d'),
             'transcripts_dir'     => "recordings/job_{$job1Id}/transcripts",
-            'ringkasan_eksekutif' => 'Komisi I DPRD Provinsi Sulawesi Tengah menggelar Rapat Dengar Pendapat (RDP) bersama mitra kerja perangkat daerah terkait evaluasi standar operasional pelayanan publik dan digitalisasi birokrasi. Rapat menghasilkan beberapa poin kesepakatan percepatan implementasi SPBE terintegrasi di seluruh kabupaten/kota se-Sulawesi Tengah serta komitmen peningkatan transparansi anggaran.',
-            'agenda_pembahasan'   => json_encode([
-                [
-                    'topik'     => 'Evaluasi Kepatuhan Standar Pelayanan Publik',
-                    'uraian'    => 'Komisi I menyoroti pentingnya kepatuhan terhadap standar pelayanan Ombudsman dan penguatan kanal pengaduan masyarakat.',
-                    'pembicara' => 'Ketua Komisi I',
-                ],
-                [
-                    'topik'     => 'Integrasi Sistem Pemerintahan Berbasis Elektronik (SPBE)',
-                    'uraian'    => 'Dinas Kominfo memaparkan progres integrasi portal layanan satu pintu dan penguatan infrastruktur jaringan di daerah terluar.',
-                    'pembicara' => 'Kepala Dinas Kominfo',
-                ],
-            ]),
-            'kesimpulan'          => json_encode([
-                'Komisi I mengapresiasi capaian indeks SPBE dan meminta penuntasan titik blankspot di wilayah kepulauan.',
-                'Disepakati pembentukan tim asistensi bersama untuk pengawasan berkala triwulanan.',
-            ]),
-            'tindak_lanjut'       => json_encode([
-                'Dinas Kominfo menyampaikan laporan berkala progres integrasi server selambat-lambatnya 14 hari kerja.',
-                'Komisi I menjadwalkan peninjauan lapangan ke command center provinsi pada bulan depan.',
-            ]),
-            'peserta_terdeteksi'  => json_encode([
-                'Ketua Komisi I DPRD',
-                'Wakil Ketua Komisi I',
-                'Sekretaris Komisi I',
-                'Kepala Dinas Kominfo Sulteng',
-                'Kepala Biro Organisasi Setda',
-            ]),
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nKomisi I DPRD Provinsi Sulawesi Tengah menggelar Rapat Dengar Pendapat (RDP) bersama mitra kerja perangkat daerah terkait evaluasi standar operasional pelayanan publik dan digitalisasi birokrasi. Rapat menghasilkan beberapa poin kesepakatan percepatan implementasi SPBE terintegrasi di seluruh kabupaten/kota se-Sulawesi Tengah serta komitmen peningkatan transparansi anggaran.\n\nII. POIN-POIN PEMBAHASAN\n- 00:15:20 | Evaluasi Kepatuhan Standar Pelayanan Publik: Komisi I menyoroti pentingnya kepatuhan terhadap standar pelayanan Ombudsman dan penguatan kanal pengaduan masyarakat.\n- 00:45:10 | Integrasi Sistem Pemerintahan Berbasis Elektronik (SPBE): Dinas Kominfo memaparkan progres integrasi portal layanan satu pintu dan penguatan infrastruktur jaringan di daerah terluar.\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n- Komisi I mengapresiasi capaian indeks SPBE dan meminta penuntasan titik blankspot di wilayah kepulauan.\n- Disepakati pembentukan tim asistensi bersama untuk pengawasan berkala triwulanan.\n- Dinas Kominfo menyampaikan laporan berkala progres integrasi server selambat-lambatnya 14 hari kerja.",
             'status_verifikasi'   => 'final',
             'verified_by'         => 1,
             'verified_at'         => $now,

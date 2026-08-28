@@ -95,7 +95,7 @@
                             </td>
                             <td data-label="Aksi">
                                 <div class="general-schedule-actions flex flex-wrap items-center justify-end gap-1.5">
-                                    <a href="<?= base_url('admin/notulen?q=' . urlencode($schedule['judul'])) ?>" class="btn btn-ghost btn-xs gap-1 text-primary" title="Buka / Buat Notulensi AI">
+                                    <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="btn btn-ghost btn-xs gap-1 text-primary" title="Buka / Buat Notulensi AI">
                                         <i data-lucide="mic" class="h-3.5 w-3.5"></i>
                                         Notulen
                                     </a>

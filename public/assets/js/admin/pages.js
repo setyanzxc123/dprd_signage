@@ -1181,6 +1181,27 @@
             });
         }
 
+        const presetType  = modal.dataset.presetType || '';
+        const presetId    = parseInt(modal.dataset.presetId || '0', 10);
+        const presetTitle = modal.dataset.presetTitle || '';
+        const presetLabel = modal.dataset.presetLabel || '';
+
+        function applyPresetIfAvailable() {
+            if (presetId > 0 && presetType) {
+                if (jadwalType) {
+                    jadwalType.value = presetType;
+                    jadwalType.disabled = true;
+                }
+                if (agendaTrigger) {
+                    agendaTrigger.disabled = true;
+                    agendaTrigger.classList.add('cursor-not-allowed', 'opacity-70', 'bg-base-200');
+                }
+                selectAgendaItem(String(presetId), presetTitle, presetLabel);
+                return true;
+            }
+            return false;
+        }
+
         function resetForm() {
             activeUploadId        = null;
             isCancelling          = false;
@@ -1204,12 +1225,16 @@
             if (infoNote) infoNote.classList.add('hidden');
             if (retryBtnEl) retryBtnEl.classList.add('hidden');
             if (fileInput) fileInput.value = '';
-            if (judulInput) judulInput.value = '';
-            if (jadwalId) jadwalId.value = '';
-            if (agendaSearchInput) agendaSearchInput.value = '';
-            if (agendaSelectedLabel) agendaSelectedLabel.textContent = '— Tanpa Relasi Agenda —';
-            if (typeof renderAgendaOptions === 'function') renderAgendaOptions('');
 
+            if (presetId > 0 && presetType) {
+                applyPresetIfAvailable();
+            } else {
+                if (judulInput) judulInput.value = '';
+                if (jadwalId) jadwalId.value = '';
+                if (agendaSearchInput) agendaSearchInput.value = '';
+                if (agendaSelectedLabel) agendaSelectedLabel.textContent = '— Tanpa Relasi Agenda —';
+                if (typeof renderAgendaOptions === 'function') renderAgendaOptions('');
+            }
 
             showDropzoneIdle();
 
@@ -1331,6 +1356,12 @@
             renderAgendaOptions('');
         }
 
+        if (jadwalType) {
+            jadwalType.addEventListener('change', () => {
+                updateJadwalOptions();
+            });
+        }
+
         if (agendaSearchInput) {
             agendaSearchInput.addEventListener('input', () => {
                 renderAgendaOptions(agendaSearchInput.value);
@@ -1345,13 +1376,24 @@
             });
         }
 
-        updateJadwalOptions();
-
+        if (!applyPresetIfAvailable()) {
+            updateJadwalOptions();
+        } else {
+            // Auto open modal on page load if preset was requested
+            setTimeout(() => {
+                if (modal && !modal.open) {
+                    modal.showModal();
+                    rerenderIcons();
+                }
+            }, 100);
+        }
 
         if (openBtn) {
             openBtn.addEventListener('click', () => {
                 resetForm();
-                updateJadwalOptions();
+                if (!applyPresetIfAvailable()) {
+                    updateJadwalOptions();
+                }
                 modal.showModal();
                 rerenderIcons();
             });
@@ -1730,10 +1772,13 @@
             setProgress(100, 'Berhasil! Mendaftarkan job ke antrean AI...');
             const fd = new FormData();
             fd.append('upload_id', uploadId);
-            if (jadwalType) fd.append('jadwal_type', jadwalType.value);
-            if (jadwalId) fd.append('jadwal_id', jadwalId.value);
 
-            let finalTitle = judulInput && judulInput.value ? judulInput.value.trim() : '';
+            const actualJadwalType = (presetId > 0 && presetType) ? presetType : (jadwalType ? jadwalType.value : 'umum');
+            const actualJadwalId   = (presetId > 0) ? String(presetId) : (jadwalId ? jadwalId.value : '');
+            fd.append('jadwal_type', actualJadwalType);
+            fd.append('jadwal_id', actualJadwalId);
+
+            let finalTitle = judulInput && judulInput.value ? judulInput.value.trim() : (presetTitle || '');
             if (!finalTitle) {
                 const todayFormatted = new Intl.DateTimeFormat('id-ID', {
                     day: 'numeric', month: 'long', year: 'numeric'

@@ -318,7 +318,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <td data-label="Aksi">
                                     <div class="banmus-item-actions flex flex-wrap items-center justify-end gap-1.5">
                                         <a
-                                            href="<?= base_url('admin/notulen?q=' . urlencode($item['agenda'])) ?>"
+                                            href="<?= base_url('admin/notulen?jadwal_type=banmus&jadwal_id=' . (int) $item['id']) ?>"
                                             class="btn btn-ghost btn-xs gap-1 text-primary"
                                             title="Buka / Buat Notulensi AI">
                                             <i data-lucide="mic" class="h-3.5 w-3.5"></i>

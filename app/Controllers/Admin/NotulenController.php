@@ -27,10 +27,39 @@ class NotulenController extends BaseController
     /**
      * Dashboard daftar notulensi dan antrean transkripsi AI.
      */
-    public function index(): string
+    public function index(): string|RedirectResponse
     {
         $jobModel = new MeetingTranscriptionJobModel();
         $minutesModel = new MeetingMinutesModel();
+
+        // Cek apakah ada rujukan jadwal yang diminta via query string
+        $targetType = trim((string) $this->request->getGet('jadwal_type'));
+        $targetId   = (int) $this->request->getGet('jadwal_id');
+
+        $presetSchedule = null;
+        if ($targetId > 0 && in_array($targetType, [MeetingTranscriptionJobModel::TYPE_UMUM, MeetingTranscriptionJobModel::TYPE_BANMUS], true)) {
+            // Cek apakah sudah ada job notulen untuk jadwal ini
+            $existingJob = $jobModel->where('jadwal_type', $targetType)
+                ->where('jadwal_id', $targetId)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            if ($existingJob) {
+                // Langsung arahkan ke detail notulen yang sudah ada
+                return redirect()->to(base_url('admin/notulen/' . (int) $existingJob['id']));
+            }
+
+            // Jika belum ada, ambil info jadwal untuk di-preset di modal upload
+            $scheduleInfo = $this->service->resolveScheduleInfo($targetType, $targetId);
+            $presetSchedule = [
+                'type'        => $targetType,
+                'id'          => $targetId,
+                'judul'       => $scheduleInfo['judul'],
+                'tanggal'     => $scheduleInfo['tanggal'],
+                'waktu_mulai' => $scheduleInfo['waktu_mulai'],
+                'label'       => date('d/m/Y', strtotime($scheduleInfo['tanggal'])) . ' — ' . $scheduleInfo['judul'],
+            ];
+        }
 
         $jobs = $jobModel->orderBy('id', 'DESC')->findAll();
 
@@ -44,25 +73,30 @@ class NotulenController extends BaseController
             }
         }
 
+        // Ambil peta rujukan jadwal SSOT untuk seluruh job
+        $schedulesMap = $this->service->resolveSchedulesForJobs($jobs);
+
         // Ambil opsi jadwal aktif untuk form upload cepat
         $generalSchedules = (new JadwalUmumModel())
             ->select('id, judul, tanggal, waktu_mulai')
             ->orderBy('tanggal', 'DESC')
-            ->limit(20)
+            ->limit(30)
             ->findAll();
 
         $banmusItems = (new JadwalBanmusModel())
             ->select('id, agenda, tanggal, jam_mulai AS waktu_mulai')
             ->orderBy('tanggal', 'DESC')
-            ->limit(20)
+            ->limit(30)
             ->findAll();
 
         return view('admin/notulen/index', [
             'pageTitle'        => 'Notulensi & Risalah AI',
             'jobs'             => $jobs,
             'minutesMap'       => $minutesMap,
+            'schedulesMap'     => $schedulesMap,
             'generalSchedules' => $generalSchedules,
             'banmusItems'      => $banmusItems,
+            'presetSchedule'   => $presetSchedule,
             'audioUploadToken' => $this->audioUploadToken(),
             'audioChunkSize'   => PostChunkAudioUpload::CHUNK_BYTES,
             'audioMaxSize'     => PostChunkAudioUpload::MAX_BYTES,
