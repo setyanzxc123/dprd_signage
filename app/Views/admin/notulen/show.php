@@ -47,31 +47,18 @@ if ($job['jadwal_type'] === 'banmus') {
                     <span class="text-xs font-bold uppercase tracking-wider text-primary">Alur Proses AI</span>
                     <span id="ai_model_badge" class="badge badge-sm badge-outline gap-1 text-primary border-primary/40 bg-primary/5 font-semibold text-[11px]">
                         <i data-lucide="sparkles" class="h-3 w-3"></i>
-                        <span id="ai_model_label_text"><?= esc($aiModelLabel ?? 'Gemini AI') ?></span>
+                        <span id="ai_model_label_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
                     </span>
                 </div>
-                <?php if ($isInProgress || $job['status'] === 'queued'): ?>
-                    <span class="badge badge-info badge-sm gap-1.5 font-mono text-[11px] px-2.5 py-1">
-                        <span class="loading loading-spinner loading-xs"></span> Sedang berjalan (<?= (int) $job['progress_percent'] ?>%)
-                    </span>
-                <?php elseif ($isCompleted): ?>
-                    <span class="badge badge-success badge-sm gap-1.5 font-mono text-[11px] px-2.5 py-1">
-                        <i data-lucide="check" class="h-3.5 w-3.5"></i> Selesai 100%
-                    </span>
-                <?php elseif ($isFailed): ?>
-                    <span class="badge badge-error badge-sm gap-1.5 font-mono text-[11px] px-2.5 py-1">
-                        <i data-lucide="alert-triangle" class="h-3.5 w-3.5"></i> Gagal
-                    </span>
-                <?php endif; ?>
             </div>
 
-            <!-- Stepper Ringkas 4 Langkah -->
+            <!-- Stepper Ringkas 5 Langkah -->
             <div class="overflow-x-auto pb-1">
-                <div class="notulen-stepper-track min-w-[500px]">
+                <div class="notulen-stepper-track min-w-[600px]">
                     <div class="notulen-stepper-line"></div>
 
                     <!-- Step 1: Unggah Rekaman -->
-                    <div class="notulen-step-item">
+                    <div class="notulen-step-item" id="step_upload_item">
                         <div class="notulen-step-circle done">
                             <i data-lucide="cloud-upload" class="h-5 w-5"></i>
                         </div>
@@ -82,69 +69,94 @@ if ($job['jadwal_type'] === 'banmus') {
                         </span>
                     </div>
 
-                    <!-- Step 2: Transkripsi Suara -->
+                    <!-- Step 2: Pemrosesan Rekaman (Abstraksi Chunking Audio) -->
                     <?php
-                    $isStep2Done = in_array($job['status'], ['summarizing', 'completed'], true);
-                    $isStep2Active = in_array($job['status'], ['chunking', 'transcribing'], true);
+                    $isStep2Done = in_array($job['status'], ['transcribing', 'summarizing', 'completed'], true);
+                    $isStep2Active = in_array($job['status'], ['chunking', 'queued'], true);
                     $step2CircleClass = $isStep2Done ? 'done' : ($isStep2Active ? 'active' : '');
                     ?>
-                    <div class="notulen-step-item">
-                        <div class="notulen-step-circle <?= $step2CircleClass ?>">
-                            <i data-lucide="mic" class="h-5 w-5"></i>
+                    <div class="notulen-step-item" id="step_chunking_item">
+                        <div class="notulen-step-circle <?= $step2CircleClass ?>" id="step_chunking_circle">
+                            <i data-lucide="sliders" class="h-5 w-5"></i>
                         </div>
-                        <span class="font-bold text-xs text-base-content mt-2">2. Transkripsi Suara</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1">
+                        <span class="font-bold text-xs text-base-content mt-2">2. Pemrosesan Rekaman</span>
+                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_chunking_status">
                             <?php if ($isStep2Done): ?>
                                 <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
                                 Selesai
                             <?php elseif ($isStep2Active): ?>
                                 <span class="loading loading-spinner loading-xs text-primary"></span>
-                                Sedang berjalan (<?= (int) $job['progress_percent'] ?>%)
+                                Menyiapkan audio...
                             <?php else: ?>
                                 Menunggu
                             <?php endif; ?>
                         </span>
-                        <?php if ($isStep2Active): ?><div class="notulen-active-pill"></div><?php endif; ?>
+                        <?php if ($isStep2Active): ?><div class="notulen-active-pill" id="step_chunking_pill"></div><?php endif; ?>
                     </div>
 
-                    <!-- Step 3: Penyusunan Risalah -->
+                    <!-- Step 3: Transkripsi Suara -->
                     <?php
-                    $isStep3Done = $isCompleted;
-                    $isStep3Active = $job['status'] === 'summarizing';
+                    $isStep3Done = in_array($job['status'], ['summarizing', 'completed'], true);
+                    $isStep3Active = $job['status'] === 'transcribing';
                     $step3CircleClass = $isStep3Done ? 'done' : ($isStep3Active ? 'active' : '');
                     ?>
-                    <div class="notulen-step-item">
-                        <div class="notulen-step-circle <?= $step3CircleClass ?>">
-                            <i data-lucide="sparkles" class="h-5 w-5"></i>
+                    <div class="notulen-step-item" id="step_transcribing_item">
+                        <div class="notulen-step-circle <?= $step3CircleClass ?>" id="step_transcribing_circle">
+                            <i data-lucide="mic" class="h-5 w-5"></i>
                         </div>
-                        <span class="font-bold text-xs text-base-content mt-2">3. Penyusunan Risalah</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1">
+                        <span class="font-bold text-xs text-base-content mt-2">3. Transkripsi Suara</span>
+                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_transcribing_status">
                             <?php if ($isStep3Done): ?>
                                 <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
                                 Selesai
                             <?php elseif ($isStep3Active): ?>
                                 <span class="loading loading-spinner loading-xs text-primary"></span>
-                                Menyusun intisari...
+                                Mentranskripsi (<?= (int) $job['progress_percent'] ?>%)
                             <?php else: ?>
                                 Menunggu
                             <?php endif; ?>
                         </span>
-                        <?php if ($isStep3Active): ?><div class="notulen-active-pill"></div><?php endif; ?>
+                        <?php if ($isStep3Active): ?><div class="notulen-active-pill" id="step_transcribing_pill"></div><?php endif; ?>
                     </div>
 
-                    <!-- Step 4: Risalah Siap -->
+                    <!-- Step 4: Penyusunan Risalah -->
                     <?php
-                    $step4CircleClass = $isCompleted ? 'done' : '';
+                    $isStep4Done = $isCompleted;
+                    $isStep4Active = $job['status'] === 'summarizing';
+                    $step4CircleClass = $isStep4Done ? 'done' : ($isStep4Active ? 'active' : '');
                     ?>
-                    <div class="notulen-step-item">
-                        <div class="notulen-step-circle <?= $step4CircleClass ?>">
+                    <div class="notulen-step-item" id="step_summarizing_item">
+                        <div class="notulen-step-circle <?= $step4CircleClass ?>" id="step_summarizing_circle">
+                            <i data-lucide="sparkles" class="h-5 w-5"></i>
+                        </div>
+                        <span class="font-bold text-xs text-base-content mt-2">4. Penyusunan Risalah</span>
+                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_summarizing_status">
+                            <?php if ($isStep4Done): ?>
+                                <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
+                                Selesai
+                            <?php elseif ($isStep4Active): ?>
+                                <span class="loading loading-spinner loading-xs text-primary"></span>
+                                Menyusun risalah...
+                            <?php else: ?>
+                                Menunggu
+                            <?php endif; ?>
+                        </span>
+                        <?php if ($isStep4Active): ?><div class="notulen-active-pill" id="step_summarizing_pill"></div><?php endif; ?>
+                    </div>
+
+                    <!-- Step 5: Risalah Siap -->
+                    <?php
+                    $step5CircleClass = $isCompleted ? 'done' : '';
+                    ?>
+                    <div class="notulen-step-item" id="step_completed_item">
+                        <div class="notulen-step-circle <?= $step5CircleClass ?>" id="step_completed_circle">
                             <i data-lucide="file-check" class="h-5 w-5"></i>
                         </div>
-                        <span class="font-bold text-xs text-base-content mt-2">4. Risalah Siap</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1">
+                        <span class="font-bold text-xs text-base-content mt-2">5. Risalah Siap</span>
+                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_completed_status">
                             <?php if ($isCompleted): ?>
                                 <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
-                                Siap Dibaca
+                                Siap Ditinjau
                             <?php else: ?>
                                 Menunggu
                             <?php endif; ?>
@@ -312,11 +324,10 @@ if ($job['jadwal_type'] === 'banmus') {
 
                 </div>
             <?php else: ?>
-                <!-- Placeholder saat masih proses AI -->
-                <div class="py-12 text-center text-base-content/60 space-y-3">
-                    <span class="loading loading-spinner loading-lg text-primary"></span>
-                    <p class="font-medium text-sm">Sedang menyusun ringkasan 3 pilar rapat...</p>
-                    <p class="text-xs text-base-content/40">Data intisari akan otomatis muncul begitu worker AI selesai memproses.</p>
+                <!-- Placeholder saat belum tersedia -->
+                <div class="py-12 text-center text-base-content/50 space-y-1">
+                    <p class="font-semibold text-xs sm:text-sm text-base-content/70">Ringkasan Rapat Belum Tersedia</p>
+                    <p class="text-[11px] sm:text-xs text-base-content/40">Data intisari rapat akan otomatis ditampilkan di sini setelah proses AI selesai.</p>
                 </div>
             <?php endif; ?>
 
@@ -340,9 +351,9 @@ if ($job['jadwal_type'] === 'banmus') {
 <?= esc($minutes['ringkasan_eksekutif']) ?>
                 </div>
             <?php else: ?>
-                <div class="py-14 text-center text-base-content/60 space-y-3">
-                    <span class="loading loading-spinner loading-lg text-primary"></span>
-                    <p class="font-bold text-sm text-base-content">Sedang menyusun format naskah dinas...</p>
+                <div class="py-14 text-center text-base-content/50 space-y-1">
+                    <p class="font-semibold text-xs sm:text-sm text-base-content/70">Naskah Risalah Belum Tersedia</p>
+                    <p class="text-[11px] sm:text-xs text-base-content/40">Format naskah risalah resmi rapat akan ditampilkan di sini setelah proses AI selesai.</p>
                 </div>
             <?php endif; ?>
 
@@ -496,7 +507,7 @@ if ($job['jadwal_type'] === 'banmus') {
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
                 <span class="text-base-content/60">Model Transkripsi &amp; Risalah:</span>
-                <span class="font-semibold text-primary" id="ai_model_meta_text"><?= esc($aiModelLabel ?? 'Gemini AI') ?></span>
+                <span class="font-semibold text-primary" id="ai_model_meta_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
                 <span class="text-base-content/60">Status Integritas:</span>

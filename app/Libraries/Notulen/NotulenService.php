@@ -61,7 +61,15 @@ class NotulenService
     {
         $raw = trim((string) $modelIdentifier);
         if ($raw === '') {
-            return 'Gemini Flash AI';
+            // Ambil model primer dari variabel environment GEMINI_MODEL_CHAIN di .env
+            $chain = trim((string) (env('GEMINI_MODEL_CHAIN') ?: ($_ENV['GEMINI_MODEL_CHAIN'] ?? '')));
+            if ($chain !== '') {
+                $chainParts = explode(',', $chain);
+                $raw = trim($chainParts[0] ?? '');
+            }
+            if ($raw === '') {
+                $raw = 'gemini-3.5-flash-lite';
+            }
         }
 
         $knownLabels = [

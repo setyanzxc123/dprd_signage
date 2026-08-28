@@ -2052,6 +2052,54 @@
                         if (modelMetaEl) modelMetaEl.textContent = d.ai_model_label;
                     }
 
+                    // Update Stepper 5 Langkah
+                    const chunkCircle = document.getElementById('step_chunking_circle');
+                    const chunkStatus = document.getElementById('step_chunking_status');
+                    const transCircle = document.getElementById('step_transcribing_circle');
+                    const transStatus = document.getElementById('step_transcribing_status');
+                    const summCircle  = document.getElementById('step_summarizing_circle');
+                    const summStatus  = document.getElementById('step_summarizing_status');
+                    const compCircle  = document.getElementById('step_completed_circle');
+                    const compStatus  = document.getElementById('step_completed_status');
+
+                    if (['transcribing', 'summarizing', 'completed'].includes(d.status)) {
+                        if (chunkCircle) chunkCircle.className = 'notulen-step-circle done';
+                        if (chunkStatus) chunkStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                    } else if (['chunking', 'queued'].includes(d.status)) {
+                        if (chunkCircle) chunkCircle.className = 'notulen-step-circle active';
+                        if (chunkStatus) chunkStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-primary"></span> Menyiapkan audio...';
+                    }
+
+                    if (['summarizing', 'completed'].includes(d.status)) {
+                        if (transCircle) transCircle.className = 'notulen-step-circle done';
+                        if (transStatus) transStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                    } else if (d.status === 'transcribing') {
+                        if (transCircle) transCircle.className = 'notulen-step-circle active';
+                        if (transStatus) transStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-primary"></span> Mentranskripsi (' + d.progress_percent + '%)';
+                    } else if (['chunking', 'queued'].includes(d.status)) {
+                        if (transCircle) transCircle.className = 'notulen-step-circle';
+                        if (transStatus) transStatus.textContent = 'Menunggu';
+                    }
+
+                    if (d.status === 'completed') {
+                        if (summCircle) summCircle.className = 'notulen-step-circle done';
+                        if (summStatus) summStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                        if (compCircle) compCircle.className = 'notulen-step-circle done';
+                        if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Siap Ditinjau';
+                    } else if (d.status === 'summarizing') {
+                        if (summCircle) summCircle.className = 'notulen-step-circle active';
+                        if (summStatus) summStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-primary"></span> Menyusun risalah...';
+                    } else {
+                        if (summCircle) summCircle.className = 'notulen-step-circle';
+                        if (summStatus) summStatus.textContent = 'Menunggu';
+                        if (compCircle) compCircle.className = 'notulen-step-circle';
+                        if (compStatus) compStatus.textContent = 'Menunggu';
+                    }
+
+                    if (window.lucide && window.lucide.createIcons) {
+                        window.lucide.createIcons();
+                    }
+
                     if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
                         if (notulenPollTimer) {
                             clearInterval(notulenPollTimer);
