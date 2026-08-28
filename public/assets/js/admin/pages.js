@@ -1006,3 +1006,742 @@
         if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close();
     });
 })();
+
+(() => {
+    const initializeNotulenUploadWorkspace = () => {
+        const modal = document.getElementById('modal_upload_notulen');
+        if (!(modal instanceof HTMLDialogElement)) return;
+        if (modal.dataset.initialized === 'true') return;
+        modal.dataset.initialized = 'true';
+
+        const openBtn     = document.getElementById('btn_open_upload_modal');
+        const submitBtn   = document.getElementById('um_submit_btn');
+        const cancelBtn   = document.getElementById('um_cancel_btn');
+        const closeBtn    = document.getElementById('um_close_btn');
+        const backdropBtn = document.getElementById('um_backdrop_btn');
+        const retryBtn    = document.getElementById('um_retry_btn');
+        const fileInput   = document.getElementById('modal_audio_file');
+        const judulInput  = document.getElementById('modal_judul_rapat');
+        const jadwalType  = document.getElementById('modal_jadwal_type');
+        const jadwalId    = document.getElementById('modal_jadwal_id');
+
+        // Dropzone refs
+        const dropzone    = document.getElementById('um_dropzone');
+        const dzIdle      = document.getElementById('um_dz_idle');
+        const dzSelected  = document.getElementById('um_dz_selected');
+        const dzFilename  = document.getElementById('um_dz_filename');
+        const dzFilemeta  = document.getElementById('um_dz_filemeta');
+        const dzChangeBtn = document.getElementById('um_dz_change_btn');
+        const dzIconWrap  = document.getElementById('um_dz_icon_wrap');
+
+        // Confirm dialog refs
+        const confirmDialog    = document.getElementById('um_confirm_dialog');
+        const confirmKeepBtn   = document.getElementById('um_confirm_keep_btn');
+        const confirmCancelBtn = document.getElementById('um_confirm_cancel_btn');
+        let pendingCloseAction = null;
+
+        // Server config dari data attributes
+        const UPLOAD_TOKEN = modal.dataset.uploadToken || '';
+        const START_URL    = modal.dataset.startUrl    || '';
+        const CHUNK_URL    = modal.dataset.chunkUrl    || '';
+        const CANCEL_URL   = modal.dataset.cancelUrl   || '';
+        const COMMIT_URL   = modal.dataset.commitUrl   || '';
+        const CHUNK_SIZE   = parseInt(modal.dataset.chunkSize, 10) || 524288;
+        const CSRF_NAME    = modal.dataset.csrfName    || '';
+        const CSRF_VALUE   = modal.dataset.csrfValue   || '';
+        const MAX_SIZE     = parseInt(modal.dataset.maxSize, 10) || 314572800; // 300 MB
+
+        const ALLOWED_TYPES = ['audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/wav', 'audio/wave',
+            'audio/ogg', 'audio/aac', 'audio/flac', 'audio/x-flac', 'video/mp4'];
+        const ALLOWED_EXT   = /\.(mp3|m4a|wav|ogg|aac|flac|mp4)$/i;
+
+        const retryDelays           = [0, 1500, 4000, 8000];
+        let activeUploadId        = null;
+        let uploadStartedAt       = 0;
+        let uploadInitialOffset   = 0;
+        let currentAcceptedOffset = 0;
+        let isCancelling          = false;
+        let isUploading           = false;
+        let lastFile              = null;
+
+        function rerenderIcons() {
+            if (window.lucide && window.lucide.createIcons) {
+                window.lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
+            }
+        }
+
+        function openConfirmDialog(onConfirm) {
+            pendingCloseAction = onConfirm;
+            if (confirmDialog instanceof HTMLDialogElement) {
+                confirmDialog.showModal();
+                rerenderIcons();
+            }
+        }
+
+        if (confirmKeepBtn) {
+            confirmKeepBtn.addEventListener('click', () => {
+                pendingCloseAction = null;
+                if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+            });
+        }
+
+        if (confirmCancelBtn) {
+            confirmCancelBtn.addEventListener('click', () => {
+                if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+                if (typeof pendingCloseAction === 'function') {
+                    pendingCloseAction();
+                    pendingCloseAction = null;
+                }
+            });
+        }
+
+        function showDropzoneIdle() {
+            if (!dzIdle || !dzSelected || !dropzone) return;
+            dzIdle.classList.remove('hidden');
+            dzIdle.classList.add('flex');
+            dzSelected.classList.remove('flex');
+            dzSelected.classList.add('hidden');
+            dropzone.classList.remove('border-success', 'bg-success/5');
+            dropzone.classList.add('border-dashed', 'border-base-300', 'bg-base-200/50');
+        }
+
+        function showDropzoneSelected(file) {
+            if (!dzIdle || !dzSelected || !dropzone) return;
+            const mb  = (file.size / 1048576).toFixed(1);
+            const ext = file.name.split('.').pop().toUpperCase();
+            if (dzFilename) dzFilename.textContent = file.name;
+            if (dzFilemeta) dzFilemeta.textContent = mb + ' MB · ' + ext;
+            dzIdle.classList.remove('flex');
+            dzIdle.classList.add('hidden');
+            dzSelected.classList.remove('hidden');
+            dzSelected.classList.add('flex');
+            dropzone.classList.remove('border-dashed', 'border-base-300', 'bg-base-200/50');
+            dropzone.classList.add('border-success', 'bg-success/5');
+        }
+
+        if (dropzone) {
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (fileInput && fileInput.files && fileInput.files[0]) return;
+                dropzone.classList.add('border-primary', 'bg-primary/5', 'scale-[1.01]');
+                dropzone.classList.remove('border-base-300');
+                if (dzIconWrap) dzIconWrap.classList.add('bg-primary/20');
+            });
+
+            dropzone.addEventListener('dragleave', (e) => {
+                if (dropzone.contains(e.relatedTarget)) return;
+                dropzone.classList.remove('border-primary', 'bg-primary/5', 'scale-[1.01]');
+                dropzone.classList.add('border-base-300');
+                if (dzIconWrap) dzIconWrap.classList.remove('bg-primary/20');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('border-primary', 'bg-primary/5', 'scale-[1.01]');
+                dropzone.classList.add('border-base-300');
+                if (dzIconWrap) dzIconWrap.classList.remove('bg-primary/20');
+                const files = e.dataTransfer ? e.dataTransfer.files : null;
+                if (files && files[0] && fileInput) {
+                    try {
+                        const dt = new DataTransfer();
+                        dt.items.add(files[0]);
+                        fileInput.files = dt.files;
+                    } catch (err) { /* fallback skip */ }
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            dropzone.addEventListener('click', (e) => {
+                if (dzChangeBtn && dzChangeBtn.contains(e.target)) return;
+                if (fileInput) fileInput.click();
+            });
+
+            dropzone.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (fileInput) fileInput.click();
+                }
+            });
+        }
+
+        if (dzChangeBtn) {
+            dzChangeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (fileInput) fileInput.click();
+            });
+        }
+
+        function resetForm() {
+            activeUploadId        = null;
+            isCancelling          = false;
+            isUploading           = false;
+            lastFile              = null;
+            uploadStartedAt       = 0;
+            uploadInitialOffset   = 0;
+            currentAcceptedOffset = 0;
+
+            const progressBox = document.getElementById('upload_progress_box');
+            const warningBanner = document.getElementById('upload_warning_banner');
+            const errorBox = document.getElementById('um_error_box');
+            const previewContainer = document.getElementById('audio_preview_container');
+            const infoNote = document.getElementById('um_info_note');
+            const retryBtnEl = document.getElementById('um_retry_btn');
+
+            if (progressBox) progressBox.classList.add('hidden');
+            if (warningBanner) warningBanner.classList.add('hidden');
+            if (errorBox) errorBox.classList.add('hidden');
+            if (previewContainer) previewContainer.classList.add('hidden');
+            if (infoNote) infoNote.classList.add('hidden');
+            if (retryBtnEl) retryBtnEl.classList.add('hidden');
+
+            if (fileInput) fileInput.value = '';
+            if (judulInput) judulInput.value = '';
+            if (jadwalId) jadwalId.value = '';
+
+            showDropzoneIdle();
+
+            if (submitBtn) submitBtn.disabled = false;
+            const spinner = document.getElementById('um_spinner');
+            const btnIcon = document.getElementById('um_btn_icon');
+            const btnLabel = document.getElementById('um_btn_label');
+            if (spinner) spinner.classList.add('hidden');
+            if (btnIcon) btnIcon.classList.remove('hidden');
+            if (btnLabel) btnLabel.textContent = 'Kirim Rekaman';
+
+            setProgress(0, 'Mengunggah rekaman ke server...');
+            const transferInfo = document.getElementById('upload_transfer_info');
+            const speedInfo = document.getElementById('upload_speed_info');
+            const etaInfo = document.getElementById('upload_eta_info');
+            if (transferInfo) transferInfo.textContent = '0 MB / 0 MB';
+            if (speedInfo) speedInfo.textContent = '— MB/s';
+            if (etaInfo) etaInfo.textContent = '';
+        }
+
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                resetForm();
+                modal.showModal();
+                rerenderIcons();
+            });
+        }
+
+        function confirmCancelUpload(onConfirmed) {
+            if (isUploading) {
+                openConfirmDialog(() => {
+                    isCancelling = true;
+                    if (activeUploadId) doCancel(activeUploadId);
+                    onConfirmed();
+                });
+            } else {
+                onConfirmed();
+            }
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                confirmCancelUpload(() => modal.close());
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                confirmCancelUpload(() => modal.close());
+            });
+        }
+
+        if (backdropBtn) {
+            backdropBtn.addEventListener('click', () => {
+                if (isUploading) return;
+                modal.close();
+            });
+        }
+
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                if (!lastFile) return;
+                startUpload(lastFile);
+            });
+        }
+
+        modal.addEventListener('close', () => {
+            if (activeUploadId && !isCancelling) {
+                doCancel(activeUploadId);
+            }
+            resetForm();
+        });
+
+        if (fileInput) {
+            fileInput.addEventListener('change', () => {
+                const container = document.getElementById('audio_preview_container');
+                const player    = document.getElementById('audio_preview_player');
+                const info      = document.getElementById('audio_preview_info');
+                const infoNote  = document.getElementById('um_info_note');
+
+                const errBox = document.getElementById('um_error_box');
+                const retryB = document.getElementById('um_retry_btn');
+                if (errBox) errBox.classList.add('hidden');
+                if (retryB) retryB.classList.add('hidden');
+
+                if (fileInput.files && fileInput.files[0]) {
+                    const f = fileInput.files[0];
+                    showDropzoneSelected(f);
+
+                    if (info) info.textContent = f.name + ' · ' + (f.size / 1048576).toFixed(1) + ' MB';
+                    if (player) player.src = URL.createObjectURL(f);
+                    if (container) container.classList.remove('hidden');
+                    if (infoNote) infoNote.classList.remove('hidden');
+                    rerenderIcons();
+                } else {
+                    showDropzoneIdle();
+                    if (container) container.classList.add('hidden');
+                    if (infoNote) infoNote.classList.add('hidden');
+                    if (player && player.src) {
+                        URL.revokeObjectURL(player.src);
+                        player.src = '';
+                    }
+                }
+            });
+        }
+
+        if (jadwalType) {
+            jadwalType.addEventListener('change', () => {
+                const grpUmum = document.getElementById('group_umum');
+                const grpBanmus = document.getElementById('group_banmus');
+                if (grpUmum) grpUmum.classList.toggle('hidden', jadwalType.value === 'banmus');
+                if (grpBanmus) grpBanmus.classList.toggle('hidden', jadwalType.value !== 'banmus');
+                if (jadwalId) jadwalId.value = '';
+                if (judulInput) judulInput.value = '';
+            });
+        }
+
+        if (jadwalId) {
+            jadwalId.addEventListener('change', () => {
+                const opt = jadwalId.options[jadwalId.selectedIndex];
+                const title = opt ? opt.getAttribute('data-title') : null;
+                if (title && judulInput && !judulInput.value) judulInput.value = title;
+            });
+        }
+
+        function validateFile(file) {
+            if (!file) return 'Pilih berkas rekaman audio terlebih dahulu.';
+            if (file.size > MAX_SIZE) {
+                return 'Berkas terlalu besar (' + (file.size / 1048576).toFixed(1) + ' MB). Maksimum 300 MB.';
+            }
+            const extOk  = ALLOWED_EXT.test(file.name);
+            const typeOk = file.type === '' || ALLOWED_TYPES.includes(file.type);
+            if (!extOk && !typeOk) {
+                return 'Format berkas tidak didukung. Gunakan MP3, M4A, WAV, OGG, AAC, FLAC, atau MP4.';
+            }
+            return null;
+        }
+
+        function categorizeError(err) {
+            if (!err) return 'Terjadi kesalahan tidak diketahui. Coba lagi.';
+            const status = err.status || 0;
+            const msg    = err.message || '';
+
+            if (status === 0 || msg.includes('Koneksi')) {
+                return 'Koneksi terputus. Periksa jaringan Anda, lalu coba lagi.';
+            }
+            if (status === 413) {
+                return 'Berkas terlalu besar untuk diterima server. Kompres rekaman dan coba lagi.';
+            }
+            if (status === 422 || status === 400) {
+                return msg || 'Format berkas tidak diterima server. Pastikan format audio valid.';
+            }
+            if (status >= 500) {
+                return 'Server sedang mengalami gangguan (' + status + '). Coba lagi dalam beberapa menit.';
+            }
+            if (msg) return msg;
+            return 'Gagal mengunggah rekaman (HTTP ' + status + '). Coba lagi.';
+        }
+
+        function setProgress(pct, msg) {
+            const bar = document.getElementById('upload_progress_bar');
+            const percent = document.getElementById('upload_progress_percent');
+            const text = document.getElementById('upload_status_text');
+            if (bar) bar.value = pct;
+            if (percent) percent.textContent = Math.round(pct) + '%';
+            if (text && msg !== undefined) text.textContent = msg;
+        }
+
+        function showError(msg, allowRetry) {
+            isUploading = false;
+            if (submitBtn) submitBtn.disabled = false;
+            const spinner = document.getElementById('um_spinner');
+            const btnIcon = document.getElementById('um_btn_icon');
+            const btnLabel = document.getElementById('um_btn_label');
+            const warningBanner = document.getElementById('upload_warning_banner');
+            const retryEl = document.getElementById('um_retry_btn');
+            const errorText = document.getElementById('um_error_text');
+            const errorBox = document.getElementById('um_error_box');
+
+            if (spinner) spinner.classList.add('hidden');
+            if (btnIcon) btnIcon.classList.remove('hidden');
+            if (btnLabel) btnLabel.textContent = 'Kirim Rekaman';
+            if (warningBanner) warningBanner.classList.add('hidden');
+
+            if (retryEl) {
+                if (allowRetry && lastFile) retryEl.classList.remove('hidden');
+                else retryEl.classList.add('hidden');
+            }
+
+            if (errorText) errorText.textContent = msg;
+            if (errorBox) errorBox.classList.remove('hidden');
+        }
+
+        function updateProgress(fileSize, acceptedOffset, chunkLoaded = 0) {
+            const uploaded    = Math.min(fileSize, acceptedOffset + chunkLoaded);
+            const pct         = fileSize > 0 ? (uploaded / fileSize) * 100 : 0;
+            const elapsedSec  = (performance.now() - uploadStartedAt) / 1000;
+            const transferred = Math.max(0, uploaded - uploadInitialOffset);
+
+            if (elapsedSec >= 0.5 && transferred > 0) {
+                const speedMBs = transferred / elapsedSec / 1048576;
+                const speedInfo = document.getElementById('upload_speed_info');
+                if (speedInfo) speedInfo.textContent = speedMBs.toFixed(1) + ' MB/s';
+
+                const remaining = fileSize - uploaded;
+                const etaInfo = document.getElementById('upload_eta_info');
+                if (remaining > 0 && speedMBs > 0 && etaInfo) {
+                    const etaSec = remaining / (speedMBs * 1048576);
+                    const etaStr = etaSec >= 60
+                        ? Math.ceil(etaSec / 60) + ' mnt tersisa'
+                        : Math.ceil(etaSec) + ' dtk tersisa';
+                    etaInfo.textContent = '~' + etaStr;
+                } else if (etaInfo) {
+                    etaInfo.textContent = '';
+                }
+            }
+
+            const transferInfo = document.getElementById('upload_transfer_info');
+            if (transferInfo) {
+                transferInfo.textContent = (uploaded / 1048576).toFixed(1) + ' MB / ' + (fileSize / 1048576).toFixed(1) + ' MB';
+            }
+
+            const statusMsg = pct >= 100
+                ? 'Berkas diterima! Mendaftarkan ke antrean AI...'
+                : 'Mengunggah rekaman ke server...';
+            setProgress(pct, statusMsg);
+        }
+
+        function bytesToHex(buffer) {
+            return Array.from(new Uint8Array(buffer))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        function sha256(value) {
+            if (!window.crypto || !window.crypto.subtle) {
+                return Promise.reject(new Error('Browser tidak mendukung checksum upload yang aman.'));
+            }
+            const p = value instanceof ArrayBuffer ? Promise.resolve(value) : value.arrayBuffer();
+            return p.then(buf => window.crypto.subtle.digest('SHA-256', buf)).then(bytesToHex);
+        }
+
+        function fileFingerprint(file) {
+            const sampleSize = 65536;
+            const first      = file.slice(0, Math.min(sampleSize, file.size)).arrayBuffer();
+            const lastStart  = Math.max(0, file.size - sampleSize);
+            const last       = file.slice(lastStart, file.size).arrayBuffer();
+            const meta       = new TextEncoder().encode(
+                file.name + '\n' + file.type + '\n' + file.size + '\n' + file.lastModified + '\n'
+            );
+
+            return Promise.all([first, last]).then(([f, l]) => {
+                const combined = new Uint8Array(meta.byteLength + f.byteLength + l.byteLength);
+                combined.set(meta, 0);
+                combined.set(new Uint8Array(f), meta.byteLength);
+                combined.set(new Uint8Array(l), meta.byteLength + f.byteLength);
+                return sha256(combined.buffer);
+            });
+        }
+
+        function postJson(url, formData, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                if (onProgress) xhr.upload.addEventListener('progress', onProgress);
+
+                xhr.addEventListener('load', () => {
+                    let payload = null;
+                    try { payload = JSON.parse(xhr.responseText); } catch (e) { /* noop */ }
+                    if (xhr.status >= 200 && xhr.status < 300 && payload && payload.status === 'success') {
+                        resolve(payload);
+                    } else {
+                        reject({ status: xhr.status, payload: payload, message: (payload && payload.message) || '' });
+                    }
+                });
+                xhr.addEventListener('error', () => {
+                    reject({ status: 0, payload: null, message: 'Koneksi terputus saat mengunggah file.' });
+                });
+                xhr.send(formData);
+            });
+        }
+
+        function sleep(ms) {
+            return new Promise(res => setTimeout(res, ms));
+        }
+
+        function postWithRetry(url, createFormData, onProgress) {
+            let lastError = null;
+            let attempt   = 0;
+
+            function tryOnce() {
+                if (isCancelling) return Promise.reject({ status: 0, message: 'Upload dibatalkan.' });
+                const delay = retryDelays[attempt] || 0;
+                const p = delay > 0
+                    ? sleep(delay).then(() => postJson(url, createFormData(), onProgress))
+                    : postJson(url, createFormData(), onProgress);
+
+                return p.catch(err => {
+                    lastError = err;
+                    attempt++;
+                    if (attempt >= retryDelays.length) throw lastError;
+                    if (err.status > 0 && err.status < 500 && err.status !== 409) throw err;
+                    return tryOnce();
+                });
+            }
+
+            return tryOnce();
+        }
+
+        function beginUpload(file, clientKey) {
+            return postWithRetry(START_URL, () => {
+                const fd = new FormData();
+                fd.append('upload_token', UPLOAD_TOKEN);
+                fd.append(CSRF_NAME, CSRF_VALUE);
+                fd.append('client_key', clientKey);
+                fd.append('file_name', file.name);
+                fd.append('file_size', String(file.size));
+                fd.append('file_type', file.type);
+                return fd;
+            });
+        }
+
+        function uploadInChunks(file) {
+            setProgress(0, 'Memeriksa berkas dan mencari sesi upload sebelumnya...');
+
+            return fileFingerprint(file).then(clientKey => {
+                return beginUpload(file, clientKey).then(state => {
+                    activeUploadId = state.upload_id;
+                    let offset     = Number(state.offset) || 0;
+                    const chunkSize  = Math.min(Number(state.chunk_size) || CHUNK_SIZE, CHUNK_SIZE);
+
+                    uploadInitialOffset   = offset;
+                    currentAcceptedOffset = offset;
+                    uploadStartedAt       = performance.now();
+                    updateProgress(file.size, offset);
+
+                    function nextChunk() {
+                        if (isCancelling) return Promise.reject({ status: 0, message: 'Upload dibatalkan.' });
+                        if (offset >= file.size) return Promise.resolve(state);
+
+                        const chunk       = file.slice(offset, Math.min(offset + chunkSize, file.size));
+                        const chunkOffset = offset;
+
+                        return sha256(chunk).then(checksum => {
+                            return postWithRetry(CHUNK_URL, () => {
+                                const fd = new FormData();
+                                fd.append('upload_token', UPLOAD_TOKEN);
+                                fd.append(CSRF_NAME, CSRF_VALUE);
+                                fd.append('upload_id', state.upload_id);
+                                fd.append('offset', String(chunkOffset));
+                                fd.append('checksum', checksum);
+                                fd.append('chunk', chunk, 'chunk.bin');
+                                return fd;
+                            }, ev => {
+                                updateProgress(file.size, currentAcceptedOffset,
+                                    ev.lengthComputable ? Math.min(ev.loaded, chunk.size) : 0);
+                            }).catch(err => {
+                                if (err.status !== 409) throw err;
+                                return beginUpload(file, clientKey).then(s => { state = s; return s; });
+                            });
+                        }).then(newState => {
+                            state                 = newState;
+                            offset                = Number(newState.offset) || 0;
+                            currentAcceptedOffset = offset;
+                            updateProgress(file.size, offset);
+                            return nextChunk();
+                        });
+                    }
+
+                    return nextChunk().then(() => {
+                        if (!state.completed) {
+                            return beginUpload(file, clientKey).then(s => { state = s; return state; });
+                        }
+                        return state;
+                    }).then(finalState => {
+                        if (!finalState.completed) {
+                            throw { status: 409, message: 'Server belum menandai upload sebagai selesai.' };
+                        }
+                        return finalState.upload_id;
+                    });
+                });
+            });
+        }
+
+        function doCancel(uploadId) {
+            const fd = new FormData();
+            fd.append('upload_token', UPLOAD_TOKEN);
+            fd.append(CSRF_NAME, CSRF_VALUE);
+            fd.append('upload_id', uploadId);
+            postJson(CANCEL_URL, fd).catch(() => { /* best effort */ });
+        }
+
+        function commitUpload(uploadId) {
+            setProgress(100, 'Berhasil! Mendaftarkan job ke antrean AI...');
+            const fd = new FormData();
+            fd.append('upload_id', uploadId);
+            if (jadwalType) fd.append('jadwal_type', jadwalType.value);
+            if (jadwalId) fd.append('jadwal_id', jadwalId.value);
+            if (judulInput) fd.append('judul_rapat', judulInput.value);
+            fd.append(CSRF_NAME, CSRF_VALUE);
+            return postJson(COMMIT_URL, fd);
+        }
+
+        function startUpload(file) {
+            const validationError = validateFile(file);
+            if (validationError) {
+                showError(validationError, false);
+                return;
+            }
+
+            lastFile     = file;
+            isCancelling = false;
+            isUploading  = true;
+            activeUploadId = null;
+
+            const errBox = document.getElementById('um_error_box');
+            const retryB = document.getElementById('um_retry_btn');
+            const progressBox = document.getElementById('upload_progress_box');
+            const warningBanner = document.getElementById('upload_warning_banner');
+
+            if (errBox) errBox.classList.add('hidden');
+            if (retryB) retryB.classList.add('hidden');
+            if (progressBox) progressBox.classList.remove('hidden');
+            if (warningBanner) warningBanner.classList.remove('hidden');
+
+            if (submitBtn) submitBtn.disabled = true;
+            const spinner = document.getElementById('um_spinner');
+            const btnIcon = document.getElementById('um_btn_icon');
+            const btnLabel = document.getElementById('um_btn_label');
+
+            if (spinner) spinner.classList.remove('hidden');
+            if (btnIcon) btnIcon.classList.add('hidden');
+            if (btnLabel) btnLabel.textContent = 'Mengunggah...';
+
+            uploadInChunks(file)
+                .then(uploadId => commitUpload(uploadId))
+                .then(res => {
+                    isUploading    = false;
+                    activeUploadId = null;
+                    if (warningBanner) warningBanner.classList.add('hidden');
+                    setProgress(100, 'Selesai! Mengalihkan ke halaman notulensi...');
+                    if (res.redirect) {
+                        setTimeout(() => {
+                            if (window.Turbo) {
+                                window.Turbo.visit(res.redirect);
+                            } else {
+                                window.location.href = res.redirect;
+                            }
+                        }, 500);
+                    }
+                })
+                .catch(err => {
+                    activeUploadId = null;
+                    if (!isCancelling) {
+                        showError(categorizeError(err), true);
+                    } else {
+                        isUploading = false;
+                        if (warningBanner) warningBanner.classList.add('hidden');
+                    }
+                });
+        }
+
+        if (submitBtn) {
+            submitBtn.addEventListener('click', () => {
+                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                    showError('Pilih berkas rekaman audio terlebih dahulu.', false);
+                    return;
+                }
+                startUpload(fileInput.files[0]);
+            });
+        }
+    };
+
+    document.addEventListener('turbo:load', initializeNotulenUploadWorkspace);
+    document.addEventListener('turbo:before-cache', () => {
+        const modal = document.getElementById('modal_upload_notulen');
+        if (modal instanceof HTMLDialogElement && modal.open) modal.close();
+        const confirmDialog = document.getElementById('um_confirm_dialog');
+        if (confirmDialog instanceof HTMLDialogElement && confirmDialog.open) confirmDialog.close();
+    });
+})();
+
+(() => {
+    let notulenPollTimer = null;
+
+    const initializeNotulenShowWorkspace = () => {
+        if (notulenPollTimer) {
+            clearInterval(notulenPollTimer);
+            notulenPollTimer = null;
+        }
+
+        const pollElement = document.querySelector('[data-notulen-poll]');
+        if (!pollElement) return;
+
+        const statusUrl = pollElement.dataset.statusUrl;
+        const initialStatus = pollElement.dataset.status;
+        const activeStatuses = ['queued', 'chunking', 'transcribing', 'summarizing'];
+
+        if (!activeStatuses.includes(initialStatus) || !statusUrl) return;
+
+        const poll = () => {
+            fetch(statusUrl)
+                .then(r => r.ok ? r.json() : null)
+                .then(json => {
+                    if (!json || json.status !== 'success' || !json.data) return;
+                    const d = json.data;
+
+                    const pct = document.getElementById('live_progress_percent');
+                    const bar = document.getElementById('live_progress_bar');
+                    const step = document.getElementById('live_current_step');
+                    const chunks = document.getElementById('live_chunk_info');
+                    const title = document.getElementById('live_status_title');
+
+                    if (pct) pct.textContent = d.progress_percent + '%';
+                    if (bar) bar.value = d.progress_percent;
+                    if (step) step.textContent = d.current_step || '-';
+                    if (chunks) chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
+                    if (title && d.current_step) title.textContent = d.current_step;
+
+                    if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
+                        if (notulenPollTimer) {
+                            clearInterval(notulenPollTimer);
+                            notulenPollTimer = null;
+                        }
+                        setTimeout(() => {
+                            if (window.Turbo) {
+                                window.Turbo.visit(window.location.href, { action: 'replace' });
+                            } else {
+                                window.location.reload();
+                            }
+                        }, 1200);
+                    }
+                })
+                .catch(e => console.warn('Poll error:', e));
+        };
+
+        notulenPollTimer = setInterval(poll, 3500);
+    };
+
+    document.addEventListener('turbo:load', initializeNotulenShowWorkspace);
+    document.addEventListener('turbo:before-cache', () => {
+        if (notulenPollTimer) {
+            clearInterval(notulenPollTimer);
+            notulenPollTimer = null;
+        }
+    });
+})();

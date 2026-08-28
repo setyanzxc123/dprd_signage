@@ -185,7 +185,12 @@ $statusLabel = $statusLabels[$job['status']] ?? strtoupper($job['status']);
 
 <!-- Progress Card saat Job Masih Berjalan -->
 <?php if (! $isCompleted): ?>
-<div id="live_progress_card" class="card card-border mb-6 bg-base-100 shadow-sm border-warning/40">
+<div id="live_progress_card"
+     data-notulen-poll
+     data-job-id="<?= (int) $job['id'] ?>"
+     data-status="<?= esc($job['status']) ?>"
+     data-status-url="<?= base_url('admin/notulen/status/' . $job['id']) ?>"
+     class="card card-border mb-6 bg-base-100 shadow-sm border-warning/40">
     <div class="card-body p-4 sm:p-5 space-y-3">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -552,47 +557,3 @@ $statusLabel = $statusLabels[$job['status']] ?? strtoupper($job['status']);
 
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
-<script {csp-script-nonce}>
-(function() {
-    var JOB_ID         = <?= (int) $job['id'] ?>;
-    var STATUS_URL     = '<?= base_url('admin/notulen/status/') ?>' + JOB_ID;
-    var INITIAL_STATUS = '<?= esc($job['status']) ?>';
-    var POLL_MS        = 3500;
-    var ACTIVE         = ['queued', 'chunking', 'transcribing', 'summarizing'];
-    var timerId        = null;
-
-    function poll() {
-        fetch(STATUS_URL)
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(json) {
-                if (!json || json.status !== 'success' || !json.data) return;
-                var d = json.data;
-
-                var pct    = document.getElementById('live_progress_percent');
-                var bar    = document.getElementById('live_progress_bar');
-                var step   = document.getElementById('live_current_step');
-                var chunks = document.getElementById('live_chunk_info');
-                var title  = document.getElementById('live_status_title');
-
-                if (pct)     pct.textContent    = d.progress_percent + '%';
-                if (bar)     bar.value          = d.progress_percent;
-                if (step)    step.textContent   = d.current_step || '-';
-                if (chunks)  chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
-                if (title && d.current_step) title.textContent = d.current_step;
-
-                if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
-                    clearInterval(timerId);
-                    timerId = null;
-                    setTimeout(function() { window.location.reload(); }, 1200);
-                }
-            })
-            .catch(function(e) { console.warn('Poll error:', e); });
-    }
-
-    if (ACTIVE.indexOf(INITIAL_STATUS) !== -1) {
-        timerId = setInterval(poll, POLL_MS);
-    }
-})();
-</script>
-<?= $this->endSection() ?>this->endSection() ?>
