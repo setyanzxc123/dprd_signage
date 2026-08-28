@@ -1021,9 +1021,19 @@
         const backdropBtn = document.getElementById('um_backdrop_btn');
         const retryBtn    = document.getElementById('um_retry_btn');
         const fileInput   = document.getElementById('modal_audio_file');
+
         const judulInput  = document.getElementById('modal_judul_rapat');
+
         const jadwalType  = document.getElementById('modal_jadwal_type');
         const jadwalId    = document.getElementById('modal_jadwal_id');
+        const agendaDropdown      = document.getElementById('um_agenda_dropdown');
+        const agendaTrigger       = document.getElementById('um_agenda_trigger');
+        const agendaSelectedLabel = document.getElementById('um_agenda_selected_label');
+        const agendaSearchInput   = document.getElementById('um_agenda_search_input');
+        const agendaOptionsList   = document.getElementById('um_agenda_options_list');
+
+
+
 
         // Dropzone refs
         const dropzone    = document.getElementById('um_dropzone');
@@ -1193,10 +1203,13 @@
             if (previewContainer) previewContainer.classList.add('hidden');
             if (infoNote) infoNote.classList.add('hidden');
             if (retryBtnEl) retryBtnEl.classList.add('hidden');
-
             if (fileInput) fileInput.value = '';
             if (judulInput) judulInput.value = '';
             if (jadwalId) jadwalId.value = '';
+            if (agendaSearchInput) agendaSearchInput.value = '';
+            if (agendaSelectedLabel) agendaSelectedLabel.textContent = '— Tanpa Relasi Agenda —';
+            if (typeof renderAgendaOptions === 'function') renderAgendaOptions('');
+
 
             showDropzoneIdle();
 
@@ -1206,7 +1219,7 @@
             const btnLabel = document.getElementById('um_btn_label');
             if (spinner) spinner.classList.add('hidden');
             if (btnIcon) btnIcon.classList.remove('hidden');
-            if (btnLabel) btnLabel.textContent = 'Kirim Rekaman';
+            if (btnLabel) btnLabel.textContent = 'Unggah Rekaman';
 
             setProgress(0, 'Mengunggah rekaman ke server...');
             const transferInfo = document.getElementById('upload_transfer_info');
@@ -1215,15 +1228,135 @@
             if (transferInfo) transferInfo.textContent = '0 MB / 0 MB';
             if (speedInfo) speedInfo.textContent = '— MB/s';
             if (etaInfo) etaInfo.textContent = '';
+
+            const player = document.getElementById('audio_preview_player');
+            if (player && player.src) {
+                URL.revokeObjectURL(player.src);
+                player.src = '';
+            }
         }
+
+        let currentAgendaItems = [];
+
+        function selectAgendaItem(id, title, label) {
+            if (jadwalId) jadwalId.value = id || '';
+            if (agendaSelectedLabel) {
+                agendaSelectedLabel.textContent = label || '— Tanpa Relasi Agenda —';
+            }
+            if (judulInput) {
+                judulInput.value = title || '';
+            }
+
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+        }
+
+        function renderAgendaOptions(searchTerm = '') {
+            if (!agendaOptionsList) return;
+            agendaOptionsList.innerHTML = '';
+
+            const term = (searchTerm || '').trim().toLowerCase();
+            const filtered = currentAgendaItems.filter((item) => {
+                if (!term) return true;
+                const titleMatch = (item.title || '').toLowerCase().includes(term);
+                const labelMatch = (item.label || '').toLowerCase().includes(term);
+                const dateMatch  = (item.date || '').toLowerCase().includes(term);
+                return titleMatch || labelMatch || dateMatch;
+            });
+
+            if (!term || 'tanpa relasi agenda'.includes(term)) {
+                const liNone = document.createElement('li');
+                const btnNone = document.createElement('button');
+                btnNone.type = 'button';
+                const isSelected = !jadwalId || !jadwalId.value;
+                btnNone.className = 'flex items-center justify-between py-1.5 px-2 rounded hover:bg-base-200 text-xs ' + (isSelected ? 'active font-bold bg-base-200 text-base-content' : 'text-base-content/70');
+                btnNone.innerHTML = '<span>— Tanpa Relasi Agenda —</span>';
+                btnNone.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectAgendaItem('', '', '— Tanpa Relasi Agenda —');
+                });
+                liNone.appendChild(btnNone);
+                agendaOptionsList.appendChild(liNone);
+            }
+
+            if (filtered.length === 0 && term) {
+                const liEmpty = document.createElement('li');
+                liEmpty.className = 'py-3 text-center text-xs text-base-content/40 italic';
+                liEmpty.textContent = 'Tidak ada agenda yang cocok';
+                agendaOptionsList.appendChild(liEmpty);
+                return;
+            }
+
+            filtered.forEach((item) => {
+                const isSelected = jadwalId && jadwalId.value === item.id;
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'flex flex-col items-start gap-0.5 py-1.5 px-2 rounded hover:bg-base-200 text-left ' + (isSelected ? 'active bg-primary/10 text-primary font-semibold' : 'text-base-content');
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'text-xs font-semibold leading-snug line-clamp-2';
+                titleSpan.textContent = item.title;
+
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'text-[10px] font-mono text-base-content/50';
+                dateSpan.textContent = item.date || item.label;
+
+                btn.appendChild(titleSpan);
+                btn.appendChild(dateSpan);
+
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectAgendaItem(item.id, item.title, item.label);
+                });
+
+                li.appendChild(btn);
+                agendaOptionsList.appendChild(li);
+            });
+        }
+
+        function updateJadwalOptions() {
+            if (!jadwalId || !jadwalType) return;
+            let generalOpts = [];
+            let banmusOpts = [];
+            try {
+                generalOpts = JSON.parse(jadwalId.dataset.generalOptions || '[]');
+                banmusOpts = JSON.parse(jadwalId.dataset.banmusOptions || '[]');
+            } catch (e) { /* fallback empty */ }
+
+            currentAgendaItems = (jadwalType.value === 'banmus') ? banmusOpts : generalOpts;
+            if (agendaSearchInput) agendaSearchInput.value = '';
+            selectAgendaItem('', '', '— Tanpa Relasi Agenda —');
+            renderAgendaOptions('');
+        }
+
+        if (agendaSearchInput) {
+            agendaSearchInput.addEventListener('input', () => {
+                renderAgendaOptions(agendaSearchInput.value);
+            });
+            agendaSearchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                }
+            });
+        }
+
+        updateJadwalOptions();
+
 
         if (openBtn) {
             openBtn.addEventListener('click', () => {
                 resetForm();
+                updateJadwalOptions();
                 modal.showModal();
                 rerenderIcons();
             });
         }
+
 
         function confirmCancelUpload(onConfirmed) {
             if (isUploading) {
@@ -1236,6 +1369,14 @@
                 onConfirmed();
             }
         }
+
+        // Penjagaan tombol Escape native HTML5 <dialog>
+        modal.addEventListener('cancel', (e) => {
+            if (isUploading) {
+                e.preventDefault();
+                confirmCancelUpload(() => modal.close());
+            }
+        });
 
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
@@ -1287,7 +1428,10 @@
                     showDropzoneSelected(f);
 
                     if (info) info.textContent = f.name + ' · ' + (f.size / 1048576).toFixed(1) + ' MB';
-                    if (player) player.src = URL.createObjectURL(f);
+                    if (player) {
+                        if (player.src) URL.revokeObjectURL(player.src);
+                        player.src = URL.createObjectURL(f);
+                    }
                     if (container) container.classList.remove('hidden');
                     if (infoNote) infoNote.classList.remove('hidden');
                     rerenderIcons();
@@ -1305,24 +1449,16 @@
 
         if (jadwalType) {
             jadwalType.addEventListener('change', () => {
-                const grpUmum = document.getElementById('group_umum');
-                const grpBanmus = document.getElementById('group_banmus');
-                if (grpUmum) grpUmum.classList.toggle('hidden', jadwalType.value === 'banmus');
-                if (grpBanmus) grpBanmus.classList.toggle('hidden', jadwalType.value !== 'banmus');
-                if (jadwalId) jadwalId.value = '';
-                if (judulInput) judulInput.value = '';
+                updateJadwalOptions();
             });
         }
 
-        if (jadwalId) {
-            jadwalId.addEventListener('change', () => {
-                const opt = jadwalId.options[jadwalId.selectedIndex];
-                const title = opt ? opt.getAttribute('data-title') : null;
-                if (title && judulInput && !judulInput.value) judulInput.value = title;
-            });
-        }
+
+
+
 
         function validateFile(file) {
+
             if (!file) return 'Pilih berkas rekaman audio terlebih dahulu.';
             if (file.size > MAX_SIZE) {
                 return 'Berkas terlalu besar (' + (file.size / 1048576).toFixed(1) + ' MB). Maksimum 300 MB.';
@@ -1596,7 +1732,15 @@
             fd.append('upload_id', uploadId);
             if (jadwalType) fd.append('jadwal_type', jadwalType.value);
             if (jadwalId) fd.append('jadwal_id', jadwalId.value);
-            if (judulInput) fd.append('judul_rapat', judulInput.value);
+
+            let finalTitle = judulInput && judulInput.value ? judulInput.value.trim() : '';
+            if (!finalTitle) {
+                const todayFormatted = new Intl.DateTimeFormat('id-ID', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                }).format(new Date());
+                finalTitle = 'Rekaman Rapat — ' + todayFormatted;
+            }
+            fd.append('judul_rapat', finalTitle);
             fd.append(CSRF_NAME, CSRF_VALUE);
             return postJson(COMMIT_URL, fd);
         }
@@ -1630,7 +1774,7 @@
 
             if (spinner) spinner.classList.remove('hidden');
             if (btnIcon) btnIcon.classList.add('hidden');
-            if (btnLabel) btnLabel.textContent = 'Mengunggah...';
+            if (btnLabel) btnLabel.textContent = 'Mengunggah rekaman...';
 
             uploadInChunks(file)
                 .then(uploadId => commitUpload(uploadId))
@@ -1672,6 +1816,11 @@
     };
 
     document.addEventListener('turbo:load', initializeNotulenUploadWorkspace);
+    if (document.readyState !== 'loading') {
+        initializeNotulenUploadWorkspace();
+    } else {
+        document.addEventListener('DOMContentLoaded', initializeNotulenUploadWorkspace);
+    }
     document.addEventListener('turbo:before-cache', () => {
         const modal = document.getElementById('modal_upload_notulen');
         if (modal instanceof HTMLDialogElement && modal.open) modal.close();
@@ -1679,6 +1828,7 @@
         if (confirmDialog instanceof HTMLDialogElement && confirmDialog.open) confirmDialog.close();
     });
 })();
+
 
 (() => {
     let notulenPollTimer = null;

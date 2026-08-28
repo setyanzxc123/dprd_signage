@@ -137,9 +137,7 @@
             </table>
         </div>
     </div>
-</section>
-
-<!-- Modal Upload Rekaman Rapat -->
+</section><!-- Modal Upload Rekaman Rapat -->
 <dialog id="modal_upload_notulen" class="modal"
     data-upload-token="<?= esc($audioUploadToken) ?>"
     data-start-url="<?= base_url('admin/notulen/audio-upload/start') ?>"
@@ -154,7 +152,7 @@
 
         <!-- Header modal -->
         <div class="flex items-center justify-between gap-3 mb-4">
-            <h3 class="text-base font-bold leading-tight">Kirim Rekaman Rapat</h3>
+            <h3 class="text-base font-bold leading-tight">Unggah Rekaman Rapat</h3>
             <button id="um_close_btn" type="button" aria-label="Tutup dialog"
                 class="btn btn-sm btn-circle btn-ghost shrink-0 -mr-0.5">
                 <i data-lucide="x" class="h-4 w-4"></i>
@@ -178,7 +176,7 @@
             <div class="rounded-box border border-base-300 bg-base-100 divide-y divide-base-200">
 
                 <div class="px-3.5 py-2.5">
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-base-content/40 mb-2.5">Data Rapat <span class="normal-case font-normal text-base-content/40">(opsional)</span></p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-base-content/50 mb-2.5">Data Agenda &amp; Topik <span class="normal-case font-normal text-base-content/40">(opsional)</span></p>
 
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 mb-2">
                         <div>
@@ -186,44 +184,72 @@
                                 <span class="label-text text-xs font-semibold">Jenis Jadwal</span>
                             </label>
                             <select id="modal_jadwal_type" class="select select-bordered select-sm w-full text-xs"
-                                title="Umum: rapat komisi dan paripurna. Banmus: rapat Badan Musyawarah.">
+                                title="Umum: rapat komisi, paripurna, dan fraksi. Banmus: rapat Badan Musyawarah.">
                                 <option value="umum">Jadwal Umum</option>
                                 <option value="banmus">Jadwal Banmus</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="modal_jadwal_id" class="label py-0 mb-1">
-                                <span class="label-text text-xs font-semibold">Agenda</span>
+                        <div class="relative">
+                            <label class="label py-0 mb-1">
+                                <span class="label-text text-xs font-semibold">Pilih Agenda</span>
                             </label>
-                            <select id="modal_jadwal_id" class="select select-bordered select-sm w-full text-xs">
-                                <option value="">— Tanpa Relasi Agenda —</option>
-                                <optgroup label="Jadwal Umum Terdekat" id="group_umum">
-                                    <?php foreach ($generalSchedules as $g): ?>
-                                        <option value="<?= $g['id'] ?>" data-title="<?= esc($g['judul']) ?>">
-                                            <?= esc($g['tanggal']) ?> — <?= esc($g['judul']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </optgroup>
-                                <optgroup label="Agenda Banmus Terdekat" id="group_banmus" class="hidden">
-                                    <?php foreach ($banmusItems as $b): ?>
-                                        <option value="<?= $b['id'] ?>" data-title="<?= esc($b['agenda']) ?>">
-                                            <?= esc($b['tanggal']) ?> — <?= esc($b['agenda']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </optgroup>
-                            </select>
+                            <?php
+                            $generalJson = array_map(static fn ($g): array => [
+                                'id'    => (string) $g['id'],
+                                'title' => $g['judul'],
+                                'date'  => date('d/m/Y', strtotime($g['tanggal'])),
+                                'label' => date('d/m/Y', strtotime($g['tanggal'])) . ' — ' . $g['judul'],
+                            ], $generalSchedules);
+
+                            $banmusJson = array_map(static fn ($b): array => [
+                                'id'    => (string) $b['id'],
+                                'title' => $b['agenda'],
+                                'date'  => date('d/m/Y', strtotime($b['tanggal'])),
+                                'label' => date('d/m/Y', strtotime($b['tanggal'])) . ' — ' . $b['agenda'],
+                            ], $banmusItems);
+                            ?>
+                            <input type="hidden" id="modal_jadwal_id" name="jadwal_id" value=""
+                                data-general-options="<?= esc(json_encode($generalJson), 'attr') ?>"
+                                data-banmus-options="<?= esc(json_encode($banmusJson), 'attr') ?>" />
+
+                            <div class="dropdown w-full" id="um_agenda_dropdown">
+                                <button type="button" id="um_agenda_trigger" tabindex="0"
+                                    class="input input-bordered input-sm w-full flex items-center justify-between font-normal text-xs px-3 bg-base-100 cursor-pointer hover:border-base-content/40 focus:border-primary focus:outline-none">
+                                    <span id="um_agenda_selected_label" class="truncate text-left flex-1 text-base-content">— Tanpa Relasi Agenda —</span>
+                                    <i data-lucide="chevron-down" class="h-4 w-4 shrink-0 text-base-content/50 ml-1"></i>
+                                </button>
+                                <div tabindex="0" class="dropdown-content z-50 mt-1 w-full rounded-box border border-base-300 bg-base-100 p-2 shadow-xl">
+                                    <div class="relative mb-1.5">
+                                        <input type="text" id="um_agenda_search_input"
+                                            placeholder="Cari nama agenda atau tanggal..."
+                                            class="input input-bordered input-xs w-full pl-7 pr-2 text-xs"
+                                            autocomplete="off" />
+                                        <i data-lucide="search" class="absolute left-2 top-1.5 h-3.5 w-3.5 text-base-content/40"></i>
+                                    </div>
+                                    <ul id="um_agenda_options_list" class="menu menu-xs max-h-44 overflow-y-auto flex-nowrap p-0 space-y-0.5">
+                                        <!-- Opsi agenda dinamis via JavaScript -->
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
+
+
+
                     <div>
-                        <label for="modal_judul_rapat" class="label py-0 mb-1">
+                        <label for="modal_judul_rapat" class="label py-0 mb-1 flex items-center justify-between">
                             <span class="label-text text-xs font-semibold">Judul / Topik Rapat</span>
+                            <span class="label-text-alt text-base-content/40 text-[11px]">Otomatis dari Agenda</span>
                         </label>
                         <input type="text" id="modal_judul_rapat"
-                            placeholder="Judul rapat (opsional)"
-                            class="input input-bordered input-sm w-full"
+                            placeholder="Otomatis terisi saat agenda dipilih"
+                            class="input input-bordered input-sm w-full bg-base-200/60 text-base-content/70 cursor-not-allowed"
+                            disabled
+                            readonly
                             autocomplete="off" />
                     </div>
+
                 </div>
 
             </div>
@@ -236,23 +262,22 @@
                     class="sr-only"
                     aria-describedby="audio_file_hint" />
 
-                <!-- [FIX D] Dropzone -->
+                <!-- Dropzone -->
                 <div id="um_dropzone"
                     class="rounded-box border-2 border-dashed border-base-300 bg-base-200/50 px-4 py-5 text-center cursor-pointer transition-all duration-200 hover:border-primary hover:bg-primary/5"
                     role="button"
                     tabindex="0"
                     aria-label="Pilih atau seret berkas rekaman audio">
-                    <div id="um_dz_idle" class="flex flex-col items-center gap-2.5">
-                        <div id="um_dz_icon_wrap" class="flex h-10 w-10 items-center justify-center rounded-xl bg-base-300 transition-all duration-200">
-                            <i data-lucide="mic" class="h-5 w-5 text-base-content/50"></i>
+                    <div id="um_dz_idle" class="flex flex-col items-center gap-1.5 py-1">
+                        <div id="um_dz_icon_wrap" class="flex h-10 w-10 items-center justify-center rounded-xl bg-base-300 transition-all duration-200 mb-1">
+                            <i data-lucide="upload-cloud" class="h-5 w-5 text-base-content/60"></i>
                         </div>
-                        <button type="button" id="um_dz_pick_btn"
-                            class="btn btn-sm btn-outline btn-primary gap-1.5">
-                            <i data-lucide="folder-open" class="h-3.5 w-3.5"></i>
-                            Pilih File…
-                        </button>
-                        <p id="audio_file_hint" class="text-[10px] text-base-content/30">MP3 · M4A · WAV · OGG · AAC · FLAC · Maks. 300 MB</p>
+                        <p class="text-sm font-semibold text-base-content">
+                            <span class="text-primary">Pilih berkas rekaman</span> atau seret ke sini
+                        </p>
+                        <p id="audio_file_hint" class="text-xs text-base-content/50">MP3 · M4A · WAV · OGG · AAC · FLAC · Maks. 300 MB</p>
                     </div>
+
 
                     <!-- File dipilih state -->
                     <div id="um_dz_selected" class="hidden items-center gap-3 text-left">
@@ -261,12 +286,12 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <p id="um_dz_filename" class="truncate text-sm font-semibold text-base-content"></p>
-                            <p id="um_dz_filemeta" class="mt-0.5 text-[10px] font-mono text-base-content/50"></p>
+                            <p id="um_dz_filemeta" class="mt-0.5 text-xs font-mono text-base-content/60"></p>
                         </div>
                         <button type="button" id="um_dz_change_btn"
-                            class="btn btn-xs btn-ghost shrink-0 gap-1 text-base-content/50 hover:text-base-content">
+                            class="btn btn-xs btn-ghost shrink-0 gap-1 text-base-content/60 hover:text-base-content">
                             <i data-lucide="refresh-cw" class="h-3 w-3"></i>
-                            Ganti
+                            Ganti Berkas
                         </button>
                     </div>
                 </div>
@@ -274,10 +299,14 @@
 
             <!-- Preview audio — muncul setelah file dipilih -->
             <div id="audio_preview_container" class="hidden mt-2 rounded-lg bg-base-200 p-3">
-                <div class="mb-1.5 flex items-center justify-between text-xs text-base-content/50">
-                    <span id="audio_preview_info" class="font-mono text-[10px]"></span>
+                <div class="mb-1.5 flex items-center justify-between text-xs text-base-content/60">
+                    <span class="font-semibold flex items-center gap-1.5">
+                        <i data-lucide="volume-2" class="h-3.5 w-3.5 text-primary"></i>
+                        Pratinjau Rekaman
+                    </span>
+                    <span id="audio_preview_info" class="font-mono text-xs text-base-content/50"></span>
                 </div>
-                <audio id="audio_preview_player" controls class="w-full h-10"></audio>
+                <audio id="audio_preview_player" controls preload="metadata" class="w-full h-10" aria-label="Pemutar pratinjau audio rekaman"></audio>
             </div>
 
             <!-- Progress upload — muncul setelah submit -->
@@ -294,25 +323,25 @@
                 <!-- Progress bar -->
                 <progress id="upload_progress_bar" class="progress progress-primary w-full h-2" value="0" max="100"></progress>
                 <!-- Baris 2: byte counter + speed + ETA -->
-                <div class="flex items-center justify-between text-[10px] text-base-content/50 font-mono">
+                <div class="flex items-center justify-between text-xs text-base-content/60 font-mono">
                     <div class="flex items-center gap-2.5">
                         <span id="upload_transfer_info">0 MB / 0 MB</span>
                         <span class="text-base-content/30">·</span>
                         <span id="upload_speed_info">— MB/s</span>
                     </div>
-                    <span id="upload_eta_info" class="text-base-content/50"></span>
+                    <span id="upload_eta_info" class="text-base-content/60"></span>
                 </div>
                 <!-- Banner jangan tutup — muncul saat upload aktif -->
-                <div id="upload_warning_banner" class="hidden flex items-center gap-2 text-[10px] text-warning/80 pt-0.5">
-                    <i data-lucide="shield-alert" class="h-3 w-3 shrink-0"></i>
-                    <span>Jangan tutup atau navigasi dari halaman ini selama proses unggahan berlangsung.</span>
+                <div id="upload_warning_banner" class="hidden flex items-center gap-2 text-xs text-warning/90 pt-0.5">
+                    <i data-lucide="shield-alert" class="h-3.5 w-3.5 shrink-0"></i>
+                    <span>Jangan tutup atau berpindah dari halaman ini selama proses unggahan berlangsung.</span>
                 </div>
             </div>
 
             <!-- Info redirect — muncul setelah file dipilih -->
-            <div id="um_info_note" class="hidden mt-2 flex items-start gap-1.5 text-[10px] text-base-content/40 leading-relaxed">
-                <i data-lucide="info" class="h-3 w-3 shrink-0 mt-0.5 text-info/60"></i>
-                <span>Anda akan diarahkan ke halaman notulensi setelah unggahan selesai.</span>
+            <div id="um_info_note" class="hidden mt-2 flex items-start gap-1.5 text-xs text-base-content/50 leading-relaxed">
+                <i data-lucide="info" class="h-3.5 w-3.5 shrink-0 mt-0.5 text-info/70"></i>
+                <span>Anda akan otomatis dialihkan ke halaman monitoring setelah unggahan selesai.</span>
             </div>
 
         </div>
@@ -323,7 +352,7 @@
             <button type="button" id="um_submit_btn" class="btn btn-primary btn-sm gap-1.5">
                 <span id="um_spinner" class="loading loading-spinner loading-xs hidden"></span>
                 <i data-lucide="upload" id="um_btn_icon" class="h-3.5 w-3.5"></i>
-                <span id="um_btn_label">Kirim Rekaman</span>
+                <span id="um_btn_label">Unggah Rekaman</span>
             </button>
         </div>
 
@@ -335,7 +364,7 @@
     </div>
 </dialog>
 
-<!-- [FIX E] Dialog konfirmasi batalkan upload — DaisyUI, menggantikan confirm() browser -->
+<!-- Dialog konfirmasi batalkan upload — DaisyUI -->
 <dialog id="um_confirm_dialog" class="modal">
     <div class="modal-box max-w-sm">
         <div class="flex items-start gap-3">
@@ -343,15 +372,15 @@
                 <i data-lucide="triangle-alert" class="h-4 w-4 text-warning"></i>
             </div>
             <div>
-                <h4 class="text-sm font-bold">Batalkan upload?</h4>
+                <h4 class="text-sm font-bold">Batalkan unggahan rekaman?</h4>
                 <p class="mt-1 text-xs text-base-content/60 leading-relaxed">
-                    Unggahan sedang berjalan. Jika dibatalkan, file tidak akan tersimpan dan Anda perlu memulai dari awal.
+                    Unggahan sedang berjalan. Jika dibatalkan, proses tidak akan tersimpan dan Anda perlu mengulang dari awal.
                 </p>
             </div>
         </div>
         <div class="modal-action mt-4 gap-2">
             <button type="button" id="um_confirm_keep_btn" class="btn btn-sm btn-ghost">
-                Lanjutkan Upload
+                Lanjutkan Unggahan
             </button>
             <button type="button" id="um_confirm_cancel_btn" class="btn btn-sm btn-warning gap-1.5">
                 <i data-lucide="x" class="h-3.5 w-3.5"></i>
@@ -362,4 +391,5 @@
 </dialog>
 
 <?= $this->endSection() ?>
+
 
