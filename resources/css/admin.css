@@ -696,6 +696,49 @@
         color: var(--od-fg2);
         font-size: var(--od-text-xs);
         font-weight: 800;
+        text-align: left;
+    }
+
+    /* ── DataTables Text Alignment Overrides ──
+     * DataTables 2.x otomatis mendeteksi tipe data (tanggal, angka, dsb) dan menambahkan
+     * class .dt-type-date / .dt-type-numeric yang memaksakan text-align: right.
+     * Kita paksa seluruh header dan sel default rata kiri,
+     * kecuali yang secara eksplisit diberi class .text-right atau .text-center.
+     */
+    table.dataTable.admin-data-table th,
+    table.dataTable.admin-data-table td,
+    table.dataTable.admin-data-table th.dt-type-numeric,
+    table.dataTable.admin-data-table th.dt-type-date,
+    table.dataTable.admin-data-table td.dt-type-numeric,
+    table.dataTable.admin-data-table td.dt-type-date {
+        text-align: left !important;
+    }
+
+    table.dataTable.admin-data-table thead th div.dt-column-header,
+    table.dataTable.admin-data-table th.dt-type-numeric div.dt-column-header,
+    table.dataTable.admin-data-table th.dt-type-date div.dt-column-header {
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+    }
+
+    table.dataTable.admin-data-table th.text-right,
+    table.dataTable.admin-data-table td.text-right,
+    table.dataTable.admin-data-table th.dt-right,
+    table.dataTable.admin-data-table td.dt-right {
+        text-align: right !important;
+    }
+
+    table.dataTable.admin-data-table th.text-right div.dt-column-header,
+    table.dataTable.admin-data-table th.dt-right div.dt-column-header {
+        flex-direction: row-reverse !important;
+        justify-content: flex-start !important;
+    }
+
+    table.dataTable.admin-data-table th.text-center,
+    table.dataTable.admin-data-table td.text-center,
+    table.dataTable.admin-data-table th.dt-center,
+    table.dataTable.admin-data-table td.dt-center {
+        text-align: center !important;
     }
     .dashboard-home-calendar {
         padding: 14px;

@@ -32,32 +32,7 @@ class NotulenController extends BaseController
         $jobModel = new MeetingTranscriptionJobModel();
         $minutesModel = new MeetingMinutesModel();
 
-        $statusFilter = trim((string) $this->request->getGet('status'));
-        $searchQuery  = trim((string) $this->request->getGet('q'));
-
-        $builder = $jobModel->orderBy('id', 'DESC');
-
-        if ($statusFilter !== '' && $statusFilter !== 'all') {
-            if ($statusFilter === 'in_progress') {
-                $builder->whereIn('status', [
-                    MeetingTranscriptionJobModel::STATUS_CHUNKING,
-                    MeetingTranscriptionJobModel::STATUS_TRANSCRIBING,
-                    MeetingTranscriptionJobModel::STATUS_SUMMARIZING,
-                ]);
-            } else {
-                $builder->where('status', $statusFilter);
-            }
-        }
-
-        if ($searchQuery !== '') {
-            $builder->groupStart()
-                ->like('audio_filename', $searchQuery)
-                ->orLike('current_step', $searchQuery)
-                ->groupEnd();
-        }
-
-        $jobs = $builder->paginate(15, 'default');
-        $pager = $jobModel->pager;
+        $jobs = $jobModel->orderBy('id', 'DESC')->findAll();
 
         // Ambil relasi minutes untuk setiap job
         $jobIds = array_column($jobs, 'id');
@@ -82,16 +57,10 @@ class NotulenController extends BaseController
             ->limit(20)
             ->findAll();
 
-        $statusCounts = $jobModel->getStatusCounts();
-
         return view('admin/notulen/index', [
             'pageTitle'        => 'Notulensi & Risalah AI',
             'jobs'             => $jobs,
             'minutesMap'       => $minutesMap,
-            'pager'            => $pager,
-            'statusCounts'     => $statusCounts,
-            'currentStatus'    => $statusFilter,
-            'searchQuery'      => $searchQuery,
             'generalSchedules' => $generalSchedules,
             'banmusItems'      => $banmusItems,
             'audioUploadToken' => $this->audioUploadToken(),

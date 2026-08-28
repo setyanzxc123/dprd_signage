@@ -96,6 +96,13 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $response->assertSee('Risalah AI');
         $response->assertSee('RDP Komisi I');
         $response->assertSee('rapat_dengar_pendapat.mp3');
+        $response->assertSee('data-admin-datatable');
+        $response->assertSee('data-dt-col-filters');
+        $response->assertSee('data-filter="Selesai"');
+        $response->assertSee('data-filter="Draft"');
+        $response->assertSee('id="table-notulen"');
+        $response->assertSee('Buka');
+        $response->assertSee('Hapus');
     }
 
     public function testStatusAjaxEndpointReturnsJobProgress(): void

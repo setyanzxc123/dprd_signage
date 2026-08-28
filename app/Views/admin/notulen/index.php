@@ -1,4 +1,4 @@
-﻿<?= $this->extend('admin/layouts/main') ?>
+<?= $this->extend('admin/layouts/main') ?>
 
 <?= $this->section('content') ?>
 
@@ -26,9 +26,10 @@
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
             <table class="notulen-table table table-zebra table-md w-full admin-data-table"
+                id="table-notulen"
                 data-admin-datatable
                 data-dt-order='[[1,"desc"]]'
-                data-dt-col-filters='[{"column":2,"label":"Status AI"},{"column":3,"label":"Risalah"}]'>
+                data-dt-col-filters='[{"col":2,"label":"Status AI"},{"col":3,"label":"Risalah"}]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
@@ -56,10 +57,24 @@
                             'cancelled'   => 'Dibatalkan',
                             default       => ucfirst($job['status']),
                         };
+
+                        $statusClass = match ($job['status']) {
+                            'completed'   => 'badge-success',
+                            'chunking', 'transcribing', 'summarizing' => 'badge-warning',
+                            'queued'      => 'badge-info',
+                            'failed'      => 'badge-error',
+                            'cancelled'   => 'badge-ghost',
+                            default       => 'badge-ghost',
+                        };
+
+                        $risalahFilter = 'Belum Ada';
+                        if ($minutes && ! empty($minutes['ringkasan_eksekutif'])) {
+                            $risalahFilter = $minutes['status_verifikasi'] === 'final' ? 'Final' : 'Draft';
+                        }
                         ?>
                         <tr class="transition-colors hover:bg-base-200/40">
                             <td class="dt-row-number" data-label="No"></td>
-                            <td data-label="Rapat & Rekaman" data-order="<?= esc($tanggalRapat) ?>">
+                            <td data-label="Rapat & Rekaman" data-order="<?= esc($job['created_at'] ?? $tanggalRapat) ?>">
                                 <div class="font-bold text-base-content">
                                     <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="hover:text-primary hover:underline">
                                         <?= esc($judulRapat) ?>
@@ -80,111 +95,40 @@
                                     <?php endif; ?>
                                 </div>
                             </td>
-                            <td data-label="Status AI">
-                                <?php if ($job['status'] === 'completed'): ?>
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="badge badge-success badge-sm font-semibold">Selesai</span>
-                                        <span class="text-xs text-base-content/60"><?= (int) $job['total_chunks'] ?> segmen</span>
-                                    </div>
-                                <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
-                                    <div class="space-y-1">
-                                        <div class="flex items-center justify-between text-xs">
-                                            <span class="font-semibold <?= $job['status'] === 'queued' ? 'text-info' : 'text-warning' ?>">
-                                                <?= esc($statusLabel) ?>
-                                            </span>
-                                            <span class="font-mono"><?= (int) $job['progress_percent'] ?>%</span>
-                                        </div>
-                                        <progress class="progress <?= $job['status'] === 'queued' ? 'progress-info' : 'progress-warning' ?> w-full" value="<?= (int) $job['progress_percent'] ?>" max="100"></progress>
-                                        <div class="truncate text-[11px] text-base-content/60" title="<?= esc($job['current_step']) ?>">
-                                            <?= esc($job['current_step']) ?>
-                                        </div>
-                                    </div>
-                                <?php elseif ($job['status'] === 'failed'): ?>
-                                    <div>
-                                        <span class="badge badge-error badge-sm font-semibold">Gagal</span>
-                                        <?php if (! empty($job['error_message'])): ?>
-                                            <p class="mt-0.5 max-w-xs truncate text-[11px] text-error" title="<?= esc($job['error_message']) ?>">
-                                                <?= esc($job['error_message']) ?>
-                                            </p>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php elseif ($job['status'] === 'cancelled'): ?>
-                                    <span class="badge badge-neutral badge-sm font-semibold">Dibatalkan</span>
-                                <?php endif; ?>
+                            <td data-label="Status AI" data-filter="<?= esc($statusLabel) ?>">
+                                <span class="badge badge-sm <?= $statusClass ?> font-semibold">
+                                    <?= esc($statusLabel) ?>
+                                </span>
                             </td>
-                            <td data-label="Risalah">
+                            <td data-label="Risalah" data-filter="<?= esc($risalahFilter) ?>">
                                 <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                                     <?php if ($minutes['status_verifikasi'] === 'final'): ?>
-                                        <span class="badge badge-success badge-sm gap-1">
+                                        <span class="badge badge-success badge-sm font-semibold gap-1">
                                             <i data-lucide="check-check" class="h-3 w-3"></i> Final
                                         </span>
                                     <?php else: ?>
-                                        <span class="badge badge-warning badge-sm gap-1">
+                                        <span class="badge badge-warning badge-sm font-semibold gap-1">
                                             <i data-lucide="file-edit" class="h-3 w-3"></i> Draft
                                         </span>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <span class="text-xs text-base-content/40">—</span>
+                                    <span class="badge badge-ghost badge-sm text-base-content/45 font-medium">Belum Ada</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="btn btn-ghost btn-xs gap-1" title="Buka Detail">
+                                <div class="notulen-actions flex flex-wrap items-center justify-end gap-1.5">
+                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="btn btn-xs w-16 gap-1" title="Buka Detail">
                                         <i data-lucide="eye" class="h-3.5 w-3.5"></i>
                                         Buka
                                     </a>
-
-                                    <div class="dropdown dropdown-end">
-                                        <button tabindex="0" class="btn btn-ghost btn-xs btn-square">
-                                            <i data-lucide="more-vertical" class="h-4 w-4"></i>
+                                    <form method="post" action="<?= base_url('admin/notulen/destroy/' . $job['id']) ?>"
+                                        class="m-0 inline-flex" data-confirm-message="Hapus notulen ini beserta seluruh transkrip dan risalahnya?">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-ghost btn-error btn-xs w-20 gap-1">
+                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                            Hapus
                                         </button>
-                                        <ul tabindex="0" class="dropdown-content menu rounded-box z-10 w-48 border border-base-300 bg-base-100 p-2 text-xs shadow-lg">
-                                            <?php if (in_array($job['status'], ['failed', 'cancelled'], true)): ?>
-                                                <li>
-                                                    <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
-                                                        <?= csrf_field() ?>
-                                                        <button type="submit" class="gap-2 text-primary">
-                                                            <i data-lucide="rotate-cw" class="h-3.5 w-3.5"></i> Proses Ulang (Resume)
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            <?php endif; ?>
-
-                                            <?php if ($isInProgress || $job['status'] === 'queued'): ?>
-                                                <li>
-                                                    <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>"
-                                                        data-confirm-message="Batalkan proses AI untuk rekaman ini?">
-                                                        <?= csrf_field() ?>
-                                                        <button type="submit" class="gap-2 text-warning">
-                                                            <i data-lucide="ban" class="h-3.5 w-3.5"></i> Batalkan Proses
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            <?php endif; ?>
-
-                                            <?php if ($job['status'] === 'completed'): ?>
-                                                <li>
-                                                    <form method="post" action="<?= base_url('admin/notulen/delete-audio/' . $job['id']) ?>"
-                                                        data-confirm-message="Hapus berkas audio lokal? Transkrip dan risalah tetap tersimpan.">
-                                                        <?= csrf_field() ?>
-                                                        <button type="submit" class="gap-2 text-base-content/80">
-                                                            <i data-lucide="trash" class="h-3.5 w-3.5"></i> Bersihkan Audio Lokal
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            <?php endif; ?>
-
-                                            <li>
-                                                <form method="post" action="<?= base_url('admin/notulen/destroy/' . $job['id']) ?>"
-                                                    data-confirm-message="Hapus permanen notulen ini beserta seluruh transkrip dan berkasnya?">
-                                                    <?= csrf_field() ?>
-                                                    <button type="submit" class="gap-2 text-error">
-                                                        <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Hapus Permanen
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

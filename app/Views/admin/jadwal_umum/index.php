@@ -22,9 +22,10 @@
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
             <table class="general-schedule-table table table-zebra table-md w-full admin-data-table"
+                id="table-jadwal-umum"
                 data-admin-datatable
                 data-dt-order='[[1,"desc"]]'
-                data-dt-col-filters='[{"column":4,"label":"Status"},{"column":5,"label":"Publikasi"}]'>
+                data-dt-col-filters='[{"col":4,"label":"Status"},{"col":5,"label":"Publikasi"}]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
@@ -72,7 +73,7 @@
                                         : 'Tanpa kelompok peserta khusus' ?>
                                 </div>
                             </td>
-                            <td data-label="Status">
+                            <td data-label="Status" data-filter="<?= esc(ucfirst($schedule['status'])) ?>">
                                 <?php
                                 $statusClass = match ($schedule['status']) {
                                     'berlangsung' => 'badge-success',
@@ -85,7 +86,7 @@
                                     <?= esc(ucfirst($schedule['status'])) ?>
                                 </span>
                             </td>
-                            <td data-label="Publikasi">
+                            <td data-label="Publikasi" data-filter="<?= (int) $schedule['is_publik'] === 1 ? 'Publik' : 'Internal' ?>">
                                 <?php if ((int) $schedule['is_publik'] === 1): ?>
                                     <span class="badge badge-success badge-sm">Publik</span>
                                 <?php else: ?>

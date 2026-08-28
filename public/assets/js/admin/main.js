@@ -280,6 +280,7 @@
     /*
      * Membaca atribut data-dt-col-filters pada <table> (JSON array):
      *   [{"col": <index>, "label": "Label", "all": "Semua ..."}]
+     *   atau [{"column": <index>, "label": "Label"}]
      * Lalu meng-inject dropdown DaisyUI ke area toolbar DataTables
      * sehingga admin bisa filter Jenis / Status tanpa reload halaman.
      */
@@ -303,20 +304,31 @@
         bar.className = 'dt-col-filter-bar flex flex-wrap gap-2 items-center mt-2 mb-1';
 
         defs.forEach(function (def) {
-            var colIdx  = def.col;
-            var allText = def.all  || 'Semua';
+            var colIdx  = def.col !== undefined ? def.col : def.column;
+            if (colIdx === undefined || colIdx === null) return;
+            var allText = def.all  || ('Semua ' + (def.label || ''));
+            if (!def.all && !def.label) allText = 'Semua';
             var label   = def.label || ('Kolom ' + colIdx);
 
             /* Kumpulkan nilai unik dari kolom tsb */
             var values = [];
-            api.column(colIdx).data().each(function (cell) {
-                /* Ambil teks bersih dari HTML (badge, span, dll) */
-                var tmp = document.createElement('div');
-                tmp.innerHTML = cell;
-                var text = (tmp.textContent || tmp.innerText || '').trim();
+            api.column(colIdx).nodes().each(function (cell) {
+                /* Ambil teks bersih dari data-filter / data-search atau HTML (badge, span, dll) */
+                var text = cell.getAttribute('data-filter') || cell.getAttribute('data-search');
+                if (!text) {
+                    var badge = cell.querySelector('.badge');
+                    if (badge) {
+                        text = (badge.textContent || badge.innerText || '').trim();
+                    } else {
+                        text = (cell.textContent || cell.innerText || '').trim();
+                    }
+                }
+                text = (text || '').trim();
                 if (text && values.indexOf(text) === -1) values.push(text);
             });
             values.sort();
+
+            if (values.length === 0) return;
 
             /* Bungkus label + select */
             var wrap = document.createElement('div');
@@ -357,7 +369,9 @@
             bar.appendChild(wrap);
         });
 
-        toolbar.appendChild(bar);
+        if (bar.children.length > 0) {
+            toolbar.appendChild(bar);
+        }
     }
 
     function initAdminDataTables() {
@@ -377,11 +391,17 @@
                 var pageLength = parseInt(table.getAttribute('data-dt-page-length') || '10', 10);
                 if (!Number.isFinite(pageLength) || pageLength <= 0) pageLength = 10;
 
+                var urlParams = new URLSearchParams(window.location.search);
+                var initialSearch = urlParams.get('q') || '';
+
                 window.jQuery(table).DataTable({
                     autoWidth: false,
                     pageLength: pageLength,
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
                     order: parseDataTableOrder(table),
+                    search: {
+                        search: initialSearch,
+                    },
                     columnDefs: [
                         { targets: '.no-sort', orderable: false, searchable: false },
                     ],
