@@ -7,23 +7,28 @@ $isInProgress = in_array($job['status'], ['chunking', 'transcribing', 'summarizi
 $judulRapat   = ! empty($minutes['judul_rapat']) ? $minutes['judul_rapat'] : $job['audio_filename'];
 $tanggalRapat = ! empty($minutes['tanggal_rapat']) ? $minutes['tanggal_rapat'] : substr((string) $job['created_at'], 0, 10);
 $durationMin  = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 60) : null;
+$isCompleted  = $job['status'] === 'completed';
+$isFinal      = ($minutes && $minutes['status_verifikasi'] === 'final');
 
-// Terjemahan label status AI (selaraskan dengan STATUS_LABELS di JS)
+// Cek ketersediaan file audio fisik
+$hasAudioFile = is_file(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'recordings' . DIRECTORY_SEPARATOR . 'job_' . $job['id'] . DIRECTORY_SEPARATOR . 'audio' . DIRECTORY_SEPARATOR . 'original.mp3')
+    || (! empty($job['audio_path']) && is_file(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $job['audio_path']));
+
+// Terjemahan label status AI
 $statusLabels = [
-    'queued'      => 'Dalam Antrean',
-    'chunking'    => 'Memotong Audio',
-    'transcribing'=> 'Transkripsi Berjalan',
-    'summarizing' => 'Menyusun Risalah',
-    'completed'   => 'Selesai',
-    'failed'      => 'Gagal',
-    'cancelled'   => 'Dibatalkan',
+    'queued'       => 'Dalam Antrean',
+    'chunking'     => 'Memotong Audio',
+    'transcribing' => 'Transkripsi Berjalan',
+    'summarizing'  => 'Menyusun Risalah',
+    'completed'    => 'Selesai',
+    'failed'       => 'Gagal',
+    'cancelled'    => 'Dibatalkan',
 ];
 $statusLabel = $statusLabels[$job['status']] ?? strtoupper($job['status']);
-$isCompleted = $job['status'] === 'completed';
 ?>
 
 <!-- Header Halaman & Aksi -->
-<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-5">
     <div class="flex min-w-0 items-start gap-2">
         <a href="<?= base_url('admin/notulen') ?>"
            class="btn btn-ghost btn-sm shrink-0 gap-1.5"
@@ -33,21 +38,25 @@ $isCompleted = $job['status'] === 'completed';
         </a>
         <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-                <h1 class="page-title truncate"><?= esc($judulRapat) ?></h1>
-                <?php if ($minutes && $minutes['status_verifikasi'] === 'final'): ?>
+                <h1 class="page-title truncate text-lg sm:text-xl font-bold"><?= esc($judulRapat) ?></h1>
+                <?php if ($isFinal): ?>
                     <span class="badge badge-success badge-sm gap-1">
-                        <i data-lucide="check-check" class="h-3 w-3"></i> Final
+                        <i data-lucide="check-check" class="h-3 w-3"></i> Risalah Final Resmi
                     </span>
                 <?php elseif ($minutes): ?>
                     <span class="badge badge-warning badge-sm gap-1">
-                        <i data-lucide="file-edit" class="h-3 w-3"></i> Draft
+                        <i data-lucide="file-edit" class="h-3 w-3"></i> Draft Risalah
+                    </span>
+                <?php else: ?>
+                    <span class="badge badge-info badge-sm gap-1">
+                        <i data-lucide="clock" class="h-3 w-3"></i> <?= esc($statusLabel) ?>
                     </span>
                 <?php endif; ?>
             </div>
             <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-base-content/60">
-                <span>Tanggal Rapat: <?= esc($tanggalRapat) ?></span>
+                <span>Tanggal: <strong><?= esc($tanggalRapat) ?></strong></span>
                 <span>•</span>
-                <span>File: <span class="font-mono"><?= esc($job['audio_filename']) ?></span></span>
+                <span>Berkas: <span class="font-mono"><?= esc($job['audio_filename']) ?></span></span>
                 <?php if ($job['jadwal_type'] === 'banmus'): ?>
                     <span class="badge badge-secondary badge-xs">Banmus</span>
                 <?php else: ?>
@@ -57,7 +66,7 @@ $isCompleted = $job['status'] === 'completed';
         </div>
     </div>
 
-    <!-- Tombol Aksi Header -->
+    <!-- Tombol Aksi Utama di Header -->
     <div class="flex flex-wrap items-center gap-2">
         <?php if ($minutes && ! empty($minutes['id'])): ?>
             <a href="<?= base_url('admin/notulen/export-pdf/' . $minutes['id']) ?>" target="_blank" class="btn btn-outline btn-sm gap-1.5">
@@ -65,8 +74,7 @@ $isCompleted = $job['status'] === 'completed';
                 Cetak / Ekspor PDF
             </a>
 
-            <?php if ($minutes['status_verifikasi'] !== 'final'): ?>
-                <!-- Tombol pemicu modal Finalisasi -->
+            <?php if (! $isFinal): ?>
                 <button type="button"
                         class="btn btn-success btn-sm gap-1.5 text-white"
                         onclick="document.getElementById('modal_finalisasi').showModal()">
@@ -77,58 +85,466 @@ $isCompleted = $job['status'] === 'completed';
         <?php endif; ?>
 
         <?php if (! empty($transcripts['full_text'])): ?>
-            <a href="<?= base_url('admin/notulen/download-transcript/' . $job['id']) ?>" class="btn btn-ghost btn-sm gap-1.5" title="Unduh transkrip percakapan utuh dalam format .txt">
+            <a href="<?= base_url('admin/notulen/download-transcript/' . $job['id']) ?>" class="btn btn-ghost btn-sm gap-1.5" title="Unduh transkrip percakapan utuh (.txt)">
                 <i data-lucide="download" class="h-4 w-4"></i>
-                Unduh Transkrip (.txt)
+                Unduh .txt
             </a>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- Modal Konfirmasi Finalisasi Risalah -->
-<?php if ($minutes && ! empty($minutes['id']) && ($minutes['status_verifikasi'] !== 'final')): ?>
-<dialog id="modal_finalisasi" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box max-w-md">
-        <!-- Header Modal -->
-        <div class="flex items-start gap-3 mb-4">
-            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-warning/15 flex items-center justify-center">
-                <i data-lucide="alert-triangle" class="h-5 w-5 text-warning"></i>
+<!-- Visual Lifecycle Stepper (Alur 4 Langkah) -->
+<div class="card card-border bg-base-100 shadow-sm mb-6">
+    <div class="card-body p-4 sm:p-5">
+        <ul class="steps steps-vertical sm:steps-horizontal w-full text-xs font-medium">
+            <!-- Langkah 1: Unggah Rekaman -->
+            <li class="step step-primary" data-content="✓">
+                <span class="font-semibold text-xs text-base-content">1. Rekaman Diunggah</span>
+            </li>
+
+            <!-- Langkah 2: Pemrosesan AI -->
+            <?php if ($isCompleted): ?>
+                <li class="step step-primary" data-content="✓">
+                    <span class="font-semibold text-xs text-base-content">2. Transkripsi & AI Selesai</span>
+                </li>
+            <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
+                <li class="step step-primary" data-content="●">
+                    <span class="font-semibold text-xs text-primary animate-pulse">2. Pemrosesan AI (Berjalan)</span>
+                </li>
+            <?php elseif ($job['status'] === 'failed'): ?>
+                <li class="step step-error" data-content="✕">
+                    <span class="font-semibold text-xs text-error">2. Pemrosesan Gagal</span>
+                </li>
+            <?php else: ?>
+                <li class="step" data-content="✕">
+                    <span class="text-xs text-base-content/60">2. Dibatalkan</span>
+                </li>
+            <?php endif; ?>
+
+            <!-- Langkah 3: Tinjau & Edit Draft -->
+            <?php if ($isFinal): ?>
+                <li class="step step-primary" data-content="✓">
+                    <span class="font-semibold text-xs text-base-content">3. Ditinjau & Diedit</span>
+                </li>
+            <?php elseif ($isCompleted): ?>
+                <li class="step step-primary" data-content="3">
+                    <span class="font-semibold text-xs text-warning">3. Tinjau & Edit Draft (Aktif)</span>
+                </li>
+            <?php else: ?>
+                <li class="step" data-content="3">
+                    <span class="text-xs text-base-content/50">3. Tinjau & Edit Draft</span>
+                </li>
+            <?php endif; ?>
+
+            <!-- Langkah 4: Risalah Final Resmi -->
+            <?php if ($isFinal): ?>
+                <li class="step step-primary" data-content="★">
+                    <span class="font-bold text-xs text-success">4. Risalah Final Resmi</span>
+                </li>
+            <?php else: ?>
+                <li class="step" data-content="4">
+                    <span class="text-xs text-base-content/50">4. Risalah Final Resmi</span>
+                </li>
+            <?php endif; ?>
+        </ul>
+
+        <!-- Banner Panduan Kontekstual -->
+        <div class="mt-4 pt-3 border-t border-base-200">
+            <?php if ($isFinal): ?>
+                <div class="alert alert-success/15 border border-success/30 py-2.5 px-3.5 text-xs flex items-center gap-2 text-success-content">
+                    <i data-lucide="shield-check" class="h-4 w-4 shrink-0 text-success"></i>
+                    <span><strong>Risalah Resmi Terkunci:</strong> Dokumen ini telah disahkan. Anggota dewan dapat membacanya langsung melalui aplikasi mobile, atau Anda dapat mencetak lembar PDF resmi.</span>
+                </div>
+            <?php elseif ($isCompleted): ?>
+                <div class="alert alert-warning/15 border border-warning/30 py-2.5 px-3.5 text-xs flex items-center justify-between gap-2 text-warning-content">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="sparkles" class="h-4 w-4 shrink-0 text-warning"></i>
+                        <span><strong>Draft 3 Pilar Siap Ditinjau:</strong> AI telah menyusun intisari rapat. Silakan baca dan sesuaikan teks di bawah jika ada istilah atau angka yang perlu disempurnakan, lalu klik <strong>Simpan</strong> atau <strong>Finalisasi</strong>.</span>
+                    </div>
+                </div>
+            <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
+                <div class="alert alert-info/15 border border-info/30 py-2.5 px-3.5 text-xs flex items-center gap-2 text-info-content">
+                    <span class="loading loading-spinner loading-xs text-info shrink-0"></span>
+                    <span><strong>Worker AI Sedang Bekerja:</strong> Rekaman sedang dipotong dan ditranskripsikan. Halaman ini akan otomatis memuat ulang begitu penyusunan risalah selesai.</span>
+                </div>
+            <?php elseif ($job['status'] === 'failed'): ?>
+                <div class="alert alert-error/15 border border-error/30 py-2.5 px-3.5 text-xs flex items-center justify-between gap-2 text-error-content">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="h-4 w-4 shrink-0 text-error"></i>
+                        <span><strong>Pemrosesan Mengalami Kendala:</strong> <?= esc($job['error_message']) ?: 'Terjadi kesalahan saat memproses audio.' ?></span>
+                    </div>
+                    <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-error btn-xs text-white">Proses Ulang</button>
+                    </form>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Card saat Job Masih Berjalan -->
+<?php if (! $isCompleted): ?>
+<div id="live_progress_card" class="card card-border mb-6 bg-base-100 shadow-sm border-warning/40">
+    <div class="card-body p-4 sm:p-5 space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="loading loading-spinner loading-sm text-warning"></span>
+                <span class="font-bold text-sm text-base-content" id="live_status_title">
+                    <?= esc($job['current_step']) ?: 'Sedang Memproses Audio...' ?>
+                </span>
             </div>
-            <div class="min-w-0">
-                <h3 class="font-bold text-base leading-snug">Finalisasi Risalah Rapat?</h3>
-                <p class="text-xs text-base-content/60 mt-0.5">Tindakan ini tidak dapat dibatalkan</p>
+            <span class="font-mono font-bold text-sm text-warning" id="live_progress_percent"><?= (int) $job['progress_percent'] ?>%</span>
+        </div>
+
+        <progress id="live_progress_bar"
+                  class="progress progress-warning w-full h-2.5"
+                  value="<?= (int) $job['progress_percent'] ?>"
+                  max="100"
+                  aria-label="Progres AI"></progress>
+
+        <div class="flex items-center justify-between text-xs text-base-content/60">
+            <span id="live_current_step"><?= esc($job['current_step']) ?: 'Menunggu worker...' ?></span>
+            <span id="live_chunk_info" class="font-mono"><?= (int) $job['completed_chunks'] ?> / <?= (int) $job['total_chunks'] ?> segmen</span>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Konten Utama: 2 Kolom (Sidebar Kiri & Editor Kanan) -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+    <!-- Kolom Kiri: Sidebar Informasi & Audio Player (1 Kolom) -->
+    <div class="lg:col-span-1 space-y-5">
+
+        <!-- Card 1: Informasi Rekaman -->
+        <div class="card card-border bg-base-100 shadow-sm">
+            <div class="card-body p-4 space-y-3">
+                <h2 class="card-title text-sm font-bold border-b border-base-200 pb-2 flex items-center gap-1.5">
+                    <i data-lucide="file-audio" class="h-4 w-4 text-primary"></i>
+                    Informasi Rekaman
+                </h2>
+
+                <dl class="space-y-2 text-xs">
+                    <div>
+                        <dt class="text-base-content/50">Nama Berkas:</dt>
+                        <dd class="font-mono font-medium truncate mt-0.5" title="<?= esc($job['audio_filename']) ?>">
+                            <?= esc($job['audio_filename']) ?>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-base-content/50">Ukuran Berkas:</dt>
+                        <dd class="font-medium mt-0.5">
+                            <?= round($job['audio_size'] / (1024 * 1024), 2) ?> MB
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-base-content/50">Estimasi Durasi:</dt>
+                        <dd class="font-medium mt-0.5">
+                            <?= $durationMin ? "{$durationMin} Menit" : 'Mengukur...' ?>
+                            <?php if ($job['total_chunks'] > 0): ?>
+                                <span class="text-base-content/50">(<?= (int) $job['total_chunks'] ?> bagian)</span>
+                            <?php endif; ?>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-base-content/50">Waktu Unggah:</dt>
+                        <dd class="font-medium mt-0.5"><?= esc($job['created_at']) ?></dd>
+                    </div>
+                </dl>
             </div>
         </div>
 
-        <!-- Peringatan -->
-        <div class="bg-warning/10 border border-warning/30 rounded-lg p-3.5 mb-4 text-sm space-y-1.5">
-            <p class="font-semibold text-sm text-base-content">Setelah difinalisasi:</p>
-            <ul class="space-y-1 text-xs text-base-content/80 list-none">
-                <li class="flex items-start gap-2">
-                    <i data-lucide="smartphone" class="h-3.5 w-3.5 text-warning shrink-0 mt-0.5"></i>
-                    Risalah akan langsung <strong>dapat dibaca oleh anggota dewan</strong> melalui aplikasi mobile
-                </li>
-                <li class="flex items-start gap-2">
-                    <i data-lucide="lock" class="h-3.5 w-3.5 text-warning shrink-0 mt-0.5"></i>
-                    Dokumen akan <strong>dikunci sebagai catatan resmi</strong> dan tidak dapat diedit kembali
-                </li>
-                <li class="flex items-start gap-2">
-                    <i data-lucide="x-circle" class="h-3.5 w-3.5 text-warning shrink-0 mt-0.5"></i>
-                    Proses ini <strong>tidak dapat dibatalkan</strong> setelah dikonfirmasi
-                </li>
+        <!-- Card 2: Pemutar Audio Rapat -->
+        <div class="card card-border bg-base-100 shadow-sm">
+            <div class="card-body p-4 space-y-3">
+                <h2 class="card-title text-sm font-bold border-b border-base-200 pb-2 flex items-center gap-1.5">
+                    <i data-lucide="headphones" class="h-4 w-4 text-primary"></i>
+                    Putar Audio Rapat
+                </h2>
+
+                <?php if ($hasAudioFile): ?>
+                    <p class="text-xs text-base-content/60">Dengarkan audio sambil memeriksa draf risalah di samping:</p>
+                    <audio controls class="w-full mt-1 focus:outline-none" preload="metadata">
+                        <source src="<?= base_url('admin/notulen/audio/' . $job['id']) ?>" type="audio/mpeg">
+                        Peramban Anda tidak mendukung pemutar audio HTML5.
+                    </audio>
+                <?php else: ?>
+                    <div class="rounded-lg bg-base-200 p-3 text-center text-xs text-base-content/60">
+                        <i data-lucide="hard-drive" class="h-5 w-5 mx-auto mb-1 text-base-content/40"></i>
+                        Berkas audio telah dibersihkan dari server untuk retensi penyimpanan. Teks transkrip tetap aman.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Card 3: Status & Aksi Dokumen -->
+        <div class="card card-border bg-base-100 shadow-sm">
+            <div class="card-body p-4 space-y-3">
+                <h2 class="card-title text-sm font-bold border-b border-base-200 pb-2 flex items-center gap-1.5">
+                    <i data-lucide="check-square" class="h-4 w-4 text-primary"></i>
+                    Aksi Dokumen
+                </h2>
+
+                <div class="space-y-2">
+                    <?php if ($isFinal): ?>
+                        <div class="rounded-lg bg-success/10 border border-success/20 p-3 text-xs text-success-content space-y-1">
+                            <span class="font-bold flex items-center gap-1">
+                                <i data-lucide="lock" class="h-3.5 w-3.5"></i> Status: Dokumen Final
+                            </span>
+                            <p class="text-[11px] text-base-content/70">Divalidasi pada: <?= esc($minutes['verified_at'] ?? $minutes['updated_at']) ?></p>
+                        </div>
+
+                        <a href="<?= base_url('admin/notulen/export-pdf/' . $minutes['id']) ?>" target="_blank" class="btn btn-primary btn-sm w-full gap-1.5">
+                            <i data-lucide="printer" class="h-4 w-4"></i> Cetak / Ekspor PDF
+                        </a>
+                    <?php elseif ($minutes): ?>
+                        <div class="rounded-lg bg-warning/10 border border-warning/20 p-3 text-xs text-warning-content space-y-1">
+                            <span class="font-bold flex items-center gap-1">
+                                <i data-lucide="edit-3" class="h-3.5 w-3.5"></i> Status: Draf Risalah
+                            </span>
+                            <p class="text-[11px] text-base-content/70">Dokumen masih dapat disunting sebelum difinalisasi.</p>
+                        </div>
+
+                        <button type="button"
+                                class="btn btn-success btn-sm w-full gap-1.5 text-white"
+                                onclick="document.getElementById('modal_finalisasi').showModal()">
+                            <i data-lucide="check-circle" class="h-4 w-4"></i> Finalisasi Risalah
+                        </button>
+                    <?php endif; ?>
+
+                    <?php if (! empty($transcripts['full_text'])): ?>
+                        <a href="<?= base_url('admin/notulen/download-transcript/' . $job['id']) ?>" class="btn btn-ghost btn-sm w-full gap-1.5">
+                            <i data-lucide="file-text" class="h-4 w-4"></i> Unduh Transkrip (.txt)
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Kolom Kanan: Editor Risalah & Transkrip (3 Kolom) -->
+    <div class="lg:col-span-3 space-y-4">
+
+        <!-- Tab Navigasi Bersih -->
+        <div class="tabs tabs-boxed bg-base-200 p-1 rounded-lg">
+            <input type="radio" name="notulen_view_tab" class="tab font-semibold text-xs sm:text-sm !h-9" aria-label="📑 Naskah Risalah Rapat (3 Pilar)" checked />
+            <div class="tab-content bg-base-100 border-base-300 rounded-box p-4 sm:p-6 mt-2 border shadow-sm">
+
+                <?php if ($minutes && ! empty($minutes['id'])): ?>
+
+                    <?php if (! $isFinal): ?>
+                        <!-- ================= MODE DRAFT: FORMULIR EDITOR 1 FIELD TUNGGAL ================= -->
+                        <form method="post" action="<?= base_url('admin/notulen/update-minutes/' . $minutes['id']) ?>" class="space-y-5">
+                            <?= csrf_field() ?>
+
+                            <!-- Baris Header Input: Judul & Tanggal -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 border-b border-base-200">
+                                <div class="sm:col-span-2">
+                                    <label class="label py-1">
+                                        <span class="label-text font-bold text-xs">Agenda / Judul Rapat <span class="text-error">*</span></span>
+                                    </label>
+                                    <input type="text"
+                                           name="judul_rapat"
+                                           class="input input-bordered input-sm w-full font-semibold"
+                                           value="<?= esc($judulRapat) ?>"
+                                           required />
+                                </div>
+                                <div>
+                                    <label class="label py-1">
+                                        <span class="label-text font-bold text-xs">Tanggal Pelaksanaan</span>
+                                    </label>
+                                    <input type="date"
+                                           name="tanggal_rapat"
+                                           class="input input-bordered input-sm w-full"
+                                           value="<?= esc($tanggalRapat) ?>" />
+                                </div>
+                            </div>
+
+                            <!-- Petunjuk 3 Pilar -->
+                            <div class="bg-base-200/60 rounded-lg p-3 text-xs text-base-content/80 flex items-start gap-2">
+                                <i data-lucide="info" class="h-4 w-4 text-info shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-bold block text-base-content">Format Naskah Risalah Resmi (3 Pilar):</span>
+                                    <span class="text-base-content/70">Naskah mencakup <strong>I. Ringkasan Utama</strong>, <strong>II. Poin-Poin Pembahasan</strong>, dan <strong>III. Kesimpulan & Keputusan Akhir</strong>. Anda dapat mengoreksi nama pembicara, data pembahasan, atau keputusan rapat langsung pada kotak teks di bawah ini.</span>
+                                </div>
+                            </div>
+
+                            <!-- Textarea Editor Tunggal (Satu Lembar Naskah Utuh) -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="label-text font-bold text-xs text-base-content flex items-center gap-1.5">
+                                        <i data-lucide="file-text" class="h-4 w-4 text-primary"></i>
+                                        Isi Naskah Risalah Rapat
+                                    </label>
+                                    <span class="text-[11px] text-base-content/50">Simpan perubahan draf kapan saja</span>
+                                </div>
+
+                                <textarea name="ringkasan_eksekutif"
+                                          rows="22"
+                                          class="textarea textarea-bordered w-full font-mono sm:font-sans text-sm leading-relaxed p-4 bg-base-100 focus:border-primary focus:ring-1 focus:ring-primary shadow-inner"
+                                          placeholder="I. RINGKASAN UTAMA&#10;...&#10;&#10;II. POIN-POIN PEMBAHASAN&#10;1. Topik:...&#10;&#10;III. KESIMPULAN & KEPUTUSAN AKHIR&#10;1. ..."><?= esc($minutes['ringkasan_eksekutif'] ?? '') ?></textarea>
+                            </div>
+
+                            <!-- Baris Tombol Simpan -->
+                            <div class="flex items-center justify-between pt-4 border-t border-base-200">
+                                <div class="text-xs text-base-content/60">
+                                    <span>Terakhir disimpan: <strong><?= esc($minutes['updated_at'] ?? '-') ?></strong></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm gap-1.5">
+                                        <i data-lucide="save" class="h-4 w-4"></i>
+                                        Simpan Perubahan Draft
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                    <?php else: ?>
+                        <!-- ================= MODE FINAL: PRATINJAU DOKUMEN RESMI (READ-ONLY) ================= -->
+                        <div class="space-y-6">
+
+                            <!-- Banner Dokumen Resmi -->
+                            <div class="flex items-center justify-between p-4 rounded-xl bg-success/10 border border-success/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center text-success shrink-0">
+                                        <i data-lucide="stamp" class="h-5 w-5"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-success">DOKUMEN RISALAH RESMI</h3>
+                                        <p class="text-xs text-base-content/70">Risalah telah difinalisasi dan terkunci sebagai rekaman dinas resmi.</p>
+                                    </div>
+                                </div>
+                                <a href="<?= base_url('admin/notulen/export-pdf/' . $minutes['id']) ?>" target="_blank" class="btn btn-success btn-sm text-white gap-1.5">
+                                    <i data-lucide="printer" class="h-4 w-4"></i> Cetak Dokumen Resmi
+                                </a>
+                            </div>
+
+                            <!-- Lembar Pratinjau Kertas Naskah Dinas -->
+                            <div class="rounded-xl border border-base-200 bg-base-100 p-6 sm:p-10 shadow-sm space-y-6">
+                                <!-- Header Lembar Rapat -->
+                                <div class="text-center border-b-2 border-base-content/20 pb-4 space-y-1">
+                                    <p class="text-xs font-bold uppercase tracking-widest text-base-content/60">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
+                                    <h2 class="text-lg sm:text-xl font-black uppercase text-base-content tracking-wide">RISALAH RAPAT RESMI</h2>
+                                    <p class="text-sm font-semibold text-primary"><?= esc($judulRapat) ?></p>
+                                    <p class="text-xs text-base-content/60">Tanggal Pelaksanaan: <?= esc($tanggalRapat) ?></p>
+                                </div>
+
+                                <!-- Isi Naskah 3 Pilar -->
+                                <div class="prose max-w-none text-sm text-base-content leading-relaxed whitespace-pre-wrap font-sans">
+<?= esc($minutes['ringkasan_eksekutif'] ?? '') ?>
+                                </div>
+
+                                <!-- Kolom Pengesahan -->
+                                <div class="pt-8 border-t border-base-200 grid grid-cols-2 gap-6 text-center text-xs">
+                                    <div>
+                                        <p class="text-base-content/60">Mengetahui,</p>
+                                        <p class="font-bold mt-1">Pimpinan Rapat / Sidang</p>
+                                        <div class="h-16"></div>
+                                        <p class="font-semibold text-base-content/80">( ..................................................... )</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-base-content/60">Palu, <?= esc($tanggalRapat) ?></p>
+                                        <p class="font-bold mt-1">Sekretariat / Notulis Rapat</p>
+                                        <div class="h-16"></div>
+                                        <p class="font-semibold text-base-content/80">( ..................................................... )</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    <?php endif; ?>
+
+                <?php else: ?>
+                    <!-- State Belum Ada Risalah (Masih Proses AI) -->
+                    <div class="py-12 text-center text-base-content/60 space-y-3">
+                        <span class="loading loading-spinner loading-lg text-primary"></span>
+                        <p class="font-medium text-sm">Sedang memproses transkrip dan menyusun naskah risalah 3 pilar...</p>
+                        <p class="text-xs text-base-content/40">Hasil risalah akan otomatis muncul di sini begitu worker AI selesai bekerja.</p>
+                    </div>
+                <?php endif; ?>
+
+            </div>
+
+            <!-- Tab 2: Transkrip Percakapan Lengkap -->
+            <input type="radio" name="notulen_view_tab" class="tab font-semibold text-xs sm:text-sm !h-9" aria-label="🎙 Transkrip Lengkap (<?= count($transcripts['chunks']) ?> Bagian)" />
+            <div class="tab-content bg-base-100 border-base-300 rounded-box p-4 sm:p-6 mt-2 border shadow-sm space-y-4">
+
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-base-200">
+                    <div>
+                        <h3 class="font-bold text-sm text-base-content flex items-center gap-1.5">
+                            <i data-lucide="mic" class="h-4 w-4 text-primary"></i>
+                            Transkrip Verbatim Percakapan Audio
+                        </h3>
+                        <p class="text-xs text-base-content/60">Rekaman dipotong per 30 menit dan ditranskripsikan secara otomatis.</p>
+                    </div>
+                    <?php if (! empty($transcripts['full_text'])): ?>
+                        <a href="<?= base_url('admin/notulen/download-transcript/' . $job['id']) ?>" class="btn btn-outline btn-xs gap-1">
+                            <i data-lucide="download" class="h-3.5 w-3.5"></i> Unduh Transkrip Lengkap (.txt)
+                        </a>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (empty($transcripts['chunks'])): ?>
+                    <div class="py-10 text-center text-xs text-base-content/50">
+                        <i data-lucide="file-x" class="h-8 w-8 mx-auto mb-2 opacity-40"></i>
+                        Berkas potongan transkrip belum tersedia.
+                    </div>
+                <?php else: ?>
+                    <div class="space-y-3">
+                        <?php foreach ($transcripts['chunks'] as $chunk): ?>
+                            <div class="collapse collapse-arrow bg-base-200/50 border border-base-200 rounded-lg">
+                                <input type="checkbox" <?= $chunk['index'] === 1 ? 'checked' : '' ?> />
+                                <div class="collapse-title font-semibold text-xs flex items-center justify-between pr-10">
+                                    <span class="flex items-center gap-2">
+                                        <span class="badge badge-primary badge-sm font-mono">Bagian <?= (int) $chunk['index'] ?></span>
+                                        <span><?= esc($chunk['time_label']) ?></span>
+                                    </span>
+                                    <span class="text-[11px] text-base-content/50 font-normal">
+                                        <?= number_format(str_word_count($chunk['text']), 0, ',', '.') ?> kata
+                                    </span>
+                                </div>
+                                <div class="collapse-content text-xs bg-base-100 pt-3 border-t border-base-200">
+                                    <pre class="font-mono text-xs whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto p-2 bg-base-200/30 rounded"><?= esc($chunk['text']) ?></pre>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal Konfirmasi Finalisasi Risalah -->
+<?php if ($minutes && ! empty($minutes['id']) && (! $isFinal)): ?>
+<dialog id="modal_finalisasi" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box max-w-md">
+        <div class="flex items-start gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-warning/15 flex items-center justify-center text-warning shrink-0">
+                <i data-lucide="alert-triangle" class="h-5 w-5"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-base">Finalisasi Risalah Rapat?</h3>
+                <p class="text-xs text-base-content/60 mt-0.5">Dokumen akan disahkan dan dikunci sebagai rekaman resmi.</p>
+            </div>
+        </div>
+
+        <div class="bg-warning/10 border border-warning/30 rounded-lg p-3.5 mb-4 text-xs space-y-2 text-base-content/90">
+            <p class="font-bold text-base-content">Poin penting setelah finalisasi:</p>
+            <ul class="space-y-1.5 list-disc pl-4">
+                <li>Risalah akan <strong>langsung dapat dibaca anggota dewan</strong> pada aplikasi mobile.</li>
+                <li>Status dokumen berubah menjadi <strong>Final (Terkunci)</strong>.</li>
             </ul>
         </div>
 
-        <!-- Nama Rapat yang akan difinalisasi -->
-        <div class="bg-base-200 rounded-lg p-3 mb-5 text-xs">
-            <span class="text-base-content/50 block mb-1">Risalah yang akan difinalisasi:</span>
-            <span class="font-semibold text-sm"><?= esc($judulRapat) ?></span>
-        </div>
-
-        <!-- Tombol Aksi -->
         <div class="modal-action mt-0 gap-2">
             <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal_finalisasi').close()">
-                Batal, Tinjau Kembali
+                Batal
             </button>
             <form method="post" action="<?= base_url('admin/notulen/finalize/' . $minutes['id']) ?>">
                 <?= csrf_field() ?>
@@ -139,393 +555,23 @@ $isCompleted = $job['status'] === 'completed';
             </form>
         </div>
     </div>
-    <!-- Klik luar modal untuk menutup -->
     <form method="dialog" class="modal-backdrop">
         <button>tutup</button>
     </form>
 </dialog>
 <?php endif; ?>
 
-<!-- Widget Pemantau Progres Real-time & Live Log -->
-<?php if (! $isCompleted): ?>
-<!-- Status card penuh: ditampilkan saat proses masih berjalan / antrean / gagal / dibatalkan -->
-<div id="live_progress_card" class="card card-border mb-5 bg-base-100 shadow-sm <?= $job['status'] === 'failed' ? 'border-error/40' : ($job['status'] === 'cancelled' ? 'border-neutral/40' : 'border-warning/40') ?>">
-    <div class="card-body p-4 sm:p-5">
-        <div class="flex flex-col gap-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <?php if ($isInProgress || $job['status'] === 'queued'): ?>
-                        <span class="loading loading-spinner loading-sm text-warning"></span>
-                    <?php elseif ($job['status'] === 'failed'): ?>
-                        <i data-lucide="alert-triangle" class="h-5 w-5 text-error"></i>
-                    <?php else: ?>
-                        <i data-lucide="ban" class="h-5 w-5 text-base-content/50"></i>
-                    <?php endif; ?>
-
-                    <span class="font-bold text-sm text-base-content" id="live_status_title">
-                        <?= $job['status'] === 'failed' ? 'Pemrosesan Mengalami Kendala' : ($job['status'] === 'cancelled' ? 'Proses Dibatalkan' : ($job['status'] === 'chunking' ? 'Memotong Audio Rekaman...' : ($job['status'] === 'transcribing' ? 'Transkripsi Audio Berjalan...' : ($job['status'] === 'summarizing' ? 'Menyusun Risalah Rapat...' : 'Dalam Antrean Pemrosesan...')))) ?>
-                    </span>
-                </div>
-                <span class="font-mono font-bold text-sm <?= $job['status'] === 'failed' ? 'text-error' : 'text-warning' ?>" id="live_progress_percent"><?= (int) $job['progress_percent'] ?>%</span>
-            </div>
-
-            <progress id="live_progress_bar"
-                      class="progress <?= $job['status'] === 'failed' ? 'progress-error' : ($job['status'] === 'cancelled' ? 'progress-neutral' : 'progress-warning') ?> w-full h-2.5"
-                      value="<?= (int) $job['progress_percent'] ?>"
-                      max="100"
-                      aria-label="Progres pemrosesan AI: <?= (int) $job['progress_percent'] ?>%"></progress>
-
-            <div class="flex items-center justify-between text-xs text-base-content/60">
-                <span id="live_current_step" class="truncate"><?= esc($job['current_step']) ?: '-' ?></span>
-                <span id="live_chunk_info" class="font-mono shrink-0 ml-2">
-                    <?= (int) $job['completed_chunks'] ?> / <?= (int) $job['total_chunks'] ?> segmen
-                </span>
-            </div>
-
-            <!-- Live Process Log Console -->
-            <div class="rounded-box bg-neutral text-neutral-content p-3 font-mono text-xs space-y-1 overflow-hidden">
-                <div class="flex items-center justify-between border-b border-neutral-content/15 pb-2 text-[11px] text-neutral-content/70">
-                    <span class="flex items-center gap-1.5">
-                        <span id="live_log_dot" class="h-2 w-2 rounded-full <?= $isInProgress || $job['status'] === 'queued' ? 'bg-warning animate-pulse' : ($job['status'] === 'completed' ? 'bg-success' : 'bg-error') ?>"></span>
-                        LOG AKTIVITAS PROSES AI
-                    </span>
-                    <span id="live_log_time" class="font-mono">-- : -- : --</span>
-                </div>
-                <div id="live_log_stream"
-                     class="space-y-1 pt-1 max-h-32 overflow-y-auto leading-relaxed text-[11.5px]"
-                     role="log"
-                     aria-live="polite"
-                     aria-label="Log aktivitas proses AI">
-                    <div class="text-neutral-content/60 flex items-start gap-1.5">
-                        <span class="shrink-0 text-neutral-content/40">[--:--:--]</span>
-                        <span>Berkas: <?= esc($job['audio_filename']) ?> (<?= round($job['audio_size'] / (1024 * 1024), 2) ?> MB)</span>
-                    </div>
-                    <?php if ($job['status'] === 'failed'): ?>
-                        <div class="text-error flex items-start gap-1.5">
-                            <span class="shrink-0">⚠</span>
-                            <span>Error: <?= esc($job['error_message'] ?? 'Proses gagal.') ?></span>
-                        </div>
-                    <?php elseif (! empty($job['current_step'])): ?>
-                        <div class="text-info flex items-start gap-1.5">
-                            <span class="shrink-0">›</span>
-                            <span><?= esc($job['current_step']) ?></span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<?php else: ?>
-<!-- Strip ringkas status selesai: ditampilkan saat job completed -->
-<div id="live_progress_card" class="flex items-center gap-3 bg-success/8 border border-success/25 rounded-xl px-4 py-3 mb-5 text-sm">
-    <i data-lucide="check-circle-2" class="h-5 w-5 text-success shrink-0"></i>
-    <span class="font-semibold text-success">Transkripsi & Risalah Selesai</span>
-    <span class="text-base-content/50 text-xs ml-auto font-mono"><?= (int) $job['progress_percent'] ?>%
-        · <?= (int) $job['total_chunks'] ?> segmen</span>
-</div>
-<?php endif; ?>
-
-<!-- Grid Metadata & Konten Utama -->
-<div class="grid grid-cols-1 gap-5 lg:grid-cols-4">
-    <!-- Kolom Kiri: Metadata Rekaman & Status -->
-    <div class="space-y-4 lg:col-span-1">
-        <div class="card card-border bg-base-100 shadow-sm">
-            <div class="card-body p-4">
-                <h3 class="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-3">Informasi Rekaman</h3>
-                <div class="space-y-3 text-xs">
-                    <div>
-                        <span class="block text-base-content/50">Nama Berkas:</span>
-                        <span class="font-mono font-semibold break-all"><?= esc($job['audio_filename']) ?></span>
-                    </div>
-                    <div>
-                        <span class="block text-base-content/50">Ukuran Berkas:</span>
-                        <span class="font-semibold"><?= round($job['audio_size'] / (1024 * 1024), 2) ?> MB</span>
-                    </div>
-                    <div>
-                        <span class="block text-base-content/50">Estimasi Durasi:</span>
-                        <span class="font-semibold">
-                            <?= $durationMin !== null ? "{$durationMin} menit (" . gmdate('H:i:s', (int) $job['audio_duration']) . ')' : 'Dihitung saat pemrosesan' ?>
-                        </span>
-                    </div>
-                    <div>
-                        <span class="block text-base-content/50">Jumlah Potongan (per 30m):</span>
-                        <span class="font-semibold"><?= (int) $job['total_chunks'] ?> segmen</span>
-                    </div>
-                    <div>
-                        <span class="block text-base-content/50">Status AI:</span>
-                        <span class="badge badge-sm mt-1 <?= $job['status'] === 'completed' ? 'badge-success' : ($isInProgress ? 'badge-warning' : ($job['status'] === 'failed' ? 'badge-error' : ($job['status'] === 'queued' ? 'badge-info' : 'badge-neutral'))) ?>">
-                            <?= esc($statusLabel) ?>
-                        </span>
-                    </div>
-                </div>
-
-                <?php if (in_array($job['status'], ['failed', 'cancelled'], true)): ?>
-                    <div class="mt-4 pt-3 border-t border-base-300">
-                        <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-primary btn-sm w-full gap-1.5">
-                                <i data-lucide="rotate-cw" class="h-4 w-4"></i>
-                                Proses Ulang
-                            </button>
-                        </form>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- Kolom Kanan: Tabs Editor Risalah & Transkrip Percakapan -->
-    <div class="space-y-4 lg:col-span-3">
-        <div class="card card-border bg-base-100 shadow-sm">
-            <!-- Tab Headers -->
-            <div class="border-b border-base-300 px-4 pt-3">
-                <div role="tablist" class="tabs tabs-bordered font-semibold text-sm">
-                    <input type="radio" name="notulen_tabs" role="tab" class="tab gap-2"
-                           aria-label="Draft Risalah Rapat" checked />
-                    <label class="tab gap-2 pointer-events-none select-none" aria-hidden="true">
-                        <i data-lucide="file-text" class="h-3.5 w-3.5"></i>
-                        Draft Risalah
-                    </label>
-
-                    <div role="tabpanel" class="tab-content py-5">
-                        <!-- Form Editor Risalah -->
-                        <?php if ($minutes && ! empty($minutes['id'])): ?>
-                            <form method="post" action="<?= base_url('admin/notulen/update-minutes/' . $minutes['id']) ?>" class="space-y-5">
-                                <?= csrf_field() ?>
-
-                                <!-- Judul & Tanggal Rapat -->
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                    <div class="sm:col-span-2 form-control">
-                                        <label class="label"><span class="label-text font-bold text-xs">Judul Rapat</span></label>
-                                        <input type="text" name="judul_rapat" value="<?= esc($minutes['judul_rapat']) ?>" required class="input input-bordered input-sm w-full font-semibold" />
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label"><span class="label-text font-bold text-xs">Tanggal Rapat</span></label>
-                                        <input type="date" name="tanggal_rapat" value="<?= esc($minutes['tanggal_rapat']) ?>" class="input input-bordered input-sm w-full" />
-                                    </div>
-                                </div>
-
-                                <!-- Ringkasan Eksekutif -->
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text font-bold text-xs">Ringkasan Eksekutif</span>
-                                        <span class="label-text-alt text-base-content/50">Intisari pokok bahasan dan hasil rapat</span>
-                                    </label>
-                                    <textarea name="ringkasan_eksekutif" rows="6" class="textarea textarea-bordered w-full text-sm leading-relaxed" placeholder="Tuliskan ringkasan eksekutif rapat..."><?= esc($minutes['ringkasan_eksekutif']) ?></textarea>
-                                </div>
-
-                                <!-- Agenda Pembahasan -->
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text font-bold text-xs">Agenda &amp; Pokok Pembahasan</span>
-                                    </label>
-                                    <div class="space-y-3">
-                                        <?php if (! empty($agendaItems)): ?>
-                                            <?php foreach ($agendaItems as $aIdx => $item): ?>
-                                                <div class="rounded-lg bg-base-200/50 p-3.5 border border-base-300/80">
-                                                    <div class="font-bold text-xs text-primary mb-1">
-                                                        <?= esc($item['topik'] ?? "Pokok Bahasan " . ($aIdx + 1)) ?>
-                                                        <?php if (! empty($item['pembicara'])): ?>
-                                                            <span class="text-base-content/50 font-normal ml-1">(<?= esc($item['pembicara']) ?>)</span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                    <p class="text-xs text-base-content/80 leading-relaxed"><?= nl2br(esc($item['uraian'] ?? (is_string($item) ? $item : ''))) ?></p>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-
-                                        <!-- Raw JSON tersembunyi di balik toggle -->
-                                        <details class="group">
-                                            <summary class="flex cursor-pointer select-none items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content/80 transition-colors w-fit">
-                                                <i data-lucide="code-2" class="h-3.5 w-3.5 shrink-0"></i>
-                                                <span>Edit data mentah (JSON)</span>
-                                                <i data-lucide="chevron-right" class="h-3 w-3 shrink-0 transition-transform group-open:rotate-90"></i>
-                                            </summary>
-                                            <div class="mt-2">
-                                                <textarea name="agenda_pembahasan" rows="4"
-                                                          class="textarea textarea-bordered w-full text-xs font-mono"
-                                                          placeholder='[{"topik":"...","pembicara":"...","uraian":"..."}]'><?= esc($minutes['agenda_pembahasan']) ?></textarea>
-                                                <p class="text-[10px] text-base-content/40 mt-1">Format JSON array. Perubahan di sini akan menimpa tampilan di atas setelah disimpan.</p>
-                                            </div>
-                                        </details>
-                                    </div>
-                                </div>
-
-                                <!-- Kesimpulan / Keputusan -->
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text font-bold text-xs">Kesimpulan &amp; Keputusan Rapat</span>
-                                    </label>
-                                    <?php if (! empty($kesimpulanItems)): ?>
-                                        <ul class="list-disc list-inside space-y-1 mb-2 text-xs text-base-content/90 bg-base-200/40 p-3 rounded-lg">
-                                            <?php foreach ($kesimpulanItems as $kItem): ?>
-                                                <li><?= esc(is_string($kItem) ? $kItem : json_encode($kItem)) ?></li>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                    <?php endif; ?>
-
-                                    <!-- Raw JSON tersembunyi di balik toggle -->
-                                    <details class="group">
-                                        <summary class="flex cursor-pointer select-none items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content/80 transition-colors w-fit">
-                                            <i data-lucide="code-2" class="h-3.5 w-3.5 shrink-0"></i>
-                                            <span>Edit data mentah (JSON)</span>
-                                            <i data-lucide="chevron-right" class="h-3 w-3 shrink-0 transition-transform group-open:rotate-90"></i>
-                                        </summary>
-                                        <div class="mt-2">
-                                            <textarea name="kesimpulan" rows="4"
-                                                      class="textarea textarea-bordered w-full text-xs font-mono"
-                                                      placeholder='["Poin kesimpulan pertama","Poin kesimpulan kedua"]'><?= esc($minutes['kesimpulan']) ?></textarea>
-                                            <p class="text-[10px] text-base-content/40 mt-1">Format JSON array of strings.</p>
-                                        </div>
-                                    </details>
-                                </div>
-
-                                <!-- Tindak Lanjut / Rekomendasi -->
-                                <div class="form-control">
-                                    <label class="label">
-                                        <span class="label-text font-bold text-xs">Rekomendasi &amp; Rencana Tindak Lanjut</span>
-                                    </label>
-                                    <?php if (! empty($tindakLanjutItems)): ?>
-                                        <ul class="list-disc list-inside space-y-1 mb-2 text-xs text-base-content/90 bg-base-200/40 p-3 rounded-lg">
-                                            <?php foreach ($tindakLanjutItems as $tItem): ?>
-                                                <li><?= esc(is_string($tItem) ? $tItem : json_encode($tItem)) ?></li>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                    <?php endif; ?>
-
-                                    <!-- Raw JSON tersembunyi di balik toggle -->
-                                    <details class="group">
-                                        <summary class="flex cursor-pointer select-none items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content/80 transition-colors w-fit">
-                                            <i data-lucide="code-2" class="h-3.5 w-3.5 shrink-0"></i>
-                                            <span>Edit data mentah (JSON)</span>
-                                            <i data-lucide="chevron-right" class="h-3 w-3 shrink-0 transition-transform group-open:rotate-90"></i>
-                                        </summary>
-                                        <div class="mt-2">
-                                            <textarea name="tindak_lanjut" rows="4"
-                                                      class="textarea textarea-bordered w-full text-xs font-mono"
-                                                      placeholder='["Tindak lanjut pertama","Tindak lanjut kedua"]'><?= esc($minutes['tindak_lanjut']) ?></textarea>
-                                            <p class="text-[10px] text-base-content/40 mt-1">Format JSON array of strings.</p>
-                                        </div>
-                                    </details>
-                                </div>
-
-                                <!-- Tombol Simpan -->
-                                <div class="flex justify-end pt-3 border-t border-base-300">
-                                    <button type="submit" class="btn btn-primary btn-sm gap-1.5">
-                                        <i data-lucide="save" class="h-4 w-4"></i>
-                                        Simpan Perubahan Risalah
-                                    </button>
-                                </div>
-                            </form>
-                        <?php else: ?>
-                            <div class="py-12 text-center text-sm text-base-content/60">
-                                <i data-lucide="loader" class="h-8 w-8 text-base-content/30 mx-auto mb-2 animate-spin"></i>
-                                <p>Draft risalah sedang diproses oleh worker AI. Halaman ini akan diperbarui secara otomatis setelah selesai.</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Tab 2: Transkrip Percakapan -->
-                    <input type="radio" name="notulen_tabs" role="tab" class="tab gap-2"
-                           aria-label="Transkrip Percakapan (<?= (int) ($transcripts['total_chunks'] ?? 0) ?> Bagian)" />
-                    <label class="tab gap-2 pointer-events-none select-none" aria-hidden="true">
-                        <i data-lucide="mic" class="h-3.5 w-3.5"></i>
-                        Transkrip
-                        <?php if (! empty($transcripts['total_chunks'])): ?>
-                            <span class="badge badge-ghost badge-xs"><?= (int) $transcripts['total_chunks'] ?></span>
-                        <?php endif; ?>
-                    </label>
-
-                    <div role="tabpanel" class="tab-content py-5">
-                        <?php if (empty($transcripts['chunks'])): ?>
-                            <div class="py-12 text-center text-sm text-base-content/60">
-                                <i data-lucide="file-text" class="h-8 w-8 text-base-content/30 mx-auto mb-2"></i>
-                                <p>Belum ada potongan transkrip yang selesai diproses.</p>
-                            </div>
-                        <?php else: ?>
-                            <div class="space-y-3">
-                                <?php foreach ($transcripts['chunks'] as $chunk): ?>
-                                    <div class="collapse collapse-arrow bg-base-200/50 border border-base-300">
-                                        <input type="checkbox" checked />
-                                        <div class="collapse-title flex items-center justify-between font-bold text-xs sm:text-sm">
-                                            <span class="flex items-center gap-2">
-                                                <i data-lucide="clock" class="h-4 w-4 text-primary"></i>
-                                                Bagian <?= (int) $chunk['index'] ?> (<?= esc($chunk['time_label']) ?>)
-                                            </span>
-                                            <span class="font-mono text-xs font-normal text-base-content/60 mr-4">
-                                                <?= esc($chunk['filename']) ?>
-                                            </span>
-                                        </div>
-                                        <div class="collapse-content border-t border-base-300/50 pt-3">
-                                            <div class="bg-base-100 p-3.5 rounded-md font-sans text-xs leading-relaxed whitespace-pre-wrap select-all text-base-content/90 max-h-96 overflow-y-auto">
-                                                <?= esc($chunk['text']) ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script {csp-script-nonce}>
 (function() {
-    var JOB_ID        = <?= (int) $job['id'] ?>;
-    var STATUS_URL    = '<?= base_url('admin/notulen/status/') ?>' + JOB_ID;
+    var JOB_ID         = <?= (int) $job['id'] ?>;
+    var STATUS_URL     = '<?= base_url('admin/notulen/status/') ?>' + JOB_ID;
     var INITIAL_STATUS = '<?= esc($job['status']) ?>';
-    var POLL_MS       = 3500;
-    var ACTIVE        = ['queued', 'chunking', 'transcribing', 'summarizing'];
-    var lastStep      = '<?= esc($job['current_step'] ?? '', 'js') ?>';
-    var timerId       = null;
-
-    var STATUS_LABELS = {
-        chunking:     'Memotong Audio Rekaman...',
-        transcribing: 'Transkripsi Audio Berjalan...',
-        summarizing:  'Menyusun Risalah Rapat...',
-        completed:    'Transkripsi & Risalah Selesai',
-        failed:       'Pemrosesan Mengalami Kendala',
-        cancelled:    'Proses Dibatalkan'
-    };
-
-    // Tampilkan waktu nyata di console header saat halaman dimuat
-    var logTimeEl = document.getElementById('live_log_time');
-    if (logTimeEl) {
-        logTimeEl.textContent = new Date().toLocaleTimeString('id-ID', { hour12: false }) + ' WITA';
-    }
-
-    // Setel timestamp awal pada entri log pertama
-    var firstLogs = document.querySelectorAll('#live_log_stream [class*="--:--:--"], #live_log_stream span:first-child');
-    document.querySelectorAll('#live_log_stream .shrink-0').forEach(function(el) {
-        if (el.textContent.trim() === '[--:--:--]') {
-            el.textContent = '[' + new Date().toLocaleTimeString('id-ID', { hour12: false }) + ']';
-        }
-    });
-
-    function timeStr() {
-        return new Date().toLocaleTimeString('id-ID', { hour12: false });
-    }
-
-    // prefix: '›' info, '✓' sukses, '⚠' peringatan/error
-    function addLog(msg, cls, prefix) {
-        var el = document.getElementById('live_log_stream');
-        if (!el) return;
-        var d = document.createElement('div');
-        d.className = (cls || 'text-warning') + ' flex items-start gap-1.5';
-        d.innerHTML =
-            '<span class="shrink-0">[' + timeStr() + ']</span>' +
-            '<span class="shrink-0">' + (prefix || '›') + '</span>' +
-            '<span>' + msg + '</span>';
-        el.appendChild(d);
-        el.scrollTop = el.scrollHeight;
-    }
+    var POLL_MS        = 3500;
+    var ACTIVE         = ['queued', 'chunking', 'transcribing', 'summarizing'];
+    var timerId        = null;
 
     function poll() {
         fetch(STATUS_URL)
@@ -539,37 +585,25 @@ $isCompleted = $job['status'] === 'completed';
                 var step   = document.getElementById('live_current_step');
                 var chunks = document.getElementById('live_chunk_info');
                 var title  = document.getElementById('live_status_title');
-                var logTime = document.getElementById('live_log_time');
 
-                if (pct)     pct.textContent     = d.progress_percent + '%';
-                if (bar)     { bar.value = d.progress_percent; bar.setAttribute('aria-label', 'Progres pemrosesan AI: ' + d.progress_percent + '%'); }
-                if (step)    step.textContent    = d.current_step || '-';
-                if (chunks)  chunks.textContent  = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
-                if (title && STATUS_LABELS[d.status]) title.textContent = STATUS_LABELS[d.status];
-                if (logTime) logTime.textContent = timeStr() + ' WITA';
-
-                if (d.current_step && d.current_step !== lastStep) {
-                    lastStep = d.current_step;
-                    addLog(d.current_step + ' (' + d.progress_percent + '%)', 'text-warning', '›');
-                }
+                if (pct)     pct.textContent    = d.progress_percent + '%';
+                if (bar)     bar.value          = d.progress_percent;
+                if (step)    step.textContent   = d.current_step || '-';
+                if (chunks)  chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
+                if (title && d.current_step) title.textContent = d.current_step;
 
                 if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
                     clearInterval(timerId);
                     timerId = null;
-                    var isOk  = d.status === 'completed';
-                    var cls   = isOk ? 'text-success font-bold' : 'text-error font-bold';
-                    var pfx   = isOk ? '✓' : '⚠';
-                    addLog('Proses ' + (STATUS_LABELS[d.status] || d.status) + '. Memuat ulang...', cls, pfx);
-                    setTimeout(function() { window.location.reload(); }, 1500);
+                    setTimeout(function() { window.location.reload(); }, 1200);
                 }
             })
             .catch(function(e) { console.warn('Poll error:', e); });
     }
 
     if (ACTIVE.indexOf(INITIAL_STATUS) !== -1) {
-        poll();
         timerId = setInterval(poll, POLL_MS);
     }
 })();
 </script>
-<?= $this->endSection() ?>
+<?= $this->endSection() ?>this->endSection() ?>

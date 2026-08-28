@@ -154,27 +154,7 @@ class CreateMeetingTranscriptionAndMinutesTables extends Migration
                     'default'    => null,
                 ],
                 'ringkasan_eksekutif' => [
-                    'type'    => 'TEXT',
-                    'null'    => true,
-                    'default' => null,
-                ],
-                'agenda_pembahasan' => [
                     'type'    => 'LONGTEXT',
-                    'null'    => true,
-                    'default' => null,
-                ],
-                'kesimpulan' => [
-                    'type'    => 'LONGTEXT',
-                    'null'    => true,
-                    'default' => null,
-                ],
-                'tindak_lanjut' => [
-                    'type'    => 'LONGTEXT',
-                    'null'    => true,
-                    'default' => null,
-                ],
-                'peserta_terdeteksi' => [
-                    'type'    => 'TEXT',
                     'null'    => true,
                     'default' => null,
                 ],

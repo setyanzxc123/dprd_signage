@@ -190,62 +190,11 @@
     </table>
 </div>
 
-<!-- Ringkasan Eksekutif -->
+<!-- Naskah Risalah Rapat (3 Pilar) -->
 <?php if (! empty($minutes['ringkasan_eksekutif'])): ?>
-    <div class="section-title">II. Ringkasan Eksekutif</div>
-    <div class="content-box">
-        <?= nl2br(esc($minutes['ringkasan_eksekutif'])) ?>
+    <div class="content-box" style="white-space: pre-wrap; line-height: 1.6; font-size: 11pt; margin-top: 15px;">
+<?= esc($minutes['ringkasan_eksekutif']) ?>
     </div>
-<?php endif; ?>
-
-<!-- Pokok-Pokok Pembahasan -->
-<?php if (! empty($agendaItems)): ?>
-    <div class="section-title">III. Pokok-Pokok Pembahasan Rapat</div>
-    <table class="custom-table">
-        <thead>
-            <tr>
-                <th style="width: 6%;">No</th>
-                <th style="width: 30%;">Topik / Pembicara</th>
-                <th>Uraian Pandangan & Pembahasan</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($agendaItems as $i => $item): ?>
-                <tr>
-                    <td style="text-align: center;"><?= $i + 1 ?></td>
-                    <td>
-                        <strong><?= esc($item['topik'] ?? "Pokok Bahasan " . ($i + 1)) ?></strong>
-                        <?php if (! empty($item['pembicara'])): ?>
-                            <br><small style="color: #444;">(<?= esc($item['pembicara']) ?>)</small>
-                        <?php endif; ?>
-                    </td>
-                    <td style="text-align: justify;">
-                        <?= nl2br(esc($item['uraian'] ?? (is_string($item) ? $item : ''))) ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-<?php endif; ?>
-
-<!-- Kesimpulan & Keputusan -->
-<?php if (! empty($kesimpulanItems)): ?>
-    <div class="section-title">IV. Kesimpulan dan Keputusan</div>
-    <ol>
-        <?php foreach ($kesimpulanItems as $kItem): ?>
-            <li><?= esc(is_string($kItem) ? $kItem : json_encode($kItem)) ?></li>
-        <?php endforeach; ?>
-    </ol>
-<?php endif; ?>
-
-<!-- Rencana Tindak Lanjut -->
-<?php if (! empty($tindakLanjutItems)): ?>
-    <div class="section-title">V. Rencana Tindak Lanjut / Rekomendasi</div>
-    <ol>
-        <?php foreach ($tindakLanjutItems as $tItem): ?>
-            <li><?= esc(is_string($tItem) ? $tItem : json_encode($tItem)) ?></li>
-        <?php endforeach; ?>
-    </ol>
 <?php endif; ?>
 
 <!-- Kolom Tanda Tangan -->

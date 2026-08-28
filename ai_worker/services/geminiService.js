@@ -306,8 +306,8 @@ export async function generateMeetingMinutesWithFallback({
 }) {
   onLog(`[Minutes] Memulai penyusunan Risalah Rapat resmi dari transkrip (${fullTranscript.length} karakter)...`);
 
-  const promptText = `Anda adalah Sekretaris Notulis Ahli untuk DPRD (Dewan Perwakilan Rakyat Daerah) Provinsi Sulawesi Tengah.
-Tugas Anda adalah membaca dan menganalisis transkrip rekaman rapat berikut, kemudian menyusun DRAFT RISALAH RAPAT RESMI dalam format JSON terstruktur yang profesional, rapi, dan sesuai tata naskah dinas legislatif daerah.
+  const promptText = `Anda adalah Notulis Risalah Resmi untuk DPRD (Dewan Perwakilan Rakyat Daerah) Provinsi Sulawesi Tengah.
+Tugas Anda adalah membaca, menganalisis, dan menyusun DRAFT RISALAH RAPAT RESMI dari transkrip percakapan rapat berikut ke dalam SATU NASKAH DOKUMEN UTUH yang profesional, rapi, dan sesuai standar tata naskah dinas legislatif daerah.
 
 Informasi Konteks Rapat:
 - Judul Rapat: ${metadata.judul_rapat || 'Rapat DPRD Provinsi Sulawesi Tengah'}
@@ -319,28 +319,24 @@ KONTEN TRANSKRIP RAPAT LENGKAP:
 ${fullTranscript}
 ---
 
+FORMAT PENYUSUNAN NASKAH RISALAH (WAJIB MEMUAT 3 BAGIAN BERIKUT SECARA BERURUTAN):
+
+I. RINGKASAN UTAMA
+Tuliskan intisari komprehensif rapat dalam 2-4 paragraf yang merangkum latar belakang pertemuan, inti pokok masalah yang dibahas, dinamika pembicaraan/perdebatan, dan hasil akhir rapat secara utuh dan padat.
+
+II. POIN-POIN PEMBAHASAN
+Uraikan rincian jalannya pembahasan per pokok bahasan dengan format butir bernomor (1, 2, dst.):
+1. Topik: [Judul Pokok Bahasan]
+   - Pembicara: [Pimpinan Sidang / Fraksi / Komisi / Pejabat / Dinas Terkait]
+   - Uraian: [Penjelasan rinci mengenai materi yang dipaparkan, pertanyaan, tanggapan, atau catatan kritis yang disampaikan selama rapat]
+
+III. KESIMPULAN & KEPUTUSAN AKHIR
+Rumuskan kesepakatan dan keputusan resmi yang disahkan dalam rapat dalam bentuk butir-butir bernomor (1, 2, dst.), mencakup poin persetujuan bersama, rekomendasi resmi, serta instruksi tindak lanjut yang disepakati.
+
 INSTRUKSI OUTPUT:
 Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai berikut (tanpa blok markdown formatting pembungkus seperti \`\`\`json):
 {
-  "ringkasan_eksekutif": "Ringkasan eksekutif komprehensif rapat dalam 2-4 paragraf yang merangkum pokok bahasan, perdebatan utama, dan hasil akhir.",
-  "agenda_pembahasan": [
-    {
-      "topik": "Judul pokok bahasan 1",
-      "uraian": "Penjelasan rinci mengenai pembahasan materi, saran, kritik, atau catatan fraksi/komisi",
-      "pembicara": "Nama/jabatan pihak atau fraksi terkait yang memberikan pandangan"
-    }
-  ],
-  "kesimpulan": [
-    "Poin kesimpulan atau keputusan rapat butir 1",
-    "Poin kesimpulan atau keputusan rapat butir 2"
-  ],
-  "tindak_lanjut": [
-    "Poin instruksi, rekomendasi, atau rencana aksi tindak lanjut 1",
-    "Poin instruksi, rekomendasi, atau rencana aksi tindak lanjut 2"
-  ],
-  "peserta_terdeteksi": [
-    "Nama/Jabatan peserta yang teridentifikasi berbicara atau hadir dalam rekaman"
-  ]
+  "ringkasan_eksekutif": "Tuliskan seluruh naskah risalah lengkap yang memuat Bagian I, II, dan III di sini secara utuh, rapi, dan terformat sesuai panduan di atas."
 }`;
 
   const models = config.gemini.modelChain;

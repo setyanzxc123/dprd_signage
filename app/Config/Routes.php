@@ -118,6 +118,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('notulen/audio-upload/chunk',         'Admin\NotulenController::appendAudioChunk');
     $routes->post('notulen/audio-upload/cancel',        'Admin\NotulenController::cancelAudioUpload');
     $routes->get( 'notulen/status/(:num)',              'Admin\NotulenController::status/$1');
+    $routes->get( 'notulen/audio/(:num)',               'Admin\NotulenController::audio/$1');
     $routes->post('notulen/retry/(:num)',               'Admin\NotulenController::retry/$1');
     $routes->post('notulen/cancel/(:num)',              'Admin\NotulenController::cancel/$1');
     $routes->post('notulen/delete-audio/(:num)',        'Admin\NotulenController::deleteRecording/$1');

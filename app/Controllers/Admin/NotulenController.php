@@ -242,6 +242,38 @@ class NotulenController extends BaseController
     }
 
     /**
+     * Endpoint streaming audio rekaman rapat untuk audio player di web admin.
+     */
+    public function audio(int $jobId): ResponseInterface
+    {
+        $job = (new MeetingTranscriptionJobModel())->find($jobId);
+        if (! $job) {
+            return $this->response->setStatusCode(404)->setBody('Job tidak ditemukan.');
+        }
+
+        $audioPath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'recordings' . DIRECTORY_SEPARATOR . 'job_' . $jobId . DIRECTORY_SEPARATOR . 'audio' . DIRECTORY_SEPARATOR . 'original.mp3';
+        if (! is_file($audioPath) && ! empty($job['audio_path'])) {
+            $candidate = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $job['audio_path'];
+            if (is_file($candidate)) {
+                $audioPath = $candidate;
+            }
+        }
+
+        if (! is_file($audioPath)) {
+            return $this->response->setStatusCode(404)->setBody('Berkas audio tidak ditemukan atau telah dibersihkan.');
+        }
+
+        $mime = mime_content_type($audioPath) ?: 'audio/mpeg';
+        $size = filesize($audioPath);
+
+        return $this->response
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Content-Length', (string) $size)
+            ->setHeader('Accept-Ranges', 'bytes')
+            ->setBody((string) file_get_contents($audioPath));
+    }
+
+    /**
      * Handler antrekan ulang job gagal/dibatalkan (Resume dari checkpoint terakhir).
      */
     public function retry(int $jobId): RedirectResponse
@@ -337,10 +369,6 @@ class NotulenController extends BaseController
             'judul_rapat'         => $this->request->getPost('judul_rapat'),
             'tanggal_rapat'       => $this->request->getPost('tanggal_rapat'),
             'ringkasan_eksekutif' => $this->request->getPost('ringkasan_eksekutif'),
-            'agenda_pembahasan'   => $this->request->getPost('agenda_pembahasan'),
-            'kesimpulan'          => $this->request->getPost('kesimpulan'),
-            'tindak_lanjut'       => $this->request->getPost('tindak_lanjut'),
-            'peserta_terdeteksi'  => $this->request->getPost('peserta_terdeteksi'),
         ];
 
         $result = $this->service->updateMinutes($minutesId, $input, $userId);
@@ -385,18 +413,9 @@ class NotulenController extends BaseController
             return redirect()->to(base_url('admin/notulen'));
         }
 
-        $decodedAgenda = ! empty($minutes['agenda_pembahasan']) ? json_decode((string) $minutes['agenda_pembahasan'], true) : [];
-        $decodedKesimpulan = ! empty($minutes['kesimpulan']) ? json_decode((string) $minutes['kesimpulan'], true) : [];
-        $decodedTindakLanjut = ! empty($minutes['tindak_lanjut']) ? json_decode((string) $minutes['tindak_lanjut'], true) : [];
-        $decodedPeserta = ! empty($minutes['peserta_terdeteksi']) ? json_decode((string) $minutes['peserta_terdeteksi'], true) : [];
-
         return view('admin/notulen/print', [
-            'pageTitle'         => 'Cetak Risalah — ' . $minutes['judul_rapat'],
-            'minutes'           => $minutes,
-            'agendaItems'       => is_array($decodedAgenda) ? $decodedAgenda : [],
-            'kesimpulanItems'   => is_array($decodedKesimpulan) ? $decodedKesimpulan : [],
-            'tindakLanjutItems' => is_array($decodedTindakLanjut) ? $decodedTindakLanjut : [],
-            'pesertaItems'      => is_array($decodedPeserta) ? $decodedPeserta : [],
+            'pageTitle' => 'Cetak Risalah — ' . $minutes['judul_rapat'],
+            'minutes'   => $minutes,
         ]);
     }
 

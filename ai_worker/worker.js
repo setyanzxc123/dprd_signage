@@ -322,18 +322,13 @@ export async function processJob(pool, job) {
     await pool.execute(
       `UPDATE meeting_minutes
        SET judul_rapat = ?, tanggal_rapat = ?, transcripts_dir = ?,
-           ringkasan_eksekutif = ?, agenda_pembahasan = ?, kesimpulan = ?,
-           tindak_lanjut = ?, peserta_terdeteksi = ?, updated_at = NOW()
+           ringkasan_eksekutif = ?, updated_at = NOW()
        WHERE id = ?`,
       [
         meetingContext.judulRapat,
         meetingContext.tanggalRapat,
         relativeTranscriptsDir,
         minutesResult.ringkasan_eksekutif,
-        JSON.stringify(minutesResult.agenda_pembahasan),
-        JSON.stringify(minutesResult.kesimpulan),
-        JSON.stringify(minutesResult.tindak_lanjut),
-        JSON.stringify(minutesResult.peserta_terdeteksi),
         existingMinutes[0].id,
       ]
     );
@@ -341,9 +336,8 @@ export async function processJob(pool, job) {
     await pool.execute(
       `INSERT INTO meeting_minutes
        (job_id, jadwal_type, jadwal_id, judul_rapat, tanggal_rapat, transcripts_dir,
-        ringkasan_eksekutif, agenda_pembahasan, kesimpulan, tindak_lanjut, peserta_terdeteksi,
-        status_verifikasi, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', NOW(), NOW())`,
+        ringkasan_eksekutif, status_verifikasi, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', NOW(), NOW())`,
       [
         jobId,
         job.jadwal_type || 'umum',
@@ -352,10 +346,6 @@ export async function processJob(pool, job) {
         meetingContext.tanggalRapat,
         relativeTranscriptsDir,
         minutesResult.ringkasan_eksekutif,
-        JSON.stringify(minutesResult.agenda_pembahasan),
-        JSON.stringify(minutesResult.kesimpulan),
-        JSON.stringify(minutesResult.tindak_lanjut),
-        JSON.stringify(minutesResult.peserta_terdeteksi),
       ]
     );
   }

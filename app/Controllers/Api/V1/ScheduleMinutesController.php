@@ -72,11 +72,6 @@ class ScheduleMinutesController extends BaseController
             ]);
         }
 
-        $decodedAgenda = ! empty($minutes['agenda_pembahasan']) ? json_decode((string) $minutes['agenda_pembahasan'], true) : [];
-        $decodedKesimpulan = ! empty($minutes['kesimpulan']) ? json_decode((string) $minutes['kesimpulan'], true) : [];
-        $decodedTindakLanjut = ! empty($minutes['tindak_lanjut']) ? json_decode((string) $minutes['tindak_lanjut'], true) : [];
-        $decodedPeserta = ! empty($minutes['peserta_terdeteksi']) ? json_decode((string) $minutes['peserta_terdeteksi'], true) : [];
-
         return $this->apiSuccess([
             'jadwal_type'         => $normalizedSource,
             'jadwal_id'           => $id,
@@ -85,10 +80,6 @@ class ScheduleMinutesController extends BaseController
             'judul_rapat'         => $minutes['judul_rapat'],
             'tanggal_rapat'       => $minutes['tanggal_rapat'],
             'ringkasan_eksekutif' => $minutes['ringkasan_eksekutif'],
-            'agenda_pembahasan'   => is_array($decodedAgenda) ? $decodedAgenda : [],
-            'kesimpulan'          => is_array($decodedKesimpulan) ? $decodedKesimpulan : [],
-            'tindak_lanjut'       => is_array($decodedTindakLanjut) ? $decodedTindakLanjut : [],
-            'peserta_terdeteksi'  => is_array($decodedPeserta) ? $decodedPeserta : [],
             'verified_at'         => $minutes['verified_at'] ?? null,
         ]);
     }

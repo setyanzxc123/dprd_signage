@@ -80,10 +80,6 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'tanggal_rapat'       => '2026-08-27',
             'transcripts_dir'     => 'recordings/job_1/transcripts',
             'ringkasan_eksekutif' => 'Ringkasan pembahasan RDP...',
-            'agenda_pembahasan'   => json_encode([['topik' => 'Evaluasi', 'uraian' => 'Penjelasan...']]),
-            'kesimpulan'          => json_encode(['Poin kesimpulan']),
-            'tindak_lanjut'       => json_encode(['Poin tindak lanjut']),
-            'peserta_terdeteksi'  => json_encode(['Ketua Komisi I']),
             'status_verifikasi'   => 'draft',
             'created_at'          => date('Y-m-d H:i:s'),
             'updated_at'          => date('Y-m-d H:i:s'),
@@ -152,10 +148,6 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'judul_rapat'         => 'Judul Awal',
             'tanggal_rapat'       => '2026-08-20',
             'ringkasan_eksekutif' => 'Ringkasan awal',
-            'agenda_pembahasan'   => json_encode([]),
-            'kesimpulan'          => json_encode([]),
-            'tindak_lanjut'       => json_encode([]),
-            'peserta_terdeteksi'  => json_encode([]),
             'status_verifikasi'   => 'draft',
             'created_at'          => date('Y-m-d H:i:s'),
             'updated_at'          => date('Y-m-d H:i:s'),
@@ -165,11 +157,7 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $updateResp = $this->adminPost('/admin/notulen/update-minutes/10', [
             'judul_rapat'         => 'Judul Rapat Baru Direvisi',
             'tanggal_rapat'       => '2026-08-25',
-            'ringkasan_eksekutif' => 'Ringkasan eksekutif telah diperbaiki.',
-            'agenda_pembahasan'   => json_encode([['topik' => 'Revisi Anggaran', 'uraian' => 'Uraian detail']]),
-            'kesimpulan'          => json_encode(['Disetujui bersama']),
-            'tindak_lanjut'       => json_encode(['Diteruskan ke Banggar']),
-            'peserta_terdeteksi'  => json_encode(['Anggota A', 'Anggota B']),
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nRingkasan telah diperbaiki.\n\nII. POIN-POIN PEMBAHASAN\n1. Topik: Revisi Anggaran\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Disetujui",
         ]);
 
         $updateResp->assertStatus(302);
@@ -177,7 +165,7 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $rowAfterUpdate = (new MeetingMinutesModel($this->testDb))->find(10);
         $this->assertSame('Judul Rapat Baru Direvisi', $rowAfterUpdate['judul_rapat']);
         $this->assertSame('2026-08-25', $rowAfterUpdate['tanggal_rapat']);
-        $this->assertSame('Ringkasan eksekutif telah diperbaiki.', $rowAfterUpdate['ringkasan_eksekutif']);
+        $this->assertStringContainsString('Ringkasan telah diperbaiki', $rowAfterUpdate['ringkasan_eksekutif']);
 
         // 2. Finalize minutes
         $finalizeResp = $this->adminPost('/admin/notulen/finalize/10', []);
@@ -261,13 +249,7 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'jadwal_id'           => 21,
             'judul_rapat'         => 'Sidang Paripurna Pembahasan APBD',
             'tanggal_rapat'       => '2026-08-27',
-            'ringkasan_eksekutif' => 'Sidang paripurna menyetujui seluruh rancangan anggaran belanja daerah...',
-            'agenda_pembahasan'   => json_encode([
-                ['topik' => 'Anggaran Pendidikan', 'uraian' => 'Alokasi minimal 20% terpenuhi.', 'pembicara' => 'Fraksi A'],
-            ]),
-            'kesimpulan'          => json_encode(['Rancangan disahkan']),
-            'tindak_lanjut'       => json_encode(['Penyampaian ke Kemendagri']),
-            'peserta_terdeteksi'  => json_encode(['Ketua DPRD', 'Gubernur']),
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nSidang paripurna menyetujui...\n\nII. POIN-POIN PEMBAHASAN\n1. Topik: APBD\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Disahkan",
             'status_verifikasi'   => 'final',
             'created_at'          => date('Y-m-d H:i:s'),
             'updated_at'          => date('Y-m-d H:i:s'),
@@ -284,11 +266,8 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertSame('final', $json['status_verifikasi']);
         $this->assertSame('Sidang Paripurna Pembahasan APBD', $json['judul_rapat']);
         $this->assertSame('2026-08-27', $json['tanggal_rapat']);
-        $this->assertCount(1, $json['agenda_pembahasan']);
-        $this->assertSame('Anggaran Pendidikan', $json['agenda_pembahasan'][0]['topik']);
-        $this->assertCount(1, $json['kesimpulan']);
-        $this->assertSame('Rancangan disahkan', $json['kesimpulan'][0]);
-        $this->assertCount(2, $json['peserta_terdeteksi']);
+        $this->assertStringContainsString('RINGKASAN UTAMA', $json['ringkasan_eksekutif']);
+        $this->assertStringContainsString('KESIMPULAN', $json['ringkasan_eksekutif']);
     }
 
     private function adminGet(string $path)
@@ -472,10 +451,6 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'tanggal_rapat'       => ['type' => 'DATE', 'null' => true],
             'transcripts_dir'     => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'ringkasan_eksekutif' => ['type' => 'TEXT', 'null' => true],
-            'agenda_pembahasan'   => ['type' => 'TEXT', 'null' => true],
-            'kesimpulan'          => ['type' => 'TEXT', 'null' => true],
-            'tindak_lanjut'       => ['type' => 'TEXT', 'null' => true],
-            'peserta_terdeteksi'  => ['type' => 'TEXT', 'null' => true],
             'status_verifikasi'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'draft'],
             'verified_by'         => ['type' => 'INTEGER', 'null' => true],
             'verified_at'         => ['type' => 'DATETIME', 'null' => true],

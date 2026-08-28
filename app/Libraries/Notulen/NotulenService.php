@@ -655,20 +655,10 @@ class NotulenService
 
         $ringkasan = trim((string) ($input['ringkasan_eksekutif'] ?? ''));
 
-        // Normalisasi struktur JSON agenda, kesimpulan, tindak lanjut, peserta
-        $agenda = $this->normalizeJsonField($input['agenda_pembahasan'] ?? null);
-        $kesimpulan = $this->normalizeJsonField($input['kesimpulan'] ?? null);
-        $tindakLanjut = $this->normalizeJsonField($input['tindak_lanjut'] ?? null);
-        $peserta = $this->normalizeJsonField($input['peserta_terdeteksi'] ?? null);
-
         $updateData = [
             'judul_rapat'        => $judulRapat,
             'tanggal_rapat'      => ! empty($input['tanggal_rapat']) ? $input['tanggal_rapat'] : $minutes['tanggal_rapat'],
             'ringkasan_eksekutif'=> $ringkasan,
-            'agenda_pembahasan'  => $agenda,
-            'kesimpulan'         => $kesimpulan,
-            'tindak_lanjut'      => $tindakLanjut,
-            'peserta_terdeteksi' => $peserta,
         ];
 
         $minutesModel->update($minutesId, $updateData);
