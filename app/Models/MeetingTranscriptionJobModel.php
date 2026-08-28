@@ -45,6 +45,7 @@ class MeetingTranscriptionJobModel extends Model
         'progress_percent',
         'current_step',
         'error_message',
+        'ai_model',
         'created_by',
     ];
 

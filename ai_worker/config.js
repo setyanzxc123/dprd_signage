@@ -30,20 +30,24 @@ const dbConfig = {
 // Gemini API Key & Model Chain
 const geminiApiKey = getEnv('GEMINI_API_KEY', getEnv('GOOGLE_AI_API_KEY', getEnv('AI_GEMINI_KEY', '')));
 
-// Rantai model default: primary hemat token -> fallback berurutan
-// Nama model valid: gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-flash
-const defaultModelChainStr = 'gemini-2.5-flash-lite-preview-06-17,gemini-2.5-flash,gemini-2.0-flash,gemini-1.5-flash';
-const modelChainRaw = getEnv('GEMINI_MODEL_CHAIN', defaultModelChainStr);
-const modelChain = modelChainRaw
-  .split(',')
-  .map((m) => m.trim())
-  .filter((m) => m.length > 0);
+// Rantai model default sesuai contoh .env: primary hemat token -> fallback berurutan
+const DEFAULT_MODEL_CHAIN = [
+  'gemini-3.5-flash-lite',
+  'gemini-3.5-flash',
+  'gemini-3.1-flash',
+  'gemini-3.7-flash',
+];
+
+const modelChainRaw = getEnv('GEMINI_MODEL_CHAIN', '');
+const parsedModelChain = modelChainRaw
+  ? modelChainRaw.split(',').map((m) => m.trim()).filter((m) => m.length > 0)
+  : [];
 
 export const config = {
   db: dbConfig,
   gemini: {
     apiKey: geminiApiKey,
-    modelChain: modelChain.length > 0 ? modelChain : ['gemini-2.5-flash-lite-preview-06-17', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'],
+    modelChain: parsedModelChain.length > 0 ? parsedModelChain : DEFAULT_MODEL_CHAIN,
   },
   audio: {
     chunkDurationSeconds: parseInt(getEnv('CHUNK_DURATION_SECONDS', '1800'), 10), // 30 menit

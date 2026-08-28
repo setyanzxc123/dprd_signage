@@ -2045,6 +2045,13 @@
                     if (chunks) chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
                     if (title && d.current_step) title.textContent = d.current_step;
 
+                    if (d.ai_model_label) {
+                        const modelLabelEl = document.getElementById('ai_model_label_text');
+                        if (modelLabelEl) modelLabelEl.textContent = d.ai_model_label;
+                        const modelMetaEl = document.getElementById('ai_model_meta_text');
+                        if (modelMetaEl) modelMetaEl.textContent = d.ai_model_label;
+                    }
+
                     if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
                         if (notulenPollTimer) {
                             clearInterval(notulenPollTimer);

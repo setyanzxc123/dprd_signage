@@ -429,6 +429,44 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $response->assertSee('Terkunci');
     }
 
+    public function testWebAdminShowAndStatusRendersDynamicAiModel(): void
+    {
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'               => 88,
+            'jadwal_type'      => 'umum',
+            'jadwal_id'        => 44,
+            'audio_filename'   => 'sidang_hut.mp3',
+            'status'           => 'completed',
+            'progress_percent' => 100,
+            'current_step'     => 'Selesai: Transkrip dan draft risalah siap ditinjau.',
+            'ai_model'         => 'gemini-3.5-flash-lite',
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 88,
+            'ringkasan_eksekutif' => 'I. RINGKASAN UTAMA\nRisalah rapat HUT...',
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        // Verifikasi render HTML show.php memuat label dinamis
+        $showResponse = $this->adminGet('/admin/notulen/88');
+        $showResponse->assertOK();
+        $showResponse->assertSee('Gemini 3.5 Flash Lite');
+        $showResponse->assertDontSee('Gemini 2.5 Pro');
+
+        // Verifikasi response polling JSON memuat ai_model dan ai_model_label
+        $statusResponse = $this->adminGet('/admin/notulen/status/88');
+        $statusResponse->assertOK();
+        $json = json_decode($statusResponse->response()->getBody(), true);
+        $this->assertSame('success', $json['status']);
+        $this->assertSame('gemini-3.5-flash-lite', $json['data']['ai_model']);
+        $this->assertSame('Gemini 3.5 Flash Lite', $json['data']['ai_model_label']);
+    }
+
     private function adminGet(string $path)
     {
         return $this->withSession(['auth_user' => ['id' => 1, 'name' => 'Administrator', 'username' => 'admin']])->get($path);
@@ -594,6 +632,7 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'completed_chunks' => ['type' => 'INTEGER', 'default' => 0],
             'cancel_requested' => ['type' => 'INTEGER', 'default' => 0],
             'error_message'    => ['type' => 'TEXT', 'null' => true],
+            'ai_model'         => ['type' => 'VARCHAR', 'constraint' => 64, 'null' => true],
             'created_by'       => ['type' => 'INTEGER', 'null' => true],
             'created_at'       => ['type' => 'DATETIME', 'null' => true],
             'updated_at'       => ['type' => 'DATETIME', 'null' => true],

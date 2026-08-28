@@ -116,12 +116,13 @@ class NotulenController extends BaseController
         }
 
         return view('admin/notulen/show', [
-            'pageTitle'   => 'Review Risalah — ' . ($detail['schedule']['judul'] ?? $detail['job']['audio_filename']),
-            'job'         => $detail['job'],
-            'minutes'     => $detail['minutes'],
-            'schedule'    => $detail['schedule'],
-            'transcripts' => $detail['transcripts'],
-            'pillars'     => $detail['pillars'] ?? [],
+            'pageTitle'    => 'Review Risalah — ' . ($detail['schedule']['judul'] ?? $detail['job']['audio_filename']),
+            'job'          => $detail['job'],
+            'minutes'      => $detail['minutes'],
+            'schedule'     => $detail['schedule'],
+            'transcripts'  => $detail['transcripts'],
+            'pillars'      => $detail['pillars'] ?? [],
+            'aiModelLabel' => NotulenService::formatAiModelLabel($detail['job']['ai_model'] ?? null),
         ]);
     }
 
@@ -269,6 +270,8 @@ class NotulenController extends BaseController
                 'completed_chunks' => (int) $job['completed_chunks'],
                 'cancel_requested' => (bool) $job['cancel_requested'],
                 'error_message'    => $job['error_message'],
+                'ai_model'         => $job['ai_model'] ?? null,
+                'ai_model_label'   => NotulenService::formatAiModelLabel($job['ai_model'] ?? null),
             ],
         ]);
     }

@@ -45,9 +45,9 @@ if ($job['jadwal_type'] === 'banmus') {
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-base-200 pb-3">
                 <div class="flex flex-wrap items-center gap-2.5">
                     <span class="text-xs font-bold uppercase tracking-wider text-primary">Alur Proses AI</span>
-                    <span class="badge badge-sm badge-outline gap-1 text-primary border-primary/40 bg-primary/5 font-semibold text-[11px]">
+                    <span id="ai_model_badge" class="badge badge-sm badge-outline gap-1 text-primary border-primary/40 bg-primary/5 font-semibold text-[11px]">
                         <i data-lucide="sparkles" class="h-3 w-3"></i>
-                        Gemini 2.5 Pro
+                        <span id="ai_model_label_text"><?= esc($aiModelLabel ?? 'Gemini AI') ?></span>
                     </span>
                 </div>
                 <?php if ($isInProgress || $job['status'] === 'queued'): ?>
@@ -495,8 +495,8 @@ if ($job['jadwal_type'] === 'banmus') {
                 <span class="font-mono"><?= (int) $job['total_chunks'] ?> segmen chunk</span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/60">Model Transkripsi & Risalah:</span>
-                <span class="font-semibold text-primary">Gemini 2.5 Pro (Indonesia Legislative Fine-Tuned)</span>
+                <span class="text-base-content/60">Model Transkripsi &amp; Risalah:</span>
+                <span class="font-semibold text-primary" id="ai_model_meta_text"><?= esc($aiModelLabel ?? 'Gemini AI') ?></span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
                 <span class="text-base-content/60">Status Integritas:</span>

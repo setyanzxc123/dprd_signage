@@ -345,9 +345,9 @@ export async function processJob(pool, job) {
   // 5. Tandai Job Completed & Bersihkan Chunk Audio Lokal
   await pool.execute(
     `UPDATE meeting_transcription_jobs
-     SET status = 'completed', progress_percent = 100, current_step = 'Selesai: Transkrip dan draft risalah siap ditinjau.', error_message = NULL, updated_at = NOW()
+     SET status = 'completed', progress_percent = 100, current_step = 'Selesai: Transkrip dan draft risalah siap ditinjau.', ai_model = ?, error_message = NULL, updated_at = NOW()
      WHERE id = ?`,
-    [jobId]
+    [minutesResult.usedModel || null, jobId]
   );
 
   cleanLocalAudioChunks(audioDir);

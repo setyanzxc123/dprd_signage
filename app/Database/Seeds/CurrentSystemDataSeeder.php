@@ -1742,6 +1742,7 @@ class CurrentSystemDataSeeder extends Seeder
             'total_chunks'     => 2,
             'completed_chunks' => 2,
             'cancel_requested' => 0,
+            'ai_model'         => 'gemini-3.5-flash',
             'created_at'       => $now,
             'updated_at'       => $now,
         ]);
@@ -1786,6 +1787,7 @@ class CurrentSystemDataSeeder extends Seeder
             'total_chunks'     => 1,
             'completed_chunks' => 1,
             'cancel_requested' => 0,
+            'ai_model'         => 'gemini-3.5-flash-lite',
             'created_at'       => $now,
             'updated_at'       => $now,
         ]);

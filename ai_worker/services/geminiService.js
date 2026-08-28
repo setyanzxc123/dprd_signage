@@ -342,6 +342,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
   const models = config.gemini.modelChain;
   const ai = getAiClient();
   let minutesJson = null;
+  let usedModel = null;
   let lastError = null;
 
   for (let mIdx = 0; mIdx < models.length; mIdx++) {
@@ -406,6 +407,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
       }
 
       onLog(`[Minutes] Risalah rapat berhasil disusun via model ${modelName}!`);
+      usedModel = modelName;
       break;
     } catch (err) {
       lastError = err;
@@ -426,5 +428,6 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
     kesimpulan: Array.isArray(minutesJson.kesimpulan) ? minutesJson.kesimpulan : [],
     tindak_lanjut: Array.isArray(minutesJson.tindak_lanjut) ? minutesJson.tindak_lanjut : [],
     peserta_terdeteksi: Array.isArray(minutesJson.peserta_terdeteksi) ? minutesJson.peserta_terdeteksi : [],
+    usedModel: usedModel || null,
   };
 }
