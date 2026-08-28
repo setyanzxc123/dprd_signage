@@ -13,231 +13,185 @@
     </button>
 </div>
 
-<!-- Filter Status & Pencarian -->
-<div class="card card-border mb-4 bg-base-100 shadow-sm">
-    <div class="card-body p-4 sm:p-5">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <!-- Tabs Filter Status -->
-            <div class="flex flex-wrap items-center gap-1.5">
-                <a href="<?= base_url('admin/notulen') ?>" class="btn btn-xs <?= empty($currentStatus) || $currentStatus === 'all' ? 'btn-primary' : 'btn-ghost' ?>">
-                    Semua <span class="badge badge-sm ml-1"><?= ($statusCounts['in_progress'] + $statusCounts['completed'] + $statusCounts['queued'] + $statusCounts['failed'] + $statusCounts['cancelled']) ?></span>
-                </a>
-                <a href="<?= base_url('admin/notulen?status=in_progress') ?>" class="btn btn-xs <?= $currentStatus === 'in_progress' ? 'btn-warning' : 'btn-ghost' ?>">
-                    Memproses <span class="badge badge-sm ml-1"><?= $statusCounts['in_progress'] ?></span>
-                </a>
-                <a href="<?= base_url('admin/notulen?status=completed') ?>" class="btn btn-xs <?= $currentStatus === 'completed' ? 'btn-success' : 'btn-ghost' ?>">
-                    Selesai <span class="badge badge-sm ml-1"><?= $statusCounts['completed'] ?></span>
-                </a>
-                <a href="<?= base_url('admin/notulen?status=queued') ?>" class="btn btn-xs <?= $currentStatus === 'queued' ? 'btn-info' : 'btn-ghost' ?>">
-                    Antrean <span class="badge badge-sm ml-1"><?= $statusCounts['queued'] ?></span>
-                </a>
-                <a href="<?= base_url('admin/notulen?status=failed') ?>" class="btn btn-xs <?= $currentStatus === 'failed' ? 'btn-error' : 'btn-ghost' ?>">
-                    Gagal <span class="badge badge-sm ml-1"><?= $statusCounts['failed'] ?></span>
-                </a>
-                <a href="<?= base_url('admin/notulen?status=cancelled') ?>" class="btn btn-xs <?= $currentStatus === 'cancelled' ? 'btn-neutral' : 'btn-ghost' ?>">
-                    Dibatalkan <span class="badge badge-sm ml-1"><?= $statusCounts['cancelled'] ?></span>
-                </a>
-            </div>
-
-            <!-- Form Pencarian -->
-            <form method="get" action="<?= base_url('admin/notulen') ?>" class="flex w-full items-center gap-2 lg:w-72">
-                <?php if (! empty($currentStatus)): ?>
-                    <input type="hidden" name="status" value="<?= esc($currentStatus) ?>">
-                <?php endif; ?>
-                <div class="relative w-full">
-                    <input type="text" name="q" value="<?= esc($searchQuery) ?>" placeholder="Cari nama rekaman..." class="input input-sm input-bordered w-full pr-8" />
-                    <?php if (! empty($searchQuery)): ?>
-                        <a href="<?= base_url('admin/notulen' . (! empty($currentStatus) ? '?status=' . esc($currentStatus) : '')) ?>" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-base-content/40 hover:text-base-content">✕</a>
-                    <?php endif; ?>
-                </div>
-                <button type="submit" class="btn btn-square btn-sm btn-ghost" title="Cari">
-                    <i data-lucide="search" class="h-4 w-4"></i>
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- Tabel Daftar Notulen & Antrean -->
 <section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
-    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-3 sm:px-5">
-        <h2 class="card-title text-base font-bold">
+    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
+        <h2 class="card-title text-base">
             <i data-lucide="mic" class="h-5 w-5 text-primary"></i>
             Daftar Rekaman & Risalah Rapat
         </h2>
+        <span class="badge badge-ghost whitespace-nowrap"><?= count($jobs) ?> rekaman</span>
     </div>
 
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
-            <table class="table table-zebra table-md w-full">
+            <table class="notulen-table table table-zebra table-md w-full admin-data-table"
+                data-admin-datatable
+                data-dt-order='[[1,"desc"]]'
+                data-dt-col-filters='[{"column":2,"label":"Status AI"},{"column":3,"label":"Risalah"}]'>
                 <thead>
                     <tr class="bg-base-200">
-                        <th class="w-12 text-center">No</th>
-                        <th>Rapat & Rekaman</th>
-                        <th class="w-64">Status & Progres AI</th>
-                        <th>Status Risalah</th>
-                        <th class="text-right">Aksi</th>
+                        <th class="dt-row-number no-sort">No</th>
+                        <th>Rapat &amp; Rekaman</th>
+                        <th>Status AI</th>
+                        <th>Risalah</th>
+                        <th class="text-right no-sort">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($jobs)): ?>
-                        <tr>
-                            <td colspan="5" class="py-8 text-center text-sm text-base-content/60">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <i data-lucide="inbox" class="h-8 w-8 text-base-content/30"></i>
-                                    <span>Belum ada rekaman notulensi rapat. Silakan unggah file rekaman baru.</span>
+                    <?php foreach ($jobs as $job): ?>
+                        <?php
+                        $minutes      = $minutesMap[$job['id']] ?? null;
+                        $judulRapat   = ! empty($minutes['judul_rapat']) ? $minutes['judul_rapat'] : $job['audio_filename'];
+                        $tanggalRapat = ! empty($minutes['tanggal_rapat']) ? $minutes['tanggal_rapat'] : substr((string) $job['created_at'], 0, 10);
+                        $isInProgress = in_array($job['status'], ['chunking', 'transcribing', 'summarizing'], true);
+
+                        $statusLabel = match ($job['status']) {
+                            'completed'   => 'Selesai',
+                            'chunking'    => 'Memotong Audio',
+                            'transcribing'=> 'Transkripsi',
+                            'summarizing' => 'Menyusun Risalah',
+                            'queued'      => 'Antrean',
+                            'failed'      => 'Gagal',
+                            'cancelled'   => 'Dibatalkan',
+                            default       => ucfirst($job['status']),
+                        };
+                        ?>
+                        <tr class="transition-colors hover:bg-base-200/40">
+                            <td class="dt-row-number" data-label="No"></td>
+                            <td data-label="Rapat & Rekaman" data-order="<?= esc($tanggalRapat) ?>">
+                                <div class="font-bold text-base-content">
+                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="hover:text-primary hover:underline">
+                                        <?= esc($judulRapat) ?>
+                                    </a>
+                                </div>
+                                <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-base-content/60">
+                                    <span><?= esc(date('d/m/Y', strtotime($tanggalRapat))) ?></span>
+                                    <span>•</span>
+                                    <span class="font-mono"><?= esc($job['audio_filename']) ?></span>
+                                    <?php if ($job['audio_size'] > 0): ?>
+                                        <span>•</span>
+                                        <span><?= round($job['audio_size'] / (1024 * 1024), 1) ?> MB</span>
+                                    <?php endif; ?>
+                                    <?php if ($job['jadwal_type'] === 'banmus'): ?>
+                                        <span class="badge badge-secondary badge-xs">Banmus</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-primary badge-xs">Umum</span>
+                                    <?php endif; ?>
                                 </div>
                             </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($jobs as $idx => $job): ?>
-                            <?php
-                            $minutes = $minutesMap[$job['id']] ?? null;
-                            $judulRapat = ! empty($minutes['judul_rapat']) ? $minutes['judul_rapat'] : $job['audio_filename'];
-                            $tanggalRapat = ! empty($minutes['tanggal_rapat']) ? $minutes['tanggal_rapat'] : substr((string) $job['created_at'], 0, 10);
-                            $isInProgress = in_array($job['status'], ['chunking', 'transcribing', 'summarizing'], true);
-                            ?>
-                            <tr class="transition-colors hover:bg-base-200/40">
-                                <td class="text-center text-xs text-base-content/60">
-                                    <?= (int) ($idx + 1) ?>
-                                </td>
-                                <td>
-                                    <div class="font-bold text-base-content">
-                                        <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="hover:text-primary hover:underline">
-                                            <?= esc($judulRapat) ?>
-                                        </a>
+                            <td data-label="Status AI">
+                                <?php if ($job['status'] === 'completed'): ?>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="badge badge-success badge-sm font-semibold">Selesai</span>
+                                        <span class="text-xs text-base-content/60"><?= (int) $job['total_chunks'] ?> segmen</span>
                                     </div>
-                                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-base-content/60">
-                                        <span><?= esc($tanggalRapat) ?></span>
-                                        <span>•</span>
-                                        <span class="font-mono text-xs"><?= esc($job['audio_filename']) ?></span>
-                                        <?php if ($job['audio_size'] > 0): ?>
-                                            <span>•</span>
-                                            <span><?= round($job['audio_size'] / (1024 * 1024), 1) ?> MB</span>
-                                        <?php endif; ?>
-                                        <?php if ($job['jadwal_type'] === 'banmus'): ?>
-                                            <span class="badge badge-secondary badge-xs">Banmus</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-primary badge-xs">Umum</span>
+                                <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
+                                    <div class="space-y-1">
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="font-semibold <?= $job['status'] === 'queued' ? 'text-info' : 'text-warning' ?>">
+                                                <?= esc($statusLabel) ?>
+                                            </span>
+                                            <span class="font-mono"><?= (int) $job['progress_percent'] ?>%</span>
+                                        </div>
+                                        <progress class="progress <?= $job['status'] === 'queued' ? 'progress-info' : 'progress-warning' ?> w-full" value="<?= (int) $job['progress_percent'] ?>" max="100"></progress>
+                                        <div class="truncate text-[11px] text-base-content/60" title="<?= esc($job['current_step']) ?>">
+                                            <?= esc($job['current_step']) ?>
+                                        </div>
+                                    </div>
+                                <?php elseif ($job['status'] === 'failed'): ?>
+                                    <div>
+                                        <span class="badge badge-error badge-sm font-semibold">Gagal</span>
+                                        <?php if (! empty($job['error_message'])): ?>
+                                            <p class="mt-0.5 max-w-xs truncate text-[11px] text-error" title="<?= esc($job['error_message']) ?>">
+                                                <?= esc($job['error_message']) ?>
+                                            </p>
                                         <?php endif; ?>
                                     </div>
-                                </td>
-                                <td>
-                                    <?php if ($job['status'] === 'completed'): ?>
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="badge badge-success badge-sm font-semibold">Selesai</span>
-                                            <span class="text-xs text-base-content/60"><?= (int) $job['total_chunks'] ?> segmen</span>
-                                        </div>
-                                    <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
-                                        <div class="space-y-1">
-                                            <div class="flex items-center justify-between text-xs">
-                                                <span class="font-semibold <?= $job['status'] === 'queued' ? 'text-info' : 'text-warning' ?>">
-                                                    <?= $job['status'] === 'chunking' ? 'Memotong Audio' : ($job['status'] === 'transcribing' ? 'Transkripsi' : ($job['status'] === 'summarizing' ? 'Menyusun Risalah' : 'Dalam Antrean AI')) ?>
-                                                </span>
-                                                <span class="font-mono"><?= (int) $job['progress_percent'] ?>%</span>
-                                            </div>
-                                            <progress class="progress <?= $job['status'] === 'queued' ? 'progress-info' : 'progress-warning' ?> w-full" value="<?= (int) $job['progress_percent'] ?>" max="100"></progress>
-                                            <div class="truncate text-[11px] text-base-content/60" title="<?= esc($job['current_step']) ?>">
-                                                <?= esc($job['current_step']) ?>
-                                            </div>
-                                        </div>
-                                    <?php elseif ($job['status'] === 'failed'): ?>
-                                        <div>
-                                            <span class="badge badge-error badge-sm font-semibold">Gagal</span>
-                                            <?php if (! empty($job['error_message'])): ?>
-                                                <p class="mt-0.5 max-w-xs truncate text-[11px] text-error" title="<?= esc($job['error_message']) ?>">
-                                                    <?= esc($job['error_message']) ?>
-                                                </p>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php elseif ($job['status'] === 'cancelled'): ?>
-                                        <span class="badge badge-neutral badge-sm font-semibold">Dibatalkan</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
-                                        <?php if ($minutes['status_verifikasi'] === 'final'): ?>
-                                            <span class="badge badge-success badge-sm gap-1">
-                                                <i data-lucide="check-check" class="h-3 w-3"></i> Final
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge badge-warning badge-sm gap-1">
-                                                <i data-lucide="file-edit" class="h-3 w-3"></i> Draft
-                                            </span>
-                                        <?php endif; ?>
+                                <?php elseif ($job['status'] === 'cancelled'): ?>
+                                    <span class="badge badge-neutral badge-sm font-semibold">Dibatalkan</span>
+                                <?php endif; ?>
+                            </td>
+                            <td data-label="Risalah">
+                                <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
+                                    <?php if ($minutes['status_verifikasi'] === 'final'): ?>
+                                        <span class="badge badge-success badge-sm gap-1">
+                                            <i data-lucide="check-check" class="h-3 w-3"></i> Final
+                                        </span>
                                     <?php else: ?>
-                                        <span class="text-xs text-base-content/40">-</span>
+                                        <span class="badge badge-warning badge-sm gap-1">
+                                            <i data-lucide="file-edit" class="h-3 w-3"></i> Draft
+                                        </span>
                                     <?php endif; ?>
-                                </td>
-                                <td class="text-right">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="btn btn-ghost btn-xs gap-1" title="Buka Detail">
-                                            <i data-lucide="eye" class="h-3.5 w-3.5"></i>
-                                            Buka
-                                        </a>
+                                <?php else: ?>
+                                    <span class="text-xs text-base-content/40">—</span>
+                                <?php endif; ?>
+                            </td>
+                            <td data-label="Aksi">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="btn btn-ghost btn-xs gap-1" title="Buka Detail">
+                                        <i data-lucide="eye" class="h-3.5 w-3.5"></i>
+                                        Buka
+                                    </a>
 
-                                        <div class="dropdown dropdown-end">
-                                            <button tabindex="0" class="btn btn-ghost btn-xs btn-square">
-                                                <i data-lucide="more-vertical" class="h-4 w-4"></i>
-                                            </button>
-                                            <ul tabindex="0" class="dropdown-content menu rounded-box z-10 w-48 bg-base-100 p-2 shadow-lg border border-base-300 text-xs">
-                                                <?php if (in_array($job['status'], ['failed', 'cancelled'], true)): ?>
-                                                    <li>
-                                                        <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
-                                                            <?= csrf_field() ?>
-                                                            <button type="submit" class="text-primary gap-2">
-                                                                <i data-lucide="rotate-cw" class="h-3.5 w-3.5"></i> Proses Ulang (Resume)
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                <?php endif; ?>
-
-                                                <?php if ($isInProgress || $job['status'] === 'queued'): ?>
-                                                    <li>
-                                                        <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan proses job ini?')">
-                                                            <?= csrf_field() ?>
-                                                            <button type="submit" class="text-warning gap-2">
-                                                                <i data-lucide="ban" class="h-3.5 w-3.5"></i> Batalkan Proses
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                <?php endif; ?>
-
-                                                <?php if ($job['status'] === 'completed'): ?>
-                                                    <li>
-                                                        <form method="post" action="<?= base_url('admin/notulen/delete-audio/' . $job['id']) ?>" onsubmit="return confirm('Hapus berkas audio rekaman untuk menghemat ruang disk? Transkrip dan risalah tetap tersimpan.')">
-                                                            <?= csrf_field() ?>
-                                                            <button type="submit" class="text-base-content/80 gap-2">
-                                                                <i data-lucide="trash" class="h-3.5 w-3.5"></i> Bersihkan Audio Lokal
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                <?php endif; ?>
-
+                                    <div class="dropdown dropdown-end">
+                                        <button tabindex="0" class="btn btn-ghost btn-xs btn-square">
+                                            <i data-lucide="more-vertical" class="h-4 w-4"></i>
+                                        </button>
+                                        <ul tabindex="0" class="dropdown-content menu rounded-box z-10 w-48 border border-base-300 bg-base-100 p-2 text-xs shadow-lg">
+                                            <?php if (in_array($job['status'], ['failed', 'cancelled'], true)): ?>
                                                 <li>
-                                                    <form method="post" action="<?= base_url('admin/notulen/destroy/' . $job['id']) ?>" onsubmit="return confirm('Hapus permanen notulen rapat ini beserta seluruh transkrip dan berkasnya?')">
+                                                    <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
                                                         <?= csrf_field() ?>
-                                                        <button type="submit" class="text-error gap-2">
-                                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Hapus Permanen
+                                                        <button type="submit" class="gap-2 text-primary">
+                                                            <i data-lucide="rotate-cw" class="h-3.5 w-3.5"></i> Proses Ulang (Resume)
                                                         </button>
                                                     </form>
                                                 </li>
-                                            </ul>
-                                        </div>
+                                            <?php endif; ?>
+
+                                            <?php if ($isInProgress || $job['status'] === 'queued'): ?>
+                                                <li>
+                                                    <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>"
+                                                        data-confirm-message="Batalkan proses AI untuk rekaman ini?">
+                                                        <?= csrf_field() ?>
+                                                        <button type="submit" class="gap-2 text-warning">
+                                                            <i data-lucide="ban" class="h-3.5 w-3.5"></i> Batalkan Proses
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            <?php endif; ?>
+
+                                            <?php if ($job['status'] === 'completed'): ?>
+                                                <li>
+                                                    <form method="post" action="<?= base_url('admin/notulen/delete-audio/' . $job['id']) ?>"
+                                                        data-confirm-message="Hapus berkas audio lokal? Transkrip dan risalah tetap tersimpan.">
+                                                        <?= csrf_field() ?>
+                                                        <button type="submit" class="gap-2 text-base-content/80">
+                                                            <i data-lucide="trash" class="h-3.5 w-3.5"></i> Bersihkan Audio Lokal
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            <?php endif; ?>
+
+                                            <li>
+                                                <form method="post" action="<?= base_url('admin/notulen/destroy/' . $job['id']) ?>"
+                                                    data-confirm-message="Hapus permanen notulen ini beserta seluruh transkrip dan berkasnya?">
+                                                    <?= csrf_field() ?>
+                                                    <button type="submit" class="gap-2 text-error">
+                                                        <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Hapus Permanen
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
                                     </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-
-        <?php if ($pager): ?>
-            <div class="border-t border-base-300 p-4">
-                <?= $pager->links('default', 'default_full') ?>
-            </div>
-        <?php endif; ?>
     </div>
 </section>
 
