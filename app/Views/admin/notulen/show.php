@@ -4,16 +4,32 @@
 
 <?php
 $isInProgress = in_array($job['status'], ['chunking', 'transcribing', 'summarizing'], true);
-$judulRapat = ! empty($minutes['judul_rapat']) ? $minutes['judul_rapat'] : $job['audio_filename'];
+$judulRapat   = ! empty($minutes['judul_rapat']) ? $minutes['judul_rapat'] : $job['audio_filename'];
 $tanggalRapat = ! empty($minutes['tanggal_rapat']) ? $minutes['tanggal_rapat'] : substr((string) $job['created_at'], 0, 10);
-$durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 60) : null;
+$durationMin  = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 60) : null;
+
+// Terjemahan label status AI (selaraskan dengan STATUS_LABELS di JS)
+$statusLabels = [
+    'queued'      => 'Dalam Antrean',
+    'chunking'    => 'Memotong Audio',
+    'transcribing'=> 'Transkripsi Berjalan',
+    'summarizing' => 'Menyusun Risalah',
+    'completed'   => 'Selesai',
+    'failed'      => 'Gagal',
+    'cancelled'   => 'Dibatalkan',
+];
+$statusLabel = $statusLabels[$job['status']] ?? strtoupper($job['status']);
+$isCompleted = $job['status'] === 'completed';
 ?>
 
 <!-- Header Halaman & Aksi -->
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
     <div class="flex min-w-0 items-start gap-2">
-        <a href="<?= base_url('admin/notulen') ?>" class="btn btn-ghost btn-sm btn-square shrink-0" title="Kembali ke daftar notulen">
+        <a href="<?= base_url('admin/notulen') ?>"
+           class="btn btn-ghost btn-sm shrink-0 gap-1.5"
+           title="Kembali ke daftar notulen">
             <i data-lucide="arrow-left" class="h-4 w-4"></i>
+            <span class="hidden sm:inline">Kembali</span>
         </a>
         <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
@@ -50,13 +66,13 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
             </a>
 
             <?php if ($minutes['status_verifikasi'] !== 'final'): ?>
-                <form method="post" action="<?= base_url('admin/notulen/finalize/' . $minutes['id']) ?>" onsubmit="return confirm('Finalisasi risalah rapat? Risalah yang sudah final akan dapat dibaca langsung oleh anggota dewan melalui aplikasi mobile.')">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-success btn-sm gap-1.5 text-white">
-                        <i data-lucide="check-circle" class="h-4 w-4"></i>
-                        Finalisasi Risalah
-                    </button>
-                </form>
+                <!-- Tombol pemicu modal Finalisasi -->
+                <button type="button"
+                        class="btn btn-success btn-sm gap-1.5 text-white"
+                        onclick="document.getElementById('modal_finalisasi').showModal()">
+                    <i data-lucide="check-circle" class="h-4 w-4"></i>
+                    Finalisasi Risalah
+                </button>
             <?php endif; ?>
         <?php endif; ?>
 
@@ -69,16 +85,77 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
     </div>
 </div>
 
-<!-- Widget Pemantau Progres Real-time & Live Log (Selalu Ditampilkan) -->
-<div id="live_progress_card" class="card card-border mb-5 bg-base-100 shadow-sm <?= $job['status'] === 'completed' ? 'border-success/40' : ($job['status'] === 'failed' ? 'border-error/40' : ($job['status'] === 'cancelled' ? 'border-neutral/40' : 'border-warning/40')) ?>">
+<!-- Modal Konfirmasi Finalisasi Risalah -->
+<?php if ($minutes && ! empty($minutes['id']) && ($minutes['status_verifikasi'] !== 'final')): ?>
+<dialog id="modal_finalisasi" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box max-w-md">
+        <!-- Header Modal -->
+        <div class="flex items-start gap-3 mb-4">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-warning/15 flex items-center justify-center">
+                <i data-lucide="alert-triangle" class="h-5 w-5 text-warning"></i>
+            </div>
+            <div class="min-w-0">
+                <h3 class="font-bold text-base leading-snug">Finalisasi Risalah Rapat?</h3>
+                <p class="text-xs text-base-content/60 mt-0.5">Tindakan ini tidak dapat dibatalkan</p>
+            </div>
+        </div>
+
+        <!-- Peringatan -->
+        <div class="bg-warning/10 border border-warning/30 rounded-lg p-3.5 mb-4 text-sm space-y-1.5">
+            <p class="font-semibold text-sm text-base-content">Setelah difinalisasi:</p>
+            <ul class="space-y-1 text-xs text-base-content/80 list-none">
+                <li class="flex items-start gap-2">
+                    <i data-lucide="smartphone" class="h-3.5 w-3.5 text-warning shrink-0 mt-0.5"></i>
+                    Risalah akan langsung <strong>dapat dibaca oleh anggota dewan</strong> melalui aplikasi mobile
+                </li>
+                <li class="flex items-start gap-2">
+                    <i data-lucide="lock" class="h-3.5 w-3.5 text-warning shrink-0 mt-0.5"></i>
+                    Dokumen akan <strong>dikunci sebagai catatan resmi</strong> dan tidak dapat diedit kembali
+                </li>
+                <li class="flex items-start gap-2">
+                    <i data-lucide="x-circle" class="h-3.5 w-3.5 text-warning shrink-0 mt-0.5"></i>
+                    Proses ini <strong>tidak dapat dibatalkan</strong> setelah dikonfirmasi
+                </li>
+            </ul>
+        </div>
+
+        <!-- Nama Rapat yang akan difinalisasi -->
+        <div class="bg-base-200 rounded-lg p-3 mb-5 text-xs">
+            <span class="text-base-content/50 block mb-1">Risalah yang akan difinalisasi:</span>
+            <span class="font-semibold text-sm"><?= esc($judulRapat) ?></span>
+        </div>
+
+        <!-- Tombol Aksi -->
+        <div class="modal-action mt-0 gap-2">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal_finalisasi').close()">
+                Batal, Tinjau Kembali
+            </button>
+            <form method="post" action="<?= base_url('admin/notulen/finalize/' . $minutes['id']) ?>">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-success btn-sm gap-1.5 text-white">
+                    <i data-lucide="check-circle" class="h-4 w-4"></i>
+                    Ya, Finalisasi Sekarang
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- Klik luar modal untuk menutup -->
+    <form method="dialog" class="modal-backdrop">
+        <button>tutup</button>
+    </form>
+</dialog>
+<?php endif; ?>
+
+<!-- Widget Pemantau Progres Real-time & Live Log -->
+<?php if (! $isCompleted): ?>
+<!-- Status card penuh: ditampilkan saat proses masih berjalan / antrean / gagal / dibatalkan -->
+<div id="live_progress_card" class="card card-border mb-5 bg-base-100 shadow-sm <?= $job['status'] === 'failed' ? 'border-error/40' : ($job['status'] === 'cancelled' ? 'border-neutral/40' : 'border-warning/40') ?>">
     <div class="card-body p-4 sm:p-5">
         <div class="flex flex-col gap-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <?php if ($isInProgress || $job['status'] === 'queued'): ?>
                         <span class="loading loading-spinner loading-sm text-warning"></span>
-                    <?php elseif ($job['status'] === 'completed'): ?>
-                        <i data-lucide="check-circle-2" class="h-5 w-5 text-success"></i>
                     <?php elseif ($job['status'] === 'failed'): ?>
                         <i data-lucide="alert-triangle" class="h-5 w-5 text-error"></i>
                     <?php else: ?>
@@ -86,13 +163,17 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                     <?php endif; ?>
 
                     <span class="font-bold text-sm text-base-content" id="live_status_title">
-                        <?= $job['status'] === 'completed' ? 'Transkripsi & Risalah Selesai' : ($job['status'] === 'failed' ? 'Pemrosesan Mengalami Kendala' : ($job['status'] === 'cancelled' ? 'Proses Dibatalkan' : ($job['status'] === 'chunking' ? 'Memotong Audio Rekaman...' : ($job['status'] === 'transcribing' ? 'Transkripsi Audio Berjalan...' : ($job['status'] === 'summarizing' ? 'Menyusun Risalah Rapat...' : 'Dalam Antrean Pemrosesan...'))))) ?>
+                        <?= $job['status'] === 'failed' ? 'Pemrosesan Mengalami Kendala' : ($job['status'] === 'cancelled' ? 'Proses Dibatalkan' : ($job['status'] === 'chunking' ? 'Memotong Audio Rekaman...' : ($job['status'] === 'transcribing' ? 'Transkripsi Audio Berjalan...' : ($job['status'] === 'summarizing' ? 'Menyusun Risalah Rapat...' : 'Dalam Antrean Pemrosesan...')))) ?>
                     </span>
                 </div>
-                <span class="font-mono font-bold text-sm <?= $job['status'] === 'completed' ? 'text-success' : ($job['status'] === 'failed' ? 'text-error' : 'text-warning') ?>" id="live_progress_percent"><?= (int) $job['progress_percent'] ?>%</span>
+                <span class="font-mono font-bold text-sm <?= $job['status'] === 'failed' ? 'text-error' : 'text-warning' ?>" id="live_progress_percent"><?= (int) $job['progress_percent'] ?>%</span>
             </div>
 
-            <progress id="live_progress_bar" class="progress <?= $job['status'] === 'completed' ? 'progress-success' : ($job['status'] === 'failed' ? 'progress-error' : ($job['status'] === 'cancelled' ? 'progress-neutral' : 'progress-warning')) ?> w-full h-2.5" value="<?= (int) $job['progress_percent'] ?>" max="100"></progress>
+            <progress id="live_progress_bar"
+                      class="progress <?= $job['status'] === 'failed' ? 'progress-error' : ($job['status'] === 'cancelled' ? 'progress-neutral' : 'progress-warning') ?> w-full h-2.5"
+                      value="<?= (int) $job['progress_percent'] ?>"
+                      max="100"
+                      aria-label="Progres pemrosesan AI: <?= (int) $job['progress_percent'] ?>%"></progress>
 
             <div class="flex items-center justify-between text-xs text-base-content/60">
                 <span id="live_current_step" class="truncate"><?= esc($job['current_step']) ?: '-' ?></span>
@@ -108,22 +189,42 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                         <span id="live_log_dot" class="h-2 w-2 rounded-full <?= $isInProgress || $job['status'] === 'queued' ? 'bg-warning animate-pulse' : ($job['status'] === 'completed' ? 'bg-success' : 'bg-error') ?>"></span>
                         LOG AKTIVITAS PROSES AI
                     </span>
-                    <span id="live_log_time" class="font-mono"><?= date('H:i:s') ?> WITA</span>
+                    <span id="live_log_time" class="font-mono">-- : -- : --</span>
                 </div>
-                <div id="live_log_stream" class="space-y-1 pt-1 max-h-32 overflow-y-auto leading-relaxed text-[11.5px]">
-                    <div class="text-neutral-content/60">[<?= date('H:i:s') ?>] Berkas: <?= esc($job['audio_filename']) ?> (<?= round($job['audio_size'] / (1024 * 1024), 2) ?> MB)</div>
-                    <?php if ($job['status'] === 'completed'): ?>
-                        <div class="text-success">[<?= date('H:i:s') ?>] Transkripsi <?= (int) $job['total_chunks'] ?> segmen dan risalah selesai.</div>
-                    <?php elseif ($job['status'] === 'failed'): ?>
-                        <div class="text-error">[<?= date('H:i:s') ?>] Error: <?= esc($job['error_message'] ?? 'Proses gagal.') ?></div>
+                <div id="live_log_stream"
+                     class="space-y-1 pt-1 max-h-32 overflow-y-auto leading-relaxed text-[11.5px]"
+                     role="log"
+                     aria-live="polite"
+                     aria-label="Log aktivitas proses AI">
+                    <div class="text-neutral-content/60 flex items-start gap-1.5">
+                        <span class="shrink-0 text-neutral-content/40">[--:--:--]</span>
+                        <span>Berkas: <?= esc($job['audio_filename']) ?> (<?= round($job['audio_size'] / (1024 * 1024), 2) ?> MB)</span>
+                    </div>
+                    <?php if ($job['status'] === 'failed'): ?>
+                        <div class="text-error flex items-start gap-1.5">
+                            <span class="shrink-0">⚠</span>
+                            <span>Error: <?= esc($job['error_message'] ?? 'Proses gagal.') ?></span>
+                        </div>
                     <?php elseif (! empty($job['current_step'])): ?>
-                        <div class="text-info">[<?= date('H:i:s') ?>] <?= esc($job['current_step']) ?></div>
+                        <div class="text-info flex items-start gap-1.5">
+                            <span class="shrink-0">›</span>
+                            <span><?= esc($job['current_step']) ?></span>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<?php else: ?>
+<!-- Strip ringkas status selesai: ditampilkan saat job completed -->
+<div id="live_progress_card" class="flex items-center gap-3 bg-success/8 border border-success/25 rounded-xl px-4 py-3 mb-5 text-sm">
+    <i data-lucide="check-circle-2" class="h-5 w-5 text-success shrink-0"></i>
+    <span class="font-semibold text-success">Transkripsi & Risalah Selesai</span>
+    <span class="text-base-content/50 text-xs ml-auto font-mono"><?= (int) $job['progress_percent'] ?>%
+        · <?= (int) $job['total_chunks'] ?> segmen</span>
+</div>
+<?php endif; ?>
 
 <!-- Grid Metadata & Konten Utama -->
 <div class="grid grid-cols-1 gap-5 lg:grid-cols-4">
@@ -153,8 +254,8 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                     </div>
                     <div>
                         <span class="block text-base-content/50">Status AI:</span>
-                        <span class="badge badge-sm mt-1 <?= $job['status'] === 'completed' ? 'badge-success' : ($isInProgress ? 'badge-warning' : ($job['status'] === 'failed' ? 'badge-error' : 'badge-neutral')) ?>">
-                            <?= esc(strtoupper($job['status'])) ?>
+                        <span class="badge badge-sm mt-1 <?= $job['status'] === 'completed' ? 'badge-success' : ($isInProgress ? 'badge-warning' : ($job['status'] === 'failed' ? 'badge-error' : ($job['status'] === 'queued' ? 'badge-info' : 'badge-neutral'))) ?>">
+                            <?= esc($statusLabel) ?>
                         </span>
                     </div>
                 </div>
@@ -165,7 +266,7 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-primary btn-sm w-full gap-1.5">
                                 <i data-lucide="rotate-cw" class="h-4 w-4"></i>
-                                Proses Ulang (Resume)
+                                Proses Ulang
                             </button>
                         </form>
                     </div>
@@ -180,7 +281,13 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
             <!-- Tab Headers -->
             <div class="border-b border-base-300 px-4 pt-3">
                 <div role="tablist" class="tabs tabs-bordered font-semibold text-sm">
-                    <input type="radio" name="notulen_tabs" role="tab" class="tab gap-2" aria-label="Draft Risalah Rapat" checked />
+                    <input type="radio" name="notulen_tabs" role="tab" class="tab gap-2"
+                           aria-label="Draft Risalah Rapat" checked />
+                    <label class="tab gap-2 pointer-events-none select-none" aria-hidden="true">
+                        <i data-lucide="file-text" class="h-3.5 w-3.5"></i>
+                        Draft Risalah
+                    </label>
+
                     <div role="tabpanel" class="tab-content py-5">
                         <!-- Form Editor Risalah -->
                         <?php if ($minutes && ! empty($minutes['id'])): ?>
@@ -211,7 +318,7 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                                 <!-- Agenda Pembahasan -->
                                 <div class="form-control">
                                     <label class="label">
-                                        <span class="label-text font-bold text-xs">Agenda & Pokok Pembahasan (JSON / Butir)</span>
+                                        <span class="label-text font-bold text-xs">Agenda &amp; Pokok Pembahasan</span>
                                     </label>
                                     <div class="space-y-3">
                                         <?php if (! empty($agendaItems)): ?>
@@ -227,14 +334,28 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                                                 </div>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
-                                        <textarea name="agenda_pembahasan" rows="4" class="textarea textarea-bordered w-full text-xs font-mono" placeholder="Edit data mentah JSON agenda pembahasan..."><?= esc($minutes['agenda_pembahasan']) ?></textarea>
+
+                                        <!-- Raw JSON tersembunyi di balik toggle -->
+                                        <details class="group">
+                                            <summary class="flex cursor-pointer select-none items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content/80 transition-colors w-fit">
+                                                <i data-lucide="code-2" class="h-3.5 w-3.5 shrink-0"></i>
+                                                <span>Edit data mentah (JSON)</span>
+                                                <i data-lucide="chevron-right" class="h-3 w-3 shrink-0 transition-transform group-open:rotate-90"></i>
+                                            </summary>
+                                            <div class="mt-2">
+                                                <textarea name="agenda_pembahasan" rows="4"
+                                                          class="textarea textarea-bordered w-full text-xs font-mono"
+                                                          placeholder='[{"topik":"...","pembicara":"...","uraian":"..."}]'><?= esc($minutes['agenda_pembahasan']) ?></textarea>
+                                                <p class="text-[10px] text-base-content/40 mt-1">Format JSON array. Perubahan di sini akan menimpa tampilan di atas setelah disimpan.</p>
+                                            </div>
+                                        </details>
                                     </div>
                                 </div>
 
                                 <!-- Kesimpulan / Keputusan -->
                                 <div class="form-control">
                                     <label class="label">
-                                        <span class="label-text font-bold text-xs">Kesimpulan & Keputusan Rapat</span>
+                                        <span class="label-text font-bold text-xs">Kesimpulan &amp; Keputusan Rapat</span>
                                     </label>
                                     <?php if (! empty($kesimpulanItems)): ?>
                                         <ul class="list-disc list-inside space-y-1 mb-2 text-xs text-base-content/90 bg-base-200/40 p-3 rounded-lg">
@@ -243,13 +364,27 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                                             <?php endforeach; ?>
                                         </ul>
                                     <?php endif; ?>
-                                    <textarea name="kesimpulan" rows="4" class="textarea textarea-bordered w-full text-xs font-mono" placeholder="JSON atau teks poin kesimpulan..."><?= esc($minutes['kesimpulan']) ?></textarea>
+
+                                    <!-- Raw JSON tersembunyi di balik toggle -->
+                                    <details class="group">
+                                        <summary class="flex cursor-pointer select-none items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content/80 transition-colors w-fit">
+                                            <i data-lucide="code-2" class="h-3.5 w-3.5 shrink-0"></i>
+                                            <span>Edit data mentah (JSON)</span>
+                                            <i data-lucide="chevron-right" class="h-3 w-3 shrink-0 transition-transform group-open:rotate-90"></i>
+                                        </summary>
+                                        <div class="mt-2">
+                                            <textarea name="kesimpulan" rows="4"
+                                                      class="textarea textarea-bordered w-full text-xs font-mono"
+                                                      placeholder='["Poin kesimpulan pertama","Poin kesimpulan kedua"]'><?= esc($minutes['kesimpulan']) ?></textarea>
+                                            <p class="text-[10px] text-base-content/40 mt-1">Format JSON array of strings.</p>
+                                        </div>
+                                    </details>
                                 </div>
 
                                 <!-- Tindak Lanjut / Rekomendasi -->
                                 <div class="form-control">
                                     <label class="label">
-                                        <span class="label-text font-bold text-xs">Rekomendasi & Rencana Tindak Lanjut</span>
+                                        <span class="label-text font-bold text-xs">Rekomendasi &amp; Rencana Tindak Lanjut</span>
                                     </label>
                                     <?php if (! empty($tindakLanjutItems)): ?>
                                         <ul class="list-disc list-inside space-y-1 mb-2 text-xs text-base-content/90 bg-base-200/40 p-3 rounded-lg">
@@ -258,7 +393,21 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                                             <?php endforeach; ?>
                                         </ul>
                                     <?php endif; ?>
-                                    <textarea name="tindak_lanjut" rows="4" class="textarea textarea-bordered w-full text-xs font-mono" placeholder="JSON atau teks poin tindak lanjut..."><?= esc($minutes['tindak_lanjut']) ?></textarea>
+
+                                    <!-- Raw JSON tersembunyi di balik toggle -->
+                                    <details class="group">
+                                        <summary class="flex cursor-pointer select-none items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content/80 transition-colors w-fit">
+                                            <i data-lucide="code-2" class="h-3.5 w-3.5 shrink-0"></i>
+                                            <span>Edit data mentah (JSON)</span>
+                                            <i data-lucide="chevron-right" class="h-3 w-3 shrink-0 transition-transform group-open:rotate-90"></i>
+                                        </summary>
+                                        <div class="mt-2">
+                                            <textarea name="tindak_lanjut" rows="4"
+                                                      class="textarea textarea-bordered w-full text-xs font-mono"
+                                                      placeholder='["Tindak lanjut pertama","Tindak lanjut kedua"]'><?= esc($minutes['tindak_lanjut']) ?></textarea>
+                                            <p class="text-[10px] text-base-content/40 mt-1">Format JSON array of strings.</p>
+                                        </div>
+                                    </details>
                                 </div>
 
                                 <!-- Tombol Simpan -->
@@ -277,8 +426,17 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                         <?php endif; ?>
                     </div>
 
-                    <!-- Tab 2: Transkrip Percakapan Mentah (Segmented by 30-min Chunks) -->
-                    <input type="radio" name="notulen_tabs" role="tab" class="tab gap-2" aria-label="Transkrip Percakapan (<?= (int) ($transcripts['total_chunks'] ?? 0) ?> Bagian)" />
+                    <!-- Tab 2: Transkrip Percakapan -->
+                    <input type="radio" name="notulen_tabs" role="tab" class="tab gap-2"
+                           aria-label="Transkrip Percakapan (<?= (int) ($transcripts['total_chunks'] ?? 0) ?> Bagian)" />
+                    <label class="tab gap-2 pointer-events-none select-none" aria-hidden="true">
+                        <i data-lucide="mic" class="h-3.5 w-3.5"></i>
+                        Transkrip
+                        <?php if (! empty($transcripts['total_chunks'])): ?>
+                            <span class="badge badge-ghost badge-xs"><?= (int) $transcripts['total_chunks'] ?></span>
+                        <?php endif; ?>
+                    </label>
+
                     <div role="tabpanel" class="tab-content py-5">
                         <?php if (empty($transcripts['chunks'])): ?>
                             <div class="py-12 text-center text-sm text-base-content/60">
@@ -315,40 +473,56 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
     </div>
 </div>
 
-<!-- Script Polling Real-time & Live Log (selalu dimuat, cek via JS) -->
-
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script {csp-script-nonce}>
 (function() {
-    var JOB_ID = <?= (int) $job['id'] ?>;
-    var STATUS_URL = '<?= base_url('admin/notulen/status/') ?>' + JOB_ID;
+    var JOB_ID        = <?= (int) $job['id'] ?>;
+    var STATUS_URL    = '<?= base_url('admin/notulen/status/') ?>' + JOB_ID;
     var INITIAL_STATUS = '<?= esc($job['status']) ?>';
-    var POLL_MS = 3500;
-    var ACTIVE = ['queued', 'chunking', 'transcribing', 'summarizing'];
-    var lastStep = '<?= esc($job['current_step'] ?? '', 'js') ?>';
-    var timerId = null;
+    var POLL_MS       = 3500;
+    var ACTIVE        = ['queued', 'chunking', 'transcribing', 'summarizing'];
+    var lastStep      = '<?= esc($job['current_step'] ?? '', 'js') ?>';
+    var timerId       = null;
 
     var STATUS_LABELS = {
-        chunking: 'Memotong Audio Rekaman...',
+        chunking:     'Memotong Audio Rekaman...',
         transcribing: 'Transkripsi Audio Berjalan...',
-        summarizing: 'Menyusun Risalah Rapat...',
-        completed: 'Transkripsi & Risalah Selesai',
-        failed: 'Pemrosesan Mengalami Kendala',
-        cancelled: 'Proses Dibatalkan'
+        summarizing:  'Menyusun Risalah Rapat...',
+        completed:    'Transkripsi & Risalah Selesai',
+        failed:       'Pemrosesan Mengalami Kendala',
+        cancelled:    'Proses Dibatalkan'
     };
+
+    // Tampilkan waktu nyata di console header saat halaman dimuat
+    var logTimeEl = document.getElementById('live_log_time');
+    if (logTimeEl) {
+        logTimeEl.textContent = new Date().toLocaleTimeString('id-ID', { hour12: false }) + ' WITA';
+    }
+
+    // Setel timestamp awal pada entri log pertama
+    var firstLogs = document.querySelectorAll('#live_log_stream [class*="--:--:--"], #live_log_stream span:first-child');
+    document.querySelectorAll('#live_log_stream .shrink-0').forEach(function(el) {
+        if (el.textContent.trim() === '[--:--:--]') {
+            el.textContent = '[' + new Date().toLocaleTimeString('id-ID', { hour12: false }) + ']';
+        }
+    });
 
     function timeStr() {
         return new Date().toLocaleTimeString('id-ID', { hour12: false });
     }
 
-    function addLog(msg, cls) {
+    // prefix: '›' info, '✓' sukses, '⚠' peringatan/error
+    function addLog(msg, cls, prefix) {
         var el = document.getElementById('live_log_stream');
         if (!el) return;
         var d = document.createElement('div');
-        d.className = cls || 'text-warning';
-        d.textContent = '[' + timeStr() + '] ' + msg;
+        d.className = (cls || 'text-warning') + ' flex items-start gap-1.5';
+        d.innerHTML =
+            '<span class="shrink-0">[' + timeStr() + ']</span>' +
+            '<span class="shrink-0">' + (prefix || '›') + '</span>' +
+            '<span>' + msg + '</span>';
         el.appendChild(d);
         el.scrollTop = el.scrollHeight;
     }
@@ -365,23 +539,27 @@ $durationMin = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 
                 var step   = document.getElementById('live_current_step');
                 var chunks = document.getElementById('live_chunk_info');
                 var title  = document.getElementById('live_status_title');
+                var logTime = document.getElementById('live_log_time');
 
-                if (pct)    pct.textContent    = d.progress_percent + '%';
-                if (bar)    bar.value          = d.progress_percent;
-                if (step)   step.textContent   = d.current_step || '-';
-                if (chunks) chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
+                if (pct)     pct.textContent     = d.progress_percent + '%';
+                if (bar)     { bar.value = d.progress_percent; bar.setAttribute('aria-label', 'Progres pemrosesan AI: ' + d.progress_percent + '%'); }
+                if (step)    step.textContent    = d.current_step || '-';
+                if (chunks)  chunks.textContent  = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
                 if (title && STATUS_LABELS[d.status]) title.textContent = STATUS_LABELS[d.status];
+                if (logTime) logTime.textContent = timeStr() + ' WITA';
 
                 if (d.current_step && d.current_step !== lastStep) {
                     lastStep = d.current_step;
-                    addLog(d.current_step + ' (' + d.progress_percent + '%)', 'text-warning');
+                    addLog(d.current_step + ' (' + d.progress_percent + '%)', 'text-warning', '›');
                 }
 
                 if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
                     clearInterval(timerId);
                     timerId = null;
-                    var cls = d.status === 'completed' ? 'text-success font-bold' : 'text-error font-bold';
-                    addLog('Proses ' + d.status.toUpperCase() + '! Memuat ulang halaman...', cls);
+                    var isOk  = d.status === 'completed';
+                    var cls   = isOk ? 'text-success font-bold' : 'text-error font-bold';
+                    var pfx   = isOk ? '✓' : '⚠';
+                    addLog('Proses ' + (STATUS_LABELS[d.status] || d.status) + '. Memuat ulang...', cls, pfx);
                     setTimeout(function() { window.location.reload(); }, 1500);
                 }
             })
