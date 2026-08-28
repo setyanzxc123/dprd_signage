@@ -50,6 +50,63 @@ export async function deleteFromFilesApi(fileResource) {
 }
 
 /**
+ * Memvalidasi hasil teks transkrip dari model AI.
+ * Melempar Error jika transkrip tidak memenuhi syarat kualitas (hard fail).
+ * Mencatat peringatan jika ada indikasi masalah ringan (soft warn).
+ *
+ * @param {string} text          Teks transkrip yang sudah di-trim
+ * @param {string} chunkNum      Label chunk untuk pesan log (misal "001")
+ * @param {number} minWords      Minimum jumlah kata yang diharapkan
+ * @param {Function} onLog       Callback log
+ * @throws {Error}               Jika validasi hard-fail tidak terpenuhi
+ */
+function validateTranscriptQuality(text, chunkNum, minWords, onLog) {
+  const words = text.split(/\s+/).filter(Boolean).length;
+
+  // --- Hard fail 1: Densitas kata terlalu rendah ---
+  // Indikasi: model mengembalikan output sangat singkat, mungkin hanya
+  // konfirmasi, pernyataan error, atau audio tidak terbaca.
+  if (words < minWords) {
+    throw new Error(
+      `Transkrip chunk_${chunkNum} terlalu pendek: ${words} kata (minimum ${minWords} kata). ` +
+      `Kemungkinan output terpotong atau audio tidak dapat ditranskripsikan.`
+    );
+  }
+
+  // --- Hard fail 2: Tidak ada struktur (tidak ada newline DAN tidak ada label speaker) ---
+  // Indikasi: model mengabaikan format prompt dan mengembalikan satu blok
+  // teks panjang tanpa pembagian pembicara — tidak berguna untuk risalah.
+  const hasNewlines = text.includes('\n');
+  const hasSpeakerLabel = /\[.+?\]/.test(text);
+  if (!hasNewlines && !hasSpeakerLabel) {
+    throw new Error(
+      `Transkrip chunk_${chunkNum} tidak berstruktur: tidak ada newline atau label speaker. ` +
+      `Model mengabaikan format prompt diarization.`
+    );
+  }
+
+  // --- Soft warn: Kemungkinan terpotong di tengah kalimat ---
+  // Periksa hanya jika teks cukup panjang agar tidak false-positive pada
+  // transkrip pendek yang memang berakhir natural.
+  if (text.length >= config.validation.abruptCutMinLength) {
+    const tail = text.slice(-150);
+    const endsAbruptly = !/[.!?\]"']/.test(tail);
+    if (endsAbruptly) {
+      onLog(
+        `[Transcribe] Peringatan: chunk_${chunkNum} mungkin terpotong di tengah kalimat ` +
+        `(tidak ada tanda baca penutup di 150 karakter terakhir).`
+      );
+    }
+  }
+
+  onLog(
+    `[Transcribe] Validasi chunk_${chunkNum} lulus: ${words} kata, ` +
+    `${hasNewlines ? 'ada newline' : 'tanpa newline'}, ` +
+    `${hasSpeakerLabel ? 'ada label speaker' : 'tanpa label speaker'}.`
+  );
+}
+
+/**
  * Menjalankan transkripsi audio per chunk dengan rantai model fallback (Primary -> Fallbacks)
  * dan proteksi penulisan atomik (.part -> rename).
  *
@@ -79,12 +136,22 @@ export async function transcribeChunkWithFallback({
     fs.mkdirSync(transcriptsDir, { recursive: true });
   }
 
-  // 1. Cek Checkpoint: jika chunk_NNN.txt final sudah ada dan valid, langsung lewati (resume)
+  // Hitung minimum kata yang diharapkan berdasarkan durasi chunk
+  const chunkDurationMin = config.audio.chunkDurationSeconds / 60;
+  const minExpectedWords = Math.floor(chunkDurationMin * config.validation.minWordsPerMinute);
+
+  // 1. Cek Checkpoint: jika chunk_NNN.txt final sudah ada, validasi dulu sebelum lewati
   if (fs.existsSync(finalFilePath)) {
     const existingContent = fs.readFileSync(finalFilePath, 'utf-8').trim();
     if (existingContent.length > 0) {
-      onLog(`[Transcribe] Checkpoint ditemukan: chunk_${chunkNum}.txt sudah selesai. Melewati...`);
-      return existingContent;
+      const existingWords = existingContent.split(/\s+/).filter(Boolean).length;
+      if (existingWords >= minExpectedWords) {
+        onLog(`[Transcribe] Checkpoint valid: chunk_${chunkNum}.txt (${existingWords} kata). Melewati...`);
+        return existingContent;
+      }
+      // Checkpoint ada tapi tidak memenuhi densitas minimum — hapus dan proses ulang
+      onLog(`[Transcribe] Checkpoint chunk_${chunkNum}.txt tidak valid (${existingWords} kata, minimum ${minExpectedWords}). Memproses ulang...`);
+      fs.unlinkSync(finalFilePath);
     }
   }
 
@@ -158,7 +225,7 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
               const now = Date.now();
               if (now - lastLogTime >= LOG_INTERVAL_MS) {
                 const elapsedSec = Math.round((now - startTime) / 1000);
-                onLog(`[Transcribe] ⏳ chunk_${chunkNum} streaming... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.length.toLocaleString('id-ID')} karakter]`);
+                onLog(`[Transcribe] chunk_${chunkNum} streaming... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.length.toLocaleString('id-ID')} karakter]`);
                 lastLogTime = now;
               }
             }
@@ -168,8 +235,13 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
               throw new Error(`Respons model ${modelName} kosong.`);
             }
 
-            onLog(`[Transcribe] ✅ Stream selesai: chunk_${chunkNum} via ${modelName} [${elapsedTotal}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
-            return accumulated.trim();
+            const trimmed = accumulated.trim();
+
+            // Validasi kualitas transkrip — melempar Error jika tidak memenuhi syarat
+            validateTranscriptQuality(trimmed, chunkNum, minExpectedWords, onLog);
+
+            onLog(`[Transcribe] Stream selesai: chunk_${chunkNum} via ${modelName} [${elapsedTotal}s | ~${wordCount.toLocaleString('id-ID')} kata | ${trimmed.length.toLocaleString('id-ID')} karakter]`);
+            return trimmed;
           },
           {
             maxRetries: config.worker.maxRetriesPerModel,
@@ -304,7 +376,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
             const now = Date.now();
             if (now - lastLogTime >= LOG_INTERVAL_MS) {
               const elapsedSec = Math.round((now - startTime) / 1000);
-              onLog(`[Minutes] ⏳ Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
+              onLog(`[Minutes] Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
               lastLogTime = now;
             }
           }
@@ -314,7 +386,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
             throw new Error(`Respons risalah model ${modelName} kosong.`);
           }
 
-          onLog(`[Minutes] ✅ Stream selesai: risalah via ${modelName} [${elapsedTotal}s | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
+          onLog(`[Minutes] Stream selesai: risalah via ${modelName} [${elapsedTotal}s | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
           return accumulated.trim();
         },
         {

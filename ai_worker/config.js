@@ -53,6 +53,15 @@ export const config = {
     pollIntervalMs: parseInt(getEnv('WORKER_POLL_INTERVAL_MS', '5000'), 10), // 5 detik
     maxRetriesPerModel: parseInt(getEnv('MAX_RETRIES_PER_MODEL', '4'), 10),
   },
+  validation: {
+    // Minimum kata per menit audio — threshold konservatif untuk percakapan rapat
+    // Rata-rata manusia berbicara 120-150 kata/menit; 30 kata/menit adalah batas bawah
+    // yang mencakup kondisi audio buruk, banyak jeda, atau rapat formal lambat
+    minWordsPerMinute: parseInt(getEnv('VALIDATION_MIN_WORDS_PER_MINUTE', '30'), 10),
+    // Jumlah karakter minimum agar cek abrupt-cut dijalankan
+    // (transkrip sangat pendek tidak perlu dicek ending-nya)
+    abruptCutMinLength: parseInt(getEnv('VALIDATION_ABRUPT_CUT_MIN_LENGTH', '500'), 10),
+  },
   paths: {
     root: path.resolve(__dirname, '..'),
     recordingsBaseDir: path.resolve(__dirname, '../writable/uploads/recordings'),
