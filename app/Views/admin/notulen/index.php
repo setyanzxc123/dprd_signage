@@ -255,13 +255,10 @@
     <div class="modal-box w-full max-w-lg">
 
         <!-- Header modal -->
-        <div class="flex items-start justify-between gap-3 mb-4">
-            <div>
-                <h3 class="text-base font-bold leading-tight">Kirim Rekaman Rapat</h3>
-                <p class="mt-0.5 text-xs text-base-content/60">Rekaman akan ditranskripsi dan disusun menjadi risalah resmi oleh AI.</p>
-            </div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+            <h3 class="text-base font-bold leading-tight">Kirim Rekaman Rapat</h3>
             <button id="um_close_btn" type="button" aria-label="Tutup dialog"
-                class="btn btn-sm btn-circle btn-ghost shrink-0 -mt-0.5 -mr-0.5">
+                class="btn btn-sm btn-circle btn-ghost shrink-0 -mr-0.5">
                 <i data-lucide="x" class="h-4 w-4"></i>
             </button>
         </div>
@@ -295,9 +292,6 @@
                                 <option value="umum">Jadwal Umum</option>
                                 <option value="banmus">Jadwal Banmus</option>
                             </select>
-                            <p class="mt-1 text-[10px] text-base-content/40 leading-tight" id="jadwal_type_hint">
-                                Umum: rapat komisi &amp; paripurna. Banmus: Badan Musyawarah.
-                            </p>
                         </div>
                         <div>
                             <label for="modal_jadwal_id" class="label py-0 mb-1">
@@ -328,10 +322,9 @@
                             <span class="label-text text-xs font-semibold">Judul / Topik Rapat</span>
                         </label>
                         <input type="text" id="modal_judul_rapat"
-                            placeholder="Contoh: Rapat Dengar Pendapat Komisi I"
+                            placeholder="Judul rapat (opsional)"
                             class="input input-bordered input-sm w-full"
                             autocomplete="off" />
-                        <p class="mt-1 text-[10px] text-base-content/40">Kosongkan untuk menggunakan judul agenda terpilih atau nama file.</p>
                     </div>
                 </div>
 
@@ -339,27 +332,52 @@
 
             <!-- ── Kelompok 2: Berkas Audio ────────────────────────────── -->
             <div class="mt-3">
-                <label for="modal_audio_file" class="label py-0 mb-1.5">
-                    <span class="label-text text-xs font-semibold">
-                        Berkas Rekaman Audio <span class="text-error">*</span>
-                    </span>
-                    <span class="label-text-alt text-base-content/50 font-mono text-[10px]">MP3 · M4A · WAV · OGG · Maks. 300 MB</span>
-                </label>
+                <!-- Input file asli — tersembunyi, dikontrol via dropzone -->
                 <input type="file" id="modal_audio_file"
                     accept=".mp3,.m4a,.wav,.ogg,.aac,.flac,.mp4,audio/*"
-                    class="file-input file-input-bordered file-input-sm w-full"
+                    class="sr-only"
                     aria-describedby="audio_file_hint" />
-                <p id="audio_file_hint" class="mt-1 text-[10px] text-base-content/40">Format yang didukung: MP3, M4A, WAV, OGG, AAC, FLAC, MP4 (audio).</p>
+
+                <!-- [FIX D] Dropzone -->
+                <div id="um_dropzone"
+                    class="rounded-box border-2 border-dashed border-base-300 bg-base-200/50 px-4 py-5 text-center cursor-pointer transition-all duration-200 hover:border-primary hover:bg-primary/5"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Pilih atau seret berkas rekaman audio">
+                    <div id="um_dz_idle" class="flex flex-col items-center gap-2.5">
+                        <div id="um_dz_icon_wrap" class="flex h-10 w-10 items-center justify-center rounded-xl bg-base-300 transition-all duration-200">
+                            <i data-lucide="mic" class="h-5 w-5 text-base-content/50"></i>
+                        </div>
+                        <button type="button" id="um_dz_pick_btn"
+                            class="btn btn-sm btn-outline btn-primary gap-1.5">
+                            <i data-lucide="folder-open" class="h-3.5 w-3.5"></i>
+                            Pilih File…
+                        </button>
+                        <p id="audio_file_hint" class="text-[10px] text-base-content/30">MP3 · M4A · WAV · OGG · AAC · FLAC · Maks. 300 MB</p>
+                    </div>
+
+                    <!-- File dipilih state -->
+                    <div id="um_dz_selected" class="hidden items-center gap-3 text-left">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success/15">
+                            <i data-lucide="file-audio" class="h-5 w-5 text-success"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p id="um_dz_filename" class="truncate text-sm font-semibold text-base-content"></p>
+                            <p id="um_dz_filemeta" class="mt-0.5 text-[10px] font-mono text-base-content/50"></p>
+                        </div>
+                        <button type="button" id="um_dz_change_btn"
+                            class="btn btn-xs btn-ghost shrink-0 gap-1 text-base-content/50 hover:text-base-content">
+                            <i data-lucide="refresh-cw" class="h-3 w-3"></i>
+                            Ganti
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Preview audio — muncul setelah file dipilih -->
             <div id="audio_preview_container" class="hidden mt-2 rounded-lg bg-base-200 p-3">
-                <div class="mb-1.5 flex items-center justify-between text-xs font-semibold">
-                    <span class="flex items-center gap-1.5 text-base-content/70">
-                        <i data-lucide="music" class="h-3.5 w-3.5"></i>
-                        Pratinjau Audio
-                    </span>
-                    <span id="audio_preview_info" class="font-mono text-[10px] text-base-content/50"></span>
+                <div class="mb-1.5 flex items-center justify-between text-xs text-base-content/50">
+                    <span id="audio_preview_info" class="font-mono text-[10px]"></span>
                 </div>
                 <audio id="audio_preview_player" controls class="w-full h-10"></audio>
             </div>
@@ -394,9 +412,9 @@
             </div>
 
             <!-- Info redirect — muncul setelah file dipilih -->
-            <div id="um_info_note" class="hidden mt-3 flex items-start gap-2 text-[10px] text-base-content/50 leading-relaxed">
-                <i data-lucide="info" class="h-3.5 w-3.5 shrink-0 mt-0.5 text-info"></i>
-                <span>Setelah unggahan selesai, Anda akan diarahkan ke halaman kerja notulensi untuk memantau proses AI.</span>
+            <div id="um_info_note" class="hidden mt-2 flex items-start gap-1.5 text-[10px] text-base-content/40 leading-relaxed">
+                <i data-lucide="info" class="h-3 w-3 shrink-0 mt-0.5 text-info/60"></i>
+                <span>Anda akan diarahkan ke halaman notulensi setelah unggahan selesai.</span>
             </div>
 
         </div>
@@ -419,6 +437,32 @@
     </div>
 </dialog>
 
+<!-- [FIX E] Dialog konfirmasi batalkan upload — DaisyUI, menggantikan confirm() browser -->
+<dialog id="um_confirm_dialog" class="modal">
+    <div class="modal-box max-w-sm">
+        <div class="flex items-start gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning/15">
+                <i data-lucide="triangle-alert" class="h-4 w-4 text-warning"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold">Batalkan upload?</h4>
+                <p class="mt-1 text-xs text-base-content/60 leading-relaxed">
+                    Unggahan sedang berjalan. Jika dibatalkan, file tidak akan tersimpan dan Anda perlu memulai dari awal.
+                </p>
+            </div>
+        </div>
+        <div class="modal-action mt-4 gap-2">
+            <button type="button" id="um_confirm_keep_btn" class="btn btn-sm btn-ghost">
+                Lanjutkan Upload
+            </button>
+            <button type="button" id="um_confirm_cancel_btn" class="btn btn-sm btn-warning gap-1.5">
+                <i data-lucide="x" class="h-3.5 w-3.5"></i>
+                Ya, Batalkan
+            </button>
+        </div>
+    </div>
+</dialog>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -437,6 +481,119 @@
     var judulInput  = document.getElementById('modal_judul_rapat');
     var jadwalType  = document.getElementById('modal_jadwal_type');
     var jadwalId    = document.getElementById('modal_jadwal_id');
+
+    // ── Dropzone refs ─────────────────────────────────────────────────────
+    var dropzone      = document.getElementById('um_dropzone');
+    var dzIdle        = document.getElementById('um_dz_idle');
+    var dzSelected    = document.getElementById('um_dz_selected');
+    var dzFilename    = document.getElementById('um_dz_filename');
+    var dzFilemeta    = document.getElementById('um_dz_filemeta');
+    var dzPickBtn     = document.getElementById('um_dz_pick_btn');
+    var dzChangeBtn   = document.getElementById('um_dz_change_btn');
+    var dzIconWrap    = document.getElementById('um_dz_icon_wrap');
+
+    // ── Confirm dialog refs ───────────────────────────────────────────────
+    var confirmDialog    = document.getElementById('um_confirm_dialog');
+    var confirmKeepBtn   = document.getElementById('um_confirm_keep_btn');
+    var confirmCancelBtn = document.getElementById('um_confirm_cancel_btn');
+    var pendingCloseAction = null; // callback yang menunggu konfirmasi
+
+    // ── Confirm dialog: buka & tutup ──────────────────────────────────────
+    function openConfirmDialog(onConfirm) {
+        pendingCloseAction = onConfirm;
+        confirmDialog.showModal();
+        if (window.lucide && window.lucide.createIcons) {
+            window.lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
+        }
+    }
+
+    confirmKeepBtn.addEventListener('click', function () {
+        pendingCloseAction = null;
+        confirmDialog.close();
+    });
+
+    confirmCancelBtn.addEventListener('click', function () {
+        confirmDialog.close();
+        if (typeof pendingCloseAction === 'function') {
+            pendingCloseAction();
+            pendingCloseAction = null;
+        }
+    });
+
+    // ── Dropzone: tampilkan state idle atau file-dipilih ──────────────────
+    function showDropzoneIdle() {
+        dzIdle.classList.remove('hidden');
+        dzIdle.classList.add('flex');
+        dzSelected.classList.remove('flex');
+        dzSelected.classList.add('hidden');
+        dropzone.classList.remove('border-success', 'bg-success/5');
+        dropzone.classList.add('border-dashed', 'border-base-300', 'bg-base-200/50');
+    }
+
+    function showDropzoneSelected(file) {
+        var mb  = (file.size / 1048576).toFixed(1);
+        var ext = file.name.split('.').pop().toUpperCase();
+        dzFilename.textContent = file.name;
+        dzFilemeta.textContent = mb + ' MB · ' + ext;
+        dzIdle.classList.remove('flex');
+        dzIdle.classList.add('hidden');
+        dzSelected.classList.remove('hidden');
+        dzSelected.classList.add('flex');
+        dropzone.classList.remove('border-dashed', 'border-base-300', 'bg-base-200/50');
+        dropzone.classList.add('border-success', 'bg-success/5');
+    }
+
+    // ── Dropzone: drag-over visual ────────────────────────────────────────
+    dropzone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (fileInput.files && fileInput.files[0]) return; // sudah ada file, abaikan
+        dropzone.classList.add('border-primary', 'bg-primary/5', 'scale-[1.01]');
+        dropzone.classList.remove('border-base-300');
+        dzIconWrap.classList.add('bg-primary/20');
+    });
+
+    dropzone.addEventListener('dragleave', function (e) {
+        if (dropzone.contains(e.relatedTarget)) return;
+        dropzone.classList.remove('border-primary', 'bg-primary/5', 'scale-[1.01]');
+        dropzone.classList.add('border-base-300');
+        dzIconWrap.classList.remove('bg-primary/20');
+    });
+
+    dropzone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dropzone.classList.remove('border-primary', 'bg-primary/5', 'scale-[1.01]');
+        dropzone.classList.add('border-base-300');
+        dzIconWrap.classList.remove('bg-primary/20');
+        var files = e.dataTransfer ? e.dataTransfer.files : null;
+        if (files && files[0]) {
+            // Inject ke file input via DataTransfer
+            try {
+                var dt = new DataTransfer();
+                dt.items.add(files[0]);
+                fileInput.files = dt.files;
+            } catch (err) { /* browser lama — fallback skip */ }
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // ── Dropzone: klik area / tombol pilih / tombol ganti ─────────────────
+    dropzone.addEventListener('click', function (e) {
+        // Jangan trigger kalau klik tombol Ganti (punya handler sendiri)
+        if (dzChangeBtn && dzChangeBtn.contains(e.target)) return;
+        fileInput.click();
+    });
+
+    dropzone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    dzChangeBtn && dzChangeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        fileInput.click();
+    });
 
     // ── Server config dari data attributes ───────────────────────────────
     var UPLOAD_TOKEN = modal.dataset.uploadToken || '';
@@ -481,24 +638,27 @@
         });
     }
 
+    // ── Fungsi konfirmasi batalkan (menggantikan confirm() browser) ────────
+    function confirmCancelUpload(onConfirmed) {
+        if (isUploading) {
+            openConfirmDialog(function () {
+                isCancelling = true;
+                if (activeUploadId) doCancel(activeUploadId);
+                onConfirmed();
+            });
+        } else {
+            onConfirmed();
+        }
+    }
+
     // ── Tutup via tombol X (header) ───────────────────────────────────────
     closeBtn.addEventListener('click', function () {
-        if (isUploading) {
-            if (!confirm('Upload sedang berlangsung. Batalkan dan tutup dialog?')) return;
-            isCancelling = true;
-            if (activeUploadId) doCancel(activeUploadId);
-        }
-        modal.close();
+        confirmCancelUpload(function () { modal.close(); });
     });
 
     // ── Tutup via tombol Batal ────────────────────────────────────────────
     cancelBtn.addEventListener('click', function () {
-        if (isUploading) {
-            if (!confirm('Upload sedang berlangsung. Batalkan dan tutup dialog?')) return;
-            isCancelling = true;
-            if (activeUploadId) doCancel(activeUploadId);
-        }
-        modal.close();
+        confirmCancelUpload(function () { modal.close(); });
     });
 
     // ── Backdrop: diblokir saat upload aktif ──────────────────────────────
@@ -542,6 +702,9 @@
         judulInput.value   = '';
         jadwalId.value     = '';
 
+        // Reset dropzone ke idle
+        showDropzoneIdle();
+
         submitBtn.disabled = false;
         document.getElementById('um_spinner').classList.add('hidden');
         document.getElementById('um_btn_icon').classList.remove('hidden');
@@ -553,7 +716,7 @@
         document.getElementById('upload_eta_info').textContent      = '';
     }
 
-    // ── Preview audio — setelah file dipilih ─────────────────────────────
+    // ── Preview audio + update dropzone state — setelah file dipilih ─────
     fileInput.addEventListener('change', function () {
         var container = document.getElementById('audio_preview_container');
         var player    = document.getElementById('audio_preview_player');
@@ -566,11 +729,17 @@
 
         if (fileInput.files && fileInput.files[0]) {
             var f = fileInput.files[0];
+
+            // Update dropzone ke state file-dipilih
+            showDropzoneSelected(f);
+
             info.textContent = f.name + ' · ' + (f.size / 1048576).toFixed(1) + ' MB';
             player.src = URL.createObjectURL(f);
             container.classList.remove('hidden');
             infoNote.classList.remove('hidden');
+            rerenderIcons();
         } else {
+            showDropzoneIdle();
             container.classList.add('hidden');
             infoNote.classList.add('hidden');
             if (player.src) {
