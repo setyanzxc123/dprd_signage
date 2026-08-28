@@ -254,7 +254,7 @@
     data-max-size="314572800">
     <div class="modal-box w-full max-w-lg">
 
-        {{!-- Header modal --}}
+        <!-- Header modal -->
         <div class="flex items-start justify-between gap-3 mb-4">
             <div>
                 <h3 class="text-base font-bold leading-tight">Kirim Rekaman Rapat</h3>
@@ -266,7 +266,7 @@
             </button>
         </div>
 
-        {{!-- Error box dengan aria-live agar screen reader mengumumkannya --}}
+        <!-- Error box dengan aria-live agar screen reader mengumumkannya -->
         <div id="um_error_box" class="hidden mb-3" role="alert" aria-live="assertive">
             <div class="alert alert-error py-2.5 text-xs gap-2.5">
                 <i data-lucide="alert-circle" class="h-4 w-4 shrink-0"></i>
@@ -279,7 +279,7 @@
 
         <div class="space-y-0">
 
-            {{!-- ── Kelompok 1: Data Rapat ──────────────────────────────── --}}
+            <!-- ── Kelompok 1: Data Rapat ──────────────────────────────── -->
             <div class="rounded-box border border-base-300 bg-base-100 divide-y divide-base-200">
 
                 <div class="px-3.5 py-2.5">
@@ -337,7 +337,7 @@
 
             </div>
 
-            {{!-- ── Kelompok 2: Berkas Audio ────────────────────────────── --}}
+            <!-- ── Kelompok 2: Berkas Audio ────────────────────────────── -->
             <div class="mt-3">
                 <label for="modal_audio_file" class="label py-0 mb-1.5">
                     <span class="label-text text-xs font-semibold">
@@ -352,7 +352,7 @@
                 <p id="audio_file_hint" class="mt-1 text-[10px] text-base-content/40">Format yang didukung: MP3, M4A, WAV, OGG, AAC, FLAC, MP4 (audio).</p>
             </div>
 
-            {{!-- Preview audio — muncul setelah file dipilih --}}
+            <!-- Preview audio — muncul setelah file dipilih -->
             <div id="audio_preview_container" class="hidden mt-2 rounded-lg bg-base-200 p-3">
                 <div class="mb-1.5 flex items-center justify-between text-xs font-semibold">
                     <span class="flex items-center gap-1.5 text-base-content/70">
@@ -364,10 +364,10 @@
                 <audio id="audio_preview_player" controls class="w-full h-10"></audio>
             </div>
 
-            {{!-- Progress upload — muncul setelah submit --}}
+            <!-- Progress upload — muncul setelah submit -->
             <div id="upload_progress_box" class="hidden mt-3 rounded-box bg-base-200 border border-primary/20 p-3.5 space-y-2"
                 role="status" aria-live="polite" aria-label="Status unggahan">
-                {{!-- Baris 1: status + persen --}}
+                <!-- Baris 1: status + persen -->
                 <div class="flex items-center justify-between text-xs font-semibold">
                     <div class="flex items-center gap-2 text-primary">
                         <span class="loading loading-spinner loading-xs"></span>
@@ -375,9 +375,9 @@
                     </div>
                     <span id="upload_progress_percent" class="font-mono text-primary">0%</span>
                 </div>
-                {{!-- Progress bar --}}
+                <!-- Progress bar -->
                 <progress id="upload_progress_bar" class="progress progress-primary w-full h-2" value="0" max="100"></progress>
-                {{!-- Baris 2: byte counter + speed + ETA --}}
+                <!-- Baris 2: byte counter + speed + ETA -->
                 <div class="flex items-center justify-between text-[10px] text-base-content/50 font-mono">
                     <div class="flex items-center gap-2.5">
                         <span id="upload_transfer_info">0 MB / 0 MB</span>
@@ -386,14 +386,14 @@
                     </div>
                     <span id="upload_eta_info" class="text-base-content/50"></span>
                 </div>
-                {{!-- Banner jangan tutup — muncul saat upload aktif --}}
+                <!-- Banner jangan tutup — muncul saat upload aktif -->
                 <div id="upload_warning_banner" class="hidden flex items-center gap-2 text-[10px] text-warning/80 pt-0.5">
                     <i data-lucide="shield-alert" class="h-3 w-3 shrink-0"></i>
                     <span>Jangan tutup atau navigasi dari halaman ini selama proses unggahan berlangsung.</span>
                 </div>
             </div>
 
-            {{!-- Info redirect — muncul setelah file dipilih --}}
+            <!-- Info redirect — muncul setelah file dipilih -->
             <div id="um_info_note" class="hidden mt-3 flex items-start gap-2 text-[10px] text-base-content/50 leading-relaxed">
                 <i data-lucide="info" class="h-3.5 w-3.5 shrink-0 mt-0.5 text-info"></i>
                 <span>Setelah unggahan selesai, Anda akan diarahkan ke halaman kerja notulensi untuk memantau proses AI.</span>
@@ -401,7 +401,7 @@
 
         </div>
 
-        {{!-- Action buttons --}}
+        <!-- Action buttons -->
         <div class="modal-action mt-4">
             <button type="button" id="um_cancel_btn" class="btn btn-ghost btn-sm">Batal</button>
             <button type="button" id="um_submit_btn" class="btn btn-primary btn-sm gap-1.5">
@@ -413,7 +413,7 @@
 
     </div>
 
-    {{!-- Backdrop: dikelola via JS — diblokir saat upload aktif --}}
+    <!-- Backdrop: dikelola via JS — diblokir saat upload aktif -->
     <div id="um_backdrop" class="modal-backdrop" aria-hidden="true">
         <button type="button" id="um_backdrop_btn" tabindex="-1">tutup</button>
     </div>
