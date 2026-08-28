@@ -216,23 +216,15 @@ class NotulenService
                 'audio_path' => $relativeAudioPath,
             ]);
 
-            // Inisialisasi draft record meeting_minutes jika belum ada
+            // Inisialisasi draft record meeting_minutes jika belum ada (Single Source of Truth)
             $minutesModel = new MeetingMinutesModel($this->db);
             $existingMinutes = $minutesModel->where('job_id', $jobId)->first();
 
             if (! $existingMinutes) {
                 $minutesModel->insert([
                     'job_id'             => $jobId,
-                    'jadwal_type'        => $validated['jadwal_type'],
-                    'jadwal_id'          => $validated['jadwal_id'],
-                    'judul_rapat'        => $validated['judul_rapat'],
-                    'tanggal_rapat'      => $this->resolveScheduleDate($validated['jadwal_type'], $validated['jadwal_id']),
                     'transcripts_dir'    => 'recordings/job_' . $jobId . '/transcripts',
                     'ringkasan_eksekutif'=> null,
-                    'agenda_pembahasan'  => null,
-                    'kesimpulan'         => null,
-                    'tindak_lanjut'      => null,
-                    'peserta_terdeteksi' => null,
                     'status_verifikasi'  => MeetingMinutesModel::STATUS_DRAFT,
                 ]);
             }
@@ -374,23 +366,15 @@ class NotulenService
                 'audio_size'     => $fileSize,
             ]);
 
-            // Inisialisasi draft meeting_minutes
+            // Inisialisasi draft meeting_minutes (Single Source of Truth)
             $minutesModel   = new MeetingMinutesModel($this->db);
             $existingMinutes = $minutesModel->where('job_id', $jobId)->first();
 
             if (! $existingMinutes) {
                 $minutesModel->insert([
                     'job_id'              => $jobId,
-                    'jadwal_type'         => $jadwalType,
-                    'jadwal_id'           => $jadwalId,
-                    'judul_rapat'         => $judulRapat,
-                    'tanggal_rapat'       => $this->resolveScheduleDate($jadwalType, $jadwalId),
                     'transcripts_dir'     => 'recordings/job_' . $jobId . '/transcripts',
                     'ringkasan_eksekutif' => null,
-                    'agenda_pembahasan'   => null,
-                    'kesimpulan'          => null,
-                    'tindak_lanjut'       => null,
-                    'peserta_terdeteksi'  => null,
                     'status_verifikasi'   => 'draft',
                 ]);
             }
@@ -648,17 +632,10 @@ class NotulenService
             return ['error' => 'Data risalah rapat tidak ditemukan.'];
         }
 
-        $judulRapat = trim((string) ($input['judul_rapat'] ?? $minutes['judul_rapat']));
-        if ($judulRapat === '') {
-            return ['error' => 'Judul rapat wajib diisi.'];
-        }
-
         $ringkasan = trim((string) ($input['ringkasan_eksekutif'] ?? ''));
 
         $updateData = [
-            'judul_rapat'        => $judulRapat,
-            'tanggal_rapat'      => ! empty($input['tanggal_rapat']) ? $input['tanggal_rapat'] : $minutes['tanggal_rapat'],
-            'ringkasan_eksekutif'=> $ringkasan,
+            'ringkasan_eksekutif' => $ringkasan,
         ];
 
         $minutesModel->update($minutesId, $updateData);
@@ -695,7 +672,7 @@ class NotulenService
     }
 
     /**
-     * Dapatkan detail lengkap notulen (Job + Minutes + Transkrip).
+     * Dapatkan detail lengkap notulen (Job + Minutes + Transkrip + Resolved Schedule SSOT).
      */
     public function getNotulenDetail(int $jobId): ?array
     {
@@ -709,21 +686,13 @@ class NotulenService
 
         $minutes = $minutesModel->where('job_id', $jobId)->first();
         $transcripts = $this->readTranscripts($jobId);
-
-        // Decode JSON fields untuk tampilan web
-        $decodedAgenda = ! empty($minutes['agenda_pembahasan']) ? json_decode((string) $minutes['agenda_pembahasan'], true) : [];
-        $decodedKesimpulan = ! empty($minutes['kesimpulan']) ? json_decode((string) $minutes['kesimpulan'], true) : [];
-        $decodedTindakLanjut = ! empty($minutes['tindak_lanjut']) ? json_decode((string) $minutes['tindak_lanjut'], true) : [];
-        $decodedPeserta = ! empty($minutes['peserta_terdeteksi']) ? json_decode((string) $minutes['peserta_terdeteksi'], true) : [];
+        $schedule = $this->resolveScheduleInfo((string) ($job['jadwal_type'] ?? 'umum'), $job['jadwal_id'] ? (int) $job['jadwal_id'] : null);
 
         return [
-            'job'                => $job,
-            'minutes'            => $minutes,
-            'transcripts'        => $transcripts,
-            'agenda_items'       => is_array($decodedAgenda) ? $decodedAgenda : [],
-            'kesimpulan_items'   => is_array($decodedKesimpulan) ? $decodedKesimpulan : [],
-            'tindak_lanjut_items'=> is_array($decodedTindakLanjut) ? $decodedTindakLanjut : [],
-            'peserta_items'      => is_array($decodedPeserta) ? $decodedPeserta : [],
+            'job'         => $job,
+            'minutes'     => $minutes,
+            'schedule'    => $schedule,
+            'transcripts' => $transcripts,
         ];
     }
 
@@ -750,42 +719,66 @@ class NotulenService
         }
     }
 
-    private function resolveScheduleTitle(string $type, int $id): string
+    /**
+     * Dapatkan judul, tanggal, dan metadata rapat dari SSOT jadwal.
+     *
+     * @return array{judul: string, tanggal: string, waktu_mulai: string, lokasi: string}
+     */
+    public function resolveScheduleInfo(string $type, ?int $id): array
     {
+        if ($id === null) {
+            return [
+                'judul'        => 'Rapat / Sidang DPRD',
+                'tanggal'      => date('Y-m-d'),
+                'waktu_mulai'  => '-',
+                'lokasi'       => '-',
+            ];
+        }
+
         try {
             if ($type === MeetingTranscriptionJobModel::TYPE_UMUM) {
                 $item = (new JadwalUmumModel($this->db))->find($id);
-                return (string) ($item['judul'] ?? '');
+                if ($item) {
+                    return [
+                        'judul'        => (string) ($item['judul'] ?? 'Rapat Umum DPRD'),
+                        'tanggal'      => (string) ($item['tanggal'] ?? date('Y-m-d')),
+                        'waktu_mulai'  => (string) ($item['waktu_mulai'] ?? '-'),
+                        'lokasi'       => (string) ($item['lokasi_lainnya'] ?? '-'),
+                    ];
+                }
             }
+
             if ($type === MeetingTranscriptionJobModel::TYPE_BANMUS) {
                 $item = (new JadwalBanmusItemModel($this->db))->find($id);
-                return (string) ($item['agenda'] ?? '');
+                if ($item) {
+                    return [
+                        'judul'        => (string) ($item['agenda'] ?? 'Rapat Badan Musyawarah'),
+                        'tanggal'      => (string) ($item['tanggal'] ?? date('Y-m-d')),
+                        'waktu_mulai'  => (string) ($item['jam_mulai'] ?? '-'),
+                        'lokasi'       => (string) ($item['lokasi_lainnya'] ?? '-'),
+                    ];
+                }
             }
         } catch (\Throwable) {
-            return '';
+            // Fallback default
         }
-        return '';
+
+        return [
+            'judul'        => 'Rapat DPRD',
+            'tanggal'      => date('Y-m-d'),
+            'waktu_mulai'  => '-',
+            'lokasi'       => '-',
+        ];
+    }
+
+    private function resolveScheduleTitle(string $type, int $id): string
+    {
+        return $this->resolveScheduleInfo($type, $id)['judul'];
     }
 
     private function resolveScheduleDate(string $type, ?int $id): ?string
     {
-        if ($id === null) {
-            return date('Y-m-d');
-        }
-
-        try {
-            if ($type === MeetingTranscriptionJobModel::TYPE_UMUM) {
-                $item = (new JadwalUmumModel($this->db))->find($id);
-                return $item['tanggal'] ?? date('Y-m-d');
-            }
-            if ($type === MeetingTranscriptionJobModel::TYPE_BANMUS) {
-                $item = (new JadwalBanmusItemModel($this->db))->find($id);
-                return $item['tanggal'] ?? date('Y-m-d');
-            }
-        } catch (\Throwable) {
-            return date('Y-m-d');
-        }
-        return date('Y-m-d');
+        return $this->resolveScheduleInfo($type, $id)['tanggal'];
     }
 
     private function normalizeJsonField(mixed $value): ?string

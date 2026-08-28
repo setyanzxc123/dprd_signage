@@ -85,7 +85,7 @@ async function fetchMeetingContext(pool, job) {
       }
     } else if (job.jadwal_type === 'banmus' && job.jadwal_id) {
       const [rows] = await pool.query(
-        `SELECT agenda, tanggal FROM jadwal_banmus_item WHERE id = ?`,
+        `SELECT agenda, tanggal FROM jadwal_banmus WHERE id = ?`,
         [job.jadwal_id]
       );
       if (rows && rows.length > 0) {
@@ -321,12 +321,9 @@ export async function processJob(pool, job) {
   if (existingMinutes && existingMinutes.length > 0) {
     await pool.execute(
       `UPDATE meeting_minutes
-       SET judul_rapat = ?, tanggal_rapat = ?, transcripts_dir = ?,
-           ringkasan_eksekutif = ?, updated_at = NOW()
+       SET transcripts_dir = ?, ringkasan_eksekutif = ?, updated_at = NOW()
        WHERE id = ?`,
       [
-        meetingContext.judulRapat,
-        meetingContext.tanggalRapat,
         relativeTranscriptsDir,
         minutesResult.ringkasan_eksekutif,
         existingMinutes[0].id,
@@ -335,15 +332,10 @@ export async function processJob(pool, job) {
   } else {
     await pool.execute(
       `INSERT INTO meeting_minutes
-       (job_id, jadwal_type, jadwal_id, judul_rapat, tanggal_rapat, transcripts_dir,
-        ringkasan_eksekutif, status_verifikasi, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', NOW(), NOW())`,
+       (job_id, transcripts_dir, ringkasan_eksekutif, status_verifikasi, created_at, updated_at)
+       VALUES (?, ?, ?, 'draft', NOW(), NOW())`,
       [
         jobId,
-        job.jadwal_type || 'umum',
-        job.jadwal_id || null,
-        meetingContext.judulRapat,
-        meetingContext.tanggalRapat,
         relativeTranscriptsDir,
         minutesResult.ringkasan_eksekutif,
       ]

@@ -165,7 +165,7 @@
 <!-- Judul Dokumen -->
 <div class="doc-title">
     <h3>Risalah Rapat</h3>
-    <p><?= esc($minutes['judul_rapat']) ?></p>
+    <p><?= esc($schedule['judul'] ?? 'Rapat DPRD') ?></p>
 </div>
 
 <!-- Metadata Pelaksanaan -->
@@ -175,12 +175,12 @@
         <tr>
             <td style="width: 25%; padding: 2px 0;">Hari / Tanggal</td>
             <td style="width: 2%; padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><?= esc($minutes['tanggal_rapat'] ?? '-') ?></td>
+            <td style="padding: 2px 0;"><?= esc($schedule['tanggal'] ?? '-') ?></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Agenda / Acara</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><?= esc($minutes['judul_rapat']) ?></td>
+            <td style="padding: 2px 0;"><?= esc($schedule['judul'] ?? '-') ?></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Status Verifikasi</td>

@@ -25,10 +25,6 @@ class MeetingMinutesModel extends Model
     protected $useTimestamps = true;
     protected $allowedFields = [
         'job_id',
-        'jadwal_type',
-        'jadwal_id',
-        'judul_rapat',
-        'tanggal_rapat',
         'transcripts_dir',
         'ringkasan_eksekutif',
         'status_verifikasi',
@@ -45,13 +41,15 @@ class MeetingMinutesModel extends Model
     }
 
     /**
-     * Cari risalah terbaru berdasarkan jadwal.
+     * Cari risalah terbaru berdasarkan jadwal (JOIN via meeting_transcription_jobs).
      */
     public function findLatestByJadwal(string $jadwalType, int $jadwalId): ?array
     {
-        return $this->where('jadwal_type', $jadwalType)
-            ->where('jadwal_id', $jadwalId)
-            ->orderBy('id', 'DESC')
+        return $this->select('meeting_minutes.*, meeting_transcription_jobs.jadwal_type, meeting_transcription_jobs.jadwal_id')
+            ->join('meeting_transcription_jobs', 'meeting_transcription_jobs.id = meeting_minutes.job_id')
+            ->where('meeting_transcription_jobs.jadwal_type', $jadwalType)
+            ->where('meeting_transcription_jobs.jadwal_id', $jadwalId)
+            ->orderBy('meeting_minutes.id', 'DESC')
             ->first();
     }
 }

@@ -72,12 +72,16 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'updated_at'       => date('Y-m-d H:i:s'),
         ]);
 
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 10,
+            'judul'       => 'RDP Komisi I',
+            'tanggal'     => '2026-08-27',
+            'waktu_mulai' => '09:00:00',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
         $this->testDb->table('meeting_minutes')->insert([
             'job_id'              => 1,
-            'jadwal_type'         => 'umum',
-            'jadwal_id'           => 10,
-            'judul_rapat'         => 'RDP Komisi I',
-            'tanggal_rapat'       => '2026-08-27',
             'transcripts_dir'     => 'recordings/job_1/transcripts',
             'ringkasan_eksekutif' => 'Ringkasan pembahasan RDP...',
             'status_verifikasi'   => 'draft',
@@ -144,9 +148,6 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->testDb->table('meeting_minutes')->insert([
             'id'                  => 10,
             'job_id'              => 3,
-            'jadwal_type'         => 'umum',
-            'judul_rapat'         => 'Judul Awal',
-            'tanggal_rapat'       => '2026-08-20',
             'ringkasan_eksekutif' => 'Ringkasan awal',
             'status_verifikasi'   => 'draft',
             'created_at'          => date('Y-m-d H:i:s'),
@@ -155,16 +156,12 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
 
         // 1. Update minutes fields
         $updateResp = $this->adminPost('/admin/notulen/update-minutes/10', [
-            'judul_rapat'         => 'Judul Rapat Baru Direvisi',
-            'tanggal_rapat'       => '2026-08-25',
             'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nRingkasan telah diperbaiki.\n\nII. POIN-POIN PEMBAHASAN\n1. Topik: Revisi Anggaran\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Disetujui",
         ]);
 
         $updateResp->assertStatus(302);
 
         $rowAfterUpdate = (new MeetingMinutesModel($this->testDb))->find(10);
-        $this->assertSame('Judul Rapat Baru Direvisi', $rowAfterUpdate['judul_rapat']);
-        $this->assertSame('2026-08-25', $rowAfterUpdate['tanggal_rapat']);
         $this->assertStringContainsString('Ringkasan telah diperbaiki', $rowAfterUpdate['ringkasan_eksekutif']);
 
         // 2. Finalize minutes
@@ -218,11 +215,25 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
 
     public function testMobileApiReturnsNotAvailableWhenDraft(): void
     {
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 5,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 20,
+            'audio_filename' => 'rdp_20.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 20,
+            'judul'       => 'Rapat Dengar Pendapat',
+            'tanggal'     => '2026-08-27',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
         $this->testDb->table('meeting_minutes')->insert([
             'job_id'              => 5,
-            'jadwal_type'         => 'umum',
-            'jadwal_id'           => 20,
-            'judul_rapat'         => 'Rapat Dengar Pendapat',
             'ringkasan_eksekutif' => 'Ringkasan draft',
             'status_verifikasi'   => 'draft',
             'created_at'          => date('Y-m-d H:i:s'),
@@ -243,12 +254,25 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
 
     public function testMobileApiReturnsFullMinutesWhenFinal(): void
     {
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 6,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 21,
+            'audio_filename' => 'sidang_21.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 21,
+            'judul'       => 'Sidang Paripurna Pembahasan APBD',
+            'tanggal'     => '2026-08-27',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
         $this->testDb->table('meeting_minutes')->insert([
             'job_id'              => 6,
-            'jadwal_type'         => 'umum',
-            'jadwal_id'           => 21,
-            'judul_rapat'         => 'Sidang Paripurna Pembahasan APBD',
-            'tanggal_rapat'       => '2026-08-27',
             'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nSidang paripurna menyetujui...\n\nII. POIN-POIN PEMBAHASAN\n1. Topik: APBD\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Disahkan",
             'status_verifikasi'   => 'final',
             'created_at'          => date('Y-m-d H:i:s'),
@@ -445,10 +469,6 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->forge->addField([
             'id'                  => ['type' => 'INTEGER', 'auto_increment' => true],
             'job_id'              => ['type' => 'INTEGER', 'null' => true],
-            'jadwal_type'         => ['type' => 'VARCHAR', 'constraint' => 20],
-            'jadwal_id'           => ['type' => 'INTEGER', 'null' => true],
-            'judul_rapat'         => ['type' => 'VARCHAR', 'constraint' => 255],
-            'tanggal_rapat'       => ['type' => 'DATE', 'null' => true],
             'transcripts_dir'     => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'ringkasan_eksekutif' => ['type' => 'TEXT', 'null' => true],
             'status_verifikasi'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'draft'],

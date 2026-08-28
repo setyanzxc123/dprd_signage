@@ -33,20 +33,20 @@ class ScheduleMinutesController extends BaseController
             return $this->apiError('Sumber jadwal tidak dikenali.', 404);
         }
 
-        $minutesModel = new MeetingMinutesModel();
-        $minutes = $minutesModel->where('jadwal_type', $normalizedSource)
+        $jobModel = new MeetingTranscriptionJobModel();
+        $job = $jobModel->where('jadwal_type', $normalizedSource)
             ->where('jadwal_id', $id)
             ->orderBy('id', 'DESC')
             ->first();
 
-        if (! $minutes || empty($minutes['ringkasan_eksekutif'])) {
-            // Cek apakah ada job yang sedang berjalan
-            $job = (new MeetingTranscriptionJobModel())
-                ->where('jadwal_type', $normalizedSource)
-                ->where('jadwal_id', $id)
-                ->orderBy('id', 'DESC')
-                ->first();
+        $minutes = null;
+        if ($job) {
+            $minutes = (new MeetingMinutesModel())->findByJobId((int) $job['id']);
+        }
 
+        $scheduleInfo = (new \App\Libraries\Notulen\NotulenService())->resolveScheduleInfo($normalizedSource, $id);
+
+        if (! $minutes || empty($minutes['ringkasan_eksekutif'])) {
             return $this->apiSuccess([
                 'jadwal_type'       => $normalizedSource,
                 'jadwal_id'         => $id,
@@ -77,8 +77,8 @@ class ScheduleMinutesController extends BaseController
             'jadwal_id'           => $id,
             'risalah_tersedia'    => true,
             'status_verifikasi'   => $minutes['status_verifikasi'],
-            'judul_rapat'         => $minutes['judul_rapat'],
-            'tanggal_rapat'       => $minutes['tanggal_rapat'],
+            'judul_rapat'         => $scheduleInfo['judul'],
+            'tanggal_rapat'       => $scheduleInfo['tanggal'],
             'ringkasan_eksekutif' => $minutes['ringkasan_eksekutif'],
             'verified_at'         => $minutes['verified_at'] ?? null,
         ]);

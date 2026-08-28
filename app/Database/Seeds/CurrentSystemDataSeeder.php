@@ -1824,30 +1824,8 @@ class CurrentSystemDataSeeder extends Seeder
 
         $this->db->table('meeting_minutes')->insert([
             'job_id'              => $job2Id,
-            'jadwal_type'         => 'banmus',
-            'jadwal_id'           => $banmusItemId,
-            'judul_rapat'         => self::DUMMY_PREFIX . ($banmusItem['agenda'] ?? 'Rapat Badan Musyawarah Penetapan Jadwal Masa Persidangan III'),
-            'tanggal_rapat'       => $banmusItem['tanggal'] ?? date('Y-m-d'),
             'transcripts_dir'     => "recordings/job_{$job2Id}/transcripts",
-            'ringkasan_eksekutif' => 'Badan Musyawarah DPRD Provinsi Sulawesi Tengah melaksanakan rapat penetapan jadwal masa persidangan ketiga tahun sidang 2026. Agenda mencakup penetapan tanggal rapat paripurna pembukaan masa sidang dan penyusunan jadwal kunjungan kerja komisi.',
-            'agenda_pembahasan'   => json_encode([
-                [
-                    'topik'     => 'Jadwal Paripurna Pembukaan Masa Sidang III',
-                    'uraian'    => 'Penyelarasan jadwal dengan agenda pimpinan daerah dan keprotokolan.',
-                    'pembicara' => 'Pimpinan Badan Musyawarah',
-                ],
-            ]),
-            'kesimpulan'          => json_encode([
-                'Jadwal masa persidangan disahkan untuk diedarkan kepada seluruh fraksi dan anggota dewan.',
-            ]),
-            'tindak_lanjut'       => json_encode([
-                'Sekretariat dewan menerbitkan surat edaran jadwal resmi.',
-            ]),
-            'peserta_terdeteksi'  => json_encode([
-                'Ketua Badan Musyawarah',
-                'Anggota Banmus Fraksi Gerindra',
-                'Anggota Banmus Fraksi PDI Perjuangan',
-            ]),
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nBadan Musyawarah DPRD Provinsi Sulawesi Tengah melaksanakan rapat penetapan jadwal masa persidangan ketiga tahun sidang 2026. Agenda mencakup penetapan tanggal rapat paripurna pembukaan masa sidang dan penyusunan jadwal kunjungan kerja komisi.\n\nII. POIN-POIN PEMBAHASAN\n1. Jadwal Paripurna Pembukaan Masa Sidang III (Pimpinan Badan Musyawarah): Penyelarasan jadwal dengan agenda pimpinan daerah dan keprotokolan.\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Jadwal masa persidangan disahkan untuk diedarkan kepada seluruh fraksi dan anggota dewan.\n2. Sekretariat dewan menerbitkan surat edaran jadwal resmi.",
             'status_verifikasi'   => 'draft',
             'created_at'          => $now,
             'updated_at'          => $now,

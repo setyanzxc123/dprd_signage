@@ -82,14 +82,11 @@ class NotulenController extends BaseController
         }
 
         return view('admin/notulen/show', [
-            'pageTitle'           => 'Review Risalah — ' . ($detail['minutes']['judul_rapat'] ?? $detail['job']['audio_filename']),
-            'job'                 => $detail['job'],
-            'minutes'             => $detail['minutes'],
-            'transcripts'         => $detail['transcripts'],
-            'agendaItems'         => $detail['agenda_items'],
-            'kesimpulanItems'     => $detail['kesimpulan_items'],
-            'tindakLanjutItems'   => $detail['tindak_lanjut_items'],
-            'pesertaItems'        => $detail['peserta_items'],
+            'pageTitle'   => 'Review Risalah — ' . ($detail['schedule']['judul'] ?? $detail['job']['audio_filename']),
+            'job'         => $detail['job'],
+            'minutes'     => $detail['minutes'],
+            'schedule'    => $detail['schedule'],
+            'transcripts' => $detail['transcripts'],
         ]);
     }
 
@@ -366,8 +363,6 @@ class NotulenController extends BaseController
         $userId = $this->getCurrentUserId();
 
         $input = [
-            'judul_rapat'         => $this->request->getPost('judul_rapat'),
-            'tanggal_rapat'       => $this->request->getPost('tanggal_rapat'),
             'ringkasan_eksekutif' => $this->request->getPost('ringkasan_eksekutif'),
         ];
 
@@ -401,7 +396,7 @@ class NotulenController extends BaseController
     }
 
     /**
-     * Halaman cetak resmi / export PDF risalah dengan kop surat DPRD.
+     * Halaman cetak resmi / export PDF risalah dengan kop surat DPRD (SSOT).
      */
     public function exportPdf(int $minutesId): string|RedirectResponse
     {
@@ -413,9 +408,16 @@ class NotulenController extends BaseController
             return redirect()->to(base_url('admin/notulen'));
         }
 
+        $job = (new MeetingTranscriptionJobModel())->find($minutes['job_id']);
+        $schedule = $this->service->resolveScheduleInfo(
+            (string) ($job['jadwal_type'] ?? 'umum'),
+            $job && $job['jadwal_id'] ? (int) $job['jadwal_id'] : null
+        );
+
         return view('admin/notulen/print', [
-            'pageTitle' => 'Cetak Risalah — ' . $minutes['judul_rapat'],
+            'pageTitle' => 'Cetak Risalah — ' . $schedule['judul'],
             'minutes'   => $minutes,
+            'schedule'  => $schedule,
         ]);
     }
 

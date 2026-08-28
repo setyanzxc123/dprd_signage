@@ -14,12 +14,15 @@ final class ScheduleReadService
     public function __construct(
         ?ScheduleReadRepositoryInterface $repository = null,
         ?callable $clock = null,
+        ?\CodeIgniter\Database\BaseConnection $db = null,
     ) {
-        $this->repository = $repository ?? new DatabaseScheduleReadRepository();
+        $this->db = $db ?? \Config\Database::connect();
+        $this->repository = $repository ?? new DatabaseScheduleReadRepository($this->db);
         $this->clock = \Closure::fromCallable($clock ?? static fn (): int => time());
     }
 
     private readonly ScheduleReadRepositoryInterface $repository;
+    private readonly \CodeIgniter\Database\BaseConnection $db;
 
     /** @return array<string, mixed> */
     public function publicAgenda(array $filters): array
@@ -126,16 +129,17 @@ final class ScheduleReadService
         ));
 
         $minutesMap = [];
-        $db = \Config\Database::connect();
-        if (! empty($rows) && $db->tableExists('meeting_minutes')) {
-            $scheduleIds = array_map(static fn (array $row): int => (int) $row['id'], $rows);
-            $minutesRows = $db->table('meeting_minutes')
-                ->select('jadwal_type, jadwal_id, status_verifikasi')
-                ->whereIn('jadwal_id', $scheduleIds)
+        if (! empty($rows) && $this->db->tableExists('meeting_minutes') && $this->db->tableExists('meeting_transcription_jobs')) {
+            $scheduleIds = array_map(static fn (array $row): int => (int) ($row['source_id'] ?? abs((int) $row['id'])), $rows);
+            $minutesRows = $this->db->table('meeting_minutes mm')
+                ->select('j.jadwal_type, j.jadwal_id, mm.status_verifikasi')
+                ->join('meeting_transcription_jobs j', 'j.id = mm.job_id')
+                ->whereIn('j.jadwal_id', $scheduleIds)
                 ->get()
                 ->getResultArray();
             foreach ($minutesRows as $m) {
-                $key = ($m['jadwal_type'] ?? 'umum') . '_' . $m['jadwal_id'];
+                $type = ($m['jadwal_type'] ?? '') === 'banmus' ? 'banmus' : 'jadwal_umum';
+                $key = $type . '_' . (int) $m['jadwal_id'];
                 $minutesMap[$key] = $m['status_verifikasi'] ?? 'draft';
             }
         }
@@ -144,7 +148,9 @@ final class ScheduleReadService
             $id = (int) $row['id'];
             $units = $unitMap[$id] ?? [];
             $unitIds = array_column($units, 'id');
-            $minutesKey = ($row['source'] ?? 'umum') . '_' . $id;
+            $source = (string) ($row['source'] ?? 'jadwal_umum');
+            $sourceId = (int) ($row['source_id'] ?? abs($id));
+            $minutesKey = $source . '_' . $sourceId;
             $statusVerifikasi = $minutesMap[$minutesKey] ?? null;
 
             $row['id'] = $id;

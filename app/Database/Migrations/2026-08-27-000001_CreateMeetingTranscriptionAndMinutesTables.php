@@ -110,7 +110,7 @@ class CreateMeetingTranscriptionAndMinutesTables extends Migration
             $this->forge->createTable('meeting_transcription_jobs', true);
         }
 
-        // 2. Tabel meeting_minutes
+        // 2. Tabel meeting_minutes (100% Single Source of Truth, relasi via job_id)
         if (! $this->db->tableExists('meeting_minutes')) {
             $this->forge->addField([
                 'id' => [
@@ -125,27 +125,6 @@ class CreateMeetingTranscriptionAndMinutesTables extends Migration
                     'unsigned'   => true,
                     'null'       => true,
                     'default'    => null,
-                ],
-                'jadwal_type' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 32,
-                    'default'    => 'umum',
-                ],
-                'jadwal_id' => [
-                    'type'       => 'INT',
-                    'constraint' => 11,
-                    'unsigned'   => true,
-                    'null'       => true,
-                    'default'    => null,
-                ],
-                'judul_rapat' => [
-                    'type'       => 'VARCHAR',
-                    'constraint' => 255,
-                ],
-                'tanggal_rapat' => [
-                    'type'    => 'DATE',
-                    'null'    => true,
-                    'default' => null,
                 ],
                 'transcripts_dir' => [
                     'type'       => 'VARCHAR',
@@ -189,7 +168,6 @@ class CreateMeetingTranscriptionAndMinutesTables extends Migration
 
             $this->forge->addPrimaryKey('id');
             $this->forge->addKey('job_id');
-            $this->forge->addKey(['jadwal_type', 'jadwal_id']);
             $this->forge->addKey('status_verifikasi');
             $this->forge->createTable('meeting_minutes', true);
         }

@@ -4,8 +4,8 @@
 
 <?php
 $isInProgress = in_array($job['status'], ['chunking', 'transcribing', 'summarizing'], true);
-$judulRapat   = ! empty($minutes['judul_rapat']) ? $minutes['judul_rapat'] : $job['audio_filename'];
-$tanggalRapat = ! empty($minutes['tanggal_rapat']) ? $minutes['tanggal_rapat'] : substr((string) $job['created_at'], 0, 10);
+$judulRapat   = ! empty($schedule['judul']) ? $schedule['judul'] : $job['audio_filename'];
+$tanggalRapat = ! empty($schedule['tanggal']) ? $schedule['tanggal'] : substr((string) $job['created_at'], 0, 10);
 $durationMin  = ! empty($job['audio_duration']) ? round($job['audio_duration'] / 60) : null;
 $isCompleted  = $job['status'] === 'completed';
 $isFinal      = ($minutes && $minutes['status_verifikasi'] === 'final');
@@ -339,26 +339,15 @@ $statusLabel = $statusLabels[$job['status']] ?? strtoupper($job['status']);
                         <form method="post" action="<?= base_url('admin/notulen/update-minutes/' . $minutes['id']) ?>" class="space-y-5">
                             <?= csrf_field() ?>
 
-                            <!-- Baris Header Input: Judul & Tanggal -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 border-b border-base-200">
-                                <div class="sm:col-span-2">
-                                    <label class="label py-1">
-                                        <span class="label-text font-bold text-xs">Agenda / Judul Rapat <span class="text-error">*</span></span>
-                                    </label>
-                                    <input type="text"
-                                           name="judul_rapat"
-                                           class="input input-bordered input-sm w-full font-semibold"
-                                           value="<?= esc($judulRapat) ?>"
-                                           required />
-                                </div>
+                            <!-- Info Jadwal Terkait (Single Source of Truth) -->
+                            <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-base-200/60 rounded-xl border border-base-200">
                                 <div>
-                                    <label class="label py-1">
-                                        <span class="label-text font-bold text-xs">Tanggal Pelaksanaan</span>
-                                    </label>
-                                    <input type="date"
-                                           name="tanggal_rapat"
-                                           class="input input-bordered input-sm w-full"
-                                           value="<?= esc($tanggalRapat) ?>" />
+                                    <span class="text-xs text-base-content/60 block font-medium">Agenda Rapat:</span>
+                                    <strong class="text-sm font-bold text-base-content"><?= esc($judulRapat) ?></strong>
+                                </div>
+                                <div class="text-left sm:text-right">
+                                    <span class="text-xs text-base-content/60 block font-medium">Tanggal Pelaksanaan:</span>
+                                    <strong class="text-xs font-semibold text-base-content"><?= esc($tanggalRapat) ?></strong>
                                 </div>
                             </div>
 
