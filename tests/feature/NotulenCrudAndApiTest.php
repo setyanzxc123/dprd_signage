@@ -174,6 +174,99 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertNotNull($rowFinal['verified_at']);
     }
 
+    public function testUnfinalizeMinutesAndEditProtection(): void
+    {
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 31,
+            'jadwal_type'    => 'umum',
+            'audio_filename' => 'rapat_unfinalize.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'id'                  => 15,
+            'job_id'              => 31,
+            'ringkasan_eksekutif' => 'Ringkasan awal untuk tes finalisasi',
+            'status_verifikasi'   => 'final',
+            'verified_by'         => 1,
+            'verified_at'         => date('Y-m-d H:i:s'),
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        // 1. Coba update naskah saat status final via AJAX -> ditolak 422
+        $blockedResp = $this->withHeaders(['Accept' => 'application/json'])
+            ->adminPost('/admin/notulen/update-minutes/15', [
+                'ringkasan_eksekutif' => 'Perubahan yang harusnya ditolak',
+            ]);
+
+        $blockedResp->assertStatus(422);
+        $blockedJson = json_decode($blockedResp->response()->getBody(), true);
+        $this->assertSame('error', $blockedJson['status']);
+        $this->assertStringContainsString('buka kunci revisi', $blockedJson['message']);
+
+        // 2. Buka kunci revisi (unfinalize)
+        $unfinalizeResp = $this->adminPost('/admin/notulen/unfinalize/15', []);
+        $unfinalizeResp->assertStatus(302);
+
+        $rowDraft = (new MeetingMinutesModel($this->testDb))->find(15);
+        $this->assertSame('draft', $rowDraft['status_verifikasi']);
+        $this->assertNull($rowDraft['verified_at']);
+
+        // 3. Sekarang update naskah via AJAX berhasil (200 OK)
+        $allowedResp = $this->withHeaders(['Accept' => 'application/json'])
+            ->adminPost('/admin/notulen/update-minutes/15', [
+                'ringkasan_eksekutif' => 'Naskah berhasil direvisi setelah unfinalize',
+            ]);
+
+        $allowedResp->assertStatus(200);
+        $allowedJson = json_decode($allowedResp->response()->getBody(), true);
+        $this->assertSame('success', $allowedJson['status']);
+
+        $rowUpdated = (new MeetingMinutesModel($this->testDb))->find(15);
+        $this->assertSame('Naskah berhasil direvisi setelah unfinalize', $rowUpdated['ringkasan_eksekutif']);
+    }
+
+    public function testAudioStreamingEndpointReturnsByteRange(): void
+    {
+        $jobDir = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'recordings' . DIRECTORY_SEPARATOR . 'job_50' . DIRECTORY_SEPARATOR . 'audio';
+        if (! is_dir($jobDir)) {
+            mkdir($jobDir, 0777, true);
+        }
+        $dummyAudio = $jobDir . DIRECTORY_SEPARATOR . 'original.mp3';
+        file_put_contents($dummyAudio, str_repeat('A', 5000));
+
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 50,
+            'jadwal_type'    => 'umum',
+            'audio_filename' => 'audio_test.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        try {
+            // Request with Range header
+            $response = $this->withHeaders(['Range' => 'bytes=0-99'])
+                ->adminGet('/admin/notulen/audio/50');
+
+            $response->assertStatus(206);
+            $response->assertHeader('Content-Range', 'bytes 0-99/5000');
+            $response->assertHeader('Content-Length', '100');
+            $this->assertSame(100, strlen($response->response()->getBody()));
+        } finally {
+            if (is_file($dummyAudio)) {
+                @unlink($dummyAudio);
+            }
+            if (is_dir($jobDir)) {
+                @rmdir($jobDir);
+                @rmdir(dirname($jobDir));
+            }
+        }
+    }
+
     public function testRetryAndCancelEndpoints(): void
     {
         $this->testDb->table('meeting_transcription_jobs')->insert([

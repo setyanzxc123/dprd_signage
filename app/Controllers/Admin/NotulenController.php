@@ -87,6 +87,7 @@ class NotulenController extends BaseController
             'minutes'     => $detail['minutes'],
             'schedule'    => $detail['schedule'],
             'transcripts' => $detail['transcripts'],
+            'pillars'     => $detail['pillars'] ?? [],
         ]);
     }
 
@@ -240,34 +241,75 @@ class NotulenController extends BaseController
 
     /**
      * Endpoint streaming audio rekaman rapat untuk audio player di web admin.
+     * Mendukung HTTP 206 Partial Content (Range Request) untuk scrubber & proteksi memori.
      */
     public function audio(int $jobId): ResponseInterface
     {
-        $job = (new MeetingTranscriptionJobModel())->find($jobId);
-        if (! $job) {
-            return $this->response->setStatusCode(404)->setBody('Job tidak ditemukan.');
-        }
+        $audioPath = $this->service->resolveAudioPath($jobId);
 
-        $audioPath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'recordings' . DIRECTORY_SEPARATOR . 'job_' . $jobId . DIRECTORY_SEPARATOR . 'audio' . DIRECTORY_SEPARATOR . 'original.mp3';
-        if (! is_file($audioPath) && ! empty($job['audio_path'])) {
-            $candidate = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $job['audio_path'];
-            if (is_file($candidate)) {
-                $audioPath = $candidate;
-            }
-        }
-
-        if (! is_file($audioPath)) {
+        if (! $audioPath || ! is_file($audioPath)) {
             return $this->response->setStatusCode(404)->setBody('Berkas audio tidak ditemukan atau telah dibersihkan.');
         }
 
         $mime = mime_content_type($audioPath) ?: 'audio/mpeg';
         $size = filesize($audioPath);
 
+        $fp = @fopen($audioPath, 'rb');
+        if (! $fp) {
+            return $this->response->setStatusCode(500)->setBody('Gagal membuka berkas audio.');
+        }
+
+        $rangeHeader = $this->request->getHeaderLine('Range');
+        if (! empty($rangeHeader) && preg_match('/bytes=(\d+)-(\d+)?/i', $rangeHeader, $matches)) {
+            $start = (int) $matches[1];
+            $end   = ! empty($matches[2]) ? (int) $matches[2] : ($size - 1);
+
+            if ($start > $end || $start >= $size) {
+                fclose($fp);
+                return $this->response
+                    ->setStatusCode(416)
+                    ->setHeader('Content-Range', "bytes */{$size}");
+            }
+
+            $length = $end - $start + 1;
+            fseek($fp, $start);
+            $content = fread($fp, $length);
+            fclose($fp);
+
+            return $this->response
+                ->setStatusCode(206)
+                ->setHeader('Content-Type', $mime)
+                ->setHeader('Content-Range', "bytes {$start}-{$end}/{$size}")
+                ->setHeader('Content-Length', (string) $length)
+                ->setHeader('Accept-Ranges', 'bytes')
+                ->setHeader('Cache-Control', 'private, max-age=3600')
+                ->setBody($content);
+        }
+
+        if ($size > 10 * 1024 * 1024) {
+            $initialLength = min(2 * 1024 * 1024, $size);
+            $content = fread($fp, $initialLength);
+            fclose($fp);
+
+            return $this->response
+                ->setStatusCode(206)
+                ->setHeader('Content-Type', $mime)
+                ->setHeader('Content-Range', "bytes 0-" . ($initialLength - 1) . "/{$size}")
+                ->setHeader('Content-Length', (string) $initialLength)
+                ->setHeader('Accept-Ranges', 'bytes')
+                ->setHeader('Cache-Control', 'private, max-age=3600')
+                ->setBody($content);
+        }
+
+        $content = fread($fp, $size);
+        fclose($fp);
+
         return $this->response
             ->setHeader('Content-Type', $mime)
             ->setHeader('Content-Length', (string) $size)
             ->setHeader('Accept-Ranges', 'bytes')
-            ->setBody((string) file_get_contents($audioPath));
+            ->setHeader('Cache-Control', 'private, max-age=3600')
+            ->setBody($content);
     }
 
     /**
@@ -357,8 +399,9 @@ class NotulenController extends BaseController
 
     /**
      * Handler simpan revisi/editan risalah oleh notulis.
+     * Mendukung submission form standar (MPA) maupun AJAX JSON (Ctrl+S / Quick Save).
      */
-    public function updateMinutes(int $minutesId): RedirectResponse
+    public function updateMinutes(int $minutesId): ResponseInterface|RedirectResponse
     {
         $userId = $this->getCurrentUserId();
 
@@ -367,6 +410,20 @@ class NotulenController extends BaseController
         ];
 
         $result = $this->service->updateMinutes($minutesId, $input, $userId);
+
+        if ($this->request->isAJAX() || str_contains((string) $this->request->getHeaderLine('Accept'), 'application/json')) {
+            if (isset($result['error'])) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'status'  => 'error',
+                    'message' => $result['error'],
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => $result['message'] ?? 'Perubahan risalah rapat berhasil disimpan.',
+            ]);
+        }
 
         if (isset($result['error'])) {
             session()->setFlashdata('error', $result['error']);
@@ -390,6 +447,24 @@ class NotulenController extends BaseController
             session()->setFlashdata('error', $result['error']);
         } else {
             session()->setFlashdata('success', 'Risalah rapat telah difinalisasi.');
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * Handler buka kunci / revisi risalah rapat yang telah difinalisasi.
+     */
+    public function unfinalizeMinutes(int $minutesId): RedirectResponse
+    {
+        $userId = $this->getCurrentUserId();
+
+        $result = $this->service->unfinalizeMinutes($minutesId, $userId);
+
+        if (isset($result['error'])) {
+            session()->setFlashdata('error', $result['error']);
+        } else {
+            session()->setFlashdata('success', $result['message']);
         }
 
         return redirect()->back();

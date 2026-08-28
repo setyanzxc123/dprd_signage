@@ -126,6 +126,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'notulen/download-transcript/(:num)', 'Admin\NotulenController::downloadTranscript/$1');
     $routes->post('notulen/update-minutes/(:num)',      'Admin\NotulenController::updateMinutes/$1');
     $routes->post('notulen/finalize/(:num)',            'Admin\NotulenController::finalizeMinutes/$1');
+    $routes->post('notulen/unfinalize/(:num)',          'Admin\NotulenController::unfinalizeMinutes/$1');
     $routes->get( 'notulen/export-pdf/(:num)',          'Admin\NotulenController::exportPdf/$1');
 
     // Pengaturan Signage

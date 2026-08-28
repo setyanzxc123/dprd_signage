@@ -632,6 +632,10 @@ class NotulenService
             return ['error' => 'Data risalah rapat tidak ditemukan.'];
         }
 
+        if ($minutes['status_verifikasi'] === MeetingMinutesModel::STATUS_FINAL) {
+            return ['error' => 'Risalah rapat yang telah difinalisasi tidak dapat disunting. Silakan buka kunci revisi terlebih dahulu.'];
+        }
+
         $ringkasan = trim((string) ($input['ringkasan_eksekutif'] ?? ''));
 
         $updateData = [
@@ -672,6 +676,31 @@ class NotulenService
     }
 
     /**
+     * Buka kunci revisi risalah rapat yang telah difinalisasi (kembali ke draft).
+     */
+    public function unfinalizeMinutes(int $minutesId, ?int $userId = null, string $alasan = ''): array
+    {
+        $minutesModel = new MeetingMinutesModel($this->db);
+        $minutes = $minutesModel->find($minutesId);
+
+        if (! $minutes) {
+            return ['error' => 'Data risalah rapat tidak ditemukan.'];
+        }
+
+        $minutesModel->update($minutesId, [
+            'status_verifikasi' => MeetingMinutesModel::STATUS_DRAFT,
+            'verified_by'       => null,
+            'verified_at'       => null,
+        ]);
+
+        return [
+            'success'           => true,
+            'status_verifikasi' => MeetingMinutesModel::STATUS_DRAFT,
+            'message'           => 'Kunci naskah risalah berhasil dibuka. Mode penyuntingan/revisi kini aktif.',
+        ];
+    }
+
+    /**
      * Dapatkan detail lengkap notulen (Job + Minutes + Transkrip + Resolved Schedule SSOT).
      */
     public function getNotulenDetail(int $jobId): ?array
@@ -687,13 +716,140 @@ class NotulenService
         $minutes = $minutesModel->where('job_id', $jobId)->first();
         $transcripts = $this->readTranscripts($jobId);
         $schedule = $this->resolveScheduleInfo((string) ($job['jadwal_type'] ?? 'umum'), $job['jadwal_id'] ? (int) $job['jadwal_id'] : null);
+        $pillars = $this->parsePillarsFromText($minutes['ringkasan_eksekutif'] ?? null);
 
         return [
             'job'         => $job,
             'minutes'     => $minutes,
             'schedule'    => $schedule,
             'transcripts' => $transcripts,
+            'pillars'     => $pillars,
         ];
+    }
+
+    /**
+     * Mengekstrak 3 Pilar (Ringkasan Utama, Poin Pembahasan ber-cap waktu, dan Kesimpulan) dari teks risalah.
+     *
+     * @return array{ringkasan_utama: string, poin_pembahasan: list<array{waktu: ?string, topik: string}>, kesimpulan_akhir: list<string>}
+     */
+    public function parsePillarsFromText(?string $rawText): array
+    {
+        $default = [
+            'ringkasan_utama'  => '',
+            'poin_pembahasan'  => [],
+            'kesimpulan_akhir' => [],
+        ];
+
+        if (empty($rawText)) {
+            return $default;
+        }
+
+        $text = trim($rawText);
+
+        // Pola pemisahan 3 Bagian Romawi
+        $p1Pattern = '/(?:^|\n)(?:I\.\s*RINGKASAN\s*UTAMA[^\n]*\n)([\s\S]*?)(?=(?:\nII\.\s*POIN|\nIII\.\s*KESIMPULAN|$))/i';
+        $p2Pattern = '/(?:^|\n)(?:II\.\s*POIN[^\n]*\n)([\s\S]*?)(?=(?:\nIII\.\s*KESIMPULAN|$))/i';
+        $p3Pattern = '/(?:^|\n)(?:III\.\s*KESIMPULAN[^\n]*\n)([\s\S]*?)$/i';
+
+        $p1Match = [];
+        $p2Match = [];
+        $p3Match = [];
+
+        preg_match($p1Pattern, $text, $p1Match);
+        preg_match($p2Pattern, $text, $p2Match);
+        preg_match($p3Pattern, $text, $p3Match);
+
+        $p1Raw = trim($p1Match[1] ?? '');
+        $p2Raw = trim($p2Match[1] ?? '');
+        $p3Raw = trim($p3Match[1] ?? '');
+
+        // Jika tidak cocok dengan pola 3 pilar romawi, jadikan seluruh teks sebagai ringkasan utama
+        if (empty($p1Raw) && empty($p2Raw) && empty($p3Raw)) {
+            $default['ringkasan_utama'] = $text;
+            return $default;
+        }
+
+        $default['ringkasan_utama'] = $p1Raw;
+
+        // Parse Poin-Poin Pembahasan (mencari cap waktu atau penomoran)
+        if (! empty($p2Raw)) {
+            $lines = explode("\n", $p2Raw);
+            $currentTopic = null;
+            $currentTime = null;
+
+            foreach ($lines as $line) {
+                $trimmed = trim($line);
+                if ($trimmed === '') {
+                    continue;
+                }
+
+                // Cek apakah baris diawali cap waktu (e.g. 00:12:45, [00:12:45], (12:45), 1. [00:12:45] Topik)
+                if (preg_match('/^(?:(?:\d+[\.\)]\s*)?\[?(\d{1,2}:\d{2}(?::\d{2})?)\]?\s*[-:]?\s*)(.*)$/i', $trimmed, $timeMatches)) {
+                    if ($currentTopic !== null) {
+                        $default['poin_pembahasan'][] = [
+                            'waktu' => $currentTime,
+                            'topik' => trim($currentTopic),
+                        ];
+                    }
+                    $currentTime = $timeMatches[1];
+                    $currentTopic = $timeMatches[2];
+                } elseif (preg_match('/^(?:\d+[\.\)]|\-|\*)\s+(.*)$/', $trimmed, $bulletMatches)) {
+                    if ($currentTopic !== null) {
+                        $default['poin_pembahasan'][] = [
+                            'waktu' => $currentTime,
+                            'topik' => trim($currentTopic),
+                        ];
+                    }
+                    $currentTime = null;
+                    $currentTopic = $bulletMatches[1];
+                } else {
+                    if ($currentTopic !== null) {
+                        $currentTopic .= ' ' . $trimmed;
+                    } else {
+                        $currentTopic = $trimmed;
+                    }
+                }
+            }
+
+            if ($currentTopic !== null) {
+                $default['poin_pembahasan'][] = [
+                    'waktu' => $currentTime,
+                    'topik' => trim($currentTopic),
+                ];
+            }
+        }
+
+        // Parse Kesimpulan & Keputusan Akhir (checklist butir)
+        if (! empty($p3Raw)) {
+            $lines = explode("\n", $p3Raw);
+            $currentConclusion = null;
+
+            foreach ($lines as $line) {
+                $trimmed = trim($line);
+                if ($trimmed === '') {
+                    continue;
+                }
+
+                if (preg_match('/^(?:\d+[\.\)]|\-|\*|✔|✓)\s+(.*)$/u', $trimmed, $matches)) {
+                    if ($currentConclusion !== null) {
+                        $default['kesimpulan_akhir'][] = trim($currentConclusion);
+                    }
+                    $currentConclusion = $matches[1];
+                } else {
+                    if ($currentConclusion !== null) {
+                        $currentConclusion .= ' ' . $trimmed;
+                    } else {
+                        $currentConclusion = $trimmed;
+                    }
+                }
+            }
+
+            if ($currentConclusion !== null) {
+                $default['kesimpulan_akhir'][] = trim($currentConclusion);
+            }
+        }
+
+        return $default;
     }
 
     /**
@@ -781,28 +937,50 @@ class NotulenService
         return $this->resolveScheduleInfo($type, $id)['tanggal'];
     }
 
-    private function normalizeJsonField(mixed $value): ?string
+    /**
+     * Mencari path absolut file audio fisik rekaman job transkripsi.
+     */
+    public function resolveAudioPath(int $jobId): ?string
     {
-        if ($value === null) {
+        $job = (new MeetingTranscriptionJobModel($this->db))->find($jobId);
+        if (! $job) {
             return null;
         }
-        if (is_string($value)) {
-            $trimmed = trim($value);
-            if ($trimmed === '') {
-                return null;
+
+        $jobDir = $this->getJobDir($jobId);
+        $audioDir = $jobDir . DIRECTORY_SEPARATOR . 'audio';
+
+        // Cek file audio langsung di folder audio job
+        if (is_dir($audioDir)) {
+            $files = glob($audioDir . DIRECTORY_SEPARATOR . '*');
+            if ($files) {
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        if (in_array($ext, ['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg', 'mp4', 'webm'], true)) {
+                            return $file;
+                        }
+                    }
+                }
             }
-            // Jika sudah format JSON valid
-            $decoded = json_decode($trimmed, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return json_encode($decoded, JSON_UNESCAPED_UNICODE);
+        }
+
+        // Cek fallback audio_path di database
+        if (! empty($job['audio_path'])) {
+            $candidate1 = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . ltrim(str_replace('writable/uploads/', '', $job['audio_path']), '/\\');
+            if (is_file($candidate1)) {
+                return $candidate1;
             }
-            // Jika teks multiline dipisah baris baru
-            $lines = array_filter(array_map('trim', explode("\n", $trimmed)), fn ($line) => $line !== '');
-            return json_encode(array_values($lines), JSON_UNESCAPED_UNICODE);
+            $candidate2 = WRITEPATH . ltrim($job['audio_path'], '/\\');
+            if (is_file($candidate2)) {
+                return $candidate2;
+            }
+            $candidate3 = FCPATH . ltrim($job['audio_path'], '/\\');
+            if (is_file($candidate3)) {
+                return $candidate3;
+            }
         }
-        if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE);
-        }
+
         return null;
     }
 

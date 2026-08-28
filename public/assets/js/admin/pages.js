@@ -1832,13 +1832,143 @@
 
 (() => {
     let notulenPollTimer = null;
+    let notulenPollAbort = null;
+    let isNotulenDirty = false;
 
     const initializeNotulenShowWorkspace = () => {
+        // Reset timers & controllers
         if (notulenPollTimer) {
             clearInterval(notulenPollTimer);
             notulenPollTimer = null;
         }
+        if (notulenPollAbort) {
+            notulenPollAbort.abort();
+            notulenPollAbort = null;
+        }
+        isNotulenDirty = false;
 
+        const textarea = document.getElementById('ringkasan_eksekutif');
+        const form = document.getElementById('form_update_minutes');
+        const dirtyBadge = document.getElementById('dirty_indicator');
+        const audioPlayer = document.getElementById('audio_player');
+
+        // Dirty State Tracking
+        if (textarea) {
+            const originalValue = textarea.value;
+            textarea.addEventListener('input', () => {
+                isNotulenDirty = textarea.value !== originalValue;
+                if (dirtyBadge) {
+                    dirtyBadge.classList.toggle('hidden', !isNotulenDirty);
+                }
+            });
+        }
+
+        // Reset dirty flag on direct form submit
+        if (form) {
+            form.addEventListener('submit', () => {
+                isNotulenDirty = false;
+            });
+        }
+
+        // Quick Save (Ctrl+S) via AJAX
+        const handleQuickSave = async () => {
+            if (!form || !textarea) return;
+            const submitBtn = document.getElementById('btn_save_draft');
+            const lastSavedTime = document.getElementById('last_saved_time');
+            const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+
+            try {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="loading loading-spinner loading-xs mr-1"></span> Menyimpan...';
+                }
+
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (response.ok && data.status === 'success') {
+                    isNotulenDirty = false;
+                    if (dirtyBadge) dirtyBadge.classList.add('hidden');
+                    if (lastSavedTime) {
+                        const now = new Date();
+                        lastSavedTime.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WITA';
+                    }
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i data-lucide="check" class="h-4 w-4"></i> Tersimpan!';
+                        if (window.lucide) window.lucide.createIcons();
+                    }
+                } else {
+                    alert(data.message || 'Gagal menyimpan draf risalah.');
+                }
+            } catch (err) {
+                console.error('Quick save error:', err);
+                form.submit(); // Fallback to standard MPA submit
+            } finally {
+                setTimeout(() => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                        if (window.lucide) window.lucide.createIcons();
+                    }
+                }, 1500);
+            }
+        };
+
+        // Hotkeys Stenografer (Ctrl+S, Ctrl+Space, Alt+J, Alt+K)
+        const keyHandler = (e) => {
+            const hasOpenModal = document.querySelector('dialog[open]');
+            if (hasOpenModal) return;
+
+            // Ctrl + S / Cmd + S -> Quick Save
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.code === 'KeyS')) {
+                if (form) {
+                    e.preventDefault();
+                    handleQuickSave();
+                }
+            }
+
+            // Ctrl + Space atau Alt + Space -> Play/Pause Audio
+            if ((e.ctrlKey || e.altKey) && (e.code === 'Space' || e.key === ' ')) {
+                if (audioPlayer) {
+                    e.preventDefault();
+                    if (audioPlayer.paused) {
+                        audioPlayer.play();
+                    } else {
+                        audioPlayer.pause();
+                    }
+                }
+            }
+
+            // Alt + J / Alt + ArrowLeft -> Seek -5s
+            if (e.altKey && (e.code === 'KeyJ' || e.key === 'j' || e.code === 'ArrowLeft' || e.key === 'ArrowLeft')) {
+                if (audioPlayer) {
+                    e.preventDefault();
+                    audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
+                }
+            }
+
+            // Alt + K / Alt + ArrowRight -> Seek +5s
+            if (e.altKey && (e.code === 'KeyK' || e.key === 'k' || e.code === 'ArrowRight' || e.key === 'ArrowRight')) {
+                if (audioPlayer) {
+                    e.preventDefault();
+                    audioPlayer.currentTime = Math.min(audioPlayer.duration || Infinity, audioPlayer.currentTime + 5);
+                }
+            }
+        };
+
+        document.removeEventListener('keydown', window.__notulenKeyHandler);
+        window.__notulenKeyHandler = keyHandler;
+        document.addEventListener('keydown', keyHandler);
+
+        // Polling Progress Lifecycle
         const pollElement = document.querySelector('[data-notulen-poll]');
         if (!pollElement) return;
 
@@ -1849,7 +1979,10 @@
         if (!activeStatuses.includes(initialStatus) || !statusUrl) return;
 
         const poll = () => {
-            fetch(statusUrl)
+            if (notulenPollAbort) notulenPollAbort.abort();
+            notulenPollAbort = new AbortController();
+
+            fetch(statusUrl, { signal: notulenPollAbort.signal })
                 .then(r => r.ok ? r.json() : null)
                 .then(json => {
                     if (!json || json.status !== 'success' || !json.data) return;
@@ -1872,6 +2005,9 @@
                             clearInterval(notulenPollTimer);
                             notulenPollTimer = null;
                         }
+                        // Jika notulis sedang mengetik draf, jangan reload paksa yang merusak editan
+                        if (isNotulenDirty) return;
+
                         setTimeout(() => {
                             if (window.Turbo) {
                                 window.Turbo.visit(window.location.href, { action: 'replace' });
@@ -1881,17 +2017,45 @@
                         }, 1200);
                     }
                 })
-                .catch(e => console.warn('Poll error:', e));
+                .catch(e => {
+                    if (e.name !== 'AbortError') {
+                        console.warn('Poll error:', e);
+                    }
+                });
         };
 
         notulenPollTimer = setInterval(poll, 3500);
     };
+
+    // Navigation and Unload Guards
+    window.addEventListener('beforeunload', (e) => {
+        if (isNotulenDirty) {
+            e.preventDefault();
+            e.returnValue = 'Terdapat perubahan draf risalah yang belum disimpan!';
+        }
+    });
+
+    document.addEventListener('turbo:before-visit', (e) => {
+        if (isNotulenDirty) {
+            const confirmLeave = window.confirm('Terdapat perubahan draf risalah yang belum disimpan. Yakin ingin berpindah halaman?');
+            if (!confirmLeave) {
+                e.preventDefault();
+            }
+        }
+    });
 
     document.addEventListener('turbo:load', initializeNotulenShowWorkspace);
     document.addEventListener('turbo:before-cache', () => {
         if (notulenPollTimer) {
             clearInterval(notulenPollTimer);
             notulenPollTimer = null;
+        }
+        if (notulenPollAbort) {
+            notulenPollAbort.abort();
+            notulenPollAbort = null;
+        }
+        if (window.__notulenKeyHandler) {
+            document.removeEventListener('keydown', window.__notulenKeyHandler);
         }
     });
 })();
