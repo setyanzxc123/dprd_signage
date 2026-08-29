@@ -239,6 +239,13 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
             });
 
             for await (const chunk of stream) {
+              if (cancelChecker && typeof cancelChecker === 'function') {
+                const isCancelled = await cancelChecker();
+                if (isCancelled) {
+                  throw new Error('JOB_CANCELLED_BY_ADMIN');
+                }
+              }
+
               const textChunk = chunk.text ?? '';
               accumulated += textChunk;
 
@@ -394,6 +401,13 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
           });
 
           for await (const chunk of stream) {
+            if (cancelChecker && typeof cancelChecker === 'function') {
+              const isCancelled = await cancelChecker();
+              if (isCancelled) {
+                throw new Error('JOB_CANCELLED_BY_ADMIN');
+              }
+            }
+
             accumulated += chunk.text ?? '';
 
             const now = Date.now();

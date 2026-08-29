@@ -73,7 +73,7 @@ function sliceSingleSegment(inputPath, outputPath, startTimeSeconds, durationSec
  * @param {number} chunkDurationSeconds Durasi potongan dalam detik (default: 1800)
  * @returns {Promise<Object>} Metadata pemotongan ({ totalDuration, totalChunks, chunkFiles })
  */
-export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 1800) {
+export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 1800, cancelChecker = null) {
   if (!fs.existsSync(inputPath)) {
     throw new Error(`File input rekaman tidak ditemukan: ${inputPath}`);
   }
@@ -88,6 +88,13 @@ export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 18
   const chunkFiles = [];
 
   for (let i = 1; i <= totalChunks; i++) {
+    if (cancelChecker && typeof cancelChecker === 'function') {
+      const isCancelled = await cancelChecker();
+      if (isCancelled) {
+        throw new Error('JOB_CANCELLED_BY_ADMIN');
+      }
+    }
+
     const chunkNum = formatChunkIndex(i);
     const chunkFileName = `chunk_${chunkNum}.mp3`;
     const chunkFilePath = path.join(outputDir, chunkFileName);

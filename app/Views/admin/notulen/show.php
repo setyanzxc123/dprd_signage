@@ -13,6 +13,7 @@ $durationFormatted = ! empty($job['audio_duration'])
 
 $isCompleted  = $job['status'] === 'completed';
 $isFailed     = $job['status'] === 'failed';
+$isCancelled  = $job['status'] === 'cancelled';
 $isFinal      = ($minutes && $minutes['status_verifikasi'] === 'final');
 
 // Cek ketersediaan file master audio fisik asli
@@ -50,6 +51,52 @@ if ($job['jadwal_type'] === 'banmus') {
                         <i data-lucide="sparkles" class="h-3 w-3 text-base-content/70"></i>
                         <span id="ai_model_label_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
                     </span>
+                </div>
+
+                <!-- Kontrol Proses AI: Stop / Resume / Badge Status -->
+                <div class="flex items-center gap-2" id="notulen_process_controls">
+                    <?php if ($isCancelled): ?>
+                        <span class="badge badge-sm bg-warning/15 border border-warning/40 text-base-content font-semibold text-[11px] gap-1.5 py-1 px-2.5">
+                            <i data-lucide="pause" class="h-3 w-3 fill-current text-warning"></i> Dihentikan
+                        </span>
+                        <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-xs btn-primary gap-1.5 text-white font-bold shadow-xs">
+                                <i data-lucide="play" class="h-3.5 w-3.5 fill-current"></i>
+                                Lanjutkan Proses
+                            </button>
+                        </form>
+                    <?php elseif ($isFailed): ?>
+                        <span class="badge badge-sm bg-error/15 border border-error/40 text-error font-semibold text-[11px] gap-1.5 py-1 px-2.5">
+                            <i data-lucide="alert-triangle" class="h-3.5 w-3.5"></i> Gagal
+                        </span>
+                        <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-xs btn-error text-white font-bold gap-1.5 shadow-xs">
+                                <i data-lucide="rotate-cw" class="h-3.5 w-3.5"></i>
+                                Coba Ulang
+                            </button>
+                        </form>
+                    <?php elseif ($isCompleted): ?>
+                        <span class="badge badge-sm bg-success/15 border border-success/40 text-success font-semibold text-[11px] gap-1.5 py-1 px-2.5">
+                            <i data-lucide="check-circle-2" class="h-3.5 w-3.5"></i> Selesai 100%
+                        </span>
+                    <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
+                        <?php if (! empty($job['cancel_requested'])): ?>
+                            <button type="button" disabled class="btn btn-xs btn-warning text-base-content gap-1.5 font-bold cursor-not-allowed shadow-xs opacity-90">
+                                <span class="loading loading-spinner loading-xs"></span>
+                                Menghentikan...
+                            </button>
+                        <?php else: ?>
+                            <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>" onsubmit="return confirm('Hentikan proses AI sekarang? Bagian transkrip yang telah selesai akan tetap tersimpan aman.');">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-xs btn-error gap-1.5 text-white font-bold shadow-xs" title="Hentikan sementara proses AI">
+                                    <i data-lucide="square" class="h-3 w-3 fill-current"></i>
+                                    Hentikan Proses
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -167,22 +214,21 @@ if ($job['jadwal_type'] === 'banmus') {
                 </div>
             </div>
 
-            <!-- Info Bar Bawah Stepper -->
+            <!-- Info / Alert Bar Bawah Stepper -->
             <?php if ($isInProgress || $job['status'] === 'queued'): ?>
                 <div class="alert bg-base-200/60 border border-base-300 py-2.5 px-3.5 text-xs flex items-center gap-2 text-base-content/80 mt-2 rounded-lg">
                     <i data-lucide="info" class="h-4 w-4 shrink-0 text-base-content/60"></i>
                     <span>Proses berjalan di background. Anda dapat menutup halaman ini. Sistem akan otomatis memuat hasil begitu selesai.</span>
                 </div>
+            <?php elseif ($isCancelled): ?>
+                <div class="alert bg-warning/15 border border-warning/30 py-2.5 px-3.5 text-xs flex items-center gap-2 text-base-content mt-2 rounded-lg">
+                    <i data-lucide="pause" class="h-4 w-4 shrink-0 text-warning fill-current"></i>
+                    <span>Proses AI dihentikan sementara. Klik tombol <strong>Lanjutkan Proses</strong> di bagian atas untuk melanjutkan dari checkpoint terakhir.</span>
+                </div>
             <?php elseif ($isFailed): ?>
-                <div class="alert bg-error/15 border border-error/30 py-2.5 px-3.5 text-xs flex items-center justify-between gap-2 text-base-content mt-2 rounded-lg">
-                    <div class="flex items-center gap-2 text-base-content">
-                        <i data-lucide="alert-triangle" class="h-4 w-4 shrink-0 text-error"></i>
-                        <span>Pemrosesan mengalami kendala: <strong class="text-error font-semibold"><?= esc($job['error_message']) ?: 'Koneksi AI timeout.' ?></strong></span>
-                    </div>
-                    <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-error btn-xs text-white font-bold">Proses Ulang</button>
-                    </form>
+                <div class="alert bg-error/15 border border-error/30 py-2.5 px-3.5 text-xs flex items-center gap-2 text-base-content mt-2 rounded-lg">
+                    <i data-lucide="alert-triangle" class="h-4 w-4 shrink-0 text-error"></i>
+                    <span>Pemrosesan mengalami kendala: <strong class="text-error font-semibold"><?= esc($job['error_message']) ?: 'Koneksi AI timeout.' ?></strong></span>
                 </div>
             <?php endif; ?>
 
@@ -263,11 +309,11 @@ if ($job['jadwal_type'] === 'banmus') {
             <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-                    <!-- KARTU 1: 1. Ringkasan Utama (Netral Elegan) -->
-                    <div class="card card-border bg-base-200/30 shadow-2xs border-base-300 flex flex-col justify-between rounded-xl">
+                    <!-- KARTU 1: 1. Ringkasan Utama (Ungu/Indigo Tint) -->
+                    <div class="card card-border bg-indigo-50/40 dark:bg-indigo-950/20 shadow-2xs border-indigo-200/80 dark:border-indigo-800/40 flex flex-col justify-between rounded-xl">
                         <div class="card-body p-4 sm:p-5 space-y-3">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-base-300/60 flex items-center justify-center text-base-content shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
                                     <i data-lucide="sparkles" class="h-4 w-4"></i>
                                 </div>
                                 <div>
@@ -282,11 +328,11 @@ if ($job['jadwal_type'] === 'banmus') {
                         </div>
                     </div>
 
-                    <!-- KARTU 2: 2. Poin-Poin Pembahasan (Netral Elegan) -->
-                    <div class="card card-border bg-base-200/30 shadow-2xs border-base-300 flex flex-col justify-between rounded-xl">
+                    <!-- KARTU 2: 2. Poin-Poin Pembahasan (Oranye/Amber Tint) -->
+                    <div class="card card-border bg-amber-50/40 dark:bg-amber-950/20 shadow-2xs border-amber-200/80 dark:border-amber-800/40 flex flex-col justify-between rounded-xl">
                         <div class="card-body p-4 sm:p-5 space-y-3">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-base-300/60 flex items-center justify-center text-base-content shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
                                     <i data-lucide="list-ordered" class="h-4 w-4"></i>
                                 </div>
                                 <div>
@@ -300,11 +346,11 @@ if ($job['jadwal_type'] === 'banmus') {
                                     <?php foreach ($pillars['poin_pembahasan'] as $poin): ?>
                                         <div class="flex items-start gap-2 text-xs text-base-content">
                                             <?php if (! empty($poin['waktu'])): ?>
-                                                <span class="badge badge-ghost badge-xs font-mono text-[10px] shrink-0 mt-0.5 text-base-content/90">
+                                                <span class="badge badge-xs bg-amber-100 dark:bg-amber-900/50 border border-amber-300 dark:border-amber-700/60 font-mono text-[10px] shrink-0 mt-0.5 text-amber-900 dark:text-amber-200 font-semibold">
                                                     <?= esc($poin['waktu']) ?>
                                                 </span>
                                             <?php else: ?>
-                                                <span class="h-1.5 w-1.5 rounded-full bg-base-content/40 shrink-0 mt-1.5"></span>
+                                                <span class="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5"></span>
                                             <?php endif; ?>
                                             <span class="leading-relaxed"><?= esc($poin['topik']) ?></span>
                                         </div>
@@ -316,11 +362,11 @@ if ($job['jadwal_type'] === 'banmus') {
                         </div>
                     </div>
 
-                    <!-- KARTU 3: 3. Kesimpulan & Keputusan Akhir (Netral Elegan) -->
-                    <div class="card card-border bg-base-200/30 shadow-2xs border-base-300 flex flex-col justify-between rounded-xl">
+                    <!-- KARTU 3: 3. Kesimpulan & Keputusan Akhir (Hijau/Emerald Tint) -->
+                    <div class="card card-border bg-emerald-50/40 dark:bg-emerald-950/20 shadow-2xs border-emerald-200/80 dark:border-emerald-800/40 flex flex-col justify-between rounded-xl">
                         <div class="card-body p-4 sm:p-5 space-y-3">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-base-300/60 flex items-center justify-center text-base-content shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                                     <i data-lucide="check-square" class="h-4 w-4"></i>
                                 </div>
                                 <div>
@@ -333,7 +379,7 @@ if ($job['jadwal_type'] === 'banmus') {
                                 <?php if (! empty($pillars['kesimpulan_akhir'])): ?>
                                     <?php foreach ($pillars['kesimpulan_akhir'] as $butir): ?>
                                         <div class="flex items-start gap-2 text-xs text-base-content">
-                                            <i data-lucide="check" class="h-4 w-4 text-success shrink-0 mt-0.5"></i>
+                                            <i data-lucide="check" class="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5"></i>
                                             <span class="leading-relaxed"><?= esc($butir) ?></span>
                                         </div>
                                     <?php endforeach; ?>

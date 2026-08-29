@@ -543,6 +543,67 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $showResponse = $this->adminGet('/admin/notulen/101');
         $showResponse->assertOK();
         $showResponse->assertSee('(Setelah proses selesai)');
+        // Tombol Hentikan harus muncul saat job in-progress
+        $showResponse->assertSee('Hentikan');
+    }
+
+    public function testStopAndResumeButtonsAndLifecycleInNotulenShow(): void
+    {
+        $jobId = 105;
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => $jobId,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 44,
+            'audio_filename' => 'rapat_stop_resume.mp3',
+            'status'         => 'transcribing',
+            'progress_percent' => 45,
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'id'                  => $jobId,
+            'job_id'              => $jobId,
+            'ringkasan_eksekutif' => null,
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        // 1. Verifikasi halaman show menampilkan tombol Hentikan saat job berjalan
+        $showResponse = $this->adminGet("/admin/notulen/{$jobId}");
+        $showResponse->assertOK();
+        $showResponse->assertSee('Hentikan');
+
+        // 2. Kirim request cancel/stop
+        $cancelResponse = $this->adminPost("/admin/notulen/cancel/{$jobId}", []);
+        $cancelResponse->assertRedirect();
+
+        // Verifikasi cancel_requested menjadi 1
+        $job = $this->testDb->table('meeting_transcription_jobs')->where('id', $jobId)->get()->getRowArray();
+        $this->assertSame(1, (int) $job['cancel_requested']);
+
+        // 3. Simulasikan worker menandai status menjadi cancelled
+        $this->testDb->table('meeting_transcription_jobs')->where('id', $jobId)->update([
+            'status'           => 'cancelled',
+            'cancel_requested' => 0,
+            'current_step'     => 'Dibatalkan oleh admin',
+        ]);
+
+        // 4. Verifikasi halaman show sekarang menampilkan badge Dihentikan dan tombol Lanjutkan
+        $cancelledShowResponse = $this->adminGet("/admin/notulen/{$jobId}");
+        $cancelledShowResponse->assertOK();
+        $cancelledShowResponse->assertSee('Dihentikan');
+        $cancelledShowResponse->assertSee('Lanjutkan');
+
+        // 5. Kirim request resume/retry
+        $resumeResponse = $this->adminPost("/admin/notulen/retry/{$jobId}", []);
+        $resumeResponse->assertRedirect();
+
+        // Verifikasi job kembali ke antrean queued untuk melanjutkan checkpoint
+        $resumedJob = $this->testDb->table('meeting_transcription_jobs')->where('id', $jobId)->get()->getRowArray();
+        $this->assertSame('queued', $resumedJob['status']);
+        $this->assertSame(0, (int) $resumedJob['cancel_requested']);
     }
 
     private function adminGet(string $path)
