@@ -122,6 +122,7 @@ class NotulenController extends BaseController
             'schedule'     => $detail['schedule'],
             'transcripts'  => $detail['transcripts'],
             'pillars'      => $detail['pillars'] ?? [],
+            'hasAudioFile' => $detail['hasAudioFile'] ?? false,
             'aiModelLabel' => NotulenService::formatAiModelLabel($detail['job']['ai_model'] ?? null),
         ]);
     }
@@ -323,21 +324,6 @@ class NotulenController extends BaseController
                 ->setBody($content);
         }
 
-        if ($size > 10 * 1024 * 1024) {
-            $initialLength = min(2 * 1024 * 1024, $size);
-            $content = fread($fp, $initialLength);
-            fclose($fp);
-
-            return $this->response
-                ->setStatusCode(206)
-                ->setHeader('Content-Type', $mime)
-                ->setHeader('Content-Range', "bytes 0-" . ($initialLength - 1) . "/{$size}")
-                ->setHeader('Content-Length', (string) $initialLength)
-                ->setHeader('Accept-Ranges', 'bytes')
-                ->setHeader('Cache-Control', 'private, max-age=3600')
-                ->setBody($content);
-        }
-
         $content = fread($fp, $size);
         fclose($fp);
 
@@ -415,9 +401,16 @@ class NotulenController extends BaseController
 
     /**
      * Handler unduh transkrip percakapan utuh (.txt).
+     * Hanya dapat diunduh jika proses transkripsi AI telah selesai 100%.
      */
     public function downloadTranscript(int $id): ResponseInterface|RedirectResponse
     {
+        $job = (new MeetingTranscriptionJobModel())->find($id);
+        if (! $job || $job['status'] !== MeetingTranscriptionJobModel::STATUS_COMPLETED) {
+            session()->setFlashdata('error', 'Berkas transkrip belum dapat diunduh karena proses transkripsi AI belum selesai.');
+            return redirect()->back();
+        }
+
         $transcripts = $this->service->readTranscripts($id);
         $fullText = $transcripts['full_text'];
 
@@ -509,6 +502,7 @@ class NotulenController extends BaseController
 
     /**
      * Halaman cetak resmi / export PDF risalah dengan kop surat DPRD (SSOT).
+     * Hanya dapat dicetak jika proses penyusunan AI telah selesai dan teks risalah tersedia.
      */
     public function exportPdf(int $minutesId): string|RedirectResponse
     {
@@ -520,7 +514,12 @@ class NotulenController extends BaseController
             return redirect()->to(base_url('admin/notulen'));
         }
 
-        $job = (new MeetingTranscriptionJobModel())->find($minutes['job_id']);
+        $job = (new MeetingTranscriptionJobModel())->find((int) $minutes['job_id']);
+        if (! $job || $job['status'] !== MeetingTranscriptionJobModel::STATUS_COMPLETED || empty($minutes['ringkasan_eksekutif'])) {
+            session()->setFlashdata('error', 'Risalah rapat belum dapat dicetak karena proses penyusunan AI belum selesai.');
+            return redirect()->to(base_url('admin/notulen/' . ($job['id'] ?? '')));
+        }
+
         $schedule = $this->service->resolveScheduleInfo(
             (string) ($job['jadwal_type'] ?? 'umum'),
             $job && $job['jadwal_id'] ? (int) $job['jadwal_id'] : null

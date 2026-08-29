@@ -3,7 +3,7 @@ import path from 'node:path';
 import { GoogleGenAI } from '@google/genai';
 import { config } from '../config.js';
 import { callWithRetry } from './throttler.js';
-import { formatChunkIndex } from './audioSlicer.js';
+import { formatChunkIndex, probeDuration } from './audioSlicer.js';
 
 // Inisialisasi Google GenAI Client
 let aiClient = null;
@@ -123,6 +123,8 @@ export async function transcribeChunkWithFallback({
   chunkPath,
   chunkIndex,
   totalChunks,
+  durationSeconds = null,
+  isLastChunk = false,
   transcriptsDir,
   cancelChecker = null,
   onLog = console.log,
@@ -136,9 +138,33 @@ export async function transcribeChunkWithFallback({
     fs.mkdirSync(transcriptsDir, { recursive: true });
   }
 
-  // Hitung minimum kata yang diharapkan berdasarkan durasi chunk
-  const chunkDurationMin = config.audio.chunkDurationSeconds / 60;
-  const minExpectedWords = Math.floor(chunkDurationMin * config.validation.minWordsPerMinute);
+  // Hitung durasi aktual potongan audio (dalam detik)
+  let actualDurationSeconds = durationSeconds;
+  if (typeof actualDurationSeconds !== 'number' || actualDurationSeconds <= 0) {
+    try {
+      if (fs.existsSync(chunkPath)) {
+        actualDurationSeconds = await probeDuration(chunkPath);
+      }
+    } catch {
+      actualDurationSeconds = config.audio.chunkDurationSeconds;
+    }
+  }
+  if (!actualDurationSeconds || actualDurationSeconds <= 0) {
+    actualDurationSeconds = config.audio.chunkDurationSeconds;
+  }
+
+  const chunkDurationMin = actualDurationSeconds / 60;
+  const isFinalChunk = isLastChunk || (chunkIndex === totalChunks);
+
+  // Hitung minimum kata yang diharapkan secara proporsional sesuai durasi aktual.
+  // Untuk chunk terakhir (isFinalChunk): berikan whitelist / toleransi fleksibel (minimum floor 30 kata)
+  // guna mengantisipasi penutupan rapat/sidang singkat tanpa false positive.
+  let minExpectedWords;
+  if (isFinalChunk) {
+    minExpectedWords = Math.min(30, Math.max(10, Math.floor(chunkDurationMin * config.validation.minWordsPerMinute)));
+  } else {
+    minExpectedWords = Math.max(50, Math.floor(chunkDurationMin * config.validation.minWordsPerMinute));
+  }
 
   // 1. Cek Checkpoint: jika chunk_NNN.txt final sudah ada, validasi dulu sebelum lewati
   if (fs.existsSync(finalFilePath)) {

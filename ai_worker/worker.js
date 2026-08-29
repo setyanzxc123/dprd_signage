@@ -240,6 +240,8 @@ export async function processJob(pool, job) {
       chunkPath: chunk.path,
       chunkIndex: chunk.index,
       totalChunks,
+      durationSeconds: chunk.durationSeconds,
+      isLastChunk: (chunk.index === totalChunks),
       transcriptsDir,
       cancelChecker: isCancelled,
       onLog: (msg) => console.log(`[Job #${jobId}] ${msg}`),

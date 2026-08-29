@@ -763,17 +763,19 @@ class NotulenService
             return null;
         }
 
-        $minutes = $minutesModel->where('job_id', $jobId)->first();
+        $minutes     = $minutesModel->where('job_id', $jobId)->first();
         $transcripts = $this->readTranscripts($jobId);
-        $schedule = $this->resolveScheduleInfo((string) ($job['jadwal_type'] ?? 'umum'), $job['jadwal_id'] ? (int) $job['jadwal_id'] : null);
-        $pillars = $this->parsePillarsFromText($minutes['ringkasan_eksekutif'] ?? null);
+        $schedule    = $this->resolveScheduleInfo((string) ($job['jadwal_type'] ?? 'umum'), $job['jadwal_id'] ? (int) $job['jadwal_id'] : null);
+        $pillars     = $this->parsePillarsFromText($minutes['ringkasan_eksekutif'] ?? null);
+        $audioPath   = $this->resolveAudioPath($jobId);
 
         return [
-            'job'         => $job,
-            'minutes'     => $minutes,
-            'schedule'    => $schedule,
-            'transcripts' => $transcripts,
-            'pillars'     => $pillars,
+            'job'          => $job,
+            'minutes'      => $minutes,
+            'schedule'     => $schedule,
+            'transcripts'  => $transcripts,
+            'pillars'      => $pillars,
+            'hasAudioFile' => ($audioPath !== null && is_file($audioPath)),
         ];
     }
 
@@ -1063,7 +1065,8 @@ class NotulenService
     }
 
     /**
-     * Mencari path absolut file audio fisik rekaman job transkripsi.
+     * Mencari path absolut file audio fisik rekaman job transkripsi (master audio asli).
+     * Memastikan selalu merujuk ke audio utuh asli (original.*) dan bukan potongan chunk.
      */
     public function resolveAudioPath(int $jobId): ?string
     {
@@ -1072,25 +1075,7 @@ class NotulenService
             return null;
         }
 
-        $jobDir = $this->getJobDir($jobId);
-        $audioDir = $jobDir . DIRECTORY_SEPARATOR . 'audio';
-
-        // Cek file audio langsung di folder audio job
-        if (is_dir($audioDir)) {
-            $files = glob($audioDir . DIRECTORY_SEPARATOR . '*');
-            if ($files) {
-                foreach ($files as $file) {
-                    if (is_file($file)) {
-                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                        if (in_array($ext, ['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg', 'mp4', 'webm'], true)) {
-                            return $file;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Cek fallback audio_path di database
+        // 1. Cek path audio eksplisit yang tercatat di database terlebih dahulu (SSOT)
         if (! empty($job['audio_path'])) {
             $candidate1 = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . ltrim(str_replace('writable/uploads/', '', $job['audio_path']), '/\\');
             if (is_file($candidate1)) {
@@ -1103,6 +1088,45 @@ class NotulenService
             $candidate3 = FCPATH . ltrim($job['audio_path'], '/\\');
             if (is_file($candidate3)) {
                 return $candidate3;
+            }
+            if (is_file($job['audio_path'])) {
+                return $job['audio_path'];
+            }
+        }
+
+        $jobDir   = $this->getJobDir($jobId);
+        $audioDir = $jobDir . DIRECTORY_SEPARATOR . 'audio';
+
+        // 2. Cek file original.* di folder audio job
+        if (is_dir($audioDir)) {
+            $originals = glob($audioDir . DIRECTORY_SEPARATOR . 'original.*');
+            if ($originals) {
+                foreach ($originals as $file) {
+                    if (is_file($file)) {
+                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        if (in_array($ext, ['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg', 'mp4', 'webm'], true)) {
+                            return $file;
+                        }
+                    }
+                }
+            }
+
+            // 3. Cek file audio apa pun di folder audio job yang BUKAN file potongan (chunk_*)
+            $files = glob($audioDir . DIRECTORY_SEPARATOR . '*');
+            if ($files) {
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        $basename = basename($file);
+                        // Abaikan potongan worker chunking
+                        if (str_starts_with($basename, 'chunk_')) {
+                            continue;
+                        }
+                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        if (in_array($ext, ['mp3', 'm4a', 'wav', 'aac', 'flac', 'ogg', 'mp4', 'webm'], true)) {
+                            return $file;
+                        }
+                    }
+                }
             }
         }
 

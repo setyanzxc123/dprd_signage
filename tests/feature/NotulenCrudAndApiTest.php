@@ -467,6 +467,84 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertSame('Gemini 3.5 Flash Lite', $json['data']['ai_model_label']);
     }
 
+    public function testResolveAudioPathPrefersMasterAudioOverChunks(): void
+    {
+        $jobId = 99;
+        $service = new NotulenService($this->testDb);
+        $jobDir = $service->getJobDir($jobId);
+        $audioDir = $jobDir . DIRECTORY_SEPARATOR . 'audio';
+
+        if (! is_dir($audioDir)) {
+            mkdir($audioDir, 0777, true);
+        }
+
+        // Buat file chunk dan file original
+        file_put_contents($audioDir . DIRECTORY_SEPARATOR . 'chunk_001.mp3', 'dummy chunk 1');
+        file_put_contents($audioDir . DIRECTORY_SEPARATOR . 'chunk_002.mp3', 'dummy chunk 2');
+        file_put_contents($audioDir . DIRECTORY_SEPARATOR . 'original.mp3', 'master original audio');
+
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => $jobId,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 44,
+            'audio_filename' => 'rapat_komisi.mp3',
+            'audio_path'     => 'recordings/job_99/audio/original.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $resolved = $service->resolveAudioPath($jobId);
+        $this->assertNotNull($resolved);
+        $this->assertStringEndsWith('original.mp3', str_replace('\\', '/', $resolved));
+        $this->assertStringNotContainsString('chunk_', $resolved);
+
+        // Bersihkan file testing
+        @unlink($audioDir . DIRECTORY_SEPARATOR . 'chunk_001.mp3');
+        @unlink($audioDir . DIRECTORY_SEPARATOR . 'chunk_002.mp3');
+        @unlink($audioDir . DIRECTORY_SEPARATOR . 'original.mp3');
+        @rmdir($audioDir);
+        @rmdir($jobDir);
+    }
+
+    public function testDownloadTranscriptAndExportPdfBlockedWhenNotCompleted(): void
+    {
+        // 1. Buat job yang masih berjalan (status: transcribing)
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 101,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 44,
+            'audio_filename' => 'rapat_in_progress.mp3',
+            'status'         => 'transcribing',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'id'                  => 101,
+            'job_id'              => 101,
+            'ringkasan_eksekutif' => null,
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        // Coba unduh transkrip saat belum completed -> harus diblokir & redirect
+        $transcriptResponse = $this->adminGet('/admin/notulen/download-transcript/101');
+        $transcriptResponse->assertRedirect();
+        $this->assertSame('Berkas transkrip belum dapat diunduh karena proses transkripsi AI belum selesai.', session()->getFlashdata('error'));
+
+        // Coba cetak PDF saat belum completed / teks kosong -> harus diblokir & redirect
+        $pdfResponse = $this->adminGet('/admin/notulen/export-pdf/101');
+        $pdfResponse->assertRedirectTo(base_url('admin/notulen/101'));
+        $this->assertSame('Risalah rapat belum dapat dicetak karena proses penyusunan AI belum selesai.', session()->getFlashdata('error'));
+
+        // Di halaman show.php, tombol unduh transkrip dan cetak risalah harus disabled
+        $showResponse = $this->adminGet('/admin/notulen/101');
+        $showResponse->assertOK();
+        $showResponse->assertSee('(Setelah proses selesai)');
+    }
+
     private function adminGet(string $path)
     {
         return $this->withSession(['auth_user' => ['id' => 1, 'name' => 'Administrator', 'username' => 'admin']])->get($path);

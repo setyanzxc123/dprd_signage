@@ -15,9 +15,10 @@ $isCompleted  = $job['status'] === 'completed';
 $isFailed     = $job['status'] === 'failed';
 $isFinal      = ($minutes && $minutes['status_verifikasi'] === 'final');
 
-// Cek ketersediaan file audio fisik
-$hasAudioFile = is_file(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'recordings' . DIRECTORY_SEPARATOR . 'job_' . $job['id'] . DIRECTORY_SEPARATOR . 'audio' . DIRECTORY_SEPARATOR . 'original.mp3')
-    || (! empty($job['audio_path']) && is_file(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $job['audio_path']));
+// Cek ketersediaan file master audio fisik asli
+$hasAudioFile = isset($hasAudioFile)
+    ? (bool) $hasAudioFile
+    : ((new \App\Libraries\Notulen\NotulenService())->resolveAudioPath((int) $job['id']) !== null);
 
 $badgeKategori = 'RAPAT UMUM';
 if ($job['jadwal_type'] === 'banmus') {
@@ -442,7 +443,7 @@ if ($job['jadwal_type'] === 'banmus') {
                     <?php endif; ?>
 
                     <!-- 2. Unduh Transkrip -->
-                    <?php if (! empty($transcripts['full_text'])): ?>
+                    <?php if ($isCompleted && ! empty($transcripts['full_text'])): ?>
                         <a href="<?= base_url('admin/notulen/download-transcript/' . $job['id']) ?>"
                            class="notulen-action-card border border-base-300 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-base-100 hover:bg-base-200/50">
                             <i data-lucide="file-text" class="h-5 w-5 text-secondary"></i>
@@ -450,15 +451,15 @@ if ($job['jadwal_type'] === 'banmus') {
                             <span class="text-[10px] text-base-content/50 font-medium">(.txt utuh)</span>
                         </a>
                     <?php else: ?>
-                        <div class="border border-base-200 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-base-200/30 opacity-40">
-                            <i data-lucide="file-text" class="h-5 w-5"></i>
-                            <span class="text-xs font-bold">Unduh Transkrip</span>
-                            <span class="text-[10px]">(Setelah selesai)</span>
+                        <div class="border border-base-300 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-base-200/50 cursor-not-allowed select-none" title="Transkrip dapat diunduh setelah proses AI selesai">
+                            <i data-lucide="file-text" class="h-5 w-5 text-base-content/60"></i>
+                            <span class="text-xs font-bold text-base-content">Unduh Transkrip</span>
+                            <span class="text-[10px] text-base-content/60 font-medium">(Setelah proses selesai)</span>
                         </div>
                     <?php endif; ?>
 
                     <!-- 3. Cetak Risalah PDF -->
-                    <?php if ($minutes && ! empty($minutes['id'])): ?>
+                    <?php if ($isCompleted && $minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                         <a href="<?= base_url('admin/notulen/export-pdf/' . $minutes['id']) ?>" target="_blank"
                            class="notulen-action-card border border-base-300 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-base-100 hover:bg-base-200/50">
                             <i data-lucide="printer" class="h-5 w-5 text-success"></i>
@@ -466,10 +467,10 @@ if ($job['jadwal_type'] === 'banmus') {
                             <span class="text-[10px] text-base-content/50 font-medium">(Naskah Resmi PDF)</span>
                         </a>
                     <?php else: ?>
-                        <div class="border border-base-200 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-base-200/30 opacity-40">
-                            <i data-lucide="printer" class="h-5 w-5"></i>
-                            <span class="text-xs font-bold">Cetak Risalah</span>
-                            <span class="text-[10px]">(Setelah finalisasi)</span>
+                        <div class="border border-base-300 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-base-200/50 cursor-not-allowed select-none" title="Risalah dapat dicetak setelah proses AI selesai">
+                            <i data-lucide="printer" class="h-5 w-5 text-base-content/60"></i>
+                            <span class="text-xs font-bold text-base-content">Cetak Risalah</span>
+                            <span class="text-[10px] text-base-content/60 font-medium">(Setelah proses selesai)</span>
                         </div>
                     <?php endif; ?>
 
