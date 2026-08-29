@@ -44,16 +44,16 @@ if ($job['jadwal_type'] === 'banmus') {
             
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-base-200 pb-3">
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <span class="text-xs font-bold uppercase tracking-wider text-primary">Alur Proses AI</span>
-                    <span id="ai_model_badge" class="badge badge-sm badge-outline gap-1 text-primary border-primary/40 bg-primary/5 font-semibold text-[11px]">
-                        <i data-lucide="sparkles" class="h-3 w-3"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider text-base-content/80">Alur Proses AI</span>
+                    <span id="ai_model_badge" class="badge badge-sm badge-ghost gap-1 border border-base-300 font-semibold text-[11px] text-base-content/90">
+                        <i data-lucide="sparkles" class="h-3 w-3 text-base-content/70"></i>
                         <span id="ai_model_label_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
                     </span>
                 </div>
             </div>
 
             <!-- Stepper Ringkas 5 Langkah -->
-            <div class="overflow-x-auto pb-1">
+            <div class="overflow-x-auto py-2.5 px-1">
                 <div class="notulen-stepper-track min-w-[600px]">
                     <div class="notulen-stepper-line"></div>
 
@@ -63,7 +63,7 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="cloud-upload" class="h-5 w-5"></i>
                         </div>
                         <span class="font-bold text-xs text-base-content mt-2">1. Unggah Rekaman</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1">
+                        <span class="text-[11px] text-base-content/80 font-medium mt-0.5 flex items-center gap-1">
                             <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
                             <?= substr((string) $job['created_at'], 8, 2) . ' ' . date('M H:i', strtotime((string) $job['created_at'])) ?>
                         </span>
@@ -80,12 +80,12 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="sliders" class="h-5 w-5"></i>
                         </div>
                         <span class="font-bold text-xs text-base-content mt-2">2. Pemrosesan Rekaman</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_chunking_status">
+                        <span class="text-[11px] text-base-content/80 font-medium mt-0.5 flex items-center gap-1" id="step_chunking_status">
                             <?php if ($isStep2Done): ?>
                                 <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
                                 Selesai
                             <?php elseif ($isStep2Active): ?>
-                                <span class="loading loading-spinner loading-xs text-primary"></span>
+                                <span class="loading loading-spinner loading-xs text-base-content"></span>
                                 Menyiapkan audio...
                             <?php else: ?>
                                 Menunggu
@@ -105,12 +105,12 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="mic" class="h-5 w-5"></i>
                         </div>
                         <span class="font-bold text-xs text-base-content mt-2">3. Transkripsi Suara</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_transcribing_status">
+                        <span class="text-[11px] text-base-content/80 font-medium mt-0.5 flex items-center gap-1" id="step_transcribing_status">
                             <?php if ($isStep3Done): ?>
                                 <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
                                 Selesai
                             <?php elseif ($isStep3Active): ?>
-                                <span class="loading loading-spinner loading-xs text-primary"></span>
+                                <span class="loading loading-spinner loading-xs text-base-content"></span>
                                 Mentranskripsi (<?= (int) $job['progress_percent'] ?>%)
                             <?php else: ?>
                                 Menunggu
@@ -130,12 +130,12 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="sparkles" class="h-5 w-5"></i>
                         </div>
                         <span class="font-bold text-xs text-base-content mt-2">4. Penyusunan Risalah</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_summarizing_status">
+                        <span class="text-[11px] text-base-content/80 font-medium mt-0.5 flex items-center gap-1" id="step_summarizing_status">
                             <?php if ($isStep4Done): ?>
                                 <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
                                 Selesai
                             <?php elseif ($isStep4Active): ?>
-                                <span class="loading loading-spinner loading-xs text-primary"></span>
+                                <span class="loading loading-spinner loading-xs text-base-content"></span>
                                 Menyusun risalah...
                             <?php else: ?>
                                 Menunggu
@@ -153,7 +153,7 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="file-check" class="h-5 w-5"></i>
                         </div>
                         <span class="font-bold text-xs text-base-content mt-2">5. Risalah Siap</span>
-                        <span class="text-[11px] text-base-content/60 font-medium mt-0.5 flex items-center gap-1" id="step_completed_status">
+                        <span class="text-[11px] text-base-content/80 font-medium mt-0.5 flex items-center gap-1" id="step_completed_status">
                             <?php if ($isCompleted): ?>
                                 <i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i>
                                 Siap Ditinjau
@@ -168,19 +168,19 @@ if ($job['jadwal_type'] === 'banmus') {
 
             <!-- Info Bar Bawah Stepper -->
             <?php if ($isInProgress || $job['status'] === 'queued'): ?>
-                <div class="alert alert-info/10 border border-info/20 py-2.5 px-3.5 text-xs flex items-center gap-2 text-info-content mt-2 rounded-lg">
-                    <i data-lucide="info" class="h-4 w-4 shrink-0 text-info"></i>
+                <div class="alert bg-base-200/60 border border-base-300 py-2.5 px-3.5 text-xs flex items-center gap-2 text-base-content/80 mt-2 rounded-lg">
+                    <i data-lucide="info" class="h-4 w-4 shrink-0 text-base-content/60"></i>
                     <span>Proses berjalan di background. Anda dapat menutup halaman ini. Sistem akan otomatis memuat hasil begitu selesai.</span>
                 </div>
             <?php elseif ($isFailed): ?>
-                <div class="alert alert-error/10 border border-error/20 py-2.5 px-3.5 text-xs flex items-center justify-between gap-2 text-error-content mt-2 rounded-lg">
-                    <div class="flex items-center gap-2">
+                <div class="alert bg-error/15 border border-error/30 py-2.5 px-3.5 text-xs flex items-center justify-between gap-2 text-base-content mt-2 rounded-lg">
+                    <div class="flex items-center gap-2 text-base-content">
                         <i data-lucide="alert-triangle" class="h-4 w-4 shrink-0 text-error"></i>
-                        <span>Pemrosesan mengalami kendala: <?= esc($job['error_message']) ?: 'Koneksi AI timeout.' ?></span>
+                        <span>Pemrosesan mengalami kendala: <strong class="text-error font-semibold"><?= esc($job['error_message']) ?: 'Koneksi AI timeout.' ?></strong></span>
                     </div>
                     <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
                         <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-error btn-xs text-white">Proses Ulang</button>
+                        <button type="submit" class="btn btn-error btn-xs text-white font-bold">Proses Ulang</button>
                     </form>
                 </div>
             <?php endif; ?>
@@ -204,18 +204,18 @@ if ($job['jadwal_type'] === 'banmus') {
                     <?= esc($judulRapat) ?>
                 </h1>
 
-                <div class="flex flex-wrap items-center gap-y-1.5 gap-x-5 text-xs text-base-content/70">
+                <div class="flex flex-wrap items-center gap-y-1.5 gap-x-5 text-xs text-base-content/80">
                     <span class="flex items-center gap-1.5">
-                        <i data-lucide="calendar" class="h-3.5 w-3.5 text-base-content/40"></i>
+                        <i data-lucide="calendar" class="h-3.5 w-3.5 text-base-content/60"></i>
                         <?= esc($tanggalRapat) ?>
                     </span>
                     <span class="flex items-center gap-1.5">
-                        <i data-lucide="clock" class="h-3.5 w-3.5 text-base-content/40"></i>
+                        <i data-lucide="clock" class="h-3.5 w-3.5 text-base-content/60"></i>
                         <?= ! empty($schedule['waktu_mulai']) ? substr((string) $schedule['waktu_mulai'], 0, 5) : '09:00' ?> WITA
-                        <span class="font-mono text-base-content/50 font-medium">(<?= esc($durationFormatted) ?>)</span>
+                        <span class="font-mono text-base-content/75 font-medium">(<?= esc($durationFormatted) ?>)</span>
                     </span>
                     <span class="flex items-center gap-1.5">
-                        <i data-lucide="map-pin" class="h-3.5 w-3.5 text-base-content/40"></i>
+                        <i data-lucide="map-pin" class="h-3.5 w-3.5 text-base-content/60"></i>
                         <?= esc($schedule['ruangan'] ?? 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah') ?>
                     </span>
                 </div>
@@ -233,90 +233,111 @@ if ($job['jadwal_type'] === 'banmus') {
     </div>
 
     <!-- ── 3. DUA TAB UTAMA: RINGKASAN & RISALAH ──────────────────────── -->
-    <div role="tablist" class="tabs tabs-box bg-base-200/90 p-1.5 rounded-xl border border-base-300 inline-flex w-full sm:w-auto">
-        <input type="radio" name="notulen_main_tab" role="tab" class="tab font-bold text-xs sm:text-sm px-6 !h-10 text-base-content checked:text-primary checked:bg-base-100 checked:shadow-xs" aria-label="Ringkasan" checked />
-        <div role="tabpanel" class="tab-content bg-base-100 border border-base-200 rounded-box p-4 sm:p-6 mt-3 shadow-xs space-y-4 w-full">
+    <div class="space-y-3 w-full">
+        
+        <!-- Tab Bar Switcher (Pill) -->
+        <div role="tablist" class="inline-flex items-center bg-base-200/80 p-1 rounded-xl border border-base-300 gap-1">
+            <button type="button" 
+                    role="tab"
+                    id="tab_btn_ringkasan"
+                    data-tab-target="tab_panel_ringkasan"
+                    class="notulen-main-tab-btn font-bold text-xs sm:text-sm px-6 py-2 rounded-lg transition-all duration-150 bg-base-100 text-base-content shadow-xs border border-base-300/40" 
+                    aria-selected="true">
+                Ringkasan
+            </button>
+            <button type="button" 
+                    role="tab"
+                    id="tab_btn_risalah"
+                    data-tab-target="tab_panel_risalah"
+                    class="notulen-main-tab-btn font-bold text-xs sm:text-sm px-6 py-2 rounded-lg transition-all duration-150 text-base-content/70 hover:text-base-content" 
+                    aria-selected="false">
+                Risalah
+            </button>
+        </div>
+
+        <!-- ── TAB 1: RINGKASAN ───────────────────────────────────────────── -->
+        <div id="tab_panel_ringkasan" role="tabpanel" class="w-full bg-base-100 border border-base-200 rounded-box p-4 sm:p-6 shadow-xs space-y-4">
             
-            <!-- ── TAB 1: DASHBOARD 3 KARTU SEJAJAR SESUAI MOCKUP ───────── -->
+            <!-- Dashboard 3 Kartu Sejajar Sesuai Mockup -->
             <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-                    <!-- KARTU 1: 1. Ringkasan Utama (Ungu/Indigo Tint) -->
-                    <div class="card card-border bg-indigo-50/25 dark:bg-indigo-950/10 shadow-2xs border-indigo-200/70 dark:border-indigo-800/30 flex flex-col justify-between rounded-xl">
+                    <!-- KARTU 1: 1. Ringkasan Utama (Netral Elegan) -->
+                    <div class="card card-border bg-base-200/30 shadow-2xs border-base-300 flex flex-col justify-between rounded-xl">
                         <div class="card-body p-4 sm:p-5 space-y-3">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-base-300/60 flex items-center justify-center text-base-content shrink-0">
                                     <i data-lucide="sparkles" class="h-4 w-4"></i>
                                 </div>
                                 <div>
                                     <h3 class="text-xs font-bold text-base-content leading-none">1. Ringkasan Utama</h3>
-                                    <p class="text-[10px] text-base-content/50 mt-0.5">Inti dari seluruh rapat</p>
+                                    <p class="text-[10px] text-base-content/70 mt-0.5">Inti dari seluruh rapat</p>
                                 </div>
                             </div>
 
-                            <p class="text-xs text-base-content/80 leading-relaxed text-justify font-sans">
+                            <p class="text-xs text-base-content leading-relaxed text-justify font-sans">
                                 <?= nl2br(esc(! empty($pillars['ringkasan_utama']) ? $pillars['ringkasan_utama'] : $minutes['ringkasan_eksekutif'])) ?>
                             </p>
                         </div>
                     </div>
 
-                    <!-- KARTU 2: 2. Poin-Poin Pembahasan (Oranye/Amber Tint) -->
-                    <div class="card card-border bg-amber-50/25 dark:bg-amber-950/10 shadow-2xs border-amber-200/70 dark:border-amber-800/30 flex flex-col justify-between rounded-xl">
+                    <!-- KARTU 2: 2. Poin-Poin Pembahasan (Netral Elegan) -->
+                    <div class="card card-border bg-base-200/30 shadow-2xs border-base-300 flex flex-col justify-between rounded-xl">
                         <div class="card-body p-4 sm:p-5 space-y-3">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-base-300/60 flex items-center justify-center text-base-content shrink-0">
                                     <i data-lucide="list-ordered" class="h-4 w-4"></i>
                                 </div>
                                 <div>
                                     <h3 class="text-xs font-bold text-base-content leading-none">2. Poin-Poin Pembahasan</h3>
-                                    <p class="text-[10px] text-base-content/50 mt-0.5">Rincian argumen/laporan selama rapat</p>
+                                    <p class="text-[10px] text-base-content/70 mt-0.5">Rincian argumen/laporan selama rapat</p>
                                 </div>
                             </div>
 
                             <div class="space-y-2.5">
                                 <?php if (! empty($pillars['poin_pembahasan'])): ?>
                                     <?php foreach ($pillars['poin_pembahasan'] as $poin): ?>
-                                        <div class="flex items-start gap-2 text-xs text-base-content/80">
+                                        <div class="flex items-start gap-2 text-xs text-base-content">
                                             <?php if (! empty($poin['waktu'])): ?>
-                                                <span class="badge badge-info badge-xs font-mono text-[10px] shrink-0 mt-0.5">
+                                                <span class="badge badge-ghost badge-xs font-mono text-[10px] shrink-0 mt-0.5 text-base-content/90">
                                                     <?= esc($poin['waktu']) ?>
                                                 </span>
                                             <?php else: ?>
-                                                <span class="h-1.5 w-1.5 rounded-full bg-warning shrink-0 mt-1.5"></span>
+                                                <span class="h-1.5 w-1.5 rounded-full bg-base-content/40 shrink-0 mt-1.5"></span>
                                             <?php endif; ?>
                                             <span class="leading-relaxed"><?= esc($poin['topik']) ?></span>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <p class="text-xs text-base-content/60 italic">Poin pembahasan terangkum dalam naskah dinas resmi.</p>
+                                    <p class="text-xs text-base-content/70 italic">Poin pembahasan terangkum dalam naskah dinas resmi.</p>
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
 
-                    <!-- KARTU 3: 3. Kesimpulan & Keputusan Akhir (Hijau/Emerald Tint) -->
-                    <div class="card card-border bg-emerald-50/25 dark:bg-emerald-950/10 shadow-2xs border-emerald-200/70 dark:border-emerald-800/30 flex flex-col justify-between rounded-xl">
+                    <!-- KARTU 3: 3. Kesimpulan & Keputusan Akhir (Netral Elegan) -->
+                    <div class="card card-border bg-base-200/30 shadow-2xs border-base-300 flex flex-col justify-between rounded-xl">
                         <div class="card-body p-4 sm:p-5 space-y-3">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-base-300/60 flex items-center justify-center text-base-content shrink-0">
                                     <i data-lucide="check-square" class="h-4 w-4"></i>
                                 </div>
                                 <div>
                                     <h3 class="text-xs font-bold text-base-content leading-none">3. Kesimpulan & Keputusan Akhir</h3>
-                                    <p class="text-[10px] text-base-content/50 mt-0.5">Hasil akhir yang disepakati</p>
+                                    <p class="text-[10px] text-base-content/70 mt-0.5">Hasil akhir yang disepakati</p>
                                 </div>
                             </div>
 
                             <div class="space-y-2.5">
                                 <?php if (! empty($pillars['kesimpulan_akhir'])): ?>
                                     <?php foreach ($pillars['kesimpulan_akhir'] as $butir): ?>
-                                        <div class="flex items-start gap-2 text-xs text-base-content/80">
+                                        <div class="flex items-start gap-2 text-xs text-base-content">
                                             <i data-lucide="check" class="h-4 w-4 text-success shrink-0 mt-0.5"></i>
                                             <span class="leading-relaxed"><?= esc($butir) ?></span>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <p class="text-xs text-base-content/60 italic">Kesimpulan terangkum dalam naskah dinas resmi.</p>
+                                    <p class="text-xs text-base-content/70 italic">Kesimpulan terangkum dalam naskah dinas resmi.</p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -325,25 +346,24 @@ if ($job['jadwal_type'] === 'banmus') {
                 </div>
             <?php else: ?>
                 <!-- Placeholder saat belum tersedia -->
-                <div class="py-12 text-center text-base-content/50 space-y-1">
-                    <p class="font-semibold text-xs sm:text-sm text-base-content/70">Ringkasan Rapat Belum Tersedia</p>
-                    <p class="text-[11px] sm:text-xs text-base-content/40">Data intisari rapat akan otomatis ditampilkan di sini setelah proses AI selesai.</p>
+                <div class="py-12 text-center text-base-content/60 space-y-1">
+                    <p class="font-semibold text-xs sm:text-sm text-base-content">Ringkasan Rapat Belum Tersedia</p>
+                    <p class="text-[11px] sm:text-xs text-base-content/70">Data intisari rapat akan otomatis ditampilkan di sini setelah proses AI selesai.</p>
                 </div>
             <?php endif; ?>
 
         </div>
 
         <!-- ── TAB 2: RISALAH (FORMAT NASKAH DINAS) ──────────────────────── -->
-        <input type="radio" name="notulen_main_tab" role="tab" class="tab font-bold text-xs sm:text-sm px-6 !h-10 text-base-content checked:text-primary checked:bg-base-100 checked:shadow-xs" aria-label="Risalah" />
-        <div role="tabpanel" class="tab-content bg-base-100 border border-base-200 rounded-box p-6 sm:p-10 mt-3 shadow-xs space-y-6 w-full">
+        <div id="tab_panel_risalah" role="tabpanel" class="w-full bg-base-100 border border-base-200 rounded-box p-6 sm:p-10 shadow-xs space-y-6 hidden">
             
             <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                 <!-- Kop Naskah Dinas DPRD Sulteng -->
                 <div class="text-center border-b-2 border-base-content/20 pb-5 space-y-1.5">
-                    <p class="text-xs font-bold uppercase tracking-widest text-base-content/60">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
+                    <p class="text-xs font-bold uppercase tracking-widest text-base-content/75">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
                     <h2 class="text-lg sm:text-xl font-bold uppercase text-base-content tracking-wide">RISALAH RAPAT</h2>
-                    <p class="text-sm font-bold text-primary"><?= esc($judulRapat) ?></p>
-                    <p class="text-xs text-base-content/60">Hari/Tanggal: <strong><?= esc($tanggalRapat) ?></strong> &nbsp;|&nbsp; Waktu: <strong><?= ! empty($schedule['waktu_mulai']) ? substr((string) $schedule['waktu_mulai'], 0, 5) : '09:00' ?> WITA</strong></p>
+                    <p class="text-sm font-bold text-base-content"><?= esc($judulRapat) ?></p>
+                    <p class="text-xs text-base-content/80">Hari/Tanggal: <strong><?= esc($tanggalRapat) ?></strong> &nbsp;|&nbsp; Waktu: <strong><?= ! empty($schedule['waktu_mulai']) ? substr((string) $schedule['waktu_mulai'], 0, 5) : '09:00' ?> WITA</strong></p>
                 </div>
 
                 <!-- Konten Naskah Lengkap -->
@@ -351,9 +371,9 @@ if ($job['jadwal_type'] === 'banmus') {
 <?= esc($minutes['ringkasan_eksekutif']) ?>
                 </div>
             <?php else: ?>
-                <div class="py-14 text-center text-base-content/50 space-y-1">
-                    <p class="font-semibold text-xs sm:text-sm text-base-content/70">Naskah Risalah Belum Tersedia</p>
-                    <p class="text-[11px] sm:text-xs text-base-content/40">Format naskah risalah resmi rapat akan ditampilkan di sini setelah proses AI selesai.</p>
+                <div class="py-14 text-center text-base-content/60 space-y-1">
+                    <p class="font-semibold text-xs sm:text-sm text-base-content">Naskah Risalah Belum Tersedia</p>
+                    <p class="text-[11px] sm:text-xs text-base-content/70">Format naskah risalah resmi rapat akan ditampilkan di sini setelah proses AI selesai.</p>
                 </div>
             <?php endif; ?>
 
@@ -479,43 +499,43 @@ if ($job['jadwal_type'] === 'banmus') {
 <dialog id="modal_riwayat_proses" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box max-w-lg">
         <div class="flex items-start gap-3 border-b border-base-200 pb-3">
-            <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <div class="w-9 h-9 rounded-full bg-base-200 flex items-center justify-center text-base-content shrink-0">
                 <i data-lucide="history" class="h-4 w-4"></i>
             </div>
             <div>
-                <h3 class="font-bold text-sm">Riwayat Proses & Audit Log AI</h3>
-                <p class="text-xs text-base-content/60">Jejak eksekusi pipeline kecerdasan buatan</p>
+                <h3 class="font-bold text-sm text-base-content">Riwayat Proses & Audit Log AI</h3>
+                <p class="text-xs text-base-content/70">Jejak eksekusi pipeline kecerdasan buatan</p>
             </div>
         </div>
 
         <div class="py-4 space-y-3 text-xs">
             <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/60">Job ID:</span>
-                <span class="font-mono font-semibold">#<?= (int) $job['id'] ?></span>
+                <span class="text-base-content/70">Job ID:</span>
+                <span class="font-mono font-semibold text-base-content">#<?= (int) $job['id'] ?></span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/60">Waktu Mulai Unggah:</span>
-                <span class="font-mono"><?= esc($job['created_at']) ?></span>
+                <span class="text-base-content/70">Waktu Mulai Unggah:</span>
+                <span class="font-mono text-base-content"><?= esc($job['created_at']) ?></span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/60">Durasi Rekaman Audio:</span>
-                <span class="font-mono"><?= esc($durationFormatted) ?> (<?= $durationMin ? "{$durationMin} Menit" : '-' ?>)</span>
+                <span class="text-base-content/70">Durasi Rekaman Audio:</span>
+                <span class="font-mono text-base-content"><?= esc($durationFormatted) ?> (<?= $durationMin ? "{$durationMin} Menit" : '-' ?>)</span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/60">Jumlah Segmen Audio:</span>
-                <span class="font-mono"><?= (int) $job['total_chunks'] ?> segmen chunk</span>
+                <span class="text-base-content/70">Jumlah Segmen Audio:</span>
+                <span class="font-mono text-base-content"><?= (int) $job['total_chunks'] ?> segmen chunk</span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/60">Model Transkripsi &amp; Risalah:</span>
-                <span class="font-semibold text-primary" id="ai_model_meta_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
+                <span class="text-base-content/70">Model Transkripsi &amp; Risalah:</span>
+                <span class="font-semibold text-base-content" id="ai_model_meta_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
             </div>
             <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/60">Status Integritas:</span>
+                <span class="text-base-content/70">Status Integritas:</span>
                 <span class="badge badge-success badge-xs gap-1"><i data-lucide="check" class="h-2.5 w-2.5"></i> Terverifikasi Sah</span>
             </div>
             <div class="flex justify-between">
-                <span class="text-base-content/60">Terakhir Diperbarui:</span>
-                <span class="font-mono"><?= esc($job['updated_at'] ?? $job['created_at']) ?></span>
+                <span class="text-base-content/70">Terakhir Diperbarui:</span>
+                <span class="font-mono text-base-content"><?= esc($job['updated_at'] ?? $job['created_at']) ?></span>
             </div>
         </div>
 

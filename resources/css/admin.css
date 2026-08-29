@@ -103,8 +103,9 @@
     .lucide {
         stroke-width: 2;
         vertical-align: -0.15em;
+        overflow: visible;
     }
-    code { font-family: var(--od-mono); font-size: 0.92em; color: #3538cd; }
+    code { font-family: var(--od-mono); font-size: 0.92em; color: currentColor; }
 
     /* ── Browser autofill override ─────────────────────────────────────────── */
     /* Chrome/Edge menerapkan background kebiruan/kuning saat autofill.         */
@@ -1351,11 +1352,13 @@
         align-items: flex-start;
         justify-content: space-between;
         width: 100%;
+        padding-top: 6px;
+        padding-bottom: 6px;
     }
 
     .notulen-stepper-line {
         position: absolute;
-        top: 20px;
+        top: 27px;
         left: 24px;
         right: 24px;
         height: 2px;
@@ -1385,32 +1388,42 @@
         border: 2px solid var(--color-base-300);
         color: var(--color-base-content);
         transition: all 0.2s ease;
+        box-sizing: border-box;
+        flex-shrink: 0;
+    }
+
+    .notulen-step-circle svg,
+    .notulen-step-circle i {
+        overflow: visible !important;
+        vertical-align: middle;
+        margin: 0;
+        display: block;
     }
 
     .notulen-step-circle.active {
-        border-color: #2563eb;
-        background-color: #eff6ff;
-        color: #2563eb;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+        border-color: var(--color-primary);
+        background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-base-100));
+        color: var(--color-primary);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
 
     .notulen-step-circle.done {
-        border-color: #10b981;
-        background-color: #ecfdf5;
-        color: #10b981;
+        border-color: var(--color-success);
+        background-color: color-mix(in srgb, var(--color-success) 12%, var(--color-base-100));
+        color: var(--color-success);
     }
 
     .notulen-step-circle.failed {
-        border-color: #ef4444;
-        background-color: #fef2f2;
-        color: #ef4444;
+        border-color: var(--color-error);
+        background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-base-100));
+        color: var(--color-error);
     }
 
     .notulen-active-pill {
         width: 48px;
         height: 3px;
         border-radius: 9999px;
-        background-color: #2563eb;
+        background-color: var(--color-primary);
         margin-top: 6px;
     }
 

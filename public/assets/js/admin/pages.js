@@ -1897,6 +1897,38 @@
         const dirtyBadge = document.getElementById('dirty_indicator');
         const audioPlayer = document.getElementById('audio_player');
 
+        // Main Tabs Switcher (Ringkasan & Risalah)
+        const tabBtns = document.querySelectorAll('.notulen-main-tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.tabTarget;
+                if (!targetId) return;
+
+                // Deactivate all tab buttons
+                tabBtns.forEach(b => {
+                    b.setAttribute('aria-selected', 'false');
+                    b.classList.remove('bg-base-100', 'text-base-content', 'shadow-xs', 'border', 'border-base-300/40');
+                    b.classList.add('text-base-content/70');
+                });
+
+                // Activate clicked button
+                btn.setAttribute('aria-selected', 'true');
+                btn.classList.add('bg-base-100', 'text-base-content', 'shadow-xs', 'border', 'border-base-300/40');
+                btn.classList.remove('text-base-content/70');
+
+                // Toggle panels
+                const panelRingkasan = document.getElementById('tab_panel_ringkasan');
+                const panelRisalah = document.getElementById('tab_panel_risalah');
+                if (panelRingkasan) panelRingkasan.classList.toggle('hidden', targetId !== 'tab_panel_ringkasan');
+                if (panelRisalah) panelRisalah.classList.toggle('hidden', targetId !== 'tab_panel_risalah');
+
+                // Trigger lucide icons inside revealed tab if needed
+                if (window.lucide && window.lucide.createIcons) {
+                    window.lucide.createIcons();
+                }
+            });
+        });
+
         // Dirty State Tracking
         if (textarea) {
             const originalValue = textarea.value;
@@ -2067,7 +2099,7 @@
                         if (chunkStatus) chunkStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (chunkCircle) chunkCircle.className = 'notulen-step-circle active';
-                        if (chunkStatus) chunkStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-primary"></span> Menyiapkan audio...';
+                        if (chunkStatus) chunkStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Menyiapkan audio...';
                     }
 
                     if (['summarizing', 'completed'].includes(d.status)) {
@@ -2075,7 +2107,7 @@
                         if (transStatus) transStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
                     } else if (d.status === 'transcribing') {
                         if (transCircle) transCircle.className = 'notulen-step-circle active';
-                        if (transStatus) transStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-primary"></span> Mentranskripsi (' + d.progress_percent + '%)';
+                        if (transStatus) transStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Mentranskripsi (' + d.progress_percent + '%)';
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (transCircle) transCircle.className = 'notulen-step-circle';
                         if (transStatus) transStatus.textContent = 'Menunggu';
@@ -2088,7 +2120,7 @@
                         if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Siap Ditinjau';
                     } else if (d.status === 'summarizing') {
                         if (summCircle) summCircle.className = 'notulen-step-circle active';
-                        if (summStatus) summStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-primary"></span> Menyusun risalah...';
+                        if (summStatus) summStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Menyusun risalah...';
                     } else {
                         if (summCircle) summCircle.className = 'notulen-step-circle';
                         if (summStatus) summStatus.textContent = 'Menunggu';

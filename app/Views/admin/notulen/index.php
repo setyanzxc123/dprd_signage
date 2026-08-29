@@ -60,12 +60,12 @@
                         };
 
                         $statusClass = match ($job['status']) {
-                            'completed'   => 'badge-success',
-                            'chunking', 'transcribing', 'summarizing' => 'badge-warning',
-                            'queued'      => 'badge-info',
-                            'failed'      => 'badge-error',
-                            'cancelled'   => 'badge-ghost',
-                            default       => 'badge-ghost',
+                            'completed'   => 'badge-success text-white',
+                            'chunking', 'transcribing', 'summarizing' => 'badge-warning text-base-content font-bold',
+                            'queued'      => 'badge-info text-white',
+                            'failed'      => 'badge-error text-white font-bold',
+                            'cancelled'   => 'badge-ghost text-base-content/80',
+                            default       => 'badge-ghost text-base-content/80',
                         };
 
                         $risalahFilter = 'Belum Ada';
@@ -104,16 +104,16 @@
                             <td data-label="Risalah" data-filter="<?= esc($risalahFilter) ?>">
                                 <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                                     <?php if ($minutes['status_verifikasi'] === 'final'): ?>
-                                        <span class="badge badge-success badge-sm font-semibold gap-1">
+                                        <span class="badge badge-success text-white badge-sm font-semibold gap-1">
                                             <i data-lucide="check-check" class="h-3 w-3"></i> Final
                                         </span>
                                     <?php else: ?>
-                                        <span class="badge badge-warning badge-sm font-semibold gap-1">
+                                        <span class="badge badge-warning text-base-content font-bold badge-sm gap-1">
                                             <i data-lucide="file-edit" class="h-3 w-3"></i> Draft
                                         </span>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost badge-sm text-base-content/45 font-medium">Belum Ada</span>
+                                    <span class="badge badge-ghost badge-sm text-base-content/75 font-medium">Belum Ada</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">
