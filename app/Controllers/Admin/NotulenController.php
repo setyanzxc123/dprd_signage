@@ -437,6 +437,9 @@ class NotulenController extends BaseController
 
         $input = [
             'ringkasan_eksekutif' => $this->request->getPost('ringkasan_eksekutif'),
+            'section_ringkasan'   => $this->request->getPost('section_ringkasan'),
+            'section_pembahasan'  => $this->request->getPost('section_pembahasan'),
+            'section_kesimpulan'  => $this->request->getPost('section_kesimpulan'),
         ];
 
         $result = $this->service->updateMinutes($minutesId, $input, $userId);

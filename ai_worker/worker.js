@@ -3,7 +3,7 @@ import path from 'node:path';
 import mysql from 'mysql2/promise';
 import { config } from './config.js';
 import { sliceAudio, probeDuration, formatChunkIndex } from './services/audioSlicer.js';
-import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback } from './services/geminiService.js';
+import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback, parsePillarsFromText } from './services/geminiService.js';
 import { interruptibleSleep } from './services/throttler.js';
 
 // Abaikan error EPIPE jika worker dijalankan asinkron tanpa pipe terminal aktif (popen PHP)
@@ -337,26 +337,31 @@ export async function processJob(pool, job) {
       [jobId]
     );
 
+    const pillars = parsePillarsFromText(minutesResult.ringkasan_eksekutif);
+    const strukturJsonStr = JSON.stringify(pillars);
+
     if (existingMinutes && existingMinutes.length > 0) {
       await pool.execute(
         `UPDATE meeting_minutes
-         SET transcripts_dir = ?, ringkasan_eksekutif = ?, updated_at = NOW()
+         SET transcripts_dir = ?, ringkasan_eksekutif = ?, struktur_json = ?, updated_at = NOW()
          WHERE id = ?`,
         [
           relativeTranscriptsDir,
           minutesResult.ringkasan_eksekutif,
+          strukturJsonStr,
           existingMinutes[0].id,
         ]
       );
     } else {
       await pool.execute(
         `INSERT INTO meeting_minutes
-         (job_id, transcripts_dir, ringkasan_eksekutif, status_verifikasi, created_at, updated_at)
-         VALUES (?, ?, ?, 'draft', NOW(), NOW())`,
+         (job_id, transcripts_dir, ringkasan_eksekutif, struktur_json, status_verifikasi, created_at, updated_at)
+         VALUES (?, ?, ?, ?, 'draft', NOW(), NOW())`,
         [
           jobId,
           relativeTranscriptsDir,
           minutesResult.ringkasan_eksekutif,
+          strukturJsonStr,
         ]
       );
     }

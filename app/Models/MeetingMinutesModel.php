@@ -27,6 +27,7 @@ class MeetingMinutesModel extends Model
         'job_id',
         'transcripts_dir',
         'ringkasan_eksekutif',
+        'struktur_json',
         'status_verifikasi',
         'verified_by',
         'verified_at',

@@ -686,10 +686,21 @@ class NotulenService
             return ['error' => 'Risalah rapat yang telah difinalisasi tidak dapat disunting. Silakan buka kunci revisi terlebih dahulu.'];
         }
 
-        $ringkasan = trim((string) ($input['ringkasan_eksekutif'] ?? ''));
+        if (isset($input['section_ringkasan']) || isset($input['section_pembahasan']) || isset($input['section_kesimpulan'])) {
+            $sec1 = trim((string) ($input['section_ringkasan'] ?? ''));
+            $sec2 = trim((string) ($input['section_pembahasan'] ?? ''));
+            $sec3 = trim((string) ($input['section_kesimpulan'] ?? ''));
+
+            $ringkasan = "I. RINGKASAN UTAMA\n" . $sec1 . "\n\nII. POIN-POIN PEMBAHASAN\n" . $sec2 . "\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n" . $sec3;
+        } else {
+            $ringkasan = trim((string) ($input['ringkasan_eksekutif'] ?? ''));
+        }
+
+        $pillars = $this->parsePillarsFromText($ringkasan);
 
         $updateData = [
             'ringkasan_eksekutif' => $ringkasan,
+            'struktur_json'       => json_encode($pillars, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ];
 
         $minutesModel->update($minutesId, $updateData);
@@ -766,7 +777,17 @@ class NotulenService
         $minutes     = $minutesModel->where('job_id', $jobId)->first();
         $transcripts = $this->readTranscripts($jobId);
         $schedule    = $this->resolveScheduleInfo((string) ($job['jadwal_type'] ?? 'umum'), $job['jadwal_id'] ? (int) $job['jadwal_id'] : null);
-        $pillars     = $this->parsePillarsFromText($minutes['ringkasan_eksekutif'] ?? null);
+
+        $pillars = null;
+        if (! empty($minutes['struktur_json'])) {
+            $decoded = json_decode((string) $minutes['struktur_json'], true);
+            if (is_array($decoded) && isset($decoded['ringkasan_utama'], $decoded['poin_pembahasan'], $decoded['kesimpulan_akhir'])) {
+                $pillars = $decoded;
+            }
+        }
+        if ($pillars === null) {
+            $pillars = $this->parsePillarsFromText($minutes['ringkasan_eksekutif'] ?? null);
+        }
         $audioPath   = $this->resolveAudioPath($jobId);
 
         return [
@@ -780,9 +801,9 @@ class NotulenService
     }
 
     /**
-     * Mengekstrak 3 Pilar (Ringkasan Utama, Poin Pembahasan ber-cap waktu, dan Kesimpulan) dari teks risalah.
+     * Mengekstrak 3 Pilar (Ringkasan Utama, Poin Pembahasan ber-cap waktu/pembicara, dan Kesimpulan) dari teks risalah.
      *
-     * @return array{ringkasan_utama: string, poin_pembahasan: list<array{waktu: ?string, topik: string}>, kesimpulan_akhir: list<string>}
+     * @return array{ringkasan_utama: string, poin_pembahasan: list<array{waktu: ?string, topik: string, pembicara?: ?string, uraian?: string, full_text?: string}>, kesimpulan_akhir: list<string>}
      */
     public function parsePillarsFromText(?string $rawText): array
     {
@@ -798,10 +819,10 @@ class NotulenService
 
         $text = trim($rawText);
 
-        // Pola pemisahan 3 Bagian Romawi
-        $p1Pattern = '/(?:^|\n)(?:I\.\s*RINGKASAN\s*UTAMA[^\n]*\n)([\s\S]*?)(?=(?:\nII\.\s*POIN|\nIII\.\s*KESIMPULAN|$))/i';
-        $p2Pattern = '/(?:^|\n)(?:II\.\s*POIN[^\n]*\n)([\s\S]*?)(?=(?:\nIII\.\s*KESIMPULAN|$))/i';
-        $p3Pattern = '/(?:^|\n)(?:III\.\s*KESIMPULAN[^\n]*\n)([\s\S]*?)$/i';
+        // Pola pemisahan 3 Bagian Romawi / Angka / Heading
+        $p1Pattern = '/(?:^|\n)(?:(?:I|\b1)\.\s*RINGKASAN\s*UTAMA[^\n]*\n|#+\s*1\.\s*RINGKASAN[^\n]*\n)([\s\S]*?)(?=(?:\n(?:II|\b2)\.\s*POIN|\n#+\s*2\.\s*POIN|\n(?:III|\b3)\.\s*KESIMPULAN|\n#+\s*3\.\s*KESIMPULAN|$))/i';
+        $p2Pattern = '/(?:^|\n)(?:(?:II|\b2)\.\s*POIN[^\n]*\n|#+\s*2\.\s*POIN[^\n]*\n)([\s\S]*?)(?=(?:\n(?:III|\b3)\.\s*KESIMPULAN|\n#+\s*3\.\s*KESIMPULAN|$))/i';
+        $p3Pattern = '/(?:^|\n)(?:(?:III|\b3)\.\s*KESIMPULAN[^\n]*\n|#+\s*3\.\s*KESIMPULAN[^\n]*\n)([\s\S]*?)$/i';
 
         $p1Match = [];
         $p2Match = [];
@@ -815,7 +836,6 @@ class NotulenService
         $p2Raw = trim($p2Match[1] ?? '');
         $p3Raw = trim($p3Match[1] ?? '');
 
-        // Jika tidak cocok dengan pola 3 pilar romawi, jadikan seluruh teks sebagai ringkasan utama
         if (empty($p1Raw) && empty($p2Raw) && empty($p3Raw)) {
             $default['ringkasan_utama'] = $text;
             return $default;
@@ -823,81 +843,78 @@ class NotulenService
 
         $default['ringkasan_utama'] = $p1Raw;
 
-        // Parse Poin-Poin Pembahasan (mencari cap waktu atau penomoran)
+        // Parse Poin-Poin Pembahasan
         if (! empty($p2Raw)) {
-            $lines = explode("\n", $p2Raw);
-            $currentTopic = null;
-            $currentTime = null;
-
-            foreach ($lines as $line) {
-                $trimmed = trim($line);
-                if ($trimmed === '') {
-                    continue;
-                }
-
-                // Cek apakah baris diawali cap waktu (e.g. 00:12:45, [00:12:45], (12:45), 1. [00:12:45] Topik)
-                if (preg_match('/^(?:(?:\d+[\.\)]\s*)?\[?(\d{1,2}:\d{2}(?::\d{2})?)\]?\s*[-:]?\s*)(.*)$/i', $trimmed, $timeMatches)) {
-                    if ($currentTopic !== null) {
-                        $default['poin_pembahasan'][] = [
-                            'waktu' => $currentTime,
-                            'topik' => trim($currentTopic),
-                        ];
-                    }
-                    $currentTime = $timeMatches[1];
-                    $currentTopic = $timeMatches[2];
-                } elseif (preg_match('/^(?:\d+[\.\)]|\-|\*)\s+(.*)$/', $trimmed, $bulletMatches)) {
-                    if ($currentTopic !== null) {
-                        $default['poin_pembahasan'][] = [
-                            'waktu' => $currentTime,
-                            'topik' => trim($currentTopic),
-                        ];
-                    }
-                    $currentTime = null;
-                    $currentTopic = $bulletMatches[1];
-                } else {
-                    if ($currentTopic !== null) {
-                        $currentTopic .= ' ' . $trimmed;
-                    } else {
-                        $currentTopic = $trimmed;
-                    }
-                }
+            // Pisahkan per butir utama (diawali angka 1., 2., ... atau cap waktu [00:00])
+            $rawItems = preg_split('/\n(?=(?:\d+[\.\)]|\[\d{1,2}:\d{2}(?::\d{2})?\])\s+)/', $p2Raw);
+            if (count($rawItems) <= 1) {
+                // Fallback ke pemisahan baris dengan bullet
+                $rawItems = preg_split('/\n(?=(?:[\-\*]\s+))/', $p2Raw);
             }
 
-            if ($currentTopic !== null) {
+            foreach ($rawItems as $itemStr) {
+                $itemStr = trim((string) $itemStr);
+                if ($itemStr === '') continue;
+
+                $time = null;
+                if (preg_match('/\[(\d{1,2}:\d{2}(?::\d{2})?)\]/', $itemStr, $timeMatch)) {
+                    $time = $timeMatch[1];
+                    $itemStr = trim(str_replace($timeMatch[0], '', $itemStr));
+                }
+
+                // Bersihkan nomor urut di awal: 1. atau 1) atau - atau *
+                $cleanItem = preg_replace('/^(?:\d+[\.\)]|[\-\*])\s+/', '', $itemStr);
+
+                // Ekstraksi Topik, Pembicara, Uraian jika berstruktur
+                $topik = '';
+                $pembicara = null;
+                $uraian = '';
+
+                $lines = explode("\n", $cleanItem);
+                $firstLine = trim((string) ($lines[0] ?? ''));
+
+                if (preg_match('/^Topik:\s*(.*)$/i', $firstLine, $tMatch)) {
+                    $topik = trim($tMatch[1]);
+                } else {
+                    $topik = $firstLine;
+                }
+
+                $otherLines = array_slice($lines, 1);
+                $uraianLines = [];
+
+                foreach ($otherLines as $subLine) {
+                    $trimmedSub = trim($subLine);
+                    if ($trimmedSub === '') continue;
+
+                    if (preg_match('/^(?:[\-\*]\s*)?Pembicara:\s*(.*)$/i', $trimmedSub, $pMatch)) {
+                        $pembicara = trim($pMatch[1]);
+                    } elseif (preg_match('/^(?:[\-\*]\s*)?Uraian:\s*(.*)$/i', $trimmedSub, $uMatch)) {
+                        $uraianLines[] = trim($uMatch[1]);
+                    } else {
+                        $uraianLines[] = $trimmedSub;
+                    }
+                }
+
+                $uraian = implode("\n", $uraianLines);
+
                 $default['poin_pembahasan'][] = [
-                    'waktu' => $currentTime,
-                    'topik' => trim($currentTopic),
+                    'waktu'     => $time,
+                    'topik'     => $topik,
+                    'pembicara' => $pembicara,
+                    'uraian'    => $uraian,
+                    'full_text' => $cleanItem,
                 ];
             }
         }
 
-        // Parse Kesimpulan & Keputusan Akhir (checklist butir)
+        // Parse Kesimpulan & Keputusan Akhir
         if (! empty($p3Raw)) {
-            $lines = explode("\n", $p3Raw);
-            $currentConclusion = null;
-
-            foreach ($lines as $line) {
-                $trimmed = trim($line);
-                if ($trimmed === '') {
-                    continue;
-                }
-
-                if (preg_match('/^(?:\d+[\.\)]|\-|\*|✔|✓)\s+(.*)$/u', $trimmed, $matches)) {
-                    if ($currentConclusion !== null) {
-                        $default['kesimpulan_akhir'][] = trim($currentConclusion);
-                    }
-                    $currentConclusion = $matches[1];
-                } else {
-                    if ($currentConclusion !== null) {
-                        $currentConclusion .= ' ' . $trimmed;
-                    } else {
-                        $currentConclusion = $trimmed;
-                    }
-                }
-            }
-
-            if ($currentConclusion !== null) {
-                $default['kesimpulan_akhir'][] = trim($currentConclusion);
+            $rawConclusions = preg_split('/\n(?=(?:\d+[\.\)]|[\-\*✔✓])\s+)/u', $p3Raw);
+            foreach ($rawConclusions as $cStr) {
+                $cStr = trim((string) $cStr);
+                if ($cStr === '') continue;
+                $cleanC = preg_replace('/^(?:\d+[\.\)]|[\-\*✔✓])\s+/u', '', $cStr);
+                $default['kesimpulan_akhir'][] = trim($cleanC);
             }
         }
 

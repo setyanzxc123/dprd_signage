@@ -72,6 +72,18 @@ class ScheduleMinutesController extends BaseController
             ]);
         }
 
+        $notulenService = new \App\Libraries\Notulen\NotulenService();
+        $pillars = null;
+        if (! empty($minutes['struktur_json'])) {
+            $decoded = json_decode((string) $minutes['struktur_json'], true);
+            if (is_array($decoded) && isset($decoded['ringkasan_utama'], $decoded['poin_pembahasan'], $decoded['kesimpulan_akhir'])) {
+                $pillars = $decoded;
+            }
+        }
+        if ($pillars === null) {
+            $pillars = $notulenService->parsePillarsFromText($minutes['ringkasan_eksekutif'] ?? null);
+        }
+
         return $this->apiSuccess([
             'jadwal_type'         => $normalizedSource,
             'jadwal_id'           => $id,
@@ -80,6 +92,7 @@ class ScheduleMinutesController extends BaseController
             'judul_rapat'         => $scheduleInfo['judul'],
             'tanggal_rapat'       => $scheduleInfo['tanggal'],
             'ringkasan_eksekutif' => $minutes['ringkasan_eksekutif'],
+            'tiga_pilar'          => $pillars,
             'verified_at'         => $minutes['verified_at'] ?? null,
         ]);
     }

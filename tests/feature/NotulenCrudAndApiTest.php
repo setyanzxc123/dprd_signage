@@ -385,6 +385,10 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertSame('2026-08-27', $json['tanggal_rapat']);
         $this->assertStringContainsString('RINGKASAN UTAMA', $json['ringkasan_eksekutif']);
         $this->assertStringContainsString('KESIMPULAN', $json['ringkasan_eksekutif']);
+        $this->assertIsArray($json['tiga_pilar']);
+        $this->assertArrayHasKey('ringkasan_utama', $json['tiga_pilar']);
+        $this->assertArrayHasKey('poin_pembahasan', $json['tiga_pilar']);
+        $this->assertArrayHasKey('kesimpulan_akhir', $json['tiga_pilar']);
     }
 
     public function testIndexRedirectsToExistingJobWhenScheduleReferenced(): void
@@ -606,6 +610,119 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertSame(0, (int) $resumedJob['cancel_requested']);
     }
 
+    public function testMinutesReviewAndMinimalistEditorWorkflowInShow(): void
+    {
+        $jobId = 106;
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'               => $jobId,
+            'jadwal_type'      => 'umum',
+            'jadwal_id'        => 45,
+            'audio_filename'   => 'rapat_editor_test.mp3',
+            'status'           => 'completed',
+            'progress_percent' => 100,
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'id'                  => $jobId,
+            'job_id'              => $jobId,
+            'ringkasan_eksekutif' => 'I. RINGKASAN UTAMA\nDraf awal risalah.',
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        // 1. Tampilan awal berstatus draf: tombol sunting dan finalisasi tersedia
+        $showResponse = $this->adminGet("/admin/notulen/{$jobId}");
+        $showResponse->assertOK();
+        $showResponse->assertSee('Draf Risalah');
+        $showResponse->assertSee('Sunting Naskah');
+        $showResponse->assertSee('Sahkan / Finalisasi');
+
+        // 2. Lakukan penyuntingan naskah melalui endpoint update-minutes
+        $updateResp = $this->adminPost("/admin/notulen/update-minutes/{$jobId}", [
+            'ringkasan_eksekutif' => 'I. RINGKASAN UTAMA\nNaskah telah disunting oleh notulis.',
+        ]);
+        $updateResp->assertRedirect();
+
+        $updatedMinutes = $this->testDb->table('meeting_minutes')->where('id', $jobId)->get()->getRowArray();
+        $this->assertStringContainsString('Naskah telah disunting oleh notulis.', $updatedMinutes['ringkasan_eksekutif']);
+        $this->assertNotEmpty($updatedMinutes['struktur_json']);
+        $decodedJson = json_decode((string) $updatedMinutes['struktur_json'], true);
+        $this->assertIsArray($decodedJson);
+        $this->assertArrayHasKey('ringkasan_utama', $decodedJson);
+
+        // 3. Finalisasi risalah
+        $finalizeResp = $this->adminPost("/admin/notulen/finalize/{$jobId}", []);
+        $finalizeResp->assertRedirect();
+
+        // 4. Halaman show sekarang berstatus final: tombol Buka Kunci Revisi muncul
+        $finalShowResponse = $this->adminGet("/admin/notulen/{$jobId}");
+        $finalShowResponse->assertOK();
+        $finalShowResponse->assertSee('Naskah Final');
+        $finalShowResponse->assertSee('Buka Kunci Revisi');
+
+        // 5. Buka kunci revisi (unfinalize)
+        $unfinalizeResp = $this->adminPost("/admin/notulen/unfinalize/{$jobId}", []);
+        $unfinalizeResp->assertRedirect();
+
+        $unfinalizedMinutes = $this->testDb->table('meeting_minutes')->where('id', $jobId)->get()->getRowArray();
+        $this->assertSame('draft', $unfinalizedMinutes['status_verifikasi']);
+
+        // 6. Uji simpan via 3 seksi terkunci (sectioned editor)
+        $sectionResp = $this->withHeaders(['Accept' => 'application/json'])
+            ->adminPost("/admin/notulen/update-minutes/{$jobId}", [
+                'section_ringkasan'   => 'Intisari rapat di seksi 1',
+                'section_pembahasan'  => "1. Topik: Raperda APBD\n   - Pembicara: Sekda\n   - Uraian: Penjelasan postur.",
+                'section_kesimpulan'  => "1. Disetujui bersama.",
+            ]);
+        $sectionResp->assertStatus(200);
+
+        $sectionMinutes = $this->testDb->table('meeting_minutes')->where('id', $jobId)->get()->getRowArray();
+        $this->assertStringContainsString('I. RINGKASAN UTAMA', $sectionMinutes['ringkasan_eksekutif']);
+        $this->assertStringContainsString('Intisari rapat di seksi 1', $sectionMinutes['ringkasan_eksekutif']);
+        $this->assertStringContainsString('II. POIN-POIN PEMBAHASAN', $sectionMinutes['ringkasan_eksekutif']);
+        $this->assertStringContainsString('III. KESIMPULAN & KEPUTUSAN AKHIR', $sectionMinutes['ringkasan_eksekutif']);
+
+        $secPillars = json_decode((string) $sectionMinutes['struktur_json'], true);
+        $this->assertSame('Intisari rapat di seksi 1', $secPillars['ringkasan_utama']);
+        $this->assertCount(1, $secPillars['poin_pembahasan']);
+        $this->assertSame('Raperda APBD', $secPillars['poin_pembahasan'][0]['topik']);
+    }
+
+    public function testParsePillarsRobustExtraction(): void
+    {
+        $service = new \App\Libraries\Notulen\NotulenService($this->testDb);
+        $sampleText = <<<EOT
+I. RINGKASAN UTAMA
+Rapat Paripurna DPRD Provinsi Sulawesi Tengah membahas RAPBD TA 2026.
+
+II. POIN-POIN PEMBAHASAN
+1. [00:15:00] Topik: Pidato Pengantar Nota Keuangan RAPBD TA 2026
+   - Pembicara: Sekretaris Daerah Provinsi Sulawesi Tengah
+   - Uraian: Menjelaskan arsitektur keuangan daerah dan target PAD.
+2. Topik: Pandangan Umum Fraksi Partai Golkar
+   - Pembicara: Henrikus Sumanga
+   - Uraian: Menyetujui pembahasan dilanjutkan dengan catatan PAD.
+
+III. KESIMPULAN & KEPUTUSAN AKHIR
+1. Ranperda disetujui dibahas pada tahap selanjutnya.
+2. Rapat kerja Banggar dan Komisi dijadwalkan berikutnya.
+EOT;
+
+        $pillars = $service->parsePillarsFromText($sampleText);
+        $this->assertSame('Rapat Paripurna DPRD Provinsi Sulawesi Tengah membahas RAPBD TA 2026.', $pillars['ringkasan_utama']);
+        $this->assertCount(2, $pillars['poin_pembahasan']);
+        $this->assertSame('00:15:00', $pillars['poin_pembahasan'][0]['waktu']);
+        $this->assertSame('Pidato Pengantar Nota Keuangan RAPBD TA 2026', $pillars['poin_pembahasan'][0]['topik']);
+        $this->assertSame('Sekretaris Daerah Provinsi Sulawesi Tengah', $pillars['poin_pembahasan'][0]['pembicara']);
+        $this->assertStringContainsString('arsitektur keuangan', $pillars['poin_pembahasan'][0]['uraian']);
+
+        $this->assertCount(2, $pillars['kesimpulan_akhir']);
+        $this->assertStringContainsString('Ranperda disetujui', $pillars['kesimpulan_akhir'][0]);
+    }
+
     private function adminGet(string $path)
     {
         return $this->withSession(['auth_user' => ['id' => 1, 'name' => 'Administrator', 'username' => 'admin']])->get($path);
@@ -784,6 +901,7 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
             'job_id'              => ['type' => 'INTEGER', 'null' => true],
             'transcripts_dir'     => ['type' => 'VARCHAR', 'constraint' => 500, 'null' => true],
             'ringkasan_eksekutif' => ['type' => 'TEXT', 'null' => true],
+            'struktur_json'       => ['type' => 'TEXT', 'null' => true],
             'status_verifikasi'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'draft'],
             'verified_by'         => ['type' => 'INTEGER', 'null' => true],
             'verified_at'         => ['type' => 'DATETIME', 'null' => true],

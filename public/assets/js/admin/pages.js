@@ -1929,16 +1929,58 @@
             });
         });
 
-        // Dirty State Tracking
-        if (textarea) {
-            const originalValue = textarea.value;
-            textarea.addEventListener('input', () => {
-                isNotulenDirty = textarea.value !== originalValue;
+        // Toggle Mode Sunting vs Preview Naskah Risalah
+        const btnToggleEdit = document.getElementById('btn_toggle_edit_risalah');
+        const btnCancelEdit = document.getElementById('btn_cancel_edit_risalah');
+        const viewModeEl    = document.getElementById('risalah_view_mode');
+        const editModeEl    = document.getElementById('risalah_edit_mode');
+        const previewTextEl = document.getElementById('risalah_preview_text');
+
+        if (btnToggleEdit && viewModeEl && editModeEl) {
+            btnToggleEdit.addEventListener('click', () => {
+                const isEditing = !editModeEl.classList.contains('hidden');
+                if (isEditing) {
+                    editModeEl.classList.add('hidden');
+                    viewModeEl.classList.remove('hidden');
+                } else {
+                    viewModeEl.classList.add('hidden');
+                    editModeEl.classList.remove('hidden');
+                    const firstTa = editModeEl.querySelector('textarea');
+                    if (firstTa) firstTa.focus();
+                }
+                if (window.lucide && window.lucide.createIcons) {
+                    window.lucide.createIcons();
+                }
+            });
+        }
+
+        if (btnCancelEdit && viewModeEl && editModeEl) {
+            btnCancelEdit.addEventListener('click', () => {
+                editModeEl.classList.add('hidden');
+                viewModeEl.classList.remove('hidden');
+                if (window.lucide && window.lucide.createIcons) {
+                    window.lucide.createIcons();
+                }
+            });
+        }
+
+        // Dirty State Tracking untuk Seksi Editor
+        const sectionTextareas = form ? form.querySelectorAll('.notulen-editor-section, textarea') : [];
+        const initialSectionValues = new Map();
+
+        sectionTextareas.forEach((ta) => {
+            initialSectionValues.set(ta, ta.value);
+            ta.addEventListener('input', () => {
+                let anyDirty = false;
+                sectionTextareas.forEach((t) => {
+                    if (t.value !== initialSectionValues.get(t)) anyDirty = true;
+                });
+                isNotulenDirty = anyDirty;
                 if (dirtyBadge) {
                     dirtyBadge.classList.toggle('hidden', !isNotulenDirty);
                 }
             });
-        }
+        });
 
         // Reset dirty flag on direct form submit
         if (form) {
@@ -1949,7 +1991,7 @@
 
         // Quick Save (Ctrl+S) via AJAX
         const handleQuickSave = async () => {
-            if (!form || !textarea) return;
+            if (!form || sectionTextareas.length === 0) return;
             const submitBtn = document.getElementById('btn_save_draft');
             const lastSavedTime = document.getElementById('last_saved_time');
             const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
@@ -1973,10 +2015,23 @@
                 const data = await response.json();
                 if (response.ok && data.status === 'success') {
                     isNotulenDirty = false;
+                    sectionTextareas.forEach((t) => initialSectionValues.set(t, t.value));
                     if (dirtyBadge) dirtyBadge.classList.add('hidden');
+                    
+                    if (previewTextEl) {
+                        const s1 = document.getElementById('section_ringkasan')?.value || '';
+                        const s2 = document.getElementById('section_pembahasan')?.value || '';
+                        const s3 = document.getElementById('section_kesimpulan')?.value || '';
+                        if (s1 || s2 || s3) {
+                            previewTextEl.textContent = `I. RINGKASAN UTAMA\n${s1}\n\nII. POIN-POIN PEMBAHASAN\n${s2}\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n${s3}`;
+                        } else if (textarea) {
+                            previewTextEl.textContent = textarea.value;
+                        }
+                    }
+
                     if (lastSavedTime) {
                         const now = new Date();
-                        lastSavedTime.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WITA';
+                        lastSavedTime.textContent = 'Tersimpan pukul ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WITA';
                     }
                     if (submitBtn) {
                         submitBtn.innerHTML = '<i data-lucide="check" class="h-4 w-4"></i> Tersimpan!';
@@ -1995,7 +2050,7 @@
                         submitBtn.innerHTML = originalBtnText;
                         if (window.lucide) window.lucide.createIcons();
                     }
-                }, 1500);
+                }, 2000);
             }
         };
 
