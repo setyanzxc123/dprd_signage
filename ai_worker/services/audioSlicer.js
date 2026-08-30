@@ -67,17 +67,19 @@ function sliceSingleSegment(inputPath, outputPath, startTimeSeconds, durationSec
 }
 
 /**
- * Memotong file rekaman rapat menjadi beberapa potongan per 30 menit (1.800 detik).
+ * Memotong file rekaman rapat sesuai rencana chunk sadar-hening.
+ * `plan` berupa array [{index, start, duration}] dari vad.json, atau angka
+ * durasi tetap (perilaku potongan seragam lama) untuk kompatibilitas.
  * Potongan ditulis ke file .part lalu di-rename agar job yang mati di tengah
  * slicing tidak meninggalkan chunk setengah jadi yang dianggap checkpoint sah.
  * Chunk yang sudah ada diverifikasi durasinya sebelum dipakai ulang.
  *
  * @param {string} inputPath Path absolut rekaman asli
  * @param {string} outputDir Direktori target potongan (folder `audio/`)
- * @param {number} chunkDurationSeconds Durasi potongan dalam detik (default: 1800)
+ * @param {Array|number} plan Rencana chunk atau durasi potongan tetap (detik)
  * @returns {Promise<Object>} Metadata pemotongan ({ totalDuration, totalChunks, chunkFiles })
  */
-export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 1800, cancelChecker = null, onLog = () => {}) {
+export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = null, onLog = () => {}) {
   if (!fs.existsSync(inputPath)) {
     throw new Error(`File input rekaman tidak ditemukan: ${inputPath}`);
   }
@@ -88,10 +90,12 @@ export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 18
   }
 
   const totalDuration = await probeDuration(inputPath);
-  const totalChunks = Math.max(1, Math.ceil(totalDuration / chunkDurationSeconds));
+  const chunkPlan = Array.isArray(plan)
+    ? plan
+    : fixedPlan(totalDuration, plan);
   const chunkFiles = [];
 
-  for (let i = 1; i <= totalChunks; i++) {
+  for (const entry of chunkPlan) {
     if (cancelChecker && typeof cancelChecker === 'function') {
       const isCancelled = await cancelChecker();
       if (isCancelled) {
@@ -99,18 +103,18 @@ export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 18
       }
     }
 
-    const chunkNum = formatChunkIndex(i);
+    const chunkNum = formatChunkIndex(entry.index);
     const chunkFileName = `chunk_${chunkNum}.mp3`;
     const chunkFilePath = path.join(outputDir, chunkFileName);
     const partFilePath = path.join(outputDir, `${chunkFileName}.part`);
-    const startTime = (i - 1) * chunkDurationSeconds;
-    const duration = Math.min(chunkDurationSeconds, totalDuration - startTime);
+    const startTime = entry.start;
+    const duration = Math.min(entry.duration, totalDuration - startTime);
 
     if (fs.existsSync(chunkFilePath)) {
       const isUsable = await verifyChunkDuration(chunkFilePath, duration);
       if (isUsable) {
         onLog(`[Slice] Chunk ${chunkFileName} sudah ada dan durasinya sah, melewati...`);
-        chunkFiles.push(buildChunkEntry(i, chunkFileName, chunkFilePath, startTime, duration));
+        chunkFiles.push(buildChunkEntry(entry.index, chunkFileName, chunkFilePath, startTime, duration));
         continue;
       }
       onLog(`[Slice] Chunk ${chunkFileName} rusak/tidak lengkap (durasi tidak sesuai target ${duration}s). Dibuat ulang...`);
@@ -123,14 +127,23 @@ export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 18
     await sliceSingleSegment(inputPath, partFilePath, startTime, duration);
     fs.renameSync(partFilePath, chunkFilePath);
 
-    chunkFiles.push(buildChunkEntry(i, chunkFileName, chunkFilePath, startTime, duration));
+    chunkFiles.push(buildChunkEntry(entry.index, chunkFileName, chunkFilePath, startTime, duration));
   }
 
   return {
     totalDuration,
-    totalChunks,
+    totalChunks: chunkPlan.length,
     chunkFiles,
   };
+}
+
+function fixedPlan(totalDuration, chunkDurationSeconds) {
+  const count = Math.max(1, Math.ceil(totalDuration / chunkDurationSeconds));
+  return Array.from({ length: count }, (_, i) => ({
+    index: i + 1,
+    start: i * chunkDurationSeconds,
+    duration: Math.min(chunkDurationSeconds, totalDuration - i * chunkDurationSeconds),
+  }));
 }
 
 function buildChunkEntry(index, filename, filePath, startTimeSeconds, durationSeconds) {

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-import { parseSilencedetectOutput, buildSpeechSegments, analyzeChunks, runVadAnalysis } from '../services/vad.js';
+import { parseSilencedetectOutput, buildSpeechSegments, analyzeChunks, planChunks, runVadAnalysis, loadOrAnalyze } from '../services/vad.js';
 
 test.beforeEach(() => {
   if (ffmpegInstaller && ffmpegInstaller.path) {
@@ -57,7 +57,40 @@ test('analisis per chunk menghitung rasio bicara proporsional', () => {
   assert.equal(reports[3].duration, 1800);
 });
 
-test('runVadAnalysis menulis vad.json dari audio nyata dengan jeda hening', async () => {
+test('planChunks menggeser batas ke titik hening dalam toleransi', () => {
+  const plan = planChunks(190, [{ start: 88, end: 92 }], 100, 30);
+  assert.equal(plan.length, 2);
+  assert.equal(plan[0].start, 0);
+  assert.equal(plan[0].duration, 92, 'batas bergeser ke akhir hening (92s)');
+  assert.equal(plan[1].start, 92);
+  assert.equal(plan[1].duration, 98);
+});
+
+test('planChunks memotong tepat di tengah hening yang membentang target', () => {
+  const plan = planChunks(190, [{ start: 88, end: 112 }], 100, 30);
+  assert.equal(plan[0].duration, 100, 'target 100 ada di dalam hening, tidak digeser');
+});
+
+test('planChunks mengabaikan hening di luar toleransi', () => {
+  const plan = planChunks(190, [{ start: 50, end: 55 }], 100, 30);
+  assert.equal(plan[0].duration, 100, 'hening 55s jaraknya 45s > toleransi 30s');
+});
+
+test('planChunks tanpa hening menghasilkan potongan seragam', () => {
+  const plan = planChunks(190, [], 100, 30);
+  assert.deepEqual(plan.map((entry) => entry.duration), [100, 90]);
+});
+
+test('planChunks menjumlah durasi persis durasi total dan berurutan', () => {
+  const plan = planChunks(7200, [{ start: 1790, end: 1815 }, { start: 3585, end: 3610 }], 1800, 180);
+  const total = plan.reduce((sum, entry) => sum + entry.duration, 0);
+  assert.equal(total, 7200);
+  for (let i = 1; i < plan.length; i++) {
+    assert.ok(plan[i].start >= plan[i - 1].start + plan[i - 1].duration - 0.001);
+  }
+});
+
+test('vad.json memuat rencana chunk yang durasinya menjumlah durasi total', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vad-test-'));
   const input = path.join(dir, 'input.mp3');
   await new Promise((resolve, reject) => {
@@ -86,6 +119,15 @@ test('runVadAnalysis menulis vad.json dari audio nyata dengan jeda hening', asyn
   assert.ok(silence, `ada rentang hening >= 15s: ${JSON.stringify(analysis.silences)}`);
   assert.ok(fs.existsSync(path.join(dir, 'vad.json')));
   assert.ok(!fs.existsSync(path.join(dir, 'vad.json.part')));
+
+  const saved = JSON.parse(fs.readFileSync(path.join(dir, 'vad.json'), 'utf-8'));
+  assert.ok(Array.isArray(saved.plan) && saved.plan.length >= 1);
+  const planTotal = saved.plan.reduce((sum, entry) => sum + entry.duration, 0);
+  assert.ok(Math.abs(planTotal - 60) <= 1, `rencana menjumlah ~60s: ${planTotal}`);
+
+  // loadOrAnalyze memakai ulang file yang sama tanpa analisis ulang
+  const reused = await loadOrAnalyze(input, dir, { onLog: () => {} });
+  assert.equal(reused.generated_at, saved.generated_at, 'analisis tidak diulang saat parameter sama');
 
   fs.rmSync(dir, { recursive: true, force: true });
 });
