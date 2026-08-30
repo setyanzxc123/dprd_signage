@@ -241,7 +241,7 @@ export async function processJob(pool, job) {
     );
 
     log(`[Worker] Durasi total: ${totalDuration}s (${Math.round(totalDuration / 60)} menit), Total chunk: ${totalChunks}`);
-    const sliceResult = await sliceAudio(inputAudioPath, audioDir, config.audio.chunkDurationSeconds, isCancelled);
+    const sliceResult = await sliceAudio(inputAudioPath, audioDir, config.audio.chunkDurationSeconds, isCancelled, (msg) => log(`[Job #${jobId}] ${msg}`));
 
     // 2. Tahap Transkripsi Sekuensial per Chunk
     await pool.execute(

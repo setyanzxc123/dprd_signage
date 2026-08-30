@@ -3,6 +3,7 @@ import path from 'node:path';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
+import { JobCancelledError } from './throttler.js';
 
 // Set path binary ffmpeg dan ffprobe otomatis sesuai platform (Windows/Linux/Mac)
 if (ffmpegInstaller && ffmpegInstaller.path) {
@@ -67,13 +68,16 @@ function sliceSingleSegment(inputPath, outputPath, startTimeSeconds, durationSec
 
 /**
  * Memotong file rekaman rapat menjadi beberapa potongan per 30 menit (1.800 detik).
+ * Potongan ditulis ke file .part lalu di-rename agar job yang mati di tengah
+ * slicing tidak meninggalkan chunk setengah jadi yang dianggap checkpoint sah.
+ * Chunk yang sudah ada diverifikasi durasinya sebelum dipakai ulang.
  *
  * @param {string} inputPath Path absolut rekaman asli
  * @param {string} outputDir Direktori target potongan (folder `audio/`)
  * @param {number} chunkDurationSeconds Durasi potongan dalam detik (default: 1800)
  * @returns {Promise<Object>} Metadata pemotongan ({ totalDuration, totalChunks, chunkFiles })
  */
-export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 1800, cancelChecker = null) {
+export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 1800, cancelChecker = null, onLog = () => {}) {
   if (!fs.existsSync(inputPath)) {
     throw new Error(`File input rekaman tidak ditemukan: ${inputPath}`);
   }
@@ -91,29 +95,35 @@ export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 18
     if (cancelChecker && typeof cancelChecker === 'function') {
       const isCancelled = await cancelChecker();
       if (isCancelled) {
-        throw new Error('JOB_CANCELLED_BY_ADMIN');
+        throw new JobCancelledError();
       }
     }
 
     const chunkNum = formatChunkIndex(i);
     const chunkFileName = `chunk_${chunkNum}.mp3`;
     const chunkFilePath = path.join(outputDir, chunkFileName);
+    const partFilePath = path.join(outputDir, `${chunkFileName}.part`);
     const startTime = (i - 1) * chunkDurationSeconds;
     const duration = Math.min(chunkDurationSeconds, totalDuration - startTime);
 
-    // Jika file chunk sudah ada dari proses sebelumnya, lewati pembuatan ulang
-    if (!fs.existsSync(chunkFilePath)) {
-      await sliceSingleSegment(inputPath, chunkFilePath, startTime, duration);
+    if (fs.existsSync(chunkFilePath)) {
+      const isUsable = await verifyChunkDuration(chunkFilePath, duration);
+      if (isUsable) {
+        onLog(`[Slice] Chunk ${chunkFileName} sudah ada dan durasinya sah, melewati...`);
+        chunkFiles.push(buildChunkEntry(i, chunkFileName, chunkFilePath, startTime, duration));
+        continue;
+      }
+      onLog(`[Slice] Chunk ${chunkFileName} rusak/tidak lengkap (durasi tidak sesuai target ${duration}s). Dibuat ulang...`);
+      fs.unlinkSync(chunkFilePath);
     }
 
-    chunkFiles.push({
-      index: i,
-      chunkName: `chunk_${chunkNum}`,
-      filename: chunkFileName,
-      path: chunkFilePath,
-      startTimeSeconds: startTime,
-      durationSeconds: duration,
-    });
+    if (fs.existsSync(partFilePath)) {
+      fs.unlinkSync(partFilePath);
+    }
+    await sliceSingleSegment(inputPath, partFilePath, startTime, duration);
+    fs.renameSync(partFilePath, chunkFilePath);
+
+    chunkFiles.push(buildChunkEntry(i, chunkFileName, chunkFilePath, startTime, duration));
   }
 
   return {
@@ -121,4 +131,24 @@ export async function sliceAudio(inputPath, outputDir, chunkDurationSeconds = 18
     totalChunks,
     chunkFiles,
   };
+}
+
+function buildChunkEntry(index, filename, filePath, startTimeSeconds, durationSeconds) {
+  return {
+    index,
+    chunkName: filename.replace('.mp3', ''),
+    filename,
+    path: filePath,
+    startTimeSeconds,
+    durationSeconds,
+  };
+}
+
+async function verifyChunkDuration(filePath, expectedSeconds) {
+  try {
+    const actual = await probeDuration(filePath);
+    return Math.abs(actual - expectedSeconds) <= 1;
+  } catch {
+    return false;
+  }
 }
