@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { GoogleGenAI } from '@google/genai';
 import { config } from '../config.js';
-import { callWithRetry, JobCancelledError } from './throttler.js';
+import { callWithRetry, JobCancelledError, isDailyQuotaExhausted, describeError } from './throttler.js';
+import { effectiveModelChain, setStickyModel, markDeadToday } from './modelChain.js';
 import { formatChunkIndex, probeDuration } from './audioSlicer.js';
 import { log as workerLog, warn as workerWarn } from './logger.js';
 
@@ -64,9 +65,8 @@ export async function deleteFromFilesApi(fileResource) {
 function validateTranscriptQuality(text, chunkNum, minWords, onLog) {
   const words = text.split(/\s+/).filter(Boolean).length;
 
-  // --- Hard fail 1: Densitas kata terlalu rendah ---
-  // Indikasi: model mengembalikan output sangat singkat, mungkin hanya
-  // konfirmasi, pernyataan error, atau audio tidak terbaca.
+  // Hard fail 1: densitas kata terlalu rendah. Indikasi output terpotong,
+  // hanya konfirmasi, atau audio tidak terbaca.
   if (words < minWords) {
     throw new Error(
       `Transkrip chunk_${chunkNum} terlalu pendek: ${words} kata (minimum ${minWords} kata). ` +
@@ -74,9 +74,8 @@ function validateTranscriptQuality(text, chunkNum, minWords, onLog) {
     );
   }
 
-  // --- Hard fail 2: Tidak ada struktur (tidak ada newline DAN tidak ada label speaker) ---
-  // Indikasi: model mengabaikan format prompt dan mengembalikan satu blok
-  // teks panjang tanpa pembagian pembicara — tidak berguna untuk risalah.
+  // Hard fail 2: tidak ada newline DAN tidak ada label speaker. Indikasi model
+  // mengabaikan format prompt dan mengembalikan satu blok teks panjang.
   const hasNewlines = text.includes('\n');
   const hasSpeakerLabel = /\[.+?\]/.test(text);
   if (!hasNewlines && !hasSpeakerLabel) {
@@ -86,9 +85,8 @@ function validateTranscriptQuality(text, chunkNum, minWords, onLog) {
     );
   }
 
-  // --- Soft warn: Kemungkinan terpotong di tengah kalimat ---
-  // Periksa hanya jika teks cukup panjang agar tidak false-positive pada
-  // transkrip pendek yang memang berakhir natural.
+  // Soft warn: kemungkinan terpotong di tengah kalimat. Cek hanya jika teks
+  // cukup panjang agar tidak false positive pada transkrip pendek.
   if (text.length >= config.validation.abruptCutMinLength) {
     const tail = text.slice(-150);
     const endsAbruptly = !/[.!?\]"']/.test(tail);
@@ -201,7 +199,10 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
   let modelSuccess = false;
   let lastError = null;
 
-  const models = config.gemini.modelChain;
+  const models = effectiveModelChain(config.gemini.modelChain);
+  if (models.length === 0) {
+    throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+  }
   const ai = getAiClient();
 
   try {
@@ -283,11 +284,12 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
             backoffFactor: 2.5,
             cancelChecker,
             onRetry: ({ attempt, waitTimeMs, error }) => {
-              onLog(`[Throttler] Error saat transkripsi chunk_${chunkNum} (${error.message}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+              onLog(`[Throttler] Error saat transkripsi chunk_${chunkNum} (${describeError(error)}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
             },
           }
         );
 
+        setStickyModel(modelName);
         modelSuccess = true;
         break;
       } catch (err) {
@@ -295,12 +297,17 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
         if (err instanceof JobCancelledError) {
           throw err;
         }
-        onLog(`[Transcribe] Model ${modelName} gagal setelah seluruh retry: ${err.message}. Mencoba model fallback berikutnya...`);
+        if (isDailyQuotaExhausted(err)) {
+          markDeadToday(modelName);
+          onLog(`[Transcribe] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
+        } else {
+          onLog(`[Transcribe] Model ${modelName} gagal setelah seluruh retry: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+        }
       }
     }
 
     if (!modelSuccess || !transcriptText) {
-      throw new Error(`Seluruh rantai model AI gagal mentranskripsikan chunk_${chunkNum}. Error terakhir: ${lastError?.message}`);
+      throw new Error(`Seluruh rantai model AI gagal mentranskripsikan chunk_${chunkNum}. Error terakhir: ${describeError(lastError)}`);
     }
 
     // 4. Penulisan Transkrip Atomik: tulis .part dahulu -> rename ke file final
@@ -373,7 +380,10 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
   "ringkasan_eksekutif": "Tuliskan seluruh naskah risalah lengkap yang memuat Bagian I, II, dan III di sini secara utuh, rapi, dan terformat sesuai panduan di atas."
 }`;
 
-  const models = config.gemini.modelChain;
+  const models = effectiveModelChain(config.gemini.modelChain);
+  if (models.length === 0) {
+    throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+  }
   const ai = getAiClient();
   let minutesJson = null;
   let usedModel = null;
@@ -433,7 +443,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
           backoffFactor: 2.5,
           cancelChecker,
           onRetry: ({ attempt, waitTimeMs, error }) => {
-            onLog(`[Throttler] Error saat generate risalah (${error.message}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+            onLog(`[Throttler] Error saat generate risalah (${describeError(error)}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
           },
         }
       );
@@ -448,6 +458,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
       }
 
       onLog(`[Minutes] Risalah rapat berhasil disusun via model ${modelName}!`);
+      setStickyModel(modelName);
       usedModel = modelName;
       break;
     } catch (err) {
@@ -455,12 +466,17 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
       if (err instanceof JobCancelledError) {
         throw err;
       }
-      onLog(`[Minutes] Model ${modelName} gagal menyusun risalah: ${err.message}. Mencoba model fallback berikutnya...`);
+      if (isDailyQuotaExhausted(err)) {
+        markDeadToday(modelName);
+        onLog(`[Minutes] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
+      } else {
+        onLog(`[Minutes] Model ${modelName} gagal menyusun risalah: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+      }
     }
   }
 
   if (!minutesJson) {
-    throw new Error(`Seluruh rantai model AI gagal menyusun risalah rapat. Error terakhir: ${lastError?.message}`);
+    throw new Error(`Seluruh rantai model AI gagal menyusun risalah rapat. Error terakhir: ${describeError(lastError)}`);
   }
 
   return {
