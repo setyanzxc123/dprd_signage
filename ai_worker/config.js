@@ -69,5 +69,6 @@ export const config = {
   paths: {
     root: path.resolve(__dirname, '..'),
     recordingsBaseDir: path.resolve(__dirname, '../writable/uploads/recordings'),
+    logsDir: path.resolve(__dirname, '../writable/logs'),
   },
 };

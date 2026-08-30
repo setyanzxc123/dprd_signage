@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { sliceAudio, probeDuration, formatChunkIndex } from './services/audioSlicer.js';
 import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback, parsePillarsFromText } from './services/geminiService.js';
 import { interruptibleSleep } from './services/throttler.js';
+import { log, warn, error } from './services/logger.js';
 
 // Abaikan error EPIPE jika worker dijalankan asinkron tanpa pipe terminal aktif (popen PHP)
 process.stdout?.on('error', (err) => {
@@ -34,7 +35,7 @@ export async function performStartupReset(pool) {
   );
 
   if (result.affectedRows > 0) {
-    console.log(`[Worker] Startup Reset: ${result.affectedRows} job in-progress berhasil di-reset ke 'queued'.`);
+    log(`[Worker] Startup Reset: ${result.affectedRows} job in-progress berhasil di-reset ke 'queued'.`);
   }
 }
 
@@ -104,7 +105,7 @@ async function fetchMeetingContext(pool, job) {
       }
     }
   } catch (err) {
-    console.warn(`[Worker] Peringatan membaca konteks jadwal #${job.jadwal_id}:`, err.message);
+    warn(`[Worker] Peringatan membaca konteks jadwal #${job.jadwal_id}:`, err.message);
   }
 
   return { judulRapat, tanggalRapat };
@@ -147,9 +148,9 @@ function cleanLocalAudioChunks(audioDir) {
         fs.unlinkSync(path.join(audioDir, file));
       }
     }
-    console.log(`[Worker] Retensi Disk: File potongan chunk audio lokal di ${audioDir} berhasil dibersihkan.`);
+    log(`[Worker] Retensi Disk: File potongan chunk audio lokal di ${audioDir} berhasil dibersihkan.`);
   } catch (err) {
-    console.warn(`[Worker] Peringatan saat membersihkan chunk lokal:`, err.message);
+    warn(`[Worker] Peringatan saat membersihkan chunk lokal:`, err.message);
   }
 }
 
@@ -161,9 +162,9 @@ export async function processJob(pool, job) {
   const isCancelled = createCancelChecker(pool, jobId);
 
   try {
-    console.log(`\n========================================================`);
-    console.log(`[Worker] Memulai Pemrosesan Job ID #${jobId} (${job.audio_filename})`);
-    console.log(`========================================================`);
+    log(`\n========================================================`);
+    log(`[Worker] Memulai Pemrosesan Job ID #${jobId} (${job.audio_filename})`);
+    log(`========================================================`);
 
     const jobDir = path.join(config.paths.recordingsBaseDir, `job_${jobId}`);
     const audioDir = path.join(jobDir, 'audio');
@@ -203,12 +204,12 @@ export async function processJob(pool, job) {
         `UPDATE meeting_transcription_jobs SET status = 'cancelled', cancel_requested = 0, error_message = NULL, current_step = 'Dibatalkan oleh admin', updated_at = NOW() WHERE id = ?`,
         [jobId]
       );
-      console.log(`[Worker] Job #${jobId} dibatalkan oleh admin sebelum pemrosesan dimulai.`);
+      log(`[Worker] Job #${jobId} dibatalkan oleh admin sebelum pemrosesan dimulai.`);
       return;
     }
 
     // 1. Tahap Probe Durasi & Chunking Audio
-    console.log(`[Worker] Mengukur durasi audio via ffprobe...`);
+    log(`[Worker] Mengukur durasi audio via ffprobe...`);
     const totalDuration = await probeDuration(inputAudioPath);
     const totalChunks = Math.max(1, Math.ceil(totalDuration / config.audio.chunkDurationSeconds));
 
@@ -219,7 +220,7 @@ export async function processJob(pool, job) {
       [totalDuration, totalChunks, jobId]
     );
 
-    console.log(`[Worker] Durasi total: ${totalDuration}s (${Math.round(totalDuration / 60)} menit), Total chunk: ${totalChunks}`);
+    log(`[Worker] Durasi total: ${totalDuration}s (${Math.round(totalDuration / 60)} menit), Total chunk: ${totalChunks}`);
     const sliceResult = await sliceAudio(inputAudioPath, audioDir, config.audio.chunkDurationSeconds, isCancelled);
 
     // 2. Tahap Transkripsi Sekuensial per Chunk
@@ -240,7 +241,7 @@ export async function processJob(pool, job) {
           `UPDATE meeting_transcription_jobs SET status = 'cancelled', cancel_requested = 0, error_message = NULL, current_step = 'Dibatalkan saat transkripsi berlangsung', updated_at = NOW() WHERE id = ?`,
           [jobId]
         );
-        console.log(`[Worker] Job #${jobId} dibatalkan kooperatif pada chunk ke-${chunk.index}.`);
+        log(`[Worker] Job #${jobId} dibatalkan kooperatif pada chunk ke-${chunk.index}.`);
         return;
       }
 
@@ -261,7 +262,7 @@ export async function processJob(pool, job) {
         isLastChunk: (chunk.index === totalChunks),
         transcriptsDir,
         cancelChecker: isCancelled,
-        onLog: (msg) => console.log(`[Job #${jobId}] ${msg}`),
+        onLog: (msg) => log(`[Job #${jobId}] ${msg}`),
       });
 
       const chunkProgressDone = Math.round((chunk.index / totalChunks) * 75);
@@ -274,7 +275,7 @@ export async function processJob(pool, job) {
 
       // Jeda keamanan antar chunk (Safety Delay 8 detik) jika bukan chunk terakhir
       if (i < chunkFiles.length - 1) {
-        console.log(`[Job #${jobId}] Jeda keamanan ${config.audio.safetyDelayMs / 1000}s sebelum memproses chunk berikutnya...`);
+        log(`[Job #${jobId}] Jeda keamanan ${config.audio.safetyDelayMs / 1000}s sebelum memproses chunk berikutnya...`);
         await interruptibleSleep(config.audio.safetyDelayMs, isCancelled);
       }
     }
@@ -325,7 +326,7 @@ export async function processJob(pool, job) {
         jadwal_type: job.jadwal_type,
       },
       cancelChecker: isCancelled,
-      onLog: (msg) => console.log(`[Job #${jobId}] ${msg}`),
+      onLog: (msg) => log(`[Job #${jobId}] ${msg}`),
     });
 
     // 4. Simpan Hasil Risalah ke Database MySQL (meeting_minutes)
@@ -376,10 +377,10 @@ export async function processJob(pool, job) {
 
     cleanLocalAudioChunks(audioDir);
 
-    console.log(`\n[Worker] SUKSES: Job #${jobId} (${meetingContext.judulRapat}) telah selesai 100%!\n`);
+    log(`\n[Worker] SUKSES: Job #${jobId} (${meetingContext.judulRapat}) telah selesai 100%!\n`);
   } catch (err) {
     if (err.message === 'JOB_CANCELLED_BY_ADMIN' || (await isCancelled())) {
-      console.log(`[Worker] Job #${jobId} berhasil dihentikan atas permintaan admin.`);
+      log(`[Worker] Job #${jobId} berhasil dihentikan atas permintaan admin.`);
       await pool.execute(
         `UPDATE meeting_transcription_jobs
          SET status = 'cancelled', cancel_requested = 0, error_message = NULL, current_step = 'Proses dihentikan oleh admin (dapat dilanjutkan kembali)', updated_at = NOW()
@@ -400,17 +401,17 @@ async function main() {
   const isDaemon = args.includes('--daemon');
   const jobIdArg = args.find((a) => a.startsWith('--job-id='));
 
-  console.log('------------------------------------------------------------');
-  console.log('[Worker] DPRD Signage AI Background Worker Engine');
-  console.log(`Model Chain: ${config.gemini.modelChain.join(' -> ')}`);
-  console.log(`Database: ${config.db.user}@${config.db.host}:${config.db.port}/${config.db.database}`);
-  console.log('------------------------------------------------------------');
+  log('------------------------------------------------------------');
+  log('[Worker] DPRD Signage AI Background Worker Engine');
+  log(`Model Chain: ${config.gemini.modelChain.join(' -> ')}`);
+  log(`Database: ${config.db.user}@${config.db.host}:${config.db.port}/${config.db.database}`);
+  log('------------------------------------------------------------');
 
   const pool = await getDbPool();
 
   // Registrasi handler sinyal penghentian proses (Ctrl+C / Kill)
   const handleExitSignal = async (signal) => {
-    console.log(`\n[Worker] Menerima sinyal ${signal} (Ctrl+C). Menghentikan worker segera...`);
+    log(`\n[Worker] Menerima sinyal ${signal} (Ctrl+C). Menghentikan worker segera...`);
     if (pool) {
       try {
         await pool.end();
@@ -430,14 +431,14 @@ async function main() {
       [targetJobId]
     );
     if (!rows || rows.length === 0) {
-      console.error(`[Worker] Job ID #${targetJobId} tidak ditemukan di database.`);
+      error(`[Worker] Job ID #${targetJobId} tidak ditemukan di database.`);
       process.exit(1);
     }
     try {
       await processJob(pool, rows[0]);
       process.exit(0);
     } catch (err) {
-      console.error(`[Worker] Job #${targetJobId} selesai dengan error:`, err);
+      error(`[Worker] Job #${targetJobId} selesai dengan error:`, err);
       const isCancelled = String(err.message || err).includes('JOB_CANCELLED_BY_ADMIN');
       await pool.execute(
         `UPDATE meeting_transcription_jobs
@@ -456,7 +457,7 @@ async function main() {
 
   // Mode 2: Daemon Worker Loop (PM2 / background service)
   await performStartupReset(pool);
-  console.log(`[Worker] Daemon aktif. Memantau antrean task (polling interval ${config.worker.pollIntervalMs / 1000}s)...`);
+  log(`[Worker] Daemon aktif. Memantau antrean task (polling interval ${config.worker.pollIntervalMs / 1000}s)...`);
 
   let isRunning = true;
 
@@ -467,7 +468,7 @@ async function main() {
         try {
           await processJob(pool, job);
         } catch (jobErr) {
-          console.error(`[Worker] Error saat memproses Job #${job.id}:`, jobErr);
+          error(`[Worker] Error saat memproses Job #${job.id}:`, jobErr);
           const errorMsg = String(jobErr.message || jobErr);
           const isCancelled = errorMsg.includes('JOB_CANCELLED_BY_ADMIN');
           await pool.execute(
@@ -484,13 +485,13 @@ async function main() {
         }
       } else {
         if (!isDaemon) {
-          console.log('[Worker] Tidak ada job dalam antrean. Selesai.');
+          log('[Worker] Tidak ada job dalam antrean. Selesai.');
           break;
         }
         await interruptibleSleep(config.worker.pollIntervalMs);
       }
     } catch (loopErr) {
-      console.error('[Worker] Terjadi kesalahan pada loop worker:', loopErr.message);
+      error('[Worker] Terjadi kesalahan pada loop worker:', loopErr.message);
       await interruptibleSleep(config.worker.pollIntervalMs);
     }
   }
@@ -498,12 +499,12 @@ async function main() {
   if (dbPool) {
     await dbPool.end();
   }
-  console.log('[Worker] Worker telah berhenti.');
+  log('[Worker] Worker telah berhenti.');
 }
 
 if (process.argv[1] && process.argv[1].endsWith('worker.js')) {
   main().catch((err) => {
-    console.error('[Worker] Fatal Error:', err);
+    error('[Worker] Fatal Error:', err);
     process.exit(1);
   });
 }

@@ -4,6 +4,7 @@ import { GoogleGenAI } from '@google/genai';
 import { config } from '../config.js';
 import { callWithRetry } from './throttler.js';
 import { formatChunkIndex, probeDuration } from './audioSlicer.js';
+import { log as workerLog, warn as workerWarn } from './logger.js';
 
 // Inisialisasi Google GenAI Client
 let aiClient = null;
@@ -45,7 +46,7 @@ export async function deleteFromFilesApi(fileResource) {
     }
   } catch (err) {
     // Log kegagalan cleanup tanpa menghentikan pipeline
-    console.warn(`[GeminiService] Peringatan: Gagal menghapus file cloud ${fileResource?.name || fileResource}:`, err.message);
+    workerWarn(`[GeminiService] Peringatan: Gagal menghapus file cloud ${fileResource?.name || fileResource}:`, err.message);
   }
 }
 
@@ -127,7 +128,7 @@ export async function transcribeChunkWithFallback({
   isLastChunk = false,
   transcriptsDir,
   cancelChecker = null,
-  onLog = console.log,
+  onLog = workerLog,
 }) {
   const chunkNum = formatChunkIndex(chunkIndex);
   const finalFilePath = path.join(transcriptsDir, `chunk_${chunkNum}.txt`);
@@ -335,7 +336,7 @@ export async function generateMeetingMinutesWithFallback({
   fullTranscript,
   metadata = {},
   cancelChecker = null,
-  onLog = console.log,
+  onLog = workerLog,
 }) {
   onLog(`[Minutes] Memulai penyusunan Risalah Rapat resmi dari transkrip (${fullTranscript.length} karakter)...`);
 
