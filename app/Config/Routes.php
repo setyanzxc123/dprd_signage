@@ -193,6 +193,10 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->post('notulen/jobs/(:num)/retry',    'NotulenController::retry/$1');
     $routes->delete('notulen/jobs/(:num)',        'NotulenController::delete/$1');
     $routes->delete('notulen/jobs/(:num)/rekaman', 'NotulenController::purgeRecording/$1');
+    $routes->get('notulen/risalah/(:num)',               'NotulenController::showMinutes/$1');
+    $routes->put('notulen/risalah/(:num)',               'NotulenController::updateMinutes/$1');
+    $routes->post('notulen/risalah/(:num)/finalisasi',   'NotulenController::finalizeMinutes/$1');
+    $routes->post('notulen/risalah/(:num)/unfinalisasi', 'NotulenController::unfinalizeMinutes/$1');
 
     $routes->get('ruangan',            'RuanganController::index');
     $routes->get('ruangan/(:num)',     'RuanganController::show/$1');

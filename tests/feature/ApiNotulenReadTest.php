@@ -224,6 +224,72 @@ final class ApiNotulenReadTest extends CIUnitTestCase
         $this->assertSame(0, $this->apiDb->table('meeting_minutes')->where('job_id', 39)->countAllResults());
     }
 
+    public function testShowMinutesReturnsPillars(): void
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/risalah/1');
+
+        $response->assertOK();
+        $data = json_decode((string) $response->response()->getBody(), true)['data'];
+
+        $this->assertSame('final', $data['status_verifikasi']);
+        $this->assertSame('Rapat membahas APBD.', $data['tiga_pilar']['ringkasan_utama']);
+        $this->assertSame('Anggaran', $data['tiga_pilar']['poin_pembahasan'][0]['topik']);
+    }
+
+    public function testShowMissingMinutesReturns404(): void
+    {
+        $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/risalah/999')
+            ->assertStatus(404);
+    }
+
+    public function testUpdateFinalMinutesIsRejectedUntilUnfinalized(): void
+    {
+        $body = ['section_ringkasan' => 'Ringkasan direvisi.', 'section_pembahasan' => 'Poin baru.', 'section_kesimpulan' => 'Kesimpulan baru.'];
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->withBody(json_encode($body))
+            ->put('/api/v1/notulen/risalah/1')
+            ->assertStatus(422);
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->post('/api/v1/notulen/risalah/1/unfinalisasi')
+            ->assertOK();
+
+        $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->withBody(json_encode($body))
+            ->put('/api/v1/notulen/risalah/1')
+            ->assertOK();
+
+        $row = $this->apiDb->table('meeting_minutes')->where('id', 1)->get()->getRowArray();
+        $this->assertStringContainsString('Ringkasan direvisi.', $row['ringkasan_eksekutif']);
+        $pillars = json_decode($row['struktur_json'], true);
+        $this->assertSame('Ringkasan direvisi.', $pillars['ringkasan_utama']);
+    }
+
+    public function testFinalizeDraftMinutes(): void
+    {
+        $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->post('/api/v1/notulen/risalah/1/unfinalisasi')
+            ->assertOK();
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->post('/api/v1/notulen/risalah/1/finalisasi');
+
+        $response->assertOK();
+        $row = $this->apiDb->table('meeting_minutes')->where('id', 1)->get()->getRowArray();
+        $this->assertSame('final', $row['status_verifikasi']);
+        $this->assertSame(1, (int) $row['verified_by']);
+    }
+
     private function seedIdentities(): void
     {
         $this->apiDb->table('users')->insert([
@@ -262,7 +328,15 @@ final class ApiNotulenReadTest extends CIUnitTestCase
         ]);
 
         $this->apiDb->table('meeting_minutes')->insert([
-            'job_id' => 40, 'status_verifikasi' => 'final', 'ringkasan_eksekutif' => 'Risalah final uji.',
+            'job_id' => 40, 'status_verifikasi' => 'final',
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nRapat membahas APBD.\n\nII. POIN-POIN PEMBAHASAN\n1. Topik: Anggaran\n   - Pembicara: Ketua Komisi\n   - Uraian: Pendapat umum fraksi.\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Disetujui bersama",
+            'struktur_json' => json_encode([
+                'ringkasan_utama' => 'Rapat membahas APBD.',
+                'poin_pembahasan' => [
+                    ['waktu' => '10:30', 'topik' => 'Anggaran', 'pembicara' => 'Ketua Komisi', 'uraian' => 'Pendapat umum fraksi.', 'full_text' => '1. [10:30] Topik: Anggaran'],
+                ],
+                'kesimpulan_akhir' => ['Disetujui bersama'],
+            ], JSON_UNESCAPED_UNICODE),
             'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $this->apiDb->table('meeting_minutes')->insert([

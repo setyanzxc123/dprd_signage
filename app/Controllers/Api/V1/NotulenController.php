@@ -211,4 +211,113 @@ class NotulenController extends BaseController
             'message' => $result['message'],
         ]]);
     }
+
+    /**
+     * GET api/v1/notulen/risalah/{minutesId} - detail risalah + 3 pilar.
+     */
+    public function showMinutes(int $minutesId): ResponseInterface
+    {
+        $minutes = (new MeetingMinutesModel())->find($minutesId);
+
+        if ($minutes === null) {
+            return $this->apiError('Risalah rapat tidak ditemukan.', 404);
+        }
+
+        $pillars = null;
+        if (! empty($minutes['struktur_json'])) {
+            $decoded = json_decode((string) $minutes['struktur_json'], true);
+            if (is_array($decoded) && isset($decoded['ringkasan_utama'], $decoded['poin_pembahasan'], $decoded['kesimpulan_akhir'])) {
+                $pillars = $decoded;
+            }
+        }
+        if ($pillars === null) {
+            $pillars = $this->service->parsePillarsFromText($minutes['ringkasan_eksekutif'] ?? null);
+        }
+
+        $job = (new MeetingTranscriptionJobModel())->find((int) $minutes['job_id']);
+
+        return $this->apiSuccess(['data' => [
+            'id'                  => (int) $minutes['id'],
+            'job_id'              => (int) $minutes['job_id'],
+            'job_status'          => $job['status'] ?? null,
+            'status_verifikasi'   => $minutes['status_verifikasi'],
+            'verified_at'         => $minutes['verified_at'] ?? null,
+            'ringkasan_eksekutif' => $minutes['ringkasan_eksekutif'],
+            'tiga_pilar'          => $pillars,
+        ]]);
+    }
+
+    /**
+     * PUT api/v1/notulen/risalah/{minutesId} - simpan revisi notulis.
+     * Menerima section_ringkasan/section_pembahasan/section_kesimpulan
+     * atau ringkasan_eksekutif utuh. Risalah final harus dibuka kunci dulu.
+     */
+    public function updateMinutes(int $minutesId): ResponseInterface
+    {
+        $input = [
+            'ringkasan_eksekutif' => $this->input('ringkasan_eksekutif'),
+            'section_ringkasan'   => $this->input('section_ringkasan'),
+            'section_pembahasan'  => $this->input('section_pembahasan'),
+            'section_kesimpulan'  => $this->input('section_kesimpulan'),
+        ];
+
+        $result = $this->service->updateMinutes($minutesId, $input);
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        return $this->apiSuccess(['data' => [
+            'minutes_id' => $minutesId,
+            'message' => $result['message'],
+        ]]);
+    }
+
+    /**
+     * POST api/v1/notulen/risalah/{minutesId}/finalisasi
+     */
+    public function finalizeMinutes(int $minutesId): ResponseInterface
+    {
+        $user = service('requestIdentity')->currentUser();
+
+        if ($user === null) {
+            return $this->apiUnauthorized();
+        }
+
+        $result = $this->service->finalizeMinutes($minutesId, (int) $user->id);
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        return $this->apiSuccess(['data' => [
+            'minutes_id' => $minutesId,
+            'status_verifikasi' => $result['status_verifikasi'],
+            'message' => $result['message'],
+        ]]);
+    }
+
+    /**
+     * POST api/v1/notulen/risalah/{minutesId}/unfinalisasi - buka kunci revisi.
+     */
+    public function unfinalizeMinutes(int $minutesId): ResponseInterface
+    {
+        $user = service('requestIdentity')->currentUser();
+
+        if ($user === null) {
+            return $this->apiUnauthorized();
+        }
+
+        $result = $this->service->unfinalizeMinutes($minutesId, (int) $user->id);
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        return $this->apiSuccess(['data' => [
+            'minutes_id' => $minutesId,
+            'status_verifikasi' => $result['status_verifikasi'],
+            'message' => $result['message'],
+        ]]);
+    }
 }
