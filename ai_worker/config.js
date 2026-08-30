@@ -56,6 +56,8 @@ export const config = {
   worker: {
     pollIntervalMs: parseInt(getEnv('WORKER_POLL_INTERVAL_MS', '5000'), 10), // 5 detik
     maxRetriesPerModel: parseInt(getEnv('MAX_RETRIES_PER_MODEL', '4'), 10),
+    // Job in-progress lebih tua dari nilai ini dianggap basi saat startup reset
+    staleThresholdMinutes: parseInt(getEnv('WORKER_STALE_THRESHOLD_MIN', '15'), 10),
   },
   validation: {
     // Minimum kata per menit audio — threshold konservatif untuk percakapan rapat

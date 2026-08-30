@@ -25,18 +25,43 @@ export async function getDbPool() {
 }
 
 /**
- * Startup Reset: Mengembalikan seluruh job in-progress yang menggantung saat server restart ke status 'queued'.
+ * Startup Reset: Mengembalikan job in-progress yang menggantung saat server restart
+ * ke status 'queued'. Hanya job basi (updated_at lebih tua dari threshold) yang
+ * di-reset, agar tidak membatalkan job yang sedang diproses worker lain.
  */
 export async function performStartupReset(pool) {
+  const cutoff = new Date(Date.now() - config.worker.staleThresholdMinutes * 60 * 1000);
   const [result] = await pool.execute(
     `UPDATE meeting_transcription_jobs
      SET status = 'queued', cancel_requested = 0, current_step = 'Menunggu antrean (dipulihkan dari restart)'
-     WHERE status IN ('chunking', 'transcribing', 'summarizing')`
+     WHERE status IN ('chunking', 'transcribing', 'summarizing') AND updated_at < ?`,
+    [cutoff]
   );
 
   if (result.affectedRows > 0) {
-    log(`[Worker] Startup Reset: ${result.affectedRows} job in-progress berhasil di-reset ke 'queued'.`);
+    log(`[Worker] Startup Reset: ${result.affectedRows} job in-progress basi berhasil di-reset ke 'queued'.`);
   }
+}
+
+/**
+ * Penanda job gagal dari handler error worker. Dijaga agar tidak menurunkan
+ * status 'completed'/'cancelled' yang mungkin sudah ditulis worker lain.
+ */
+export async function markJobFailure(pool, jobId, err) {
+  const message = String(err.message || err);
+  const isCancelled = message.includes('JOB_CANCELLED_BY_ADMIN');
+  const [result] = await pool.execute(
+    `UPDATE meeting_transcription_jobs
+     SET status = ?, cancel_requested = 0, error_message = ?, current_step = ?, updated_at = NOW()
+     WHERE id = ? AND status NOT IN ('completed', 'cancelled')`,
+    [
+      isCancelled ? 'cancelled' : 'failed',
+      isCancelled ? null : message,
+      isCancelled ? 'Proses dihentikan oleh admin' : ('Gagal: ' + message.slice(0, 150)),
+      jobId
+    ]
+  );
+  return result.affectedRows;
 }
 
 /**
@@ -366,7 +391,7 @@ export async function processJob(pool, job) {
     await pool.execute(
       `UPDATE meeting_transcription_jobs
        SET status = 'completed', progress_percent = 100, current_step = 'Selesai: Transkrip dan draft risalah siap ditinjau.', ai_model = ?, error_message = NULL, updated_at = NOW()
-       WHERE id = ?`,
+       WHERE id = ? AND status NOT IN ('cancelled')`,
       [minutesResult.usedModel || null, jobId]
     );
 
@@ -435,17 +460,7 @@ async function main() {
     } catch (err) {
       error(`[Worker] Job #${targetJobId} selesai dengan error:`, err);
       const isCancelled = String(err.message || err).includes('JOB_CANCELLED_BY_ADMIN');
-      await pool.execute(
-        `UPDATE meeting_transcription_jobs
-         SET status = ?, cancel_requested = 0, error_message = ?, current_step = ?, updated_at = NOW()
-         WHERE id = ?`,
-        [
-          isCancelled ? 'cancelled' : 'failed',
-          isCancelled ? null : err.message,
-          isCancelled ? 'Proses dihentikan oleh admin' : ('Gagal: ' + String(err.message).slice(0, 150)),
-          targetJobId
-        ]
-      );
+      await markJobFailure(pool, targetJobId, err);
       process.exit(isCancelled ? 0 : 1);
     }
   }
@@ -464,19 +479,7 @@ async function main() {
           await processJob(pool, job);
         } catch (jobErr) {
           error(`[Worker] Error saat memproses Job #${job.id}:`, jobErr);
-          const errorMsg = String(jobErr.message || jobErr);
-          const isCancelled = errorMsg.includes('JOB_CANCELLED_BY_ADMIN');
-          await pool.execute(
-            `UPDATE meeting_transcription_jobs
-             SET status = ?, cancel_requested = 0, error_message = ?, current_step = ?, updated_at = NOW()
-             WHERE id = ?`,
-            [
-              isCancelled ? 'cancelled' : 'failed',
-              isCancelled ? null : errorMsg,
-              isCancelled ? 'Proses dihentikan oleh admin' : ('Gagal: ' + errorMsg.slice(0, 150)),
-              job.id
-            ]
-          );
+          await markJobFailure(pool, job.id, jobErr);
         }
       } else {
         if (!isDaemon) {
