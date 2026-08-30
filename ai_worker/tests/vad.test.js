@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-import { parseSilencedetectOutput, buildSpeechSegments, analyzeChunks, planChunks, runVadAnalysis, loadOrAnalyze } from '../services/vad.js';
+import { parseSilencedetectOutput, buildSpeechSegments, analyzeChunks, planChunks, attachSpeechStats, isChunkSilent, runVadAnalysis, loadOrAnalyze } from '../services/vad.js';
 
 test.beforeEach(() => {
   if (ffmpegInstaller && ffmpegInstaller.path) {
@@ -88,6 +88,25 @@ test('planChunks menjumlah durasi persis durasi total dan berurutan', () => {
   for (let i = 1; i < plan.length; i++) {
     assert.ok(plan[i].start >= plan[i - 1].start + plan[i - 1].duration - 0.001);
   }
+});
+
+test('attachSpeechStats menambahkan rasio bicara per entri rencana', () => {
+  const plan = [
+    { index: 1, start: 0, duration: 100 },
+    { index: 2, start: 100, duration: 90 },
+  ];
+  const speech = [{ start: 0, end: 50 }, { start: 100, end: 190 }];
+  const stats = attachSpeechStats(plan, speech);
+
+  assert.equal(stats[0].speech_seconds, 50);
+  assert.equal(stats[0].ratio, 0.5);
+  assert.equal(stats[1].ratio, 1);
+});
+
+test('isChunkSilent sesuai ambang rasio bicara', () => {
+  assert.equal(isChunkSilent({ ratio: 0.03 }, 0.05), true);
+  assert.equal(isChunkSilent({ ratio: 0.1 }, 0.05), false);
+  assert.equal(isChunkSilent(null, 0.05), false, 'tanpa statistik, chunk tidak dianggap hening');
 });
 
 test('vad.json memuat rencana chunk yang durasinya menjumlah durasi total', async () => {

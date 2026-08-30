@@ -5,7 +5,7 @@ import { config } from './config.js';
 import { sliceAudio, probeDuration, formatChunkIndex } from './services/audioSlicer.js';
 import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback } from './services/geminiService.js';
 import { interruptibleSleep, JobCancelledError } from './services/throttler.js';
-import { runVadAnalysis, loadOrAnalyze } from './services/vad.js';
+import { runVadAnalysis, loadOrAnalyze, isChunkSilent } from './services/vad.js';
 import { log, warn, error } from './services/logger.js';
 
 // Abaikan error EPIPE jika worker dijalankan asinkron tanpa pipe terminal aktif (popen PHP)
@@ -272,8 +272,12 @@ export async function processJob(pool, job) {
     );
 
     const chunkFiles = sliceResult.chunkFiles;
+    const planStats = plan && Array.isArray(plan) ? plan : [];
+    const statsFor = (index) => planStats.find((entry) => entry.index === index) || null;
+
     for (let i = 0; i < chunkFiles.length; i++) {
       const chunk = chunkFiles[i];
+      const stats = statsFor(chunk.index);
 
       // Cek pembatalan sebelum setiap chunk
       if (await isCancelled()) {
@@ -283,6 +287,19 @@ export async function processJob(pool, job) {
         );
         log(`[Worker] Job #${jobId} dibatalkan kooperatif pada chunk ke-${chunk.index}.`);
         return;
+      }
+
+      // Chunk hening (rasio bicara di bawah ambang) dilewati tanpa panggil model
+      if (stats && isChunkSilent(stats, config.vad.skipSpeechRatio)) {
+        log(`[Job #${jobId}] [VAD] Bagian ${chunk.index} hening (${(stats.ratio * 100).toFixed(1)}% bicara) - dilewati tanpa transkripsi.`);
+        const progressSkipped = Math.round((chunk.index / totalChunks) * 75);
+        await pool.execute(
+          `UPDATE meeting_transcription_jobs
+           SET completed_chunks = ?, progress_percent = ?, current_step = 'Bagian ${chunk.index} dari ${totalChunks} hening - dilewati.', updated_at = NOW()
+           WHERE id = ?`,
+          [chunk.index, progressSkipped, jobId]
+        );
+        continue;
       }
 
       const chunkProgressBase = Math.round(((chunk.index - 1) / totalChunks) * 75);
@@ -299,6 +316,7 @@ export async function processJob(pool, job) {
         chunkIndex: chunk.index,
         totalChunks,
         durationSeconds: chunk.durationSeconds,
+        speechSeconds: stats ? stats.speech_seconds : null,
         isLastChunk: (chunk.index === totalChunks),
         transcriptsDir,
         cancelChecker: isCancelled,

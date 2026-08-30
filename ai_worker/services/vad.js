@@ -62,37 +62,46 @@ export function buildSpeechSegments(silences, duration) {
 }
 
 /**
- * Laporan per jendela chunk (durasi tetap): berapa detik bicara dan rasionya.
+ * Statistik bicara untuk setiap entri rencana: detik bicara + rasio.
+ * Mengembalikan rencana baru dengan field speech_seconds dan ratio.
  */
-export function analyzeChunks(speech, duration, chunkDurationSeconds) {
-  const totalChunks = Math.max(1, Math.ceil(duration / chunkDurationSeconds));
-  const reports = [];
-
-  for (let i = 1; i <= totalChunks; i++) {
-    const start = (i - 1) * chunkDurationSeconds;
-    const end = Math.min(i * chunkDurationSeconds, duration);
-    const windowDuration = end - start;
+export function attachSpeechStats(plan, speech) {
+  return plan.map((entry) => {
     let speechSeconds = 0;
-
     for (const segment of speech) {
-      const overlapStart = Math.max(segment.start, start);
-      const overlapEnd = Math.min(segment.end, end);
+      const overlapStart = Math.max(segment.start, entry.start);
+      const overlapEnd = Math.min(segment.end, entry.start + entry.duration);
       if (overlapEnd > overlapStart) {
         speechSeconds += overlapEnd - overlapStart;
       }
     }
-
-    reports.push({
-      index: i,
-      start,
-      end,
-      duration: windowDuration,
+    return {
+      ...entry,
       speech_seconds: Math.round(speechSeconds * 100) / 100,
-      ratio: windowDuration > 0 ? Math.round((speechSeconds / windowDuration) * 10000) / 10000 : 0,
-    });
-  }
+      ratio: entry.duration > 0 ? Math.round((speechSeconds / entry.duration) * 10000) / 10000 : 0,
+    };
+  });
+}
 
-  return reports;
+/**
+ * Laporan per jendela chunk (durasi tetap): berapa detik bicara dan rasionya.
+ */
+export function analyzeChunks(speech, duration, chunkDurationSeconds) {
+  const count = Math.max(1, Math.ceil(duration / chunkDurationSeconds));
+  const fixedPlan = Array.from({ length: count }, (_, i) => ({
+    index: i + 1,
+    start: i * chunkDurationSeconds,
+    duration: Math.min(chunkDurationSeconds, duration - i * chunkDurationSeconds),
+  }));
+  return attachSpeechStats(fixedPlan, speech);
+}
+
+/**
+ * Chunk dengan rasio bicara di bawah ambang dianggap hening dan boleh
+ * dilewati tanpa panggil model.
+ */
+export function isChunkSilent(chunkEntry, skipSpeechRatio) {
+  return (chunkEntry?.ratio ?? 1) < skipSpeechRatio;
 }
 
 /**
@@ -199,7 +208,10 @@ export async function runVadAnalysis(inputPath, outputDir, { onLog = () => {} } 
     speech_ratio: totalDuration > 0 ? Math.round((totalSpeech / totalDuration) * 10000) / 10000 : 0,
     silences,
     speech,
-    plan: planChunks(totalDuration, silences, config.audio.chunkDurationSeconds, config.vad.toleranceSeconds),
+    plan: attachSpeechStats(
+      planChunks(totalDuration, silences, config.audio.chunkDurationSeconds, config.vad.toleranceSeconds),
+      speech
+    ),
     chunks: chunkReports,
   };
 

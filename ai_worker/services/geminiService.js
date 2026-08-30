@@ -133,6 +133,18 @@ function validateTranscriptQuality(text, chunkNum, minWords, onLog) {
 }
 
 /**
+ * Minimum kata yang diharapkan dari transkrip, proporsional terhadap durasi
+ * bicara (bukan durasi total) chunk. Chunk final mendapat toleransi lebih longgar.
+ */
+export function minExpectedWordsFor(speechSeconds, isFinalChunk) {
+  const speechMinutes = Math.max(0, speechSeconds || 0) / 60;
+  if (isFinalChunk) {
+    return Math.min(30, Math.max(10, Math.floor(speechMinutes * config.validation.minWordsPerMinute)));
+  }
+  return Math.max(50, Math.floor(speechMinutes * config.validation.minWordsPerMinute));
+}
+
+/**
  * Menjalankan transkripsi audio per chunk dengan rantai model fallback (Primary -> Fallbacks)
  * dan proteksi penulisan atomik (.part -> rename).
  *
@@ -150,6 +162,7 @@ export async function transcribeChunkWithFallback({
   chunkIndex,
   totalChunks,
   durationSeconds = null,
+  speechSeconds = null,
   isLastChunk = false,
   transcriptsDir,
   cancelChecker = null,
@@ -179,18 +192,13 @@ export async function transcribeChunkWithFallback({
     actualDurationSeconds = config.audio.chunkDurationSeconds;
   }
 
-  const chunkDurationMin = actualDurationSeconds / 60;
   const isFinalChunk = isLastChunk || (chunkIndex === totalChunks);
 
-  // Hitung minimum kata yang diharapkan secara proporsional sesuai durasi aktual.
-  // Untuk chunk terakhir (isFinalChunk): berikan whitelist / toleransi fleksibel (minimum floor 30 kata)
-  // guna mengantisipasi penutupan rapat/sidang singkat tanpa false positive.
-  let minExpectedWords;
-  if (isFinalChunk) {
-    minExpectedWords = Math.min(30, Math.max(10, Math.floor(chunkDurationMin * config.validation.minWordsPerMinute)));
-  } else {
-    minExpectedWords = Math.max(50, Math.floor(chunkDurationMin * config.validation.minWordsPerMinute));
-  }
+  // Minimum kata proporsional terhadap durasi bicara chunk (VAD), bukan durasi total
+  const minExpectedWords = minExpectedWordsFor(
+    speechSeconds ?? actualDurationSeconds,
+    isFinalChunk
+  );
 
   // 1. Cek Checkpoint: jika chunk_NNN.txt final sudah ada, validasi dulu sebelum lewati
   if (fs.existsSync(finalFilePath)) {
