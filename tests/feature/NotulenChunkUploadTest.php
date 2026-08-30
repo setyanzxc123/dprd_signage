@@ -107,10 +107,39 @@ final class NotulenChunkUploadTest extends CIUnitTestCase
         $this->assertTrue($result['success']);
     }
 
-    private function insertJob(string $status): int
+    public function testResolveFinalMinutesMapOnlyIncludesFinalMinutes(): void
+    {
+        $service = new NotulenService($this->testDb, $this->recordingsDir);
+
+        $finalJobId = $this->insertJob('completed', 'umum', 5);
+        $draftJobId = $this->insertJob('completed', 'umum', 6);
+        $finalBanmusId = $this->insertJob('completed', 'banmus', 7);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id' => $finalJobId, 'status_verifikasi' => 'final', 'ringkasan_eksekutif' => 'Naskah.',
+            'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id' => $draftJobId, 'status_verifikasi' => 'draft', 'ringkasan_eksekutif' => 'Naskah draft.',
+            'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id' => $finalBanmusId, 'status_verifikasi' => 'final', 'ringkasan_eksekutif' => 'Naskah banmus.',
+            'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        $map = $service->resolveFinalMinutesMap([5, 6], [7]);
+
+        $this->assertTrue($map['umum'][5] ?? false, 'jadwal umum dengan risalah final');
+        $this->assertArrayNotHasKey(6, $map['umum'], 'risalah draft tidak dihitung');
+        $this->assertTrue($map['banmus'][7] ?? false, 'jadwal banmus dengan risalah final');
+    }
+
+    private function insertJob(string $status, string $jadwalType = 'umum', int $jadwalId = 1): int
     {
         $this->testDb->table('meeting_transcription_jobs')->insert([
-            'jadwal_type'  => 'umum',
+            'jadwal_type'  => $jadwalType,
+            'jadwal_id'    => $jadwalId,
             'audio_filename' => 'uji_purge.mp3',
             'audio_path'   => 'recordings/job_1/audio/original.mp3',
             'audio_size'   => 1000,

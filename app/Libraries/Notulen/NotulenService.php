@@ -816,6 +816,52 @@ class NotulenService
     }
 
     /**
+     * Peta jadwal yang risalah finalnya tersedia:
+     * ['umum' => [jadwalId => true], 'banmus' => [jadwalId => true]].
+     * Dipakai agenda anggota mobile untuk menandai ketersediaan risalah.
+     *
+     * @param list<int> $umumIds
+     * @param list<int> $banmusIds
+     * @return array{umum: array<int, bool>, banmus: array<int, bool>}
+     */
+    public function resolveFinalMinutesMap(array $umumIds, array $banmusIds): array
+    {
+        $map = ['umum' => [], 'banmus' => []];
+
+        if ($umumIds === [] && $banmusIds === []) {
+            return $map;
+        }
+
+        if (! $this->db->tableExists('meeting_transcription_jobs')) {
+            return $map;
+        }
+
+        $rows = $this->db->table('meeting_minutes m')
+            ->select('j.jadwal_type, j.jadwal_id')
+            ->join('meeting_transcription_jobs j', 'j.id = m.job_id')
+            ->where('m.status_verifikasi', 'final')
+            ->groupStart()
+                ->groupStart()
+                    ->where('j.jadwal_type', 'umum')
+                    ->whereIn('j.jadwal_id', $umumIds ?: [0])
+                ->groupEnd()
+                ->orGroupStart()
+                    ->where('j.jadwal_type', 'banmus')
+                    ->whereIn('j.jadwal_id', $banmusIds ?: [0])
+                ->groupEnd()
+            ->groupEnd()
+            ->get()
+            ->getResultArray();
+
+        foreach ($rows as $row) {
+            $type = ($row['jadwal_type'] ?? 'umum') === 'banmus' ? 'banmus' : 'umum';
+            $map[$type][(int) $row['jadwal_id']] = true;
+        }
+
+        return $map;
+    }
+
+    /**
      * Fallback parser 3 Pilar untuk teks risalah hasil editan notulis.
      * Struktur risalah dari worker kini dijamin responseSchema (lihat
      * ai_worker/services/geminiService.js); parser ini hanya dipakai bila
