@@ -153,6 +153,77 @@ final class ApiNotulenReadTest extends CIUnitTestCase
         $this->assertSame(100, strlen((string) $response->response()->getBody()));
     }
 
+    public function testRetryFailedJobReturnsQueued(): void
+    {
+        $this->apiDb->table('meeting_transcription_jobs')->where('id', 39)->update(['status' => 'failed']);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->post('/api/v1/notulen/jobs/39/retry');
+
+        $response->assertOK();
+        $data = json_decode((string) $response->response()->getBody(), true);
+        $this->assertSame('success', $data['status']);
+        $this->assertSame('queued', $data['data']['status']);
+        $this->assertSame('queued', $this->apiDb->table('meeting_transcription_jobs')->where('id', 39)->get()->getRowArray()['status']);
+    }
+
+    public function testRetryCompletedJobIsRejected(): void
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->post('/api/v1/notulen/jobs/39/retry');
+
+        $response->assertStatus(422);
+        $this->assertSame('error', json_decode((string) $response->response()->getBody(), true)['status']);
+    }
+
+    public function testCancelCompletedJobIsRejected(): void
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->post('/api/v1/notulen/jobs/39/cancel');
+
+        $response->assertStatus(422);
+        $this->assertSame('error', json_decode((string) $response->response()->getBody(), true)['status']);
+    }
+
+    public function testCancelQueuedJobSetsCancelled(): void
+    {
+        $this->apiDb->table('meeting_transcription_jobs')
+            ->where('id', 39)
+            ->update(['status' => 'queued', 'cancel_requested' => 0]);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->post('/api/v1/notulen/jobs/39/cancel');
+
+        $response->assertOK();
+        $row = $this->apiDb->table('meeting_transcription_jobs')->where('id', 39)->get()->getRowArray();
+        $this->assertSame('cancelled', $row['status']);
+    }
+
+    public function testPurgeRecordingRejectedWhileJobRunning(): void
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->delete('/api/v1/notulen/jobs/40/rekaman');
+
+        $response->assertStatus(422);
+        $this->assertSame('error', json_decode((string) $response->response()->getBody(), true)['status']);
+    }
+
+    public function testDeleteJobRemovesRow(): void
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->delete('/api/v1/notulen/jobs/39');
+
+        $response->assertOK();
+        $this->assertSame(0, $this->apiDb->table('meeting_transcription_jobs')->where('id', 39)->countAllResults());
+        $this->assertSame(0, $this->apiDb->table('meeting_minutes')->where('job_id', 39)->countAllResults());
+    }
+
     private function seedIdentities(): void
     {
         $this->apiDb->table('users')->insert([

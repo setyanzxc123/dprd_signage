@@ -139,4 +139,76 @@ class NotulenController extends BaseController
 
         return AudioStreamResponder::respond($this->request, $this->response, $this->service->resolveAudioPath($id));
     }
+
+    /**
+     * POST api/v1/notulen/jobs/{id}/cancel - langsung untuk queued,
+     * kooperatif untuk job in-progress.
+     */
+    public function cancel(int $id): ResponseInterface
+    {
+        $result = $this->service->requestCancel($id);
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        return $this->apiSuccess(['data' => [
+            'job_id' => $id,
+            'status' => $result['status'],
+            'message' => $result['message'],
+        ]]);
+    }
+
+    /**
+     * POST api/v1/notulen/jobs/{id}/retry - antrekan ulang dari checkpoint terakhir.
+     */
+    public function retry(int $id): ResponseInterface
+    {
+        $result = $this->service->requeueJob($id);
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        return $this->apiSuccess(['data' => [
+            'job_id' => $id,
+            'status' => $result['status'],
+            'message' => $result['message'],
+        ]]);
+    }
+
+    /**
+     * DELETE api/v1/notulen/jobs/{id} - hapus notulen beserta folder job.
+     */
+    public function delete(int $id): ResponseInterface
+    {
+        $result = $this->service->deleteNotulen($id);
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        return $this->apiSuccess(['data' => [
+            'job_id' => $id,
+            'message' => $result['message'],
+        ]]);
+    }
+
+    /**
+     * DELETE api/v1/notulen/jobs/{id}/rekaman - bersihkan audio saja
+     * (transkrip dan risalah dipertahankan). Ditolak selama job berjalan.
+     */
+    public function purgeRecording(int $id): ResponseInterface
+    {
+        $result = $this->service->purgeAudioFiles($id);
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        return $this->apiSuccess(['data' => [
+            'job_id' => $id,
+            'message' => $result['message'],
+        ]]);
+    }
 }

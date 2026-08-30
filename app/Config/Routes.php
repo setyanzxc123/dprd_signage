@@ -189,6 +189,10 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->get('notulen/jobs/(:num)',           'NotulenController::show/$1');
     $routes->get('notulen/jobs/(:num)/transkrip', 'NotulenController::transkrip/$1');
     $routes->get('notulen/jobs/(:num)/audio',     'NotulenController::audio/$1');
+    $routes->post('notulen/jobs/(:num)/cancel',   'NotulenController::cancel/$1');
+    $routes->post('notulen/jobs/(:num)/retry',    'NotulenController::retry/$1');
+    $routes->delete('notulen/jobs/(:num)',        'NotulenController::delete/$1');
+    $routes->delete('notulen/jobs/(:num)/rekaman', 'NotulenController::purgeRecording/$1');
 
     $routes->get('ruangan',            'RuanganController::index');
     $routes->get('ruangan/(:num)',     'RuanganController::show/$1');
