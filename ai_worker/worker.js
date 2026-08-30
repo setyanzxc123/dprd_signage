@@ -40,37 +40,18 @@ export async function performStartupReset(pool) {
 }
 
 /**
- * Klaim 1 job dari antrean secara atomik (Strict Concurrency = 1 FIFO).
+ * Mencari 1 kandidat job dari antrean (FIFO). Klaim atomik dilakukan
+ * di dalam processJob agar mode single-job dan daemon memakai jalur yang sama.
  */
-export async function claimNextQueuedJob(pool) {
+export async function nextQueuedJobCandidate(pool) {
   const [rows] = await pool.query(
-    `SELECT id FROM meeting_transcription_jobs
+    `SELECT * FROM meeting_transcription_jobs
      WHERE status = 'queued' AND cancel_requested = 0
      ORDER BY id ASC
      LIMIT 1`
   );
 
-  if (!rows || rows.length === 0) {
-    return null;
-  }
-
-  const candidateId = rows[0].id;
-  const [updateResult] = await pool.execute(
-    `UPDATE meeting_transcription_jobs
-     SET status = 'chunking', current_step = 'Menginisialisasi pemrosesan audio...', updated_at = NOW()
-     WHERE id = ? AND status = 'queued'`,
-    [candidateId]
-  );
-
-  if (updateResult.affectedRows === 1) {
-    const [claimedRows] = await pool.query(
-      `SELECT * FROM meeting_transcription_jobs WHERE id = ?`,
-      [candidateId]
-    );
-    return claimedRows[0] || null;
-  }
-
-  return null;
+  return rows[0] || null;
 }
 
 /**
@@ -160,6 +141,20 @@ function cleanLocalAudioChunks(audioDir) {
 export async function processJob(pool, job) {
   const jobId = job.id;
   const isCancelled = createCancelChecker(pool, jobId);
+
+  // Klaim atomik: hanya worker yang berhasil mengubah status dari 'queued'
+  // yang boleh memproses job ini.
+  const [claimResult] = await pool.execute(
+    `UPDATE meeting_transcription_jobs
+     SET status = 'chunking', current_step = 'Menginisialisasi pemrosesan audio...', updated_at = NOW()
+     WHERE id = ? AND status = 'queued'`,
+    [jobId]
+  );
+
+  if (claimResult.affectedRows === 0) {
+    log(`[Worker] Job #${jobId} dilewati: tidak berstatus 'queued' (sedang dipegang worker lain atau sudah selesai).`);
+    return;
+  }
 
   try {
     log(`\n========================================================`);
@@ -463,7 +458,7 @@ async function main() {
 
   while (isRunning) {
     try {
-      const job = await claimNextQueuedJob(pool);
+      const job = await nextQueuedJobCandidate(pool);
       if (job) {
         try {
           await processJob(pool, job);
