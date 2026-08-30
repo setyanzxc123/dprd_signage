@@ -5,8 +5,10 @@ namespace App\Controllers\Api\V1;
 use App\Controllers\BaseController;
 use App\Libraries\Api\ApiResponse;
 use App\Libraries\Api\ListPaginator;
+use App\Libraries\Media\MediaUploadException;
 use App\Libraries\Notulen\AudioStreamResponder;
 use App\Libraries\Notulen\NotulenService;
+use App\Libraries\Notulen\PostChunkAudioUpload;
 use App\Models\MeetingMinutesModel;
 use App\Models\MeetingTranscriptionJobModel;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -319,5 +321,119 @@ class NotulenController extends BaseController
             'status_verifikasi' => $result['status_verifikasi'],
             'message' => $result['message'],
         ]]);
+    }
+
+    /**
+     * POST api/v1/notulen/upload/start - mulai/resume sesi chunked upload.
+     * Owner sesi diturunkan dari identitas bearer sehingga resume otomatis
+     * bekerja lintas restart aplikasi selama token yang sama dipakai.
+     */
+    public function uploadStart(): ResponseInterface
+    {
+        try {
+            $payload = (new PostChunkAudioUpload())->start(
+                $this->uploadOwnerToken(),
+                trim((string) $this->input('client_key')),
+                trim((string) $this->input('file_name')),
+                (int) $this->input('file_size'),
+                (string) $this->input('file_type')
+            );
+        } catch (MediaUploadException $e) {
+            return $this->apiError($e->getMessage(), $e->getStatusCode());
+        }
+
+        return $this->apiSuccess(['data' => $payload]);
+    }
+
+    /**
+     * POST api/v1/notulen/upload/chunk - multipart/form-data:
+     * chunk (file), upload_id, offset, checksum (sha256 hex).
+     */
+    public function uploadChunk(): ResponseInterface
+    {
+        $chunk = $this->request->getFile('chunk');
+
+        if ($chunk === null) {
+            return $this->apiError('Chunk upload tidak ditemukan.', 422);
+        }
+
+        try {
+            $payload = (new PostChunkAudioUpload())->append(
+                $this->uploadOwnerToken(),
+                trim((string) $this->request->getPost('upload_id')),
+                (int) $this->request->getPost('offset'),
+                trim((string) $this->request->getPost('checksum')),
+                $chunk
+            );
+        } catch (MediaUploadException $e) {
+            return $this->apiError($e->getMessage(), $e->getStatusCode());
+        }
+
+        return $this->apiSuccess(['data' => $payload]);
+    }
+
+    /**
+     * POST api/v1/notulen/upload/cancel
+     */
+    public function uploadCancel(): ResponseInterface
+    {
+        try {
+            (new PostChunkAudioUpload())->cancel(
+                $this->uploadOwnerToken(),
+                trim((string) $this->input('upload_id'))
+            );
+        } catch (MediaUploadException $e) {
+            return $this->apiError($e->getMessage(), $e->getStatusCode());
+        }
+
+        return $this->apiSuccess(['data' => ['cancelled' => true]]);
+    }
+
+    /**
+     * POST api/v1/notulen/upload/commit - daftarkan job dari sesi upload selesai.
+     */
+    public function uploadCommit(): ResponseInterface
+    {
+        try {
+            $result = $this->service->createJobFromChunk(
+                [
+                    'jadwal_type' => $this->input('jadwal_type'),
+                    'jadwal_id'   => $this->input('jadwal_id'),
+                    'judul_rapat' => $this->input('judul_rapat'),
+                ],
+                $this->uploadOwnerToken(),
+                trim((string) $this->input('upload_id')),
+                service('requestIdentity')->currentUser()?->id
+            );
+        } catch (MediaUploadException $e) {
+            return $this->apiError($e->getMessage(), $e->getStatusCode());
+        }
+
+        if (isset($result['error'])) {
+            return $this->apiError($result['error'], 422);
+        }
+
+        $this->service->triggerWorkerAsync((int) $result['job_id']);
+
+        return $this->apiSuccess(['data' => [
+            'job_id' => (int) $result['job_id'],
+            'status' => $result['status'],
+            'message' => $result['message'],
+        ]]);
+    }
+
+    /**
+     * Owner sesi chunk diturunkan dari user pemilik bearer token (hex 64)
+     * sehingga hanya token milik user yang sama yang bisa melanjutkan sesi.
+     */
+    private function uploadOwnerToken(): string
+    {
+        $user = service('requestIdentity')->currentUser();
+
+        if ($user === null) {
+            throw new MediaUploadException('Token tidak valid.', 401);
+        }
+
+        return hash('sha256', 'notulen-upload:' . $user->id);
     }
 }

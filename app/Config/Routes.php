@@ -197,6 +197,10 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->put('notulen/risalah/(:num)',               'NotulenController::updateMinutes/$1');
     $routes->post('notulen/risalah/(:num)/finalisasi',   'NotulenController::finalizeMinutes/$1');
     $routes->post('notulen/risalah/(:num)/unfinalisasi', 'NotulenController::unfinalizeMinutes/$1');
+    $routes->post('notulen/upload/start',  'NotulenController::uploadStart');
+    $routes->post('notulen/upload/chunk',  'NotulenController::uploadChunk');
+    $routes->post('notulen/upload/cancel', 'NotulenController::uploadCancel');
+    $routes->post('notulen/upload/commit', 'NotulenController::uploadCommit');
 
     $routes->get('ruangan',            'RuanganController::index');
     $routes->get('ruangan/(:num)',     'RuanganController::show/$1');

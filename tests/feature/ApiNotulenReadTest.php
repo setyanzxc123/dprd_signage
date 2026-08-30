@@ -1,5 +1,7 @@
 <?php
 
+use App\Libraries\Notulen\PostChunkAudioUpload;
+use CodeIgniter\HTTP\Files\UploadedFile;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Forge;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -288,6 +290,121 @@ final class ApiNotulenReadTest extends CIUnitTestCase
         $row = $this->apiDb->table('meeting_minutes')->where('id', 1)->get()->getRowArray();
         $this->assertSame('final', $row['status_verifikasi']);
         $this->assertSame(1, (int) $row['verified_by']);
+    }
+
+    public function testUploadStartIsResumableWithSameOwner(): void
+    {
+        $payload = $this->startUploadSession();
+
+        $this->assertSame(0, $payload['offset']);
+        $this->assertSame(1000, $payload['file_size']);
+
+        $second = $this->startUploadSession();
+        $this->assertSame($payload['upload_id'], $second['upload_id'], 'owner dari bearer yang sama harus resume sesi yang sama');
+    }
+
+    public function testUploadChunkAppendThenResumeFromHttpStart(): void
+    {
+        $payload = $this->startUploadSession();
+        $this->appendChunk($payload['upload_id'], 1000);
+
+        $resumed = $this->startUploadSession();
+        $this->assertSame(1000, $resumed['offset']);
+        $this->assertTrue($resumed['completed']);
+    }
+
+    public function testUploadCommitCreatesJobWithOriginalFilename(): void
+    {
+        $payload = $this->startUploadSession();
+        $this->appendChunk($payload['upload_id'], 1000);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->withBody(json_encode([
+                'upload_id'   => $payload['upload_id'],
+                'jadwal_type' => 'umum',
+                'jadwal_id'   => '',
+                'judul_rapat' => 'Rapat Uji Commit',
+            ]))
+            ->post('/api/v1/notulen/upload/commit');
+
+        $response->assertOK();
+        $data = json_decode((string) $response->response()->getBody(), true)['data'];
+
+        $row = $this->apiDb->table('meeting_transcription_jobs')->where('id', (int) $data['job_id'])->get()->getRowArray();
+        $this->assertSame('queued', $row['status']);
+        $this->assertSame('rapat_kerja_uji.mp3', $row['audio_filename']);
+        $this->assertSame(1000, (int) $row['audio_size']);
+    }
+
+    public function testUploadCommitBeforeCompleteReturns409(): void
+    {
+        $payload = $this->startUploadSession();
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->withBody(json_encode(['upload_id' => $payload['upload_id'], 'jadwal_type' => 'umum']))
+            ->post('/api/v1/notulen/upload/commit');
+
+        $response->assertStatus(409);
+    }
+
+    public function testUploadCancelRemovesSession(): void
+    {
+        $payload = $this->startUploadSession();
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->withBody(json_encode(['upload_id' => $payload['upload_id']]))
+            ->post('/api/v1/notulen/upload/cancel');
+
+        $response->assertOK();
+        $this->assertFalse(is_dir(WRITEPATH . 'uploads/audio-chunks/' . $payload['upload_id']));
+    }
+
+    /**
+     * Owner sesi diturunkan di controller dari user pemilik bearer token
+     * dengan rumus yang direplikasi persis di sini (user id 1 = admin seed).
+     */
+    private function startUploadSession(): array
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->withBody(json_encode([
+                'client_key' => str_repeat('cd', 32),
+                'file_name'  => 'rapat_kerja_uji.mp3',
+                'file_size'  => 1000,
+                'file_type'  => 'audio/mpeg',
+            ]))
+            ->post('/api/v1/notulen/upload/start');
+
+        $response->assertOK();
+
+        return json_decode((string) $response->response()->getBody(), true)['data'];
+    }
+
+    private function appendChunk(string $uploadId, int $size): void
+    {
+        $content = str_repeat('X', $size);
+        $chunkPath = tempnam(sys_get_temp_dir(), 'notulen-api-chunk-');
+        file_put_contents($chunkPath, $content);
+
+        $chunk = new class($chunkPath, 'chunk.bin', 'application/octet-stream', strlen($content), UPLOAD_ERR_OK) extends UploadedFile {
+            public function isValid(): bool
+            {
+                return $this->getError() === UPLOAD_ERR_OK && is_file($this->getTempName());
+            }
+        };
+
+        (new PostChunkAudioUpload())->append(
+            hash('sha256', 'notulen-upload:1'),
+            $uploadId,
+            0,
+            hash_file('sha256', $chunkPath),
+            $chunk
+        );
+
+        unlink($chunkPath);
     }
 
     private function seedIdentities(): void
