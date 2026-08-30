@@ -137,17 +137,27 @@ export async function detectSilences(inputPath, totalDuration, { onLog = () => {
 }
 
 /**
- * Menyusun rencana chunk sadar-hening: batas antar chunk digeser ke titik
- * hening terdekat dari target kelipatan durasi chunk (dalam toleransi).
+ * Menyusun rencana chunk sadar-hening. Jumlah chunk dibulatkan ke terdekat
+ * (bukan selalu ke atas) lalu durasi dibagi merata, sehingga tidak ada chunk
+ * ekor pendek yang tetap membayar satu request penuh (hemat RPD). Batas antar
+ * chunk digeser ke titik hening terdekat dari target (dalam toleransi).
  * Rencana disimpan ke vad.json sehingga resume mereproduksi batas yang sama.
  */
 export function planChunks(duration, silences, chunkDurationSeconds, toleranceSeconds) {
-  const count = Math.max(1, Math.ceil(duration / chunkDurationSeconds));
+  // Pengaman TPM: satu request maksimal ~110 menit audio (~211K token, di bawah TPM 250K),
+  // sekalipun pembulatan menghasilkan chunk tunggal 1.5x durasi target.
+  const MAX_CHUNK_SECONDS = 6600;
+  const count = Math.max(
+    Math.round(duration / chunkDurationSeconds),
+    Math.ceil(duration / MAX_CHUNK_SECONDS),
+    1
+  );
+  const base = duration / count;
   const cuts = [];
   let prevCut = 0;
 
   for (let k = 1; k < count; k++) {
-    const target = k * chunkDurationSeconds;
+    const target = k * base;
     if (target >= duration) {
       break;
     }

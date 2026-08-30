@@ -138,11 +138,20 @@ export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = nul
 }
 
 function fixedPlan(totalDuration, chunkDurationSeconds) {
-  const count = Math.max(1, Math.ceil(totalDuration / chunkDurationSeconds));
+  // Pembagian merata (pembulatan terdekat) agar tidak ada chunk ekor kecil
+  // yang tetap membayar satu request penuh. Pengaman TPM: chunk tunggal
+  // maksimal ~110 menit audio meski pembulatan menghasilkan lebih sedikit.
+  const MAX_CHUNK_SECONDS = 6600;
+  const count = Math.max(
+    Math.round(totalDuration / chunkDurationSeconds),
+    Math.ceil(totalDuration / MAX_CHUNK_SECONDS),
+    1
+  );
+  const base = totalDuration / count;
   return Array.from({ length: count }, (_, i) => ({
     index: i + 1,
-    start: i * chunkDurationSeconds,
-    duration: Math.min(chunkDurationSeconds, totalDuration - i * chunkDurationSeconds),
+    start: i * base,
+    duration: Math.min(base, totalDuration - i * base),
   }));
 }
 

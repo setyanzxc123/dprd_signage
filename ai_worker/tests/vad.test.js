@@ -68,17 +68,30 @@ test('planChunks menggeser batas ke titik hening dalam toleransi', () => {
 
 test('planChunks memotong tepat di tengah hening yang membentang target', () => {
   const plan = planChunks(190, [{ start: 88, end: 112 }], 100, 30);
-  assert.equal(plan[0].duration, 100, 'target 100 ada di dalam hening, tidak digeser');
+  assert.equal(plan[0].duration, 95, 'target merata 95 ada di dalam hening, tidak digeser');
 });
 
 test('planChunks mengabaikan hening di luar toleransi', () => {
   const plan = planChunks(190, [{ start: 50, end: 55 }], 100, 30);
-  assert.equal(plan[0].duration, 100, 'hening 55s jaraknya 45s > toleransi 30s');
+  assert.equal(plan[0].duration, 95, 'hening 55s jaraknya 40s > toleransi 30s');
 });
 
-test('planChunks tanpa hening menghasilkan potongan seragam', () => {
+test('planChunks tanpa hening menghasilkan potongan merata', () => {
   const plan = planChunks(190, [], 100, 30);
-  assert.deepEqual(plan.map((entry) => entry.duration), [100, 90]);
+  assert.deepEqual(plan.map((entry) => entry.duration), [95, 95]);
+});
+
+test('planChunks membagi merata sehingga tidak ada chunk ekor kecil', () => {
+  // Motivasi C7.4: 125 menit dengan chunk 60 menit -> 60+60+5 (3 request)
+  // harusnya 2 chunk merata 62.5 menit (2 request)
+  const plan = planChunks(125 * 60, [], 60 * 60, 0);
+  assert.equal(plan.length, 2);
+  assert.deepEqual(plan.map((entry) => entry.duration), [62.5 * 60, 62.5 * 60]);
+
+  // 165 menit -> round(2.75)=3 chunk merata @55 menit (semua di bawah target)
+  const plan165 = planChunks(165 * 60, [], 60 * 60, 0);
+  assert.equal(plan165.length, 3);
+  assert.deepEqual(plan165.map((entry) => entry.duration), [55 * 60, 55 * 60, 55 * 60]);
 });
 
 test('planChunks menjumlah durasi persis durasi total dan berurutan', () => {

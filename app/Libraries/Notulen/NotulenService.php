@@ -617,6 +617,8 @@ class NotulenService
 
     /**
      * Membaca daftar transkrip per segmen waktu dari folder transcripts/.
+     * Label waktu memakai batas nyata dari vad.json (rencana VAD) bila tersedia;
+     * fallback mengasumsikan potongan seragam 30 menit.
      *
      * @return array{chunks: array<int, array<string, mixed>>, full_text: string, total_chunks: int}
      */
@@ -643,6 +645,7 @@ class NotulenService
 
         sort($files, SORT_NATURAL | SORT_FLAG_CASE);
 
+        $plan = $this->readChunkPlan($jobId);
         $chunks = [];
         $fullTextParts = [];
 
@@ -659,9 +662,16 @@ class NotulenService
             preg_match('/chunk_(\d+)\.txt/i', $filename, $matches);
             $chunkIndex = isset($matches[1]) ? (int) $matches[1] : count($chunks) + 1;
 
-            $startMin = ($chunkIndex - 1) * 30;
-            $endMin = $startMin + 30;
-            $timeLabel = sprintf('Menit %02d:00 - %02d:00', $startMin, $endMin);
+            $entry = $plan !== null && isset($plan[$chunkIndex - 1]) ? $plan[$chunkIndex - 1] : null;
+            if ($entry !== null && isset($entry['start'], $entry['duration'])) {
+                $startMin = (int) floor(((int) $entry['start']) / 60);
+                $endMin = (int) ceil((((int) $entry['start']) + ((int) $entry['duration'])) / 60);
+                $timeLabel = sprintf('Menit %02d - %02d', $startMin, $endMin);
+            } else {
+                $startMin = ($chunkIndex - 1) * 30;
+                $endMin = $startMin + 30;
+                $timeLabel = sprintf('Menit %02d:00 - %02d:00', $startMin, $endMin);
+            }
 
             $chunks[] = [
                 'index'      => $chunkIndex,
@@ -680,6 +690,28 @@ class NotulenService
             'full_text'    => implode("\n\n", $fullTextParts),
             'total_chunks' => count($chunks),
         ];
+    }
+
+    /**
+     * Rencana batas chunk dari vad.json (dihasilkan worker VAD), atau null.
+     *
+     * @return list<array{start: mixed, duration: mixed}>|null
+     */
+    private function readChunkPlan(int $jobId): ?array
+    {
+        $file = $this->getJobDir($jobId) . DIRECTORY_SEPARATOR . 'vad.json';
+
+        if (! is_file($file)) {
+            return null;
+        }
+
+        $decoded = json_decode((string) file_get_contents($file), true);
+
+        if (! is_array($decoded) || ! isset($decoded['plan']) || ! is_array($decoded['plan'])) {
+            return null;
+        }
+
+        return $decoded['plan'];
     }
 
     /**
