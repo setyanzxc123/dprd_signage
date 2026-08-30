@@ -8,6 +8,18 @@ export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Error pembatalan job oleh admin. Deteksi memakai instanceof, bukan
+ * perbandingan pesan, agar tidak tertukar dengan error lain yang kebetulan
+ * mengandung teks serupa.
+ */
+export class JobCancelledError extends Error {
+  constructor() {
+    super('JOB_CANCELLED_BY_ADMIN');
+    this.name = 'JobCancelledError';
+  }
+}
+
 function tryParseJson(text) {
   if (typeof text !== 'string') return null;
   const trimmed = text.trim();
@@ -165,7 +177,7 @@ export async function interruptibleSleep(ms, cancelChecker = null, checkInterval
     if (cancelChecker && typeof cancelChecker === 'function') {
       const isCancelled = await cancelChecker();
       if (isCancelled) {
-        throw new Error('JOB_CANCELLED_BY_ADMIN');
+        throw new JobCancelledError();
       }
     }
     const remaining = ms - (Date.now() - startTime);
@@ -202,14 +214,14 @@ export async function callWithRetry(fn, options = {}) {
     if (cancelChecker && typeof cancelChecker === 'function') {
       const isCancelled = await cancelChecker();
       if (isCancelled) {
-        throw new Error('JOB_CANCELLED_BY_ADMIN');
+        throw new JobCancelledError();
       }
     }
 
     try {
       return await fn(attempt);
     } catch (err) {
-      if (err.message === 'JOB_CANCELLED_BY_ADMIN') {
+      if (err instanceof JobCancelledError) {
         throw err;
       }
 

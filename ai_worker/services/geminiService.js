@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { GoogleGenAI } from '@google/genai';
 import { config } from '../config.js';
-import { callWithRetry } from './throttler.js';
+import { callWithRetry, JobCancelledError } from './throttler.js';
 import { formatChunkIndex, probeDuration } from './audioSlicer.js';
 import { log as workerLog, warn as workerWarn } from './logger.js';
 
@@ -243,7 +243,7 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
               if (cancelChecker && typeof cancelChecker === 'function') {
                 const isCancelled = await cancelChecker();
                 if (isCancelled) {
-                  throw new Error('JOB_CANCELLED_BY_ADMIN');
+                  throw new JobCancelledError();
                 }
               }
 
@@ -292,7 +292,7 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
         break;
       } catch (err) {
         lastError = err;
-        if (err.message === 'JOB_CANCELLED_BY_ADMIN') {
+        if (err instanceof JobCancelledError) {
           throw err;
         }
         onLog(`[Transcribe] Model ${modelName} gagal setelah seluruh retry: ${err.message}. Mencoba model fallback berikutnya...`);
@@ -405,7 +405,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
             if (cancelChecker && typeof cancelChecker === 'function') {
               const isCancelled = await cancelChecker();
               if (isCancelled) {
-                throw new Error('JOB_CANCELLED_BY_ADMIN');
+                throw new JobCancelledError();
               }
             }
 
@@ -452,7 +452,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
       break;
     } catch (err) {
       lastError = err;
-      if (err.message === 'JOB_CANCELLED_BY_ADMIN') {
+      if (err instanceof JobCancelledError) {
         throw err;
       }
       onLog(`[Minutes] Model ${modelName} gagal menyusun risalah: ${err.message}. Mencoba model fallback berikutnya...`);

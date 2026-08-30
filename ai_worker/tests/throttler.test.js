@@ -7,6 +7,8 @@ import {
   getRetryDelayMs,
   describeError,
   callWithRetry,
+  interruptibleSleep,
+  JobCancelledError,
 } from '../services/throttler.js';
 
 // Fixture struktur nyata dari log job #11: SDK membungkus body API dalam JSON
@@ -168,4 +170,53 @@ test('callWithRetry menghormati delay minimum RetryInfo server', async () => {
   );
   assert.ok(observedWait >= 30000, `wait ${observedWait} harus >= 30000 (RetryInfo server)`);
   assert.equal(attempts, 2);
+});
+
+test('JobCancelledError terdeteksi via instanceof dan berpesan tetap', () => {
+  const err = new JobCancelledError();
+  assert.ok(err instanceof JobCancelledError);
+  assert.ok(err instanceof Error);
+  assert.equal(err.name, 'JobCancelledError');
+  assert.equal(err.message, 'JOB_CANCELLED_BY_ADMIN');
+});
+
+test('callWithRetry melempar JobCancelledError tanpa retry', async () => {
+  let attempts = 0;
+  await assert.rejects(
+    callWithRetry(async () => {
+      attempts++;
+      throw new JobCancelledError();
+    }, { maxRetries: 4, initialDelayMs: 1 })
+  );
+  assert.equal(attempts, 1);
+});
+
+test('callWithRetry memeriksa cancelChecker sebelum setiap attempt', async () => {
+  let attempts = 0;
+  await assert.rejects(
+    callWithRetry(async () => {
+      attempts++;
+      if (attempts === 1) {
+        throw new Error('503 service unavailable');
+      }
+      return 'ok';
+    }, {
+      maxRetries: 3,
+      initialDelayMs: 1,
+      cancelChecker: async () => attempts >= 1,
+    }),
+    JobCancelledError
+  );
+  assert.equal(attempts, 1);
+});
+
+test('interruptibleSleep melempar JobCancelledError saat cancel', async () => {
+  await assert.rejects(
+    interruptibleSleep(5000, async () => true, 100),
+    JobCancelledError
+  );
+});
+
+test('interruptibleSleep selesai normal tanpa cancel', async () => {
+  await assert.doesNotReject(interruptibleSleep(50, async () => false, 20));
 });

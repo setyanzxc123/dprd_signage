@@ -4,7 +4,7 @@ import mysql from 'mysql2/promise';
 import { config } from './config.js';
 import { sliceAudio, probeDuration, formatChunkIndex } from './services/audioSlicer.js';
 import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback, parsePillarsFromText } from './services/geminiService.js';
-import { interruptibleSleep } from './services/throttler.js';
+import { interruptibleSleep, JobCancelledError } from './services/throttler.js';
 import { log, warn, error } from './services/logger.js';
 
 // Abaikan error EPIPE jika worker dijalankan asinkron tanpa pipe terminal aktif (popen PHP)
@@ -49,7 +49,7 @@ export async function performStartupReset(pool) {
  */
 export async function markJobFailure(pool, jobId, err) {
   const message = String(err.message || err);
-  const isCancelled = message.includes('JOB_CANCELLED_BY_ADMIN');
+  const isCancelled = err instanceof JobCancelledError;
   const [result] = await pool.execute(
     `UPDATE meeting_transcription_jobs
      SET status = ?, cancel_requested = 0, error_message = ?, current_step = ?, updated_at = NOW()
@@ -399,7 +399,7 @@ export async function processJob(pool, job) {
 
     log(`\n[Worker] SUKSES: Job #${jobId} (${meetingContext.judulRapat}) telah selesai 100%!\n`);
   } catch (err) {
-    if (err.message === 'JOB_CANCELLED_BY_ADMIN' || (await isCancelled())) {
+    if (err instanceof JobCancelledError || (await isCancelled())) {
       log(`[Worker] Job #${jobId} berhasil dihentikan atas permintaan admin.`);
       await pool.execute(
         `UPDATE meeting_transcription_jobs
@@ -459,7 +459,7 @@ async function main() {
       process.exit(0);
     } catch (err) {
       error(`[Worker] Job #${targetJobId} selesai dengan error:`, err);
-      const isCancelled = String(err.message || err).includes('JOB_CANCELLED_BY_ADMIN');
+      const isCancelled = err instanceof JobCancelledError;
       await markJobFailure(pool, targetJobId, err);
       process.exit(isCancelled ? 0 : 1);
     }
