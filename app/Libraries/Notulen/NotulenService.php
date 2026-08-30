@@ -373,7 +373,7 @@ class NotulenService
             // Pindahkan file chunk ke folder audio job
             // Nama file sementara untuk consume, akan kita rename sesuai ekstensi asli
             $tempDest = $audioDir . DIRECTORY_SEPARATOR . 'original.tmp';
-            $uploader->consume($ownerToken, $uploadId, $tempDest);
+            $uploaded = $uploader->consume($ownerToken, $uploadId, $tempDest);
 
             // Deteksi ekstensi dari MIME aktual file
             $finfo     = new \finfo(FILEINFO_MIME_TYPE);
@@ -400,6 +400,9 @@ class NotulenService
 
             $fileSize            = filesize($finalDest) ?: 0;
             $relativeAudioPath   = 'writable/uploads/recordings/job_' . $jobId . '/audio/' . $filename;
+            $originalClientName  = trim((string) ($uploaded['file_name'] ?? '')) !== ''
+                ? trim((string) ($uploaded['file_name'] ?? ''))
+                : $filename;
 
             if ($judulRapat === '') {
                 if ($jadwalId !== null) {
@@ -411,7 +414,7 @@ class NotulenService
             }
 
             $jobModel->update($jobId, [
-                'audio_filename' => $filename,
+                'audio_filename' => $originalClientName,
                 'audio_path'     => $relativeAudioPath,
                 'audio_size'     => $fileSize,
             ]);

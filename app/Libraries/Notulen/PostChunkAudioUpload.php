@@ -226,9 +226,13 @@ class PostChunkAudioUpload
 
     /**
      * Pindahkan file audio yang sudah lengkap ke $destinationPath.
-     * Setelah berhasil, direktori sesi chunk dihapus.
+     * Mengembalikan metadata sesi (file_name, file_size, file_type) dari
+     * nama asli yang dikirim client saat start. Setelah berhasil, direktori
+     * sesi chunk dihapus.
+     *
+     * @return array{file_name: string, file_size: int, file_type: string}
      */
-    public function consume(string $ownerToken, string $uploadId, string $destinationPath): void
+    public function consume(string $ownerToken, string $uploadId, string $destinationPath): array
     {
         $this->assertHex($ownerToken, 'Token sesi upload tidak valid.');
         $this->assertHex($uploadId, 'Identitas upload tidak valid.');
@@ -238,7 +242,7 @@ class PostChunkAudioUpload
             throw new MediaUploadException('Hasil upload tidak ditemukan. Upload file kembali.', 404);
         }
 
-        $this->withLock($uploadDir, function () use ($uploadDir, $ownerToken, $destinationPath): void {
+        $metadata = $this->withLock($uploadDir, function () use ($uploadDir, $ownerToken, $destinationPath) {
             $metadata = $this->requireOwnedMetadata($uploadDir, $ownerToken);
             $metadata = $this->syncOffset($uploadDir, $metadata);
 
@@ -259,9 +263,17 @@ class PostChunkAudioUpload
                     throw new MediaUploadException('Server gagal memindahkan audio ke folder tujuan.', 500);
                 }
             }
+
+            return $metadata;
         });
 
         $this->removeUploadDirectory($uploadDir);
+
+        return [
+            'file_name' => (string) ($metadata['file_name'] ?? ''),
+            'file_size' => (int) ($metadata['file_size'] ?? 0),
+            'file_type' => (string) ($metadata['file_type'] ?? ''),
+        ];
     }
 
     public function cancel(string $ownerToken, string $uploadId): void
