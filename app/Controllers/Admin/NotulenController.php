@@ -472,7 +472,12 @@ class NotulenController extends BaseController
      */
     public function finalizeMinutes(int $minutesId): RedirectResponse
     {
-        $userId = $this->getCurrentUserId() ?? 1;
+        $userId = $this->getCurrentUserId();
+
+        if ($userId === null) {
+            session()->setFlashdata('error', 'Sesi tidak valid. Silakan masuk kembali sebelum memfinalisasi risalah.');
+            return redirect()->back();
+        }
 
         $result = $this->service->finalizeMinutes($minutesId, $userId);
 

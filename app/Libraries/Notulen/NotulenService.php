@@ -530,9 +530,21 @@ class NotulenService
     /**
      * Hapus berkas rekaman audio lokal (Purge folder audio/ untuk menghemat disk storage).
      * Transkrip dan data risalah dipertahankan 100%.
+     * Ditolak selama job masih dalam antrean atau sedang diproses worker.
      */
     public function purgeAudioFiles(int $jobId): array
     {
+        $job = (new MeetingTranscriptionJobModel($this->db))->find($jobId);
+
+        if ($job && in_array($job['status'], [
+            MeetingTranscriptionJobModel::STATUS_QUEUED,
+            MeetingTranscriptionJobModel::STATUS_CHUNKING,
+            MeetingTranscriptionJobModel::STATUS_TRANSCRIBING,
+            MeetingTranscriptionJobModel::STATUS_SUMMARIZING,
+        ], true)) {
+            return ['error' => 'Rekaman tidak dapat dibersihkan karena job masih berstatus ' . $job['status'] . '.'];
+        }
+
         $audioDir = $this->getJobDir($jobId) . DIRECTORY_SEPARATOR . 'audio';
 
         if (is_dir($audioDir)) {

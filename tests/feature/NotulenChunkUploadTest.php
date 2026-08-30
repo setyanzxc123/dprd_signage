@@ -88,6 +88,25 @@ final class NotulenChunkUploadTest extends CIUnitTestCase
         $this->assertSame(strlen($content), (int) $row['audio_size']);
     }
 
+    public function testPurgeAudioFilesRejectsRunningJob(): void
+    {
+        $service = new NotulenService($this->testDb, $this->recordingsDir);
+        $jobId = $this->insertJob('transcribing');
+
+        $result = $service->purgeAudioFiles($jobId);
+        $this->assertArrayHasKey('error', $result);
+    }
+
+    public function testPurgeAudioFilesAllowsCompletedJob(): void
+    {
+        $service = new NotulenService($this->testDb, $this->recordingsDir);
+        $jobId = $this->insertJob('completed');
+
+        $result = $service->purgeAudioFiles($jobId);
+        $this->assertArrayNotHasKey('error', $result);
+        $this->assertTrue($result['success']);
+    }
+
     private function insertJob(string $status): int
     {
         $this->testDb->table('meeting_transcription_jobs')->insert([
