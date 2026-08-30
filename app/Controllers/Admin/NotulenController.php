@@ -16,6 +16,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 class NotulenController extends BaseController
 {
     private const AUDIO_UPLOAD_SESSION_KEY = 'notulen_audio_chunk_token';
+    private const AUDIO_RANGE_WINDOW = 2_097_152;
 
     private NotulenService $service;
 
@@ -280,6 +281,8 @@ class NotulenController extends BaseController
     /**
      * Endpoint streaming audio rekaman rapat untuk audio player di web admin.
      * Mendukung HTTP 206 Partial Content (Range Request) untuk scrubber & proteksi memori.
+     * Range terbuka dibatasi 2 MB; request tanpa Range memakai DownloadResponse
+     * yang mengirim file per 1 MB tanpa memuat seluruh isi ke memori.
      */
     public function audio(int $jobId): ResponseInterface
     {
@@ -298,7 +301,17 @@ class NotulenController extends BaseController
         }
 
         $rangeHeader = $this->request->getHeaderLine('Range');
-        if (! empty($rangeHeader) && preg_match('/bytes=(\d+)-(\d+)?/i', $rangeHeader, $matches)) {
+        if (empty($rangeHeader)) {
+            fclose($fp);
+
+            $download = service('response')->download($audioPath, null, true);
+            $download->setHeader('Accept-Ranges', 'bytes');
+            $download->setHeader('Cache-Control', 'private, max-age=3600');
+
+            return $download;
+        }
+
+        if (preg_match('/bytes=(\d+)-(\d+)?/i', $rangeHeader, $matches)) {
             $start = (int) $matches[1];
             $end   = ! empty($matches[2]) ? (int) $matches[2] : ($size - 1);
 
@@ -309,6 +322,7 @@ class NotulenController extends BaseController
                     ->setHeader('Content-Range', "bytes */{$size}");
             }
 
+            $end = min($end, $start + self::AUDIO_RANGE_WINDOW - 1, $size - 1);
             $length = $end - $start + 1;
             fseek($fp, $start);
             $content = fread($fp, $length);
