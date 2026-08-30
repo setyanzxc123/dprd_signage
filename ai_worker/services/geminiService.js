@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { GoogleGenAI } from '@google/genai';
 import { config } from '../config.js';
-import { callWithRetry, JobCancelledError, isDailyQuotaExhausted, describeError } from './throttler.js';
+import { callWithRetry, JobCancelledError, isDailyQuotaExhausted, describeError, sleep } from './throttler.js';
 import { effectiveModelChain, setStickyModel, markDeadToday } from './modelChain.js';
 import { formatChunkIndex, probeDuration } from './audioSlicer.js';
 import { log as workerLog, warn as workerWarn } from './logger.js';
@@ -48,6 +48,33 @@ export async function deleteFromFilesApi(fileResource) {
   } catch (err) {
     // Log kegagalan cleanup tanpa menghentikan pipeline
     workerWarn(`[GeminiService] Peringatan: Gagal menghapus file cloud ${fileResource?.name || fileResource}:`, err.message);
+  }
+}
+
+/**
+ * Menunggu file Files API mencapai state ACTIVE sebelum direferensikan
+ * generateContent. FAILED mengembalikan error ingest (bukan kegagalan model,
+ * jadi tidak boleh memicu fallback rantai model).
+ */
+export async function waitForFileActive(getFile, name, {
+  intervalMs = 2000,
+  timeoutMs = 120000,
+  onLog = workerLog,
+} = {}) {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const file = await getFile(name);
+    if (file.state === 'ACTIVE') {
+      return file;
+    }
+    if (file.state === 'FAILED') {
+      throw new Error(`Gagal ingest file ${name} di Files API (state FAILED).`);
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`Timeout menunggu file ${name} ACTIVE di Files API (state terakhir: ${file.state}).`);
+    }
+    onLog(`[Files API] ${name} masih ${file.state}, menunggu hingga ACTIVE...`);
+    await sleep(intervalMs);
   }
 }
 
@@ -187,8 +214,14 @@ export async function transcribeChunkWithFallback({
   try {
     uploadedFile = await uploadToFilesApi(chunkPath, 'audio/mp3');
     onLog(`[Files API] File chunk_${chunkNum} berhasil diunggah ke Google Cloud (URI: ${uploadedFile.uri})`);
+    await waitForFileActive(
+      (name) => getAiClient().files.get({ name }),
+      uploadedFile.name || uploadedFile.uri,
+      { onLog }
+    );
   } catch (uploadErr) {
-    throw new Error(`Gagal mengunggah chunk_${chunkNum} ke Files API: ${uploadErr.message}`);
+    if (uploadErr instanceof JobCancelledError) throw uploadErr;
+    throw new Error(`Gagal menyiapkan chunk_${chunkNum} di Files API: ${uploadErr.message}`);
   }
 
   const promptText = `Transkripsikan seluruh isi percakapan rekaman audio rapat DPRD Provinsi Sulawesi Tengah ini dalam Bahasa Indonesia secara verbatim, rapi, dan terstruktur.
