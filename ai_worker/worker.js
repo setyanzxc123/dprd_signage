@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { sliceAudio, probeDuration, formatChunkIndex } from './services/audioSlicer.js';
 import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback } from './services/geminiService.js';
 import { interruptibleSleep, JobCancelledError } from './services/throttler.js';
+import { runVadAnalysis } from './services/vad.js';
 import { log, warn, error } from './services/logger.js';
 
 // Abaikan error EPIPE jika worker dijalankan asinkron tanpa pipe terminal aktif (popen PHP)
@@ -241,6 +242,14 @@ export async function processJob(pool, job) {
     );
 
     log(`[Worker] Durasi total: ${totalDuration}s (${Math.round(totalDuration / 60)} menit), Total chunk: ${totalChunks}`);
+
+    // Pass VAD: laporan rasio bicara per bagian (belum mengubah batas chunk)
+    try {
+      await runVadAnalysis(inputAudioPath, jobDir, { onLog: (msg) => log(`[Job #${jobId}] ${msg}`) });
+    } catch (vadErr) {
+      warn(`[Worker] VAD dilewati untuk Job #${jobId}: ${vadErr.message}`);
+    }
+
     const sliceResult = await sliceAudio(inputAudioPath, audioDir, config.audio.chunkDurationSeconds, isCancelled, (msg) => log(`[Job #${jobId}] ${msg}`));
 
     // 2. Tahap Transkripsi Sekuensial per Chunk

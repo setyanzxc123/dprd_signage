@@ -53,6 +53,15 @@ export const config = {
     chunkDurationSeconds: parseInt(getEnv('CHUNK_DURATION_SECONDS', '1800'), 10), // 30 menit
     safetyDelayMs: parseInt(getEnv('SAFETY_DELAY_MS', '8000'), 10), // 8 detik
   },
+  vad: {
+    // Ambang kebisingan (dB) dan durasi minimum hening (detik) untuk silencedetect
+    silenceDb: parseInt(getEnv('VAD_SILENCE_DB', '-35'), 10),
+    minSilenceSeconds: parseInt(getEnv('VAD_MIN_SILENCE_S', '2'), 10),
+    // Batas pergeseran titik potong chunk mencari titik hening (detik)
+    toleranceSeconds: parseInt(getEnv('VAD_TOLERANCE_S', '180'), 10),
+    // Chunk dengan rasio bicara di bawah nilai ini dilewati tanpa panggil model
+    skipSpeechRatio: parseFloat(getEnv('VAD_SKIP_SPEECH_RATIO', '0.05')),
+  },
   worker: {
     pollIntervalMs: parseInt(getEnv('WORKER_POLL_INTERVAL_MS', '5000'), 10), // 5 detik
     maxRetriesPerModel: parseInt(getEnv('MAX_RETRIES_PER_MODEL', '4'), 10),
