@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { config } from '../config.js';
 import { callWithRetry, JobCancelledError, isDailyQuotaExhausted, describeError, sleep } from './throttler.js';
 import { effectiveModelChain, setStickyModel, markDeadToday } from './modelChain.js';
@@ -361,16 +361,85 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
   }
 }
 
+// Skema output risalah (structured output resmi) - bentuknya identik dengan
+// struktur_json yang dikonsumsi aplikasi (3 Pilar).
+export const MINUTES_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    ringkasan_utama: {
+      type: Type.STRING,
+      description: 'Intisari komprehensif rapat dalam 2-4 paragraf: latar belakang, pokok masalah, dinamika perdebatan, dan hasil akhir.',
+    },
+    poin_pembahasan: {
+      type: Type.ARRAY,
+      description: 'Rincian pembahasan per pokok bahasan.',
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          waktu: { type: Type.STRING, nullable: true, description: 'Cap waktu opsional dengan format [mm:ss] atau [hh:mm:ss].' },
+          topik: { type: Type.STRING, description: 'Judul pokok bahasan.' },
+          pembicara: { type: Type.STRING, nullable: true, description: 'Pimpinan Sidang, Fraksi, Komisi, atau pejabat terkait.' },
+          uraian: { type: Type.STRING, description: 'Penjelasan materi, pertanyaan, tanggapan, atau catatan kritis.' },
+        },
+        required: ['topik', 'uraian'],
+      },
+    },
+    kesimpulan_akhir: {
+      type: Type.ARRAY,
+      description: 'Butir kesepakatan, keputusan resmi, rekomendasi, dan instruksi tindak lanjut.',
+      items: { type: Type.STRING },
+    },
+  },
+  required: ['ringkasan_utama', 'poin_pembahasan', 'kesimpulan_akhir'],
+};
+
+/**
+ * Menyusun naskah risalah 3 bagian (I/II/III) dari struktur pilar yang
+ * dihasilkan model. Format harus tetap kompatibel dengan parser fallback
+ * di NotulenService::parsePillarsFromText (PHP).
+ */
+export function composeMinutesText(pillars) {
+  const points = Array.isArray(pillars.poin_pembahasan) ? pillars.poin_pembahasan : [];
+  const conclusions = Array.isArray(pillars.kesimpulan_akhir) ? pillars.kesimpulan_akhir : [];
+  const lines = ['I. RINGKASAN UTAMA', String(pillars.ringkasan_utama || '').trim(), '', 'II. POIN-POIN PEMBAHASAN'];
+
+  points.forEach((point, i) => {
+    const no = i + 1;
+    const waktu = point.waktu ? ` [${point.waktu}]` : '';
+    lines.push(`${no}.${waktu} Topik: ${String(point.topik || '').trim()}`);
+    if (point.pembicara) {
+      lines.push(`   - Pembicara: ${String(point.pembicara).trim()}`);
+    }
+    lines.push(`   - Uraian: ${String(point.uraian || '').trim()}`);
+    point.full_text = `${no}.${waktu} Topik: ${String(point.topik || '').trim()}`;
+  });
+
+  if (points.length === 0) {
+    lines.push('(Tidak ada poin pembahasan yang terdeteksi.)');
+  }
+
+  lines.push('', 'III. KESIMPULAN & KEPUTUSAN AKHIR');
+  conclusions.forEach((item, i) => {
+    lines.push(`${i + 1}. ${String(item).trim()}`);
+  });
+  if (conclusions.length === 0) {
+    lines.push('(Tidak ada kesimpulan yang terdeteksi.)');
+  }
+
+  return lines.join('\n').trim();
+}
+
 /**
  * Menyusun draft Risalah Rapat Resmi DPRD Provinsi Sulawesi Tengah
- * dari kumpulan transkrip lengkap menggunakan rantai model AI.
+ * dari kumpulan transkrip lengkap menggunakan rantai model AI dan
+ * structured output (responseSchema).
  *
  * @param {Object} params
  * @param {string} params.fullTranscript Teks transkrip gabungan seluruh chunk
  * @param {Object} params.metadata Metadata rapat (judul_rapat, tanggal_rapat, jadwal_type)
  * @param {Function} params.cancelChecker Fungsi cek cancel
  * @param {Function} params.onLog Callback log
- * @returns {Promise<Object>} Data risalah terstruktur (ringkasan_eksekutif, agenda_pembahasan, kesimpulan, tindak_lanjut, peserta_terdeteksi)
+ * @returns {Promise<Object>} { ringkasan_eksekutif, pillars, usedModel }
  */
 export async function generateMeetingMinutesWithFallback({
   fullTranscript,
@@ -381,7 +450,7 @@ export async function generateMeetingMinutesWithFallback({
   onLog(`[Minutes] Memulai penyusunan Risalah Rapat resmi dari transkrip (${fullTranscript.length} karakter)...`);
 
   const promptText = `Anda adalah Notulis Risalah Resmi untuk DPRD (Dewan Perwakilan Rakyat Daerah) Provinsi Sulawesi Tengah.
-Tugas Anda adalah membaca, menganalisis, dan menyusun DRAFT RISALAH RAPAT RESMI dari transkrip percakapan rapat berikut ke dalam SATU NASKAH DOKUMEN UTUH yang profesional, rapi, dan sesuai standar tata naskah dinas legislatif daerah.
+Baca dan analisis transkrip rapat berikut, lalu susun DRAFT RISALAH RAPAT RESMI yang profesional dan sesuai standar tata naskah dinas legislatif daerah.
 
 Informasi Konteks Rapat:
 - Judul Rapat: ${metadata.judul_rapat || 'Rapat DPRD Provinsi Sulawesi Tengah'}
@@ -393,25 +462,10 @@ KONTEN TRANSKRIP RAPAT LENGKAP:
 ${fullTranscript}
 ---
 
-FORMAT PENYUSUNAN NASKAH RISALAH (WAJIB MEMUAT 3 BAGIAN BERIKUT SECARA BERURUTAN):
-
-I. RINGKASAN UTAMA
-Tuliskan intisari komprehensif rapat dalam 2-4 paragraf yang merangkum latar belakang pertemuan, inti pokok masalah yang dibahas, dinamika pembicaraan/perdebatan, dan hasil akhir rapat secara utuh dan padat.
-
-II. POIN-POIN PEMBAHASAN
-Uraikan rincian jalannya pembahasan per pokok bahasan dengan format butir bernomor (1, 2, dst.):
-1. Topik: [Judul Pokok Bahasan]
-   - Pembicara: [Pimpinan Sidang / Fraksi / Komisi / Pejabat / Dinas Terkait]
-   - Uraian: [Penjelasan rinci mengenai materi yang dipaparkan, pertanyaan, tanggapan, atau catatan kritis yang disampaikan selama rapat]
-
-III. KESIMPULAN & KEPUTUSAN AKHIR
-Rumuskan kesepakatan dan keputusan resmi yang disahkan dalam rapat dalam bentuk butir-butir bernomor (1, 2, dst.), mencakup poin persetujuan bersama, rekomendasi resmi, serta instruksi tindak lanjut yang disepakati.
-
-INSTRUKSI OUTPUT:
-Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai berikut (tanpa blok markdown formatting pembungkus seperti \`\`\`json):
-{
-  "ringkasan_eksekutif": "Tuliskan seluruh naskah risalah lengkap yang memuat Bagian I, II, dan III di sini secara utuh, rapi, dan terformat sesuai panduan di atas."
-}`;
+Isi setiap field dengan lengkap:
+- ringkasan_utama: intisari 2-4 paragraf (latar belakang, pokok masalah, dinamika perdebatan, hasil akhir).
+- poin_pembahasan: satu butir per pokok bahasan; sertakan pembicara bila dapat diidentifikasi.
+- kesimpulan_akhir: seluruh kesepakatan, keputusan resmi, rekomendasi, dan tindak lanjut yang disepakati.`;
 
   const models = effectiveModelChain(config.gemini.modelChain);
   if (models.length === 0) {
@@ -441,6 +495,7 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
             contents: promptText,
             config: {
               responseMimeType: 'application/json',
+              responseSchema: MINUTES_RESPONSE_SCHEMA,
             },
           });
 
@@ -481,13 +536,17 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
         }
       );
 
-      // Bersihkan kemungkinan markdown wrapping ```json ... ```
+      // Bersihkan kemungkinan markdown wrapping ```json ... ``` (antisipasi model noncompliant)
       let cleanedJson = rawResponse.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
 
       try {
         minutesJson = JSON.parse(cleanedJson);
       } catch (parseErr) {
         throw new Error(`Gagal mem-parse JSON hasil risalah dari model ${modelName}: ${parseErr.message}`);
+      }
+
+      if (!minutesJson || typeof minutesJson !== 'object' || !('ringkasan_utama' in minutesJson)) {
+        throw new Error(`Struktur risalah dari model ${modelName} tidak memenuhi skema (ringkasan_utama tidak ditemukan).`);
       }
 
       onLog(`[Minutes] Risalah rapat berhasil disusun via model ${modelName}!`);
@@ -512,12 +571,15 @@ Kembalikan HANYA sebuah objek JSON valid dengan struktur kunci persis sebagai be
     throw new Error(`Seluruh rantai model AI gagal menyusun risalah rapat. Error terakhir: ${describeError(lastError)}`);
   }
 
+  const pillars = {
+    ringkasan_utama: String(minutesJson.ringkasan_utama || ''),
+    poin_pembahasan: Array.isArray(minutesJson.poin_pembahasan) ? minutesJson.poin_pembahasan : [],
+    kesimpulan_akhir: Array.isArray(minutesJson.kesimpulan_akhir) ? minutesJson.kesimpulan_akhir : [],
+  };
+
   return {
-    ringkasan_eksekutif: minutesJson.ringkasan_eksekutif || '',
-    agenda_pembahasan: Array.isArray(minutesJson.agenda_pembahasan) ? minutesJson.agenda_pembahasan : [],
-    kesimpulan: Array.isArray(minutesJson.kesimpulan) ? minutesJson.kesimpulan : [],
-    tindak_lanjut: Array.isArray(minutesJson.tindak_lanjut) ? minutesJson.tindak_lanjut : [],
-    peserta_terdeteksi: Array.isArray(minutesJson.peserta_terdeteksi) ? minutesJson.peserta_terdeteksi : [],
+    ringkasan_eksekutif: composeMinutesText(pillars),
+    pillars,
     usedModel: usedModel || null,
   };
 }

@@ -3,7 +3,7 @@ import path from 'node:path';
 import mysql from 'mysql2/promise';
 import { config } from './config.js';
 import { sliceAudio, probeDuration, formatChunkIndex } from './services/audioSlicer.js';
-import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback, parsePillarsFromText } from './services/geminiService.js';
+import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback } from './services/geminiService.js';
 import { interruptibleSleep, JobCancelledError } from './services/throttler.js';
 import { log, warn, error } from './services/logger.js';
 
@@ -358,8 +358,8 @@ export async function processJob(pool, job) {
       [jobId]
     );
 
-    const pillars = parsePillarsFromText(minutesResult.ringkasan_eksekutif);
-    const strukturJsonStr = JSON.stringify(pillars);
+    // Struktur 3 pilar dijamin responseSchema dari model, bukan hasil parsing regex
+    const strukturJsonStr = JSON.stringify(minutesResult.pillars);
 
     if (existingMinutes && existingMinutes.length > 0) {
       await pool.execute(
