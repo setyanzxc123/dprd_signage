@@ -185,6 +185,11 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->put('admin/profil', 'AdminProfileController::update');
     $routes->patch('admin/profil', 'AdminProfileController::update');
 
+    $routes->get('notulen/jobs',                  'NotulenController::index');
+    $routes->get('notulen/jobs/(:num)',           'NotulenController::show/$1');
+    $routes->get('notulen/jobs/(:num)/transkrip', 'NotulenController::transkrip/$1');
+    $routes->get('notulen/jobs/(:num)/audio',     'NotulenController::audio/$1');
+
     $routes->get('ruangan',            'RuanganController::index');
     $routes->get('ruangan/(:num)',     'RuanganController::show/$1');
     $routes->post('ruangan',           'RuanganController::create');

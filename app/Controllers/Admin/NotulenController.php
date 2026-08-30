@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\Media\MediaUploadException;
+use App\Libraries\Notulen\AudioStreamResponder;
 use App\Libraries\Notulen\NotulenService;
 use App\Libraries\Notulen\PostChunkAudioUpload;
 use App\Models\JadwalBanmusModel;
@@ -16,7 +17,6 @@ use CodeIgniter\HTTP\ResponseInterface;
 class NotulenController extends BaseController
 {
     private const AUDIO_UPLOAD_SESSION_KEY = 'notulen_audio_chunk_token';
-    private const AUDIO_RANGE_WINDOW = 2_097_152;
 
     private NotulenService $service;
 
@@ -280,73 +280,11 @@ class NotulenController extends BaseController
 
     /**
      * Endpoint streaming audio rekaman rapat untuk audio player di web admin.
-     * Mendukung HTTP 206 Partial Content (Range Request) untuk scrubber & proteksi memori.
-     * Range terbuka dibatasi 2 MB; request tanpa Range memakai DownloadResponse
-     * yang mengirim file per 1 MB tanpa memuat seluruh isi ke memori.
+     * Logika Range/206/streaming dibagikan dengan API mobile via AudioStreamResponder.
      */
     public function audio(int $jobId): ResponseInterface
     {
-        $audioPath = $this->service->resolveAudioPath($jobId);
-
-        if (! $audioPath || ! is_file($audioPath)) {
-            return $this->response->setStatusCode(404)->setBody('Berkas audio tidak ditemukan atau telah dibersihkan.');
-        }
-
-        $mime = mime_content_type($audioPath) ?: 'audio/mpeg';
-        $size = filesize($audioPath);
-
-        $fp = @fopen($audioPath, 'rb');
-        if (! $fp) {
-            return $this->response->setStatusCode(500)->setBody('Gagal membuka berkas audio.');
-        }
-
-        $rangeHeader = $this->request->getHeaderLine('Range');
-        if (empty($rangeHeader)) {
-            fclose($fp);
-
-            $download = service('response')->download($audioPath, null, true);
-            $download->setHeader('Accept-Ranges', 'bytes');
-            $download->setHeader('Cache-Control', 'private, max-age=3600');
-
-            return $download;
-        }
-
-        if (preg_match('/bytes=(\d+)-(\d+)?/i', $rangeHeader, $matches)) {
-            $start = (int) $matches[1];
-            $end   = ! empty($matches[2]) ? (int) $matches[2] : ($size - 1);
-
-            if ($start > $end || $start >= $size) {
-                fclose($fp);
-                return $this->response
-                    ->setStatusCode(416)
-                    ->setHeader('Content-Range', "bytes */{$size}");
-            }
-
-            $end = min($end, $start + self::AUDIO_RANGE_WINDOW - 1, $size - 1);
-            $length = $end - $start + 1;
-            fseek($fp, $start);
-            $content = fread($fp, $length);
-            fclose($fp);
-
-            return $this->response
-                ->setStatusCode(206)
-                ->setHeader('Content-Type', $mime)
-                ->setHeader('Content-Range', "bytes {$start}-{$end}/{$size}")
-                ->setHeader('Content-Length', (string) $length)
-                ->setHeader('Accept-Ranges', 'bytes')
-                ->setHeader('Cache-Control', 'private, max-age=3600')
-                ->setBody($content);
-        }
-
-        $content = fread($fp, $size);
-        fclose($fp);
-
-        return $this->response
-            ->setHeader('Content-Type', $mime)
-            ->setHeader('Content-Length', (string) $size)
-            ->setHeader('Accept-Ranges', 'bytes')
-            ->setHeader('Cache-Control', 'private, max-age=3600')
-            ->setBody($content);
+        return AudioStreamResponder::respond($this->request, $this->response, $this->service->resolveAudioPath($jobId));
     }
 
     /**
