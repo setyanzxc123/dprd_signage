@@ -923,9 +923,14 @@ class NotulenService
 
     /**
      * Pemicu asinkron worker lokal (berguna untuk lingkungan dev tanpa PM2 daemon).
+     * Set WORKER_DAEMON_MODE=1 untuk mematikan popen ini saat produksi memakai daemon.
      */
     public function triggerWorkerAsync(int $jobId): void
     {
+        if (env('WORKER_DAEMON_MODE') === '1') {
+            return;
+        }
+
         try {
             $workerScript = ROOTPATH . 'ai_worker' . DIRECTORY_SEPARATOR . 'worker.js';
             if (! file_exists($workerScript)) {
