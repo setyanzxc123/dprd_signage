@@ -84,6 +84,63 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertStringContainsString('belum dikonfigurasi', (string) $result->error);
     }
 
+    public function testGetStatusReturnsConnectedDetailsWhenOnline(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status' => 'success',
+            'data'   => [
+                'status'    => 'connected',
+                'connected' => true,
+                'user'      => [
+                    'phone' => '628123456789',
+                    'name'  => 'Humas DPRD',
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $status = $provider->getStatus();
+
+        $this->assertTrue($status['configured']);
+        $this->assertTrue($status['connected']);
+        $this->assertSame('connected', $status['status']);
+        $this->assertSame('628123456789', $status['phone']);
+        $this->assertSame('Humas DPRD', $status['name']);
+        $this->assertSame('http://127.0.0.1:3001/qr', $status['qr_url']);
+        $this->assertNull($status['error']);
+        $this->assertSame('http://127.0.0.1:3001/status', $transport->url);
+    }
+
+    public function testGetStatusReportsOfflineWhenGatewayUnreachable(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(0, null, 'Connection refused'));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $status = $provider->getStatus();
+
+        $this->assertTrue($status['configured']);
+        $this->assertFalse($status['connected']);
+        $this->assertSame('offline', $status['status']);
+        $this->assertNull($status['phone']);
+        $this->assertSame('http://127.0.0.1:3001/qr', $status['qr_url']);
+        $this->assertStringContainsString('Connection refused', (string) $status['error']);
+    }
+
+    public function testGetStatusReportsUnconfiguredWhenConfigMissing(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, '{}'));
+        $config = new Otp();
+        $config->baileysApiKey = '';
+        $provider = new BaileysProvider($transport, $config);
+
+        $status = $provider->getStatus();
+
+        $this->assertFalse($status['configured']);
+        $this->assertFalse($status['connected']);
+        $this->assertSame('unconfigured', $status['status']);
+        $this->assertStringContainsString('belum dikonfigurasi', (string) $status['error']);
+    }
+
     private function config(): Otp
     {
         $config = new Otp();
@@ -118,6 +175,15 @@ final class BaileysRecordingTransport implements HttpTransportInterface
         $this->url = $url;
         $this->headers = $headers;
         $this->payload = $payload;
+        $this->timeoutSeconds = $timeoutSeconds;
+
+        return $this->response;
+    }
+
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        $this->url = $url;
+        $this->headers = $headers;
         $this->timeoutSeconds = $timeoutSeconds;
 
         return $this->response;
