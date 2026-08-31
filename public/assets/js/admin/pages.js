@@ -646,6 +646,67 @@
                 showError(errorMessage(error));
             }
         });
+
+        const refreshWaBtn = document.getElementById('btn-refresh-wa-status');
+        const refreshWaIcon = document.getElementById('icon-refresh-wa');
+        const waPrimaryStatus = document.getElementById('wa-primary-status');
+
+        if (refreshWaBtn && waPrimaryStatus) {
+            refreshWaBtn.addEventListener('click', async () => {
+                refreshWaBtn.disabled = true;
+                if (refreshWaIcon) refreshWaIcon.classList.add('animate-spin');
+
+                try {
+                    const response = await fetch('/admin/pengaturan/whatsapp/status', {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'same-origin',
+                    });
+                    const result = await response.json();
+                    const gw = result?.gateway || {};
+
+                    if (gw.connected) {
+                        const nameStr = gw.name ? ` (${gw.name})` : '';
+                        waPrimaryStatus.innerHTML = `
+                            <div class="flex items-center gap-2 text-success font-semibold">
+                                <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
+                                <span>WhatsApp Gateway Terhubung</span>
+                            </div>
+                            <p class="text-xs text-base-content/80 mt-1">
+                                No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
+                            </p>
+                        `;
+                    } else {
+                        const errorMsg = gw.error || 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.';
+                        const qrUrl = gw.qr_url || 'http://127.0.0.1:3001/qr';
+                        waPrimaryStatus.innerHTML = `
+                            <div class="flex items-center gap-2 text-error font-semibold">
+                                <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
+                                <span>WhatsApp Belum Terhubung</span>
+                            </div>
+                            <p class="text-xs text-base-content/80 mt-1">
+                                ${errorMsg}
+                            </p>
+                            <div class="pt-2">
+                                <a href="${qrUrl}" target="_blank" rel="noopener noreferrer"
+                                    class="btn btn-warning btn-xs gap-1.5 font-semibold">
+                                    <i data-lucide="qr-code" class="h-4 w-4"></i>
+                                    <span>Buka Scan QR Code</span>
+                                </a>
+                            </div>
+                        `;
+                    }
+
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                } catch (e) {
+                    console.error('Gagal memeriksa status WhatsApp:', e);
+                } finally {
+                    refreshWaBtn.disabled = false;
+                    if (refreshWaIcon) refreshWaIcon.classList.remove('animate-spin');
+                }
+            });
+        }
     }
 
     document.addEventListener('turbo:load', initSettingsPage);

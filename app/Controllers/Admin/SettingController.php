@@ -5,7 +5,9 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\Media\MediaUploadException;
 use App\Libraries\Media\PostChunkMediaUpload;
+use App\Libraries\Otp\Providers\BaileysProvider;
 use App\Models\SettingModel;
+use Config\Otp as OtpConfig;
 
 class SettingController extends BaseController
 {
@@ -18,7 +20,6 @@ class SettingController extends BaseController
         $settingModel = new SettingModel();
         $settings     = $settingModel->getAllAssoc();
 
-        // Pastikan semua key yang dibutuhkan view tersedia dengan default
         $defaults = [
             'tema_signage'       => 'dark',
             'running_text'       => '',
@@ -31,12 +32,18 @@ class SettingController extends BaseController
         $settings['running_text_aktif'] = (bool) $settings['running_text_aktif'];
         $uploadToken = $this->mediaUploadToken();
 
+        $otpConfig = new OtpConfig();
+        $baileysProvider = new BaileysProvider(config: $otpConfig);
+        $whatsappStatus = $baileysProvider->getStatus();
+
         return view('admin/pengaturan/index', [
             'pageTitle'        => 'Pengaturan Sistem',
             'settings'         => $settings,
             'mediaUploadToken' => $uploadToken,
             'mediaUploadMax'   => PostChunkMediaUpload::MAX_BYTES,
             'mediaChunkSize'   => PostChunkMediaUpload::CHUNK_BYTES,
+            'whatsapp'         => $whatsappStatus,
+            'otpConfig'        => $otpConfig,
         ]);
     }
 
@@ -368,4 +375,17 @@ class SettingController extends BaseController
         }
     }
 
+    public function whatsappStatus()
+    {
+        $otpConfig = new OtpConfig();
+        $provider = new BaileysProvider(config: $otpConfig);
+        $status = $provider->getStatus();
+
+        return $this->response->setJSON([
+            'status'     => 'success',
+            'provider'   => $otpConfig->provider,
+            'fallback'   => $otpConfig->fazpassFallbackEnabled,
+            'gateway'    => $status,
+        ]);
+    }
 }

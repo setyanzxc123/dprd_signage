@@ -110,6 +110,90 @@
         </div>
     </section>
 
+    <section class="card card-border min-w-0 max-w-full bg-base-100 shadow-sm" id="wa-integration-card">
+        <div class="card-body min-w-0 gap-5 p-4 sm:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="card-title text-base">
+                    <i data-lucide="message-square" class="h-5 w-5 text-primary"></i>
+                    Integrasi WhatsApp OTP Gateway
+                </h2>
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-outline badge-primary text-xs font-semibold" id="wa-provider-badge">
+                        Provider: <?= esc(strtoupper($otpConfig->provider ?? 'HYBRID')) ?>
+                    </span>
+                    <button type="button" class="btn btn-ghost btn-xs gap-1" id="btn-refresh-wa-status" title="Periksa status koneksi WhatsApp">
+                        <i data-lucide="refresh-cw" class="h-3.5 w-3.5" id="icon-refresh-wa"></i>
+                        <span>Cek Status</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2" id="wa-status-grid">
+                <div class="rounded-box border border-base-300 bg-base-200 p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider opacity-70">Jalur Primer (Lokal)</span>
+                        <span class="badge badge-sm badge-success font-bold">Biaya Rp 0</span>
+                    </div>
+                    <div id="wa-primary-status">
+                        <?php if (! empty($whatsapp['connected'])): ?>
+                            <div class="flex items-center gap-2 text-success font-semibold">
+                                <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
+                                <span>WhatsApp Gateway Terhubung</span>
+                            </div>
+                            <p class="text-xs text-base-content/80 mt-1">
+                                No. Pengirim: <strong>+<?= esc($whatsapp['phone'] ?? '-') ?></strong>
+                                <?php if (! empty($whatsapp['name'])): ?>
+                                    (<?= esc($whatsapp['name']) ?>)
+                                <?php endif; ?>
+                            </p>
+                        <?php else: ?>
+                            <div class="flex items-center gap-2 text-error font-semibold">
+                                <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
+                                <span>WhatsApp Belum Terhubung</span>
+                            </div>
+                            <p class="text-xs text-base-content/80 mt-1" id="wa-error-text">
+                                <?= esc($whatsapp['error'] ?? 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.') ?>
+                            </p>
+                            <div class="pt-2">
+                                <a href="<?= esc($whatsapp['qr_url'] ?? 'http://127.0.0.1:3001/qr') ?>" target="_blank" rel="noopener noreferrer"
+                                    class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn">
+                                    <i data-lucide="qr-code" class="h-4 w-4"></i>
+                                    <span>Buka Scan QR Code</span>
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="rounded-box border border-base-300 bg-base-200 p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider opacity-70">Jalur Cadangan (Cloud Fallback)</span>
+                        <span class="badge badge-sm badge-info font-bold">Fazpass API</span>
+                    </div>
+                    <div>
+                        <?php if (! empty($otpConfig->fazpassFallbackEnabled)): ?>
+                            <div class="flex items-center gap-2 text-info font-semibold">
+                                <i data-lucide="shield-check" class="h-5 w-5 shrink-0"></i>
+                                <span>Fallback Otomatis Aktif</span>
+                            </div>
+                            <p class="text-xs text-base-content/80 mt-1">
+                                Jika service Baileys mati atau terputus, sistem otomatis mengalihkan OTP ke Fazpass Cloud tanpa gangguan.
+                            </p>
+                        <?php else: ?>
+                            <div class="flex items-center gap-2 text-warning font-semibold">
+                                <i data-lucide="shield-alert" class="h-5 w-5 shrink-0"></i>
+                                <span>Fallback Nonaktif</span>
+                            </div>
+                            <p class="text-xs text-base-content/80 mt-1">
+                                Failover ke Fazpass dimatikan melalui konfigurasi FAZPASS_FALLBACK_ENABLED=false.
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="form-actions-sticky mt-5 flex flex-col gap-3 sm:items-end">
         <div class="alert alert-info w-full max-w-xl" id="settings-upload-progress" hidden aria-live="polite">
             <div class="w-full">
