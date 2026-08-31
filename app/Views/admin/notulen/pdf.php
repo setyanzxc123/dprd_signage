@@ -11,7 +11,7 @@
             font-family: "Times New Roman", Times, serif;
             color: #111;
             font-size: 11pt;
-            line-height: 1.55;
+            line-height: 1.5;
         }
         .doc-header {
             text-align: center;
