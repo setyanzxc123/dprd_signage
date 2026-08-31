@@ -59,7 +59,7 @@ final class BaileysProvider
                 'status'     => 'unconfigured',
                 'phone'      => null,
                 'name'       => null,
-                'qr_url'     => $this->endpoint('/qr'),
+                'qr_url'     => $this->endpoint('/qr/raw'),
                 'error'      => 'Baileys gateway belum dikonfigurasi.',
             ];
         }
@@ -78,7 +78,7 @@ final class BaileysProvider
                 'status'     => 'offline',
                 'phone'      => null,
                 'name'       => null,
-                'qr_url'     => $this->endpoint('/qr'),
+                'qr_url'     => $this->endpoint('/qr/raw'),
                 'error'      => $response->error ?? $this->error($payload),
             ];
         }
@@ -93,8 +93,96 @@ final class BaileysProvider
             'status'     => (string) ($data['status'] ?? ($connected ? 'connected' : 'disconnected')),
             'phone'      => $this->string($user['phone'] ?? null),
             'name'       => $this->string($user['name'] ?? null),
-            'qr_url'     => $this->endpoint('/qr'),
+            'qr_url'     => $this->endpoint('/qr/raw'),
             'error'      => null,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function getRawQr(): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'success'      => false,
+                'connected'    => false,
+                'qr_available' => false,
+                'qr_data_url'  => null,
+                'error'        => 'Baileys gateway belum dikonfigurasi.',
+            ];
+        }
+
+        $response = $this->transport->get(
+            $this->endpoint('/qr/raw'),
+            $this->headers(),
+            $this->config->baileysTimeoutSeconds,
+        );
+
+        $payload = $this->payload($response->body);
+        if ($response->error !== null || $payload === null || $response->statusCode >= 400) {
+            return [
+                'success'      => false,
+                'connected'    => false,
+                'qr_available' => false,
+                'qr_data_url'  => null,
+                'error'        => $response->error ?? $this->error($payload),
+            ];
+        }
+
+        return [
+            'success'      => ($payload['status'] ?? '') === 'success',
+            'connected'    => (bool) ($payload['connected'] ?? false),
+            'qr_available' => (bool) ($payload['qr_available'] ?? false),
+            'qr_data_url'  => $this->string($payload['qr_data_url'] ?? null),
+            'error'        => null,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function requestPairCode(string $phone): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'success'      => false,
+                'pairing_code' => null,
+                'phone'        => null,
+                'error'        => 'Baileys gateway belum dikonfigurasi.',
+            ];
+        }
+
+        $response = $this->transport->postJson(
+            $this->endpoint('/pair-code'),
+            $this->headers(),
+            ['phone' => $phone],
+            $this->config->baileysTimeoutSeconds,
+        );
+
+        $payload = $this->payload($response->body);
+        if ($response->error !== null || $payload === null || $response->statusCode >= 400) {
+            return [
+                'success'      => false,
+                'pairing_code' => null,
+                'phone'        => null,
+                'error'        => $response->error ?? $this->error($payload),
+            ];
+        }
+
+        $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
+        $pairingCode = $this->string($data['pairing_code'] ?? null);
+
+        if (($payload['status'] ?? '') !== 'success' || $pairingCode === null) {
+            return [
+                'success'      => false,
+                'pairing_code' => null,
+                'phone'        => null,
+                'error'        => $this->error($payload),
+            ];
+        }
+
+        return [
+            'success'      => true,
+            'pairing_code' => $pairingCode,
+            'phone'        => $this->string($data['phone'] ?? null),
+            'error'        => null,
         ];
     }
 

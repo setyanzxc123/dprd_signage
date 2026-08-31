@@ -85,6 +85,7 @@
 # FAZPASS_TIMEOUT_SECONDS = 15
 
 # OTP policy
+# OTP_PROVIDER = hybrid
 # OTP_TTL_SECONDS = 300
 # OTP_CHALLENGE_TTL_SECONDS = 900
 # OTP_RESEND_COOLDOWN_SECONDS = 60
@@ -93,6 +94,12 @@
 # OTP_MAX_REQUESTS_PER_IP = 20
 # OTP_MAX_VERIFICATION_ATTEMPTS = 5
 # OTP_CLEANUP_RETENTION_SECONDS = 86400
+
+# Hybrid OTP: Baileys gateway primer, Fazpass fallback
+# BAILEYS_API_URL = http://127.0.0.1:3001
+# BAILEYS_API_KEY = your_baileys_api_key_here
+# BAILEYS_TIMEOUT_SECONDS = 5
+# FAZPASS_FALLBACK_ENABLED = true
 
 #--------------------------------------------------------------------
 # GOOGLE GEMINI AI (Transkripsi & Risalah Rapat)

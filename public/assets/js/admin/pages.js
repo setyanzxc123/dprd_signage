@@ -650,12 +650,174 @@
         const refreshWaBtn = document.getElementById('btn-refresh-wa-status');
         const refreshWaIcon = document.getElementById('icon-refresh-wa');
         const waPrimaryStatus = document.getElementById('wa-primary-status');
+        const modalWaPairing = document.getElementById('modal_wa_pairing');
+        const waQrLoading = document.getElementById('wa-qr-loading');
+        const waQrImage = document.getElementById('wa-qr-image');
+        const waQrError = document.getElementById('wa-qr-error');
+        const btnReloadQr = document.getElementById('btn-reload-qr');
+        const inputPairPhone = document.getElementById('input-pair-phone');
+        const btnRequestPairCode = document.getElementById('btn-request-pair-code');
+        const spinnerPairCode = document.getElementById('spinner-pair-code');
+        const iconPairSend = document.getElementById('icon-pair-send');
+        const boxPairResult = document.getElementById('box-pair-result');
+        const textPairingCode = document.getElementById('text-pairing-code');
+        const boxPairError = document.getElementById('box-pair-error');
 
-        if (refreshWaBtn && waPrimaryStatus) {
+        let waPollInterval = null;
+
+        const stopWaPolling = () => {
+            if (waPollInterval) {
+                clearInterval(waPollInterval);
+                waPollInterval = null;
+            }
+        };
+
+        const startWaPolling = (intervalMs = 3000) => {
+            stopWaPolling();
+            waPollInterval = setInterval(async () => {
+                const isModalOpen = Boolean(modalWaPairing && modalWaPairing.open);
+                await checkWaStatus(isModalOpen);
+            }, intervalMs);
+        };
+
+        window.switchWaTab = (tab) => {
+            const tabQr = document.getElementById('tab-btn-qr');
+            const tabPair = document.getElementById('tab-btn-pair');
+            const panelQr = document.getElementById('panel-wa-qr');
+            const panelPair = document.getElementById('panel-wa-pair');
+
+            if (tab === 'qr') {
+                tabQr?.classList.add('tab-active');
+                tabPair?.classList.remove('tab-active');
+                if (panelQr) panelQr.hidden = false;
+                if (panelPair) panelPair.hidden = true;
+                loadWaQrCode();
+            } else {
+                tabPair?.classList.add('tab-active');
+                tabQr?.classList.remove('tab-active');
+                if (panelPair) panelPair.hidden = false;
+                if (panelQr) panelQr.hidden = true;
+            }
+        };
+
+        const loadWaQrCode = async () => {
+            if (!waQrImage || !waQrLoading) return;
+            waQrLoading.hidden = false;
+            waQrImage.hidden = true;
+            if (waQrError) waQrError.hidden = true;
+
+            try {
+                const response = await fetch('/admin/pengaturan/whatsapp/status', {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                });
+                const result = await response.json();
+                const gw = result?.gateway || {};
+                const qr = result?.qr || {};
+
+                if (gw.connected) {
+                    if (modalWaPairing && modalWaPairing.open) modalWaPairing.close();
+                    stopWaPolling();
+                    renderConnectedStatus(gw);
+                    return;
+                }
+
+                if (qr.qr_data_url) {
+                    waQrImage.src = qr.qr_data_url;
+                    waQrImage.hidden = false;
+                    waQrLoading.hidden = true;
+                } else {
+                    waQrLoading.hidden = true;
+                    if (waQrError) {
+                        waQrError.textContent = qr.error || gw.error || 'QR Code belum siap atau gateway sedang offline.';
+                        waQrError.hidden = false;
+                    }
+                }
+            } catch (e) {
+                waQrLoading.hidden = true;
+                if (waQrError) {
+                    waQrError.textContent = 'Gagal terhubung ke service WhatsApp Gateway.';
+                    waQrError.hidden = false;
+                }
+            }
+        };
+
+        const renderConnectedStatus = (gw) => {
+            if (!waPrimaryStatus) return;
+            const nameStr = gw.name ? ` (${gw.name})` : '';
+            waPrimaryStatus.innerHTML = `
+                <div class="flex items-center gap-2 text-success font-semibold">
+                    <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
+                    <span>WhatsApp Gateway Terhubung</span>
+                </div>
+                <p class="text-xs text-base-content/80 mt-1">
+                    No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
+                </p>
+            `;
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        };
+
+        const renderDisconnectedStatus = (errorMsg) => {
+            if (!waPrimaryStatus) return;
+            waPrimaryStatus.innerHTML = `
+                <div class="flex items-center gap-2 text-error font-semibold">
+                    <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
+                    <span>WhatsApp Belum Terhubung</span>
+                </div>
+                <p class="text-xs text-base-content/80 mt-1">
+                    ${errorMsg}
+                </p>
+                <div class="pt-2">
+                    <button type="button" class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn"
+                        onclick="document.getElementById('modal_wa_pairing').showModal(); window.switchWaTab('qr');">
+                        <i data-lucide="qr-code" class="h-4 w-4"></i>
+                        <span>Buka Scan QR / Pairing Code</span>
+                    </button>
+                </div>
+            `;
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        };
+
+        const checkWaStatus = async (updateQrIfModalOpen = false) => {
+            if (!waPrimaryStatus) return;
+
+            try {
+                const response = await fetch('/admin/pengaturan/whatsapp/status', {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                });
+                const result = await response.json();
+                const gw = result?.gateway || {};
+                const qr = result?.qr || {};
+
+                if (gw.connected) {
+                    if (modalWaPairing && modalWaPairing.open) modalWaPairing.close();
+                    stopWaPolling();
+                    renderConnectedStatus(gw);
+                    return;
+                }
+
+                if (updateQrIfModalOpen && modalWaPairing && modalWaPairing.open && qr.qr_data_url && waQrImage) {
+                    if (waQrImage.src !== qr.qr_data_url) {
+                        waQrImage.src = qr.qr_data_url;
+                    }
+                    waQrImage.hidden = false;
+                    if (waQrLoading) waQrLoading.hidden = true;
+                    if (waQrError) waQrError.hidden = true;
+                }
+            } catch (e) {
+                // Polling error silently handled
+            }
+        };
+
+        if (refreshWaBtn) {
             refreshWaBtn.addEventListener('click', async () => {
                 refreshWaBtn.disabled = true;
                 if (refreshWaIcon) refreshWaIcon.classList.add('animate-spin');
-
                 try {
                     const response = await fetch('/admin/pengaturan/whatsapp/status', {
                         headers: { Accept: 'application/json' },
@@ -663,50 +825,103 @@
                     });
                     const result = await response.json();
                     const gw = result?.gateway || {};
-
                     if (gw.connected) {
-                        const nameStr = gw.name ? ` (${gw.name})` : '';
-                        waPrimaryStatus.innerHTML = `
-                            <div class="flex items-center gap-2 text-success font-semibold">
-                                <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
-                                <span>WhatsApp Gateway Terhubung</span>
-                            </div>
-                            <p class="text-xs text-base-content/80 mt-1">
-                                No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
-                            </p>
-                        `;
+                        stopWaPolling();
+                        renderConnectedStatus(gw);
                     } else {
-                        const errorMsg = gw.error || 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.';
-                        const qrUrl = gw.qr_url || 'http://127.0.0.1:3001/qr';
-                        waPrimaryStatus.innerHTML = `
-                            <div class="flex items-center gap-2 text-error font-semibold">
-                                <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
-                                <span>WhatsApp Belum Terhubung</span>
-                            </div>
-                            <p class="text-xs text-base-content/80 mt-1">
-                                ${errorMsg}
-                            </p>
-                            <div class="pt-2">
-                                <a href="${qrUrl}" target="_blank" rel="noopener noreferrer"
-                                    class="btn btn-warning btn-xs gap-1.5 font-semibold">
-                                    <i data-lucide="qr-code" class="h-4 w-4"></i>
-                                    <span>Buka Scan QR Code</span>
-                                </a>
-                            </div>
-                        `;
-                    }
-
-                    if (window.lucide) {
-                        window.lucide.createIcons();
+                        renderDisconnectedStatus(gw.error || 'Gateway belum terhubung. Silakan scan QR Code.');
+                        startWaPolling(4000);
                     }
                 } catch (e) {
-                    console.error('Gagal memeriksa status WhatsApp:', e);
+                    renderDisconnectedStatus('Gagal terhubung ke service WhatsApp Gateway.');
                 } finally {
                     refreshWaBtn.disabled = false;
                     if (refreshWaIcon) refreshWaIcon.classList.remove('animate-spin');
                 }
             });
         }
+
+        if (btnReloadQr) {
+            btnReloadQr.addEventListener('click', loadWaQrCode);
+        }
+
+        const waQrBtn = document.getElementById('wa-qr-btn');
+        if (waQrBtn) {
+            waQrBtn.addEventListener('click', () => {
+                loadWaQrCode();
+                startWaPolling(2500);
+            });
+        }
+
+        if (modalWaPairing) {
+            modalWaPairing.addEventListener('close', () => {
+                stopWaPolling();
+            });
+        }
+
+        if (btnRequestPairCode && inputPairPhone) {
+            btnRequestPairCode.addEventListener('click', async () => {
+                const phone = inputPairPhone.value.trim();
+                if (!phone) {
+                    if (boxPairError) {
+                        boxPairError.textContent = 'Nomor WhatsApp wajib diisi.';
+                        boxPairError.hidden = false;
+                    }
+                    return;
+                }
+
+                btnRequestPairCode.disabled = true;
+                if (spinnerPairCode) spinnerPairCode.hidden = false;
+                if (iconPairSend) iconPairSend.hidden = true;
+                if (boxPairError) boxPairError.hidden = true;
+                if (boxPairResult) boxPairResult.hidden = true;
+
+                try {
+                    const csrfInput = form.querySelector('input[name="<?= csrf_token() ?>"]') || document.querySelector('input[name="csrf_test_name"]');
+                    const csrfName = csrfInput ? csrfInput.name : 'csrf_test_name';
+                    const csrfHash = csrfInput ? csrfInput.value : '';
+
+                    const formData = new FormData();
+                    formData.append('phone', phone);
+                    if (csrfName && csrfHash) formData.append(csrfName, csrfHash);
+
+                    const response = await fetch('/admin/pengaturan/whatsapp/pair-code', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || data.status !== 'success') {
+                        throw new Error(data.message || 'Gagal mendapatkan Pairing Code.');
+                    }
+
+                    if (textPairingCode) textPairingCode.textContent = data.pairing_code;
+                    if (boxPairResult) boxPairResult.hidden = false;
+
+                    // Mulai polling cepat mendeteksi saat user menginput kode di WhatsApp HP
+                    startWaPolling(2000);
+                } catch (err) {
+                    if (boxPairError) {
+                        boxPairError.textContent = err.message || 'Terjadi kesalahan sistem.';
+                        boxPairError.hidden = false;
+                    }
+                } finally {
+                    btnRequestPairCode.disabled = false;
+                    if (spinnerPairCode) spinnerPairCode.hidden = true;
+                    if (iconPairSend) iconPairSend.hidden = false;
+                }
+            });
+        }
+
+        // Jika gateway terdeteksi belum terhubung saat buka halaman, jalankan gentle polling
+        const isCurrentlyConnected = document.getElementById('wa-integration-card')?.dataset.connected === '1';
+        if (!isCurrentlyConnected) {
+            startWaPolling(4000);
+        }
+
+        document.addEventListener('turbo:before-cache', stopWaPolling, { once: true });
+        document.addEventListener('turbo:before-visit', stopWaPolling, { once: true });
     }
 
     document.addEventListener('turbo:load', initSettingsPage);

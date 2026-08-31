@@ -381,11 +381,45 @@ class SettingController extends BaseController
         $provider = new BaileysProvider(config: $otpConfig);
         $status = $provider->getStatus();
 
+        $qrData = null;
+        if (! $status['connected']) {
+            $qrData = $provider->getRawQr();
+        }
+
         return $this->response->setJSON([
             'status'     => 'success',
             'provider'   => $otpConfig->provider,
             'fallback'   => $otpConfig->fazpassFallbackEnabled,
             'gateway'    => $status,
+            'qr'         => $qrData,
+        ]);
+    }
+
+    public function whatsappPairCode()
+    {
+        $phone = trim((string) $this->request->getPost('phone'));
+        if ($phone === '') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status'  => 'error',
+                'message' => 'Nomor WhatsApp wajib diisi.',
+            ]);
+        }
+
+        $otpConfig = new OtpConfig();
+        $provider = new BaileysProvider(config: $otpConfig);
+        $result = $provider->requestPairCode($phone);
+
+        if (! $result['success']) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status'  => 'error',
+                'message' => $result['error'] ?? 'Gagal membuat Pairing Code.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status'       => 'success',
+            'pairing_code' => $result['pairing_code'],
+            'phone'        => $result['phone'],
         ]);
     }
 }

@@ -110,7 +110,8 @@
         </div>
     </section>
 
-    <section class="card card-border min-w-0 max-w-full bg-base-100 shadow-sm" id="wa-integration-card">
+    <section class="card card-border min-w-0 max-w-full bg-base-100 shadow-sm" id="wa-integration-card"
+        data-connected="<?= ! empty($whatsapp['connected']) ? '1' : '0' ?>">
         <div class="card-body min-w-0 gap-5 p-4 sm:p-5">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="card-title text-base">
@@ -155,11 +156,11 @@
                                 <?= esc($whatsapp['error'] ?? 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.') ?>
                             </p>
                             <div class="pt-2">
-                                <a href="<?= esc($whatsapp['qr_url'] ?? 'http://127.0.0.1:3001/qr') ?>" target="_blank" rel="noopener noreferrer"
-                                    class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn">
+                                <button type="button" class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn"
+                                    onclick="document.getElementById('modal_wa_pairing').showModal()">
                                     <i data-lucide="qr-code" class="h-4 w-4"></i>
-                                    <span>Buka Scan QR Code</span>
-                                </a>
+                                    <span>Buka Scan QR / Pairing Code</span>
+                                </button>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -216,5 +217,87 @@
         </button>
     </div>
 </form>
+
+<!-- Modal Penautan WhatsApp Gateway (QR Code & Pairing Code) -->
+<dialog id="modal_wa_pairing" class="modal">
+    <div class="modal-box w-full max-w-md space-y-4">
+        <div class="flex items-center justify-between gap-3 border-b border-base-300 pb-3">
+            <h3 class="text-base font-bold flex items-center gap-2">
+                <i data-lucide="smartphone" class="h-5 w-5 text-primary"></i>
+                Tautkan WhatsApp Gateway
+            </h3>
+            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="document.getElementById('modal_wa_pairing').close()">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        </div>
+
+        <div class="tabs tabs-boxed bg-base-200 p-1 grid grid-cols-2">
+            <button type="button" class="tab tab-active font-semibold text-xs" id="tab-btn-qr" onclick="switchWaTab('qr')">
+                <i data-lucide="qr-code" class="h-3.5 w-3.5 mr-1.5"></i> Scan QR Code
+            </button>
+            <button type="button" class="tab font-semibold text-xs" id="tab-btn-pair" onclick="switchWaTab('pair')">
+                <i data-lucide="key-round" class="h-3.5 w-3.5 mr-1.5"></i> Pairing Code (8 Digit)
+            </button>
+        </div>
+
+        <!-- Panel 1: Scan QR Code -->
+        <div id="panel-wa-qr" class="space-y-3">
+            <div class="text-xs text-base-content/70">
+                Buka WhatsApp di HP $\rightarrow$ <strong>Perangkat Tertaut</strong> $\rightarrow$ <strong>Tautkan Perangkat</strong> $\rightarrow$ scan kode berikut:
+            </div>
+
+            <div class="flex flex-col items-center justify-center p-4 bg-base-200 rounded-box min-h-56">
+                <div id="wa-qr-loading" class="flex flex-col items-center gap-2">
+                    <span class="loading loading-spinner loading-md text-primary"></span>
+                    <span class="text-xs font-semibold opacity-70">Mengambil QR Code dari Gateway...</span>
+                </div>
+                <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="max-w-48 max-h-48 rounded-lg shadow-sm bg-white p-2" hidden />
+                <div id="wa-qr-error" class="alert alert-warning text-xs mt-2" hidden></div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2">
+                <span class="text-xs opacity-60 flex items-center gap-1" id="wa-qr-timer">
+                    <i data-lucide="clock" class="h-3 w-3"></i> Auto-refresh tiap 15 detik
+                </span>
+                <button type="button" class="btn btn-outline btn-xs gap-1" id="btn-reload-qr">
+                    <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i> Muat Ulang QR
+                </button>
+            </div>
+        </div>
+
+        <!-- Panel 2: Pairing Code -->
+        <div id="panel-wa-pair" class="space-y-3" hidden>
+            <div class="text-xs text-base-content/70">
+                Masukkan nomor WhatsApp resmi DPRD (contoh: <code>08123456789</code> atau <code>628123456789</code>) untuk menerima 8 digit kode pairing:
+            </div>
+
+            <div class="space-y-2">
+                <input type="tel" id="input-pair-phone" class="input input-bordered input-sm w-full font-mono"
+                    placeholder="Contoh: 081234567890" />
+                <button type="button" class="btn btn-primary btn-sm w-full gap-1.5 font-semibold" id="btn-request-pair-code">
+                    <span class="loading loading-spinner loading-xs" id="spinner-pair-code" hidden></span>
+                    <i data-lucide="send" class="h-4 w-4" id="icon-pair-send"></i>
+                    <span>Dapatkan Pairing Code</span>
+                </button>
+            </div>
+
+            <div id="box-pair-result" class="p-4 bg-primary/10 border border-primary/30 rounded-box text-center space-y-2" hidden>
+                <div class="text-xs font-bold uppercase tracking-wider text-primary">Kode Pairing Anda</div>
+                <div class="text-2xl font-black font-mono tracking-widest text-primary select-all" id="text-pairing-code">-</div>
+                <p class="text-xs text-base-content/80">
+                    Buka WhatsApp di HP $\rightarrow$ <strong>Perangkat Tertaut</strong> $\rightarrow$ <strong>Tautkan dengan nomor telepon</strong> $\rightarrow$ masukkan kode di atas.
+                </p>
+            </div>
+
+            <div id="box-pair-error" class="alert alert-error text-xs" hidden></div>
+        </div>
+
+        <div class="modal-action border-t border-base-300 pt-3">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal_wa_pairing').close()">
+                Tutup
+            </button>
+        </div>
+    </div>
+</dialog>
 
 <?= $this->endSection() ?>
