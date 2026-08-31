@@ -45,10 +45,15 @@
             color: #333;
         }
         .naskah {
-            text-align: left;
-            white-space: pre-wrap;
-            overflow-wrap: break-word;
-            word-break: break-word;
+            text-align: justify;
+            overflow-wrap: anywhere;
+        }
+        .naskah .line {
+            margin: 0;
+        }
+        .naskah .gap {
+            margin: 0;
+            height: 1.5em;
         }
     </style>
 </head>
@@ -61,13 +66,29 @@
     </div>
 
     <div class="naskah"><?php
-        foreach (preg_split('/\n/', (string) $minutes['ringkasan_eksekutif']) as $line) {
-            if (preg_match('/^\s*(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+\S/i', $line)) {
-                echo '<strong>' . esc($line) . '</strong>';
-            } else {
-                echo esc($line);
+        foreach (preg_split('/\n/', (string) $minutes['ringkasan_eksekutif']) as $rawLine) {
+            $line   = rtrim(str_replace("\t", '    ', $rawLine));
+            $core   = ltrim($line, ' ');
+            $indent = min(strlen($line) - strlen($core), 8);
+            $core   = preg_replace('/ {2,}/', ' ', $core) ?? $core;
+            $core   = implode(' ', array_map(
+                static fn (string $token): string => strlen($token) > 30
+                    ? implode("\u{00AD}", mb_str_split($token, 25))
+                    : $token,
+                explode(' ', $core),
+            ));
+            $line = str_repeat("\u{00A0}", $indent) . $core;
+
+            if ($core === '') {
+                echo '<div class="gap"></div>';
+                continue;
             }
-            echo "\n";
+
+            if (preg_match('/^(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+\S/i', $core)) {
+                echo '<div class="line"><strong>' . esc($line) . '</strong></div>';
+            } else {
+                echo '<div class="line">' . esc($line) . '</div>';
+            }
         }
     ?></div>
 </body>
