@@ -140,3 +140,4 @@ dprd_signage.sql
 googleai_studio_docs/
 js_genai_docs/
 features_list.json
+writable/worker.lock
