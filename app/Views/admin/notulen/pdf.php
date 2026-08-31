@@ -8,7 +8,7 @@
             margin: 20mm 18mm;
         }
         body {
-            font-family: "DejaVu Sans", sans-serif;
+            font-family: "Times New Roman", Times, serif;
             color: #111;
             font-size: 11pt;
             line-height: 1.55;
@@ -60,6 +60,15 @@
         <p class="metadata">Hari/Tanggal: <strong><?= esc($tanggalRapat) ?></strong> &nbsp;|&nbsp; Waktu: <strong><?= esc($waktuMulai) ?></strong></p>
     </div>
 
-    <div class="naskah"><?= esc($minutes['ringkasan_eksekutif']) ?></div>
+    <div class="naskah"><?php
+        foreach (preg_split('/\n/', (string) $minutes['ringkasan_eksekutif']) as $line) {
+            if (preg_match('/^\s*(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+\S/i', $line)) {
+                echo '<strong>' . esc($line) . '</strong>';
+            } else {
+                echo esc($line);
+            }
+            echo "\n";
+        }
+    ?></div>
 </body>
 </html>
