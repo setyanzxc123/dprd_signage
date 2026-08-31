@@ -106,7 +106,7 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertSame('connected', $status['status']);
         $this->assertSame('628123456789', $status['phone']);
         $this->assertSame('Humas DPRD', $status['name']);
-        $this->assertSame('http://127.0.0.1:3001/qr', $status['qr_url']);
+        $this->assertSame('http://127.0.0.1:3001/qr/raw', $status['qr_url']);
         $this->assertNull($status['error']);
         $this->assertSame('http://127.0.0.1:3001/status', $transport->url);
     }
@@ -122,7 +122,7 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertFalse($status['connected']);
         $this->assertSame('offline', $status['status']);
         $this->assertNull($status['phone']);
-        $this->assertSame('http://127.0.0.1:3001/qr', $status['qr_url']);
+        $this->assertSame('http://127.0.0.1:3001/qr/raw', $status['qr_url']);
         $this->assertStringContainsString('Connection refused', (string) $status['error']);
     }
 
@@ -138,7 +138,47 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertFalse($status['configured']);
         $this->assertFalse($status['connected']);
         $this->assertSame('unconfigured', $status['status']);
+        $this->assertSame('http://127.0.0.1:3001/qr/raw', $status['qr_url']);
         $this->assertStringContainsString('belum dikonfigurasi', (string) $status['error']);
+    }
+
+    public function testGetRawQrReturnsDataUrlWhenAvailable(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status'       => 'success',
+            'connected'    => false,
+            'qr_available' => true,
+            'qr_data_url'  => 'data:image/png;base64,iVBORw0KGgo...',
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->getRawQr();
+
+        $this->assertTrue($result['success']);
+        $this->assertFalse($result['connected']);
+        $this->assertTrue($result['qr_available']);
+        $this->assertSame('data:image/png;base64,iVBORw0KGgo...', $result['qr_data_url']);
+        $this->assertSame('http://127.0.0.1:3001/qr/raw', $transport->url);
+    }
+
+    public function testRequestPairCodeReturnsEightDigitCode(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status' => 'success',
+            'data'   => [
+                'phone'        => '628123456789',
+                'pairing_code' => '1234-ABCD',
+            ],
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->requestPairCode('08123456789');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('1234-ABCD', $result['pairing_code']);
+        $this->assertSame('628123456789', $result['phone']);
+        $this->assertSame('http://127.0.0.1:3001/pair-code', $transport->url);
+        $this->assertSame(['phone' => '08123456789'], $transport->payload);
     }
 
     private function config(): Otp

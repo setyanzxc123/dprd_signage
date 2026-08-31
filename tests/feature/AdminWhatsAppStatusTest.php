@@ -79,6 +79,32 @@ final class AdminWhatsAppStatusTest extends CIUnitTestCase
         $response->assertSee('Jalur Primer (Lokal)');
         $response->assertSee('Jalur Cadangan (Cloud Fallback)');
         $response->assertSee('btn-refresh-wa-status');
+        $response->assertSee('modal_wa_pairing');
+    }
+
+    public function testWhatsAppPairCodeRequiresAdminSession(): void
+    {
+        $response = $this->post('/admin/pengaturan/whatsapp/pair-code', [
+            csrf_token() => csrf_hash(),
+            'phone'      => '08123456789',
+        ]);
+        $response->assertRedirectTo(base_url('login?akses=admin'));
+    }
+
+    public function testWhatsAppPairCodeValidatesEmptyPhone(): void
+    {
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->post('/admin/pengaturan/whatsapp/pair-code', [
+                csrf_token() => csrf_hash(),
+                'phone'      => '',
+            ]);
+
+        $response->assertStatus(422);
+        $body = (string) $response->getJSON();
+        $payload = json_decode($body, true);
+        $this->assertSame('error', $payload['status'] ?? null);
+        $this->assertStringContainsString('wajib diisi', (string) ($payload['message'] ?? ''));
     }
 
     /** @return array<string, mixed> */

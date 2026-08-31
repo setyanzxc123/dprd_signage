@@ -193,7 +193,7 @@ final class ApiAuthTest extends CIUnitTestCase
         // Hanya nomor anggota aktif yang benar-benar menempuh alur OTP.
         $otp = $this->apiDb->table('member_otps')->where('anggota_id', $this->linkedAnggotaId)->get()->getRowArray();
         $this->assertNotNull($otp);
-        $this->assertSame('fazpass', $otp['provider']);
+        $this->assertSame('baileys', $otp['provider']);
         $this->assertSame(1, $this->apiDb->table('member_otps')->countAllResults());
     }
 
