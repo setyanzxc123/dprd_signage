@@ -110,6 +110,25 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     // Workspace Seluruh Agenda (Fase 5)
     $routes->get('kalender', 'Admin\AgendaWorkspaceController::kalender');
 
+    // Modul Notulensi & Risalah AI
+    $routes->get( 'notulen',                            'Admin\NotulenController::index');
+    $routes->get( 'notulen/(:num)',                     'Admin\NotulenController::show/$1');
+    $routes->post('notulen/upload',                     'Admin\NotulenController::upload');
+    $routes->post('notulen/audio-upload/start',         'Admin\NotulenController::startAudioUpload');
+    $routes->post('notulen/audio-upload/chunk',         'Admin\NotulenController::appendAudioChunk');
+    $routes->post('notulen/audio-upload/cancel',        'Admin\NotulenController::cancelAudioUpload');
+    $routes->get( 'notulen/status/(:num)',              'Admin\NotulenController::status/$1');
+    $routes->get( 'notulen/audio/(:num)',               'Admin\NotulenController::audio/$1');
+    $routes->post('notulen/retry/(:num)',               'Admin\NotulenController::retry/$1');
+    $routes->post('notulen/cancel/(:num)',              'Admin\NotulenController::cancel/$1');
+    $routes->post('notulen/delete-audio/(:num)',        'Admin\NotulenController::deleteRecording/$1');
+    $routes->post('notulen/destroy/(:num)',             'Admin\NotulenController::destroy/$1');
+    $routes->get( 'notulen/download-transcript/(:num)', 'Admin\NotulenController::downloadTranscript/$1');
+    $routes->post('notulen/update-minutes/(:num)',      'Admin\NotulenController::updateMinutes/$1');
+    $routes->post('notulen/finalize/(:num)',            'Admin\NotulenController::finalizeMinutes/$1');
+    $routes->post('notulen/unfinalize/(:num)',          'Admin\NotulenController::unfinalizeMinutes/$1');
+    $routes->get( 'notulen/export-pdf/(:num)',          'Admin\NotulenController::exportPdf/$1');
+
     // Pengaturan Signage
     $routes->get( 'pengaturan',              'Admin\SettingController::index');
     $routes->post('pengaturan/save',         'Admin\SettingController::save');
@@ -144,6 +163,7 @@ $routes->group('api/v1/anggota', ['filter' => ['cors', 'memberapi']], function (
 $routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'memberapi']], static function ($routes) {
     $routes->get('(:segment)/(:num)/(materi|stream)', 'ScheduleResourceController::resolve/$1/$2/$3');
     $routes->get('(:segment)/(:num)/undangan', 'ScheduleDocumentController::undangan/$1/$2');
+    $routes->get('(:segment)/(:num)/risalah', 'ScheduleMinutesController::show/$1/$2');
 });
 
 // ── API v1 Dokumen SK banmus (publik bila is_publik, selain itu anggota) ──
@@ -164,6 +184,23 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->get('admin/profil', 'AdminProfileController::index');
     $routes->put('admin/profil', 'AdminProfileController::update');
     $routes->patch('admin/profil', 'AdminProfileController::update');
+
+    $routes->get('notulen/jobs',                  'NotulenController::index');
+    $routes->get('notulen/jobs/(:num)',           'NotulenController::show/$1');
+    $routes->get('notulen/jobs/(:num)/transkrip', 'NotulenController::transkrip/$1');
+    $routes->get('notulen/jobs/(:num)/audio',     'NotulenController::audio/$1');
+    $routes->post('notulen/jobs/(:num)/cancel',   'NotulenController::cancel/$1');
+    $routes->post('notulen/jobs/(:num)/retry',    'NotulenController::retry/$1');
+    $routes->delete('notulen/jobs/(:num)',        'NotulenController::delete/$1');
+    $routes->delete('notulen/jobs/(:num)/rekaman', 'NotulenController::purgeRecording/$1');
+    $routes->get('notulen/risalah/(:num)',               'NotulenController::showMinutes/$1');
+    $routes->put('notulen/risalah/(:num)',               'NotulenController::updateMinutes/$1');
+    $routes->post('notulen/risalah/(:num)/finalisasi',   'NotulenController::finalizeMinutes/$1');
+    $routes->post('notulen/risalah/(:num)/unfinalisasi', 'NotulenController::unfinalizeMinutes/$1');
+    $routes->post('notulen/upload/start',  'NotulenController::uploadStart');
+    $routes->post('notulen/upload/chunk',  'NotulenController::uploadChunk');
+    $routes->post('notulen/upload/cancel', 'NotulenController::uploadCancel');
+    $routes->post('notulen/upload/commit', 'NotulenController::uploadCommit');
 
     $routes->get('ruangan',            'RuanganController::index');
     $routes->get('ruangan/(:num)',     'RuanganController::show/$1');

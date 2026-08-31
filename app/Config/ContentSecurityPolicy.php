@@ -65,10 +65,12 @@ class ContentSecurityPolicy extends BaseConfig
 
     /**
      * Specifies valid sources for JavaScript <script> elements.
+     * 'nonce' is required so that inline <script {csp-script-nonce}> blocks
+     * (e.g. the notulen upload modal) are permitted when CSP is active.
      *
      * @var list<string>|string
      */
-    public array|string $scriptSrcElem = 'self';
+    public array|string $scriptSrcElem = ['self', 'nonce'];
 
     /**
      * Specifies valid sources for JavaScript inline event

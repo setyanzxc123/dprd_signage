@@ -41,6 +41,7 @@ class CurrentSystemDataSeeder extends Seeder
             $this->seedBanmusDocuments();
             $this->seedGeneralSchedules();
             $this->seedExternalGeneralSchedules();
+            $this->seedNotulenAndMinutes();
 
             if ($this->db->transStatus() === false) {
                 throw new RuntimeException('Database menolak sebagian data seeder.');
@@ -72,6 +73,8 @@ class CurrentSystemDataSeeder extends Seeder
     private function resettableTables(): array
     {
         return [
+            'meeting_minutes',
+            'meeting_transcription_jobs',
             'member_otps',
             'jadwal_banmus_unit_rapat',
             'jadwal_umum_unit_rapat',
@@ -121,6 +124,8 @@ class CurrentSystemDataSeeder extends Seeder
             'jadwal_banmus_unit_rapat',
             'jadwal_umum',
             'jadwal_umum_unit_rapat',
+            'meeting_transcription_jobs',
+            'meeting_minutes',
         ];
     }
 
@@ -146,6 +151,12 @@ class CurrentSystemDataSeeder extends Seeder
                 'lokasi_lainnya', 'pihak_eksternal', 'is_publik',
                 'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
                 'undangan_file', 'undangan_nama_asli',
+            ],
+            'meeting_transcription_jobs' => [
+                'jadwal_type', 'audio_filename', 'status', 'progress_percent',
+            ],
+            'meeting_minutes' => [
+                'job_id', 'ringkasan_eksekutif', 'status_verifikasi',
             ],
         ];
     }
@@ -1704,6 +1715,129 @@ class CurrentSystemDataSeeder extends Seeder
             'created_at' => $now,
             'updated_at' => $now,
         ];
+    }
+
+    private function seedNotulenAndMinutes(): void
+    {
+        $now = date('Y-m-d H:i:s');
+
+        // Ambil ID contoh dari jadwal yang sudah di-seed
+        $generalSchedule = $this->db->table('jadwal_umum')->orderBy('id', 'ASC')->get(1)->getRowArray();
+        $banmusItem = $this->db->table('jadwal_banmus')->orderBy('id', 'ASC')->get(1)->getRowArray();
+
+        $generalScheduleId = $generalSchedule ? (int) $generalSchedule['id'] : null;
+        $banmusItemId = $banmusItem ? (int) $banmusItem['id'] : null;
+
+        // 1. Job Selesai dengan Risalah Final
+        $this->db->table('meeting_transcription_jobs')->insert([
+            'jadwal_type'      => 'umum',
+            'jadwal_id'        => $generalScheduleId,
+            'audio_filename'   => 'rekaman_rdp_komisi_1.mp3',
+            'audio_path'       => 'recordings/job_1/audio/original.mp3',
+            'audio_size'       => 28450000,
+            'audio_duration'   => 3540,
+            'status'           => 'completed',
+            'progress_percent' => 100,
+            'current_step'     => 'Selesai: Transkrip dan draft risalah siap ditinjau.',
+            'total_chunks'     => 2,
+            'completed_chunks' => 2,
+            'cancel_requested' => 0,
+            'ai_model'         => 'gemini-3.5-flash',
+            'created_at'       => $now,
+            'updated_at'       => $now,
+        ]);
+        $job1Id = (int) $this->db->insertID();
+
+        $this->db->table('meeting_minutes')->insert([
+            'job_id'              => $job1Id,
+            'transcripts_dir'     => "recordings/job_{$job1Id}/transcripts",
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nKomisi I DPRD Provinsi Sulawesi Tengah menggelar Rapat Dengar Pendapat (RDP) bersama mitra kerja perangkat daerah terkait evaluasi standar operasional pelayanan publik dan digitalisasi birokrasi. Rapat menghasilkan beberapa poin kesepakatan percepatan implementasi SPBE terintegrasi di seluruh kabupaten/kota se-Sulawesi Tengah serta komitmen peningkatan transparansi anggaran.\n\nII. POIN-POIN PEMBAHASAN\n- 00:15:20 | Evaluasi Kepatuhan Standar Pelayanan Publik: Komisi I menyoroti pentingnya kepatuhan terhadap standar pelayanan Ombudsman dan penguatan kanal pengaduan masyarakat.\n- 00:45:10 | Integrasi Sistem Pemerintahan Berbasis Elektronik (SPBE): Dinas Kominfo memaparkan progres integrasi portal layanan satu pintu dan penguatan infrastruktur jaringan di daerah terluar.\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n- Komisi I mengapresiasi capaian indeks SPBE dan meminta penuntasan titik blankspot di wilayah kepulauan.\n- Disepakati pembentukan tim asistensi bersama untuk pengawasan berkala triwulanan.\n- Dinas Kominfo menyampaikan laporan berkala progres integrasi server selambat-lambatnya 14 hari kerja.",
+            'status_verifikasi'   => 'final',
+            'verified_by'         => 1,
+            'verified_at'         => $now,
+            'created_at'          => $now,
+            'updated_at'          => $now,
+        ]);
+
+        // Buat file transkrip contoh di folder writable agar tampilan accordion show.php terisi
+        $transcriptsDir = WRITEPATH . "uploads/recordings/job_{$job1Id}/transcripts";
+        if (! is_dir($transcriptsDir)) {
+            mkdir($transcriptsDir, 0777, true);
+        }
+        file_put_contents(
+            $transcriptsDir . '/chunk_001.txt',
+            "[Pimpinan Sidang]: Rapat Dengar Pendapat Komisi I DPRD Provinsi Sulawesi Tengah resmi dibuka. Hari ini agenda kita mengevaluasi standar operasional pelayanan publik triwulan berjalan.\n\n[Kepala Dinas]: Terima kasih pimpinan. Kami laporkan bahwa integrasi sistem SPBE telah menjangkau 85% OPD dan siap ditingkatkan."
+        );
+        file_put_contents(
+            $transcriptsDir . '/chunk_002.txt',
+            "[Anggota Komisi I]: Mengenai wilayah blankspot di kepulauan, bagaimana langkah konkret penyediaannya pada APBD tahun berjalan?\n\n[Kepala Dinas]: Kami mengalokasikan pembangunan tower BTS perbatasan bersama BAKTI Kominfo tahun ini.\n\n[Pimpinan Sidang]: Baik, kita sepakati poin ini masuk dalam kesimpulan dan rekomendasi tindak lanjut rapat."
+        );
+
+        // 2. Job Selesai dengan Risalah Draft
+        $this->db->table('meeting_transcription_jobs')->insert([
+            'jadwal_type'      => 'banmus',
+            'jadwal_id'        => $banmusItemId,
+            'audio_filename'   => 'sidang_banmus_penetapan_agenda.mp3',
+            'audio_path'       => 'recordings/job_2/audio/original.mp3',
+            'audio_size'       => 14200000,
+            'audio_duration'   => 1780,
+            'status'           => 'completed',
+            'progress_percent' => 100,
+            'current_step'     => 'Selesai: Transkrip dan draft risalah siap ditinjau.',
+            'total_chunks'     => 1,
+            'completed_chunks' => 1,
+            'cancel_requested' => 0,
+            'ai_model'         => 'gemini-3.5-flash-lite',
+            'created_at'       => $now,
+            'updated_at'       => $now,
+        ]);
+        $job2Id = (int) $this->db->insertID();
+
+        $this->db->table('meeting_minutes')->insert([
+            'job_id'              => $job2Id,
+            'transcripts_dir'     => "recordings/job_{$job2Id}/transcripts",
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nBadan Musyawarah DPRD Provinsi Sulawesi Tengah melaksanakan rapat penetapan jadwal masa persidangan ketiga tahun sidang 2026. Agenda mencakup penetapan tanggal rapat paripurna pembukaan masa sidang dan penyusunan jadwal kunjungan kerja komisi.\n\nII. POIN-POIN PEMBAHASAN\n1. Jadwal Paripurna Pembukaan Masa Sidang III (Pimpinan Badan Musyawarah): Penyelarasan jadwal dengan agenda pimpinan daerah dan keprotokolan.\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Jadwal masa persidangan disahkan untuk diedarkan kepada seluruh fraksi dan anggota dewan.\n2. Sekretariat dewan menerbitkan surat edaran jadwal resmi.",
+            'status_verifikasi'   => 'draft',
+            'created_at'          => $now,
+            'updated_at'          => $now,
+        ]);
+
+        // 3. Job Contoh Dibatalkan (Cancelled)
+        $this->db->table('meeting_transcription_jobs')->insert([
+            'jadwal_type'      => 'umum',
+            'jadwal_id'        => null,
+            'audio_filename'   => 'audiensi_asosiasi_petani.mp3',
+            'audio_path'       => 'recordings/job_3/audio/original.mp3',
+            'audio_size'       => 42000000,
+            'audio_duration'   => 5300,
+            'status'           => 'cancelled',
+            'progress_percent' => 30,
+            'current_step'     => 'Dibatalkan oleh operator (contoh data)',
+            'total_chunks'     => 3,
+            'completed_chunks' => 1,
+            'cancel_requested' => 0,
+            'created_at'       => $now,
+            'updated_at'       => $now,
+        ]);
+
+        // 4. Job Contoh Gagal (Failed)
+        $this->db->table('meeting_transcription_jobs')->insert([
+            'jadwal_type'      => 'umum',
+            'jadwal_id'        => null,
+            'audio_filename'   => 'rapat_koordinasi_pimpinan_fraksi.mp3',
+            'audio_path'       => 'recordings/job_4/audio/original.mp3',
+            'audio_size'       => 21000000,
+            'audio_duration'   => 2600,
+            'status'           => 'failed',
+            'progress_percent' => 10,
+            'current_step'     => 'Gagal: Format audio tidak dikenali (contoh data)',
+            'total_chunks'     => 1,
+            'completed_chunks' => 0,
+            'cancel_requested' => 0,
+            'error_message'    => 'Format berkas audio tidak dikenali atau rusak.',
+            'created_at'       => $now,
+            'updated_at'       => $now,
+        ]);
     }
 
     /**

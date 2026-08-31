@@ -50,6 +50,7 @@
                         </a>
                     </li>
                     <li><a href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender" data-admin-nav>Kalender Agenda</a></li>
+                    <li><a href="<?= base_url('admin/notulen') ?>" data-path="/admin/notulen" data-admin-nav>Notulensi & Risalah AI</a></li>
                     <li><button type="button" class="menu-disabled" disabled>Laporan Agenda <span class="badge badge-ghost badge-xs ml-auto">segera</span></button></li>
                 </ul>
             </details>

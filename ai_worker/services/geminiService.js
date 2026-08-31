@@ -1,0 +1,676 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { GoogleGenAI, Type } from '@google/genai';
+import { config } from '../config.js';
+import { callWithRetry, JobCancelledError, isDailyQuotaExhausted, describeError, sleep } from './throttler.js';
+import { effectiveModelChain, setStickyModel, markDeadToday } from './modelChain.js';
+import { formatChunkIndex, probeDuration } from './audioSlicer.js';
+import { log as workerLog, warn as workerWarn } from './logger.js';
+
+// Inisialisasi Google GenAI Client
+let aiClient = null;
+
+export function getAiClient() {
+  if (!aiClient) {
+    if (!config.gemini.apiKey) {
+      throw new Error('GEMINI_API_KEY tidak ditemukan di environment (.env).');
+    }
+    aiClient = new GoogleGenAI({ apiKey: config.gemini.apiKey });
+  }
+  return aiClient;
+}
+
+const CANCEL_POLL_MS = 3000;
+const STREAM_SILENCE_LOG_MS = 30_000;
+
+/**
+ * Watchdog untuk stream Gemini: mengecek cancelChecker berkala (termasuk
+ * saat stream belum mengeluarkan teks apa pun) dan membatalkan request
+ * via AbortSignal, plus callback heartbeat saat stream senyap. Fase senyap
+ * dibedakan antara belum tersambung (server belum merespons) dan sudah
+ * tersambung (model sedang prefill/thinking).
+ */
+function createStreamWatchdog({ cancelChecker, onSilence }) {
+  const controller = new AbortController();
+  let cancelled = false;
+  let connected = false;
+  let lastActivityAt = Date.now();
+
+  const timer = setInterval(() => {
+    if (cancelled) return;
+    (async () => {
+      if (cancelChecker && typeof cancelChecker === 'function') {
+        try {
+          if (await cancelChecker()) {
+            cancelled = true;
+            controller.abort();
+            return;
+          }
+        } catch {
+          // kegagalan cek cancel tidak boleh mematikan watchdog
+        }
+      }
+      const silentForMs = Date.now() - lastActivityAt;
+      if (onSilence && silentForMs >= STREAM_SILENCE_LOG_MS) {
+        lastActivityAt = Date.now();
+        onSilence(Math.round(silentForMs / 1000), connected);
+      }
+    })();
+  }, CANCEL_POLL_MS);
+
+  return {
+    signal: controller.signal,
+    isCancelled: () => cancelled,
+    markConnected: () => { connected = true; },
+    touch: () => { lastActivityAt = Date.now(); },
+    stop: () => clearInterval(timer),
+  };
+}
+
+/**
+ * Unggah file audio potongan ke Google Gemini Files API.
+ * Wajib digunakan untuk file berukuran > 20 MB (batas inline).
+ */
+export async function uploadToFilesApi(filePath, mimeType = 'audio/mp3') {
+  const ai = getAiClient();
+  const fileUpload = await ai.files.upload({
+    file: filePath,
+    config: { mimeType },
+  });
+
+  return fileUpload;
+}
+
+/**
+ * Hapus file dari Google Gemini Files API seketika setelah selesai diproses.
+ */
+export async function deleteFromFilesApi(fileResource) {
+  if (!fileResource) return;
+  try {
+    const ai = getAiClient();
+    const fileName = typeof fileResource === 'string' ? fileResource : fileResource.name;
+    if (fileName) {
+      await ai.files.delete({ name: fileName });
+    }
+  } catch (err) {
+    // Log kegagalan cleanup tanpa menghentikan pipeline
+    workerWarn(`[GeminiService] Peringatan: Gagal menghapus file cloud ${fileResource?.name || fileResource}:`, err.message);
+  }
+}
+
+/**
+ * Menunggu file Files API mencapai state ACTIVE sebelum direferensikan
+ * generateContent. FAILED mengembalikan error ingest (bukan kegagalan model,
+ * jadi tidak boleh memicu fallback rantai model).
+ */
+export async function waitForFileActive(getFile, name, {
+  intervalMs = 2000,
+  timeoutMs = 120000,
+  onLog = workerLog,
+} = {}) {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const file = await getFile(name);
+    if (file.state === 'ACTIVE') {
+      return file;
+    }
+    if (file.state === 'FAILED') {
+      throw new Error(`Gagal ingest file ${name} di Files API (state FAILED).`);
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`Timeout menunggu file ${name} ACTIVE di Files API (state terakhir: ${file.state}).`);
+    }
+    onLog(`[Files API] ${name} masih ${file.state}, menunggu hingga ACTIVE...`);
+    await sleep(intervalMs);
+  }
+}
+
+/**
+ * Memvalidasi hasil teks transkrip dari model AI.
+ * Melempar Error jika transkrip tidak memenuhi syarat kualitas (hard fail).
+ * Mencatat peringatan jika ada indikasi masalah ringan (soft warn).
+ *
+ * @param {string} text          Teks transkrip yang sudah di-trim
+ * @param {string} chunkNum      Label chunk untuk pesan log (misal "001")
+ * @param {number} minWords      Minimum jumlah kata yang diharapkan
+ * @param {Function} onLog       Callback log
+ * @throws {Error}               Jika validasi hard-fail tidak terpenuhi
+ */
+function validateTranscriptQuality(text, chunkNum, minWords, onLog) {
+  const words = text.split(/\s+/).filter(Boolean).length;
+
+  // Hard fail 1: densitas kata terlalu rendah. Indikasi output terpotong,
+  // hanya konfirmasi, atau audio tidak terbaca.
+  if (words < minWords) {
+    throw new Error(
+      `Transkrip chunk_${chunkNum} terlalu pendek: ${words} kata (minimum ${minWords} kata). ` +
+      `Kemungkinan output terpotong atau audio tidak dapat ditranskripsikan.`
+    );
+  }
+
+  // Hard fail 2: tidak ada newline DAN tidak ada label speaker. Indikasi model
+  // mengabaikan format prompt dan mengembalikan satu blok teks panjang.
+  const hasNewlines = text.includes('\n');
+  const hasSpeakerLabel = /\[.+?\]/.test(text);
+  if (!hasNewlines && !hasSpeakerLabel) {
+    throw new Error(
+      `Transkrip chunk_${chunkNum} tidak berstruktur: tidak ada newline atau label speaker. ` +
+      `Model mengabaikan format prompt diarization.`
+    );
+  }
+
+  // Soft warn: kemungkinan terpotong di tengah kalimat. Cek hanya jika teks
+  // cukup panjang agar tidak false positive pada transkrip pendek.
+  if (text.length >= config.validation.abruptCutMinLength) {
+    const tail = text.slice(-150);
+    const endsAbruptly = !/[.!?\]"']/.test(tail);
+    if (endsAbruptly) {
+      onLog(
+        `[Transcribe] Peringatan: chunk_${chunkNum} mungkin terpotong di tengah kalimat ` +
+        `(tidak ada tanda baca penutup di 150 karakter terakhir).`
+      );
+    }
+  }
+
+  onLog(
+    `[Transcribe] Validasi chunk_${chunkNum} lulus: ${words} kata, ` +
+    `${hasNewlines ? 'ada newline' : 'tanpa newline'}, ` +
+    `${hasSpeakerLabel ? 'ada label speaker' : 'tanpa label speaker'}.`
+  );
+}
+
+/**
+ * Minimum kata yang diharapkan dari transkrip, proporsional terhadap durasi
+ * bicara (bukan durasi total) chunk. Chunk final mendapat toleransi lebih longgar.
+ */
+export function minExpectedWordsFor(speechSeconds, isFinalChunk) {
+  const speechMinutes = Math.max(0, speechSeconds || 0) / 60;
+  if (isFinalChunk) {
+    return Math.min(30, Math.max(10, Math.floor(speechMinutes * config.validation.minWordsPerMinute)));
+  }
+  return Math.max(50, Math.floor(speechMinutes * config.validation.minWordsPerMinute));
+}
+
+/**
+ * Menjalankan transkripsi audio per chunk dengan rantai model fallback (Primary -> Fallbacks)
+ * dan proteksi penulisan atomik (.part -> rename).
+ *
+ * @param {Object} params Parameter transkripsi
+ * @param {string} params.chunkPath Path absolut file audio chunk
+ * @param {number} params.chunkIndex Indeks potongan (1, 2, 3...)
+ * @param {number} params.totalChunks Jumlah total potongan
+ * @param {string} params.transcriptsDir Direktori target transkrip (folder `transcripts/`)
+ * @param {Function} params.cancelChecker Fungsi pengecek apakah job dibatalkan oleh admin
+ * @param {Function} params.onLog Callback pencatat log progres
+ * @returns {Promise<string>} Teks hasil transkripsi chunk
+ */
+export async function transcribeChunkWithFallback({
+  chunkPath,
+  chunkIndex,
+  totalChunks,
+  durationSeconds = null,
+  speechSeconds = null,
+  isLastChunk = false,
+  transcriptsDir,
+  cancelChecker = null,
+  onLog = workerLog,
+}) {
+  const chunkNum = formatChunkIndex(chunkIndex);
+  const finalFilePath = path.join(transcriptsDir, `chunk_${chunkNum}.txt`);
+  const partFilePath = path.join(transcriptsDir, `chunk_${chunkNum}.txt.part`);
+
+  // Pastikan folder transcripts/ tersedia
+  if (!fs.existsSync(transcriptsDir)) {
+    fs.mkdirSync(transcriptsDir, { recursive: true });
+  }
+
+  // Hitung durasi aktual potongan audio (dalam detik)
+  let actualDurationSeconds = durationSeconds;
+  if (typeof actualDurationSeconds !== 'number' || actualDurationSeconds <= 0) {
+    try {
+      if (fs.existsSync(chunkPath)) {
+        actualDurationSeconds = await probeDuration(chunkPath);
+      }
+    } catch {
+      actualDurationSeconds = config.audio.chunkDurationSeconds;
+    }
+  }
+  if (!actualDurationSeconds || actualDurationSeconds <= 0) {
+    actualDurationSeconds = config.audio.chunkDurationSeconds;
+  }
+
+  const isFinalChunk = isLastChunk || (chunkIndex === totalChunks);
+
+  // Minimum kata proporsional terhadap durasi bicara chunk (VAD), bukan durasi total
+  const minExpectedWords = minExpectedWordsFor(
+    speechSeconds ?? actualDurationSeconds,
+    isFinalChunk
+  );
+
+  // 1. Cek Checkpoint: jika chunk_NNN.txt final sudah ada, validasi dulu sebelum lewati
+  if (fs.existsSync(finalFilePath)) {
+    const existingContent = fs.readFileSync(finalFilePath, 'utf-8').trim();
+    if (existingContent.length > 0) {
+      const existingWords = existingContent.split(/\s+/).filter(Boolean).length;
+      if (existingWords >= minExpectedWords) {
+        onLog(`[Transcribe] Checkpoint valid: chunk_${chunkNum}.txt (${existingWords} kata). Melewati...`);
+        return existingContent;
+      }
+      // Checkpoint ada tapi tidak memenuhi densitas minimum — hapus dan proses ulang
+      onLog(`[Transcribe] Checkpoint chunk_${chunkNum}.txt tidak valid (${existingWords} kata, minimum ${minExpectedWords}). Memproses ulang...`);
+      fs.unlinkSync(finalFilePath);
+    }
+  }
+
+  onLog(`[Transcribe] Memulai upload & transkripsi chunk_${chunkNum} (${chunkIndex}/${totalChunks})...`);
+
+  // 2. Unggah file audio chunk ke Google Files API
+  let uploadedFile = null;
+  try {
+    uploadedFile = await uploadToFilesApi(chunkPath, 'audio/mp3');
+    onLog(`[Files API] File chunk_${chunkNum} berhasil diunggah ke Google Cloud (URI: ${uploadedFile.uri})`);
+    await waitForFileActive(
+      (name) => getAiClient().files.get({ name }),
+      uploadedFile.name || uploadedFile.uri,
+      { onLog }
+    );
+  } catch (uploadErr) {
+    if (uploadErr instanceof JobCancelledError) throw uploadErr;
+    throw new Error(`Gagal menyiapkan chunk_${chunkNum} di Files API: ${uploadErr.message}`);
+  }
+
+  const promptText = `Transkripsikan seluruh isi percakapan rekaman audio rapat DPRD Provinsi Sulawesi Tengah ini dalam Bahasa Indonesia secara verbatim, rapi, dan terstruktur.
+Gunakan label speaker diarization per pembicara (misalnya: [Pimpinan Sidang], [Anggota Fraksi/Komisi], [Narasumber], dll.), pisahkan setiap pergantian pembicara dengan baris baru, serta gunakan tanda baca yang tepat dan ejaan resmi istilah pemerintahan.
+Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup tambahan.`;
+
+  let transcriptText = '';
+  let modelSuccess = false;
+  let lastError = null;
+
+  const models = effectiveModelChain(config.gemini.modelChain);
+  if (models.length === 0) {
+    throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+  }
+  const ai = getAiClient();
+
+  try {
+    // 3. Iterasi rantai model AI (Primary -> Fallback 1 -> Fallback 2 -> Fallback 3)
+    for (let mIdx = 0; mIdx < models.length; mIdx++) {
+      const modelName = models[mIdx];
+      onLog(`[Transcribe] Mencoba model: ${modelName} (Model ke-${mIdx + 1}/${models.length}) untuk chunk_${chunkNum}...`);
+
+      try {
+        transcriptText = await callWithRetry(
+          async (attempt) => {
+            onLog(`[Transcribe] Memanggil model ${modelName} (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
+
+            const startTime = Date.now();
+            let accumulated = '';
+            let wordCount = 0;
+            let lastLogTime = startTime;
+            const LOG_INTERVAL_MS = 10_000; // log progress tiap 10 detik
+
+            const watchdog = createStreamWatchdog({
+              cancelChecker,
+              onSilence: (sec, isConnected) => {
+                if (isConnected) {
+                  onLog(`[Transcribe] chunk_${chunkNum} tersambung ke ${modelName}, model sedang memproses audio... [${sec}s tanpa keluaran teks]`);
+                } else {
+                  onLog(`[Transcribe] chunk_${chunkNum} belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
+                }
+              },
+            });
+
+            try {
+              const stream = await ai.models.generateContentStream({
+                model: modelName,
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [
+                      {
+                        fileData: {
+                          fileUri: uploadedFile.uri,
+                          mimeType: 'audio/mp3',
+                        },
+                      },
+                      { text: promptText },
+                    ],
+                  },
+                ],
+                config: { abortSignal: watchdog.signal },
+              });
+              watchdog.markConnected();
+              onLog(`[Transcribe] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
+
+              for await (const chunk of stream) {
+                watchdog.touch();
+
+                const textChunk = chunk.text ?? '';
+                accumulated += textChunk;
+
+                // Hitung kata secara efisien: tambah jumlah kata dari chunk baru
+                if (textChunk.trim()) {
+                  wordCount += textChunk.trim().split(/\s+/).length;
+                }
+
+                // Log progress tiap LOG_INTERVAL_MS agar tidak spam
+                const now = Date.now();
+                if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                  const elapsedSec = Math.round((now - startTime) / 1000);
+                  onLog(`[Transcribe] chunk_${chunkNum} streaming... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.length.toLocaleString('id-ID')} karakter]`);
+                  lastLogTime = now;
+                }
+              }
+            } catch (err) {
+              if (watchdog.isCancelled() || err instanceof JobCancelledError) {
+                throw new JobCancelledError();
+              }
+              throw err;
+            } finally {
+              watchdog.stop();
+            }
+
+            const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
+            if (!accumulated || accumulated.trim().length === 0) {
+              throw new Error(`Respons model ${modelName} kosong.`);
+            }
+
+            const trimmed = accumulated.trim();
+
+            // Validasi kualitas transkrip — melempar Error jika tidak memenuhi syarat
+            validateTranscriptQuality(trimmed, chunkNum, minExpectedWords, onLog);
+
+            onLog(`[Transcribe] Stream selesai: chunk_${chunkNum} via ${modelName} [${elapsedTotal}s | ~${wordCount.toLocaleString('id-ID')} kata | ${trimmed.length.toLocaleString('id-ID')} karakter]`);
+            return trimmed;
+          },
+          {
+            maxRetries: config.worker.maxRetriesPerModel,
+            initialDelayMs: 10000,
+            backoffFactor: 2.5,
+            cancelChecker,
+            onRetry: ({ attempt, waitTimeMs, error }) => {
+              onLog(`[Throttler] Error saat transkripsi chunk_${chunkNum} (${describeError(error)}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+            },
+          }
+        );
+
+        setStickyModel(modelName);
+        modelSuccess = true;
+        break;
+      } catch (err) {
+        lastError = err;
+        if (err instanceof JobCancelledError) {
+          throw err;
+        }
+        if (isDailyQuotaExhausted(err)) {
+          markDeadToday(modelName);
+          onLog(`[Transcribe] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
+        } else {
+          onLog(`[Transcribe] Model ${modelName} gagal setelah seluruh retry: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+        }
+      }
+    }
+
+    if (!modelSuccess || !transcriptText) {
+      throw new Error(`Seluruh rantai model AI gagal mentranskripsikan chunk_${chunkNum}. Error terakhir: ${describeError(lastError)}`);
+    }
+
+    // 4. Penulisan Transkrip Atomik: tulis .part dahulu -> rename ke file final
+    fs.writeFileSync(partFilePath, transcriptText, 'utf-8');
+    if (fs.existsSync(finalFilePath)) {
+      fs.unlinkSync(finalFilePath);
+    }
+    fs.renameSync(partFilePath, finalFilePath);
+    onLog(`[Transcribe] Berkas transkrip atomik tersimpan: chunk_${chunkNum}.txt`);
+
+    return transcriptText;
+  } finally {
+    // 5. Instant Cleanup: Hapus file dari Google Files API segera setelah selesai
+    if (uploadedFile) {
+      onLog(`[Files API] Menghapus file sementara di Google Cloud Files...`);
+      await deleteFromFilesApi(uploadedFile);
+    }
+  }
+}
+
+// Skema output risalah (structured output resmi) - bentuknya identik dengan
+// struktur_json yang dikonsumsi aplikasi (3 Pilar).
+export const MINUTES_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    ringkasan_utama: {
+      type: Type.STRING,
+      description: 'Intisari komprehensif rapat dalam 2-4 paragraf: latar belakang, pokok masalah, dinamika perdebatan, dan hasil akhir.',
+    },
+    poin_pembahasan: {
+      type: Type.ARRAY,
+      description: 'Rincian pembahasan per pokok bahasan.',
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          waktu: { type: Type.STRING, nullable: true, description: 'Cap waktu opsional dengan format [mm:ss] atau [hh:mm:ss].' },
+          topik: { type: Type.STRING, description: 'Judul pokok bahasan.' },
+          pembicara: { type: Type.STRING, nullable: true, description: 'Pimpinan Sidang, Fraksi, Komisi, atau pejabat terkait.' },
+          uraian: { type: Type.STRING, description: 'Penjelasan materi, pertanyaan, tanggapan, atau catatan kritis.' },
+        },
+        required: ['topik', 'uraian'],
+      },
+    },
+    kesimpulan_akhir: {
+      type: Type.ARRAY,
+      description: 'Butir kesepakatan, keputusan resmi, rekomendasi, dan instruksi tindak lanjut.',
+      items: { type: Type.STRING },
+    },
+  },
+  required: ['ringkasan_utama', 'poin_pembahasan', 'kesimpulan_akhir'],
+};
+
+/**
+ * Menyusun naskah risalah 3 bagian (I/II/III) dari struktur pilar yang
+ * dihasilkan model. Format harus tetap kompatibel dengan parser fallback
+ * di NotulenService::parsePillarsFromText (PHP).
+ */
+export function composeMinutesText(pillars) {
+  const points = Array.isArray(pillars.poin_pembahasan) ? pillars.poin_pembahasan : [];
+  const conclusions = Array.isArray(pillars.kesimpulan_akhir) ? pillars.kesimpulan_akhir : [];
+  const lines = ['I. RINGKASAN UTAMA', String(pillars.ringkasan_utama || '').trim(), '', 'II. POIN-POIN PEMBAHASAN'];
+
+  points.forEach((point, i) => {
+    const no = i + 1;
+    const waktu = point.waktu ? ` [${point.waktu}]` : '';
+    lines.push(`${no}.${waktu} Topik: ${String(point.topik || '').trim()}`);
+    if (point.pembicara) {
+      lines.push(`   - Pembicara: ${String(point.pembicara).trim()}`);
+    }
+    lines.push(`   - Uraian: ${String(point.uraian || '').trim()}`);
+    point.full_text = `${no}.${waktu} Topik: ${String(point.topik || '').trim()}`;
+  });
+
+  if (points.length === 0) {
+    lines.push('(Tidak ada poin pembahasan yang terdeteksi.)');
+  }
+
+  lines.push('', 'III. KESIMPULAN & KEPUTUSAN AKHIR');
+  conclusions.forEach((item, i) => {
+    lines.push(`${i + 1}. ${String(item).trim()}`);
+  });
+  if (conclusions.length === 0) {
+    lines.push('(Tidak ada kesimpulan yang terdeteksi.)');
+  }
+
+  return lines.join('\n').trim();
+}
+
+/**
+ * Menyusun draft Risalah Rapat Resmi DPRD Provinsi Sulawesi Tengah
+ * dari kumpulan transkrip lengkap menggunakan rantai model AI dan
+ * structured output (responseSchema).
+ *
+ * @param {Object} params
+ * @param {string} params.fullTranscript Teks transkrip gabungan seluruh chunk
+ * @param {Object} params.metadata Metadata rapat (judul_rapat, tanggal_rapat, jadwal_type)
+ * @param {Function} params.cancelChecker Fungsi cek cancel
+ * @param {Function} params.onLog Callback log
+ * @returns {Promise<Object>} { ringkasan_eksekutif, pillars, usedModel }
+ */
+export async function generateMeetingMinutesWithFallback({
+  fullTranscript,
+  metadata = {},
+  cancelChecker = null,
+  onLog = workerLog,
+}) {
+  onLog(`[Minutes] Memulai penyusunan Risalah Rapat resmi dari transkrip (${fullTranscript.length} karakter)...`);
+
+  const promptText = `Anda adalah Notulis Risalah Resmi untuk DPRD (Dewan Perwakilan Rakyat Daerah) Provinsi Sulawesi Tengah.
+Baca dan analisis transkrip rapat berikut, lalu susun DRAFT RISALAH RAPAT RESMI yang profesional dan sesuai standar tata naskah dinas legislatif daerah.
+
+Informasi Konteks Rapat:
+- Judul Rapat: ${metadata.judul_rapat || 'Rapat DPRD Provinsi Sulawesi Tengah'}
+- Tanggal Rapat: ${metadata.tanggal_rapat || 'Sesuai agenda'}
+- Jenis Agenda: ${metadata.jadwal_type || 'Umum/Banmus'}
+
+KONTEN TRANSKRIP RAPAT LENGKAP:
+---
+${fullTranscript}
+---
+
+Isi setiap field dengan lengkap:
+- ringkasan_utama: intisari 2-4 paragraf (latar belakang, pokok masalah, dinamika perdebatan, hasil akhir).
+- poin_pembahasan: satu butir per pokok bahasan; sertakan pembicara bila dapat diidentifikasi.
+- kesimpulan_akhir: seluruh kesepakatan, keputusan resmi, rekomendasi, dan tindak lanjut yang disepakati.`;
+
+  const models = effectiveModelChain(config.gemini.modelChain);
+  if (models.length === 0) {
+    throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+  }
+  const ai = getAiClient();
+  let minutesJson = null;
+  let usedModel = null;
+  let lastError = null;
+
+  for (let mIdx = 0; mIdx < models.length; mIdx++) {
+    const modelName = models[mIdx];
+    onLog(`[Minutes] Mencoba model risalah: ${modelName} (Model ke-${mIdx + 1}/${models.length})...`);
+
+    try {
+      const rawResponse = await callWithRetry(
+        async (attempt) => {
+          onLog(`[Minutes] Memanggil model ${modelName} untuk menyusun risalah (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
+
+          const startTime = Date.now();
+          let accumulated = '';
+          let lastLogTime = startTime;
+          const LOG_INTERVAL_MS = 10_000;
+
+          const watchdog = createStreamWatchdog({
+            cancelChecker,
+            onSilence: (sec, isConnected) => {
+              if (isConnected) {
+                onLog(`[Minutes] Tersambung ke ${modelName}, model sedang memproses transkrip (prefill/thinking)... [${sec}s tanpa keluaran teks]`);
+              } else {
+                onLog(`[Minutes] Belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
+              }
+            },
+          });
+
+          try {
+            const stream = await ai.models.generateContentStream({
+              model: modelName,
+              contents: promptText,
+              config: {
+                responseMimeType: 'application/json',
+                responseSchema: MINUTES_RESPONSE_SCHEMA,
+                abortSignal: watchdog.signal,
+              },
+            });
+            watchdog.markConnected();
+            onLog(`[Minutes] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
+
+            for await (const chunk of stream) {
+              watchdog.touch();
+
+              accumulated += chunk.text ?? '';
+
+              const now = Date.now();
+              if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                const elapsedSec = Math.round((now - startTime) / 1000);
+                onLog(`[Minutes] Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
+                lastLogTime = now;
+              }
+            }
+          } catch (err) {
+            if (watchdog.isCancelled() || err instanceof JobCancelledError) {
+              throw new JobCancelledError();
+            }
+            throw err;
+          } finally {
+            watchdog.stop();
+          }
+
+          const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
+          if (!accumulated || accumulated.trim().length === 0) {
+            throw new Error(`Respons risalah model ${modelName} kosong.`);
+          }
+
+          onLog(`[Minutes] Stream selesai: risalah via ${modelName} [${elapsedTotal}s | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
+          return accumulated.trim();
+        },
+        {
+          maxRetries: config.worker.maxRetriesPerModel,
+          initialDelayMs: 10000,
+          backoffFactor: 2.5,
+          cancelChecker,
+          onRetry: ({ attempt, waitTimeMs, error }) => {
+            onLog(`[Throttler] Error saat generate risalah (${describeError(error)}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+          },
+        }
+      );
+
+      // Bersihkan kemungkinan markdown wrapping ```json ... ``` (antisipasi model noncompliant)
+      let cleanedJson = rawResponse.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+      try {
+        minutesJson = JSON.parse(cleanedJson);
+      } catch (parseErr) {
+        throw new Error(`Gagal mem-parse JSON hasil risalah dari model ${modelName}: ${parseErr.message}`);
+      }
+
+      if (!minutesJson || typeof minutesJson !== 'object' || !('ringkasan_utama' in minutesJson)) {
+        throw new Error(`Struktur risalah dari model ${modelName} tidak memenuhi skema (ringkasan_utama tidak ditemukan).`);
+      }
+
+      onLog(`[Minutes] Risalah rapat berhasil disusun via model ${modelName}!`);
+      setStickyModel(modelName);
+      usedModel = modelName;
+      break;
+    } catch (err) {
+      lastError = err;
+      if (err instanceof JobCancelledError) {
+        throw err;
+      }
+      if (isDailyQuotaExhausted(err)) {
+        markDeadToday(modelName);
+        onLog(`[Minutes] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
+      } else {
+        onLog(`[Minutes] Model ${modelName} gagal menyusun risalah: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+      }
+    }
+  }
+
+  if (!minutesJson) {
+    throw new Error(`Seluruh rantai model AI gagal menyusun risalah rapat. Error terakhir: ${describeError(lastError)}`);
+  }
+
+  const pillars = {
+    ringkasan_utama: String(minutesJson.ringkasan_utama || ''),
+    poin_pembahasan: Array.isArray(minutesJson.poin_pembahasan) ? minutesJson.poin_pembahasan : [],
+    kesimpulan_akhir: Array.isArray(minutesJson.kesimpulan_akhir) ? minutesJson.kesimpulan_akhir : [],
+  };
+
+  return {
+    ringkasan_eksekutif: composeMinutesText(pillars),
+    pillars,
+    usedModel: usedModel || null,
+  };
+}

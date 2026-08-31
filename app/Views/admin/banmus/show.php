@@ -317,11 +317,19 @@ $scheduledCount = count($items) - $projectionCount;
                                 </td>
                                 <td data-label="Aksi">
                                     <div class="banmus-item-actions flex flex-wrap items-center justify-end gap-1.5">
+                                        <a
+                                            href="<?= base_url('admin/notulen?jadwal_type=banmus&jadwal_id=' . (int) $item['id']) ?>"
+                                            class="btn btn-ghost btn-xs gap-1 text-primary"
+                                            title="Buka / Buat Notulensi AI">
+                                            <i data-lucide="mic" class="h-3.5 w-3.5"></i>
+                                            Notulen
+                                        </a>
+
                                         <button
                                             type="button"
                                             data-banmus-item-edit
                                             data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
-                                            class="btn btn-xs w-20 gap-1"
+                                            class="btn btn-xs w-16 gap-1"
                                             title="Edit item agenda">
                                             <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                             Edit

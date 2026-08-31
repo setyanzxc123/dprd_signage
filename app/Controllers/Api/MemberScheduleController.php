@@ -43,6 +43,39 @@ class MemberScheduleController extends BaseController
             return $schedule;
         }, $result['data']);
 
+        // Ketersediaan risalah final per jadwal (tautan risalah di /agenda mobile).
+        $umumIds = [];
+        $banmusIds = [];
+        foreach ($result['data'] as $schedule) {
+            $id = (int) ($schedule['source_id'] ?? $schedule['id']);
+            $source = (string) ($schedule['source'] ?? '');
+            if ($id < 1) {
+                continue;
+            }
+            if ($source === 'banmus') {
+                $banmusIds[$id] = true;
+            } elseif ($source === 'jadwal_umum') {
+                $umumIds[$id] = true;
+            }
+        }
+        $finalMap = (new \App\Libraries\Notulen\NotulenService())->resolveFinalMinutesMap(
+            array_keys($umumIds),
+            array_keys($banmusIds)
+        );
+
+        $result['data'] = array_map(static function (array $schedule) use ($finalMap): array {
+            $id = (int) ($schedule['source_id'] ?? $schedule['id']);
+            $source = (string) ($schedule['source'] ?? '');
+            $apiSource = $source === 'banmus' ? 'banmus' : 'umum';
+            $hasFinal = $finalMap[$apiSource][$id] ?? false;
+            $schedule['risalah_tersedia'] = $hasFinal;
+            if ($hasFinal) {
+                $schedule['risalah_url'] = base_url("api/v1/jadwal/{$apiSource}/{$id}/risalah");
+            }
+
+            return $schedule;
+        }, $result['data']);
+
         return $this->response
             ->setHeader('Cache-Control', 'private, no-store')
             ->setHeader('Pragma', 'no-cache')

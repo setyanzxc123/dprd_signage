@@ -22,9 +22,10 @@
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
             <table class="general-schedule-table table table-zebra table-md w-full admin-data-table"
+                id="table-jadwal-umum"
                 data-admin-datatable
                 data-dt-order='[[1,"desc"]]'
-                data-dt-col-filters='[{"column":4,"label":"Status"},{"column":5,"label":"Publikasi"}]'>
+                data-dt-col-filters='[{"col":4,"label":"Status"},{"col":5,"label":"Publikasi"}]'>
                 <thead>
                     <tr class="bg-base-200">
                         <th class="dt-row-number no-sort">No</th>
@@ -72,7 +73,7 @@
                                         : 'Tanpa kelompok peserta khusus' ?>
                                 </div>
                             </td>
-                            <td data-label="Status">
+                            <td data-label="Status" data-filter="<?= esc(ucfirst($schedule['status'])) ?>">
                                 <?php
                                 $statusClass = match ($schedule['status']) {
                                     'berlangsung' => 'badge-success',
@@ -85,7 +86,7 @@
                                     <?= esc(ucfirst($schedule['status'])) ?>
                                 </span>
                             </td>
-                            <td data-label="Publikasi">
+                            <td data-label="Publikasi" data-filter="<?= (int) $schedule['is_publik'] === 1 ? 'Publik' : 'Internal' ?>">
                                 <?php if ((int) $schedule['is_publik'] === 1): ?>
                                     <span class="badge badge-success badge-sm">Publik</span>
                                 <?php else: ?>
@@ -94,7 +95,11 @@
                             </td>
                             <td data-label="Aksi">
                                 <div class="general-schedule-actions flex flex-wrap items-center justify-end gap-1.5">
-                                    <a href="<?= base_url("admin/jadwal-umum/{$schedule['id']}/edit") ?>" class="btn btn-xs w-20 gap-1">
+                                    <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="btn btn-ghost btn-xs gap-1 text-primary" title="Buka / Buat Notulensi AI">
+                                        <i data-lucide="mic" class="h-3.5 w-3.5"></i>
+                                        Notulen
+                                    </a>
+                                    <a href="<?= base_url("admin/jadwal-umum/{$schedule['id']}/edit") ?>" class="btn btn-xs w-16 gap-1">
                                         <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
                                         Edit
                                     </a>
