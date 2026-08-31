@@ -13,6 +13,10 @@ class Otp extends BaseConfig
     public string $fazpassGatewayKey = '';
     public string $fazpassCallbackSecret = '';
     public int $fazpassTimeoutSeconds = 15;
+    public bool $fazpassFallbackEnabled = true;
+    public string $baileysApiUrl = 'http://127.0.0.1:3001';
+    public string $baileysApiKey = '';
+    public int $baileysTimeoutSeconds = 5;
     public int $length = 6;
     public int $ttlSeconds = 300;
     public int $challengeTtlSeconds = 900;
@@ -39,6 +43,10 @@ class Otp extends BaseConfig
         $this->fazpassGatewayKey = trim((string) env('FAZPASS_GATEWAY_KEY', ''));
         $this->fazpassCallbackSecret = trim((string) env('FAZPASS_CALLBACK_SECRET', ''));
         $this->fazpassTimeoutSeconds = $this->envInt('FAZPASS_TIMEOUT_SECONDS', $this->fazpassTimeoutSeconds);
+        $this->fazpassFallbackEnabled = $this->envBool('FAZPASS_FALLBACK_ENABLED', $this->fazpassFallbackEnabled);
+        $this->baileysApiUrl = rtrim((string) env('BAILEYS_API_URL', $this->baileysApiUrl), '/');
+        $this->baileysApiKey = trim((string) env('BAILEYS_API_KEY', ''));
+        $this->baileysTimeoutSeconds = $this->envInt('BAILEYS_TIMEOUT_SECONDS', $this->baileysTimeoutSeconds);
         $this->ttlSeconds = $this->envInt('OTP_TTL_SECONDS', $this->ttlSeconds);
         $this->challengeTtlSeconds = $this->envInt('OTP_CHALLENGE_TTL_SECONDS', $this->challengeTtlSeconds);
         $this->resendCooldownSeconds = $this->envInt('OTP_RESEND_COOLDOWN_SECONDS', $this->resendCooldownSeconds);
@@ -64,5 +72,12 @@ class Otp extends BaseConfig
         $value = env($name);
 
         return is_numeric($value) && (int) $value > 0 ? (int) $value : $default;
+    }
+
+    private function envBool(string $name, bool $default): bool
+    {
+        $value = env($name);
+
+        return $value === null ? $default : filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 }
