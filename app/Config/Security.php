@@ -74,8 +74,12 @@ class Security extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * Regenerate CSRF Token on every submission.
+     *
+     * Dimatikan agar token tetap stabil sepanjang sesi; regenerasi per POST
+     * membuat formulir di tab lain langsung kedaluwarsa begitu tab lain
+     * berhasil mengirim POST.
      */
-    public bool $regenerate = true;
+    public bool $regenerate = false;
 
     /**
      * --------------------------------------------------------------------------

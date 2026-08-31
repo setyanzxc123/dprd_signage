@@ -1,7 +1,6 @@
 <?php
 
 use CodeIgniter\Exceptions\PageNotFoundException;
-use CodeIgniter\Security\Exceptions\SecurityException;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 
@@ -25,10 +24,15 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('data-max-digits="12"', $response->response()->getBody());
     }
 
-    public function testAdminLoginRejectsRequestWithoutCsrfToken(): void
+    public function testAdminLoginWithoutCsrfTokenGetsFriendlyRedirect(): void
     {
-        $this->expectException(SecurityException::class);
-        $this->post('/login/admin', ['username' => 'operator', 'password' => 'invalid']);
+        $response = $this->post('/login/admin', ['username' => 'operator', 'password' => 'invalid']);
+
+        $response->assertStatus(302);
+        $this->assertSame(
+            'Sesi formulir telah berakhir. Muat ulang halaman lalu ulangi tindakan Anda.',
+            session()->getFlashdata('auth_form_error'),
+        );
     }
 
     public function testMemberOtpRequestUsesPostRedirectGet(): void
