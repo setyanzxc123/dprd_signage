@@ -20,6 +20,49 @@ export function getAiClient() {
   return aiClient;
 }
 
+const CANCEL_POLL_MS = 3000;
+const STREAM_SILENCE_LOG_MS = 30_000;
+
+/**
+ * Watchdog untuk stream Gemini: mengecek cancelChecker berkala (termasuk
+ * saat stream belum mengeluarkan teks apa pun) dan membatalkan request
+ * via AbortSignal, plus callback heartbeat saat stream senyap.
+ */
+function createStreamWatchdog({ cancelChecker, onSilence }) {
+  const controller = new AbortController();
+  let cancelled = false;
+  let lastActivityAt = Date.now();
+
+  const timer = setInterval(() => {
+    if (cancelled) return;
+    (async () => {
+      if (cancelChecker && typeof cancelChecker === 'function') {
+        try {
+          if (await cancelChecker()) {
+            cancelled = true;
+            controller.abort();
+            return;
+          }
+        } catch {
+          // kegagalan cek cancel tidak boleh mematikan watchdog
+        }
+      }
+      const silentForMs = Date.now() - lastActivityAt;
+      if (onSilence && silentForMs >= STREAM_SILENCE_LOG_MS) {
+        lastActivityAt = Date.now();
+        onSilence(Math.round(silentForMs / 1000));
+      }
+    })();
+  }, CANCEL_POLL_MS);
+
+  return {
+    signal: controller.signal,
+    isCancelled: () => cancelled,
+    touch: () => { lastActivityAt = Date.now(); },
+    stop: () => clearInterval(timer),
+  };
+}
+
 /**
  * Unggah file audio potongan ke Google Gemini Files API.
  * Wajib digunakan untuk file berukuran > 20 MB (batas inline).
@@ -263,47 +306,57 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
             let lastLogTime = startTime;
             const LOG_INTERVAL_MS = 10_000; // log progress tiap 10 detik
 
-            const stream = await ai.models.generateContentStream({
-              model: modelName,
-              contents: [
-                {
-                  role: 'user',
-                  parts: [
-                    {
-                      fileData: {
-                        fileUri: uploadedFile.uri,
-                        mimeType: 'audio/mp3',
-                      },
-                    },
-                    { text: promptText },
-                  ],
-                },
-              ],
+            const watchdog = createStreamWatchdog({
+              cancelChecker,
+              onSilence: (sec) => onLog(`[Transcribe] chunk_${chunkNum} masih menunggu keluaran model... [${sec}s tanpa teks]`),
             });
 
-            for await (const chunk of stream) {
-              if (cancelChecker && typeof cancelChecker === 'function') {
-                const isCancelled = await cancelChecker();
-                if (isCancelled) {
-                  throw new JobCancelledError();
+            try {
+              const stream = await ai.models.generateContentStream({
+                model: modelName,
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [
+                      {
+                        fileData: {
+                          fileUri: uploadedFile.uri,
+                          mimeType: 'audio/mp3',
+                        },
+                      },
+                      { text: promptText },
+                    ],
+                  },
+                ],
+                config: { abortSignal: watchdog.signal },
+              });
+
+              for await (const chunk of stream) {
+                watchdog.touch();
+
+                const textChunk = chunk.text ?? '';
+                accumulated += textChunk;
+
+                // Hitung kata secara efisien: tambah jumlah kata dari chunk baru
+                if (textChunk.trim()) {
+                  wordCount += textChunk.trim().split(/\s+/).length;
+                }
+
+                // Log progress tiap LOG_INTERVAL_MS agar tidak spam
+                const now = Date.now();
+                if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                  const elapsedSec = Math.round((now - startTime) / 1000);
+                  onLog(`[Transcribe] chunk_${chunkNum} streaming... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.length.toLocaleString('id-ID')} karakter]`);
+                  lastLogTime = now;
                 }
               }
-
-              const textChunk = chunk.text ?? '';
-              accumulated += textChunk;
-
-              // Hitung kata secara efisien: tambah jumlah kata dari chunk baru
-              if (textChunk.trim()) {
-                wordCount += textChunk.trim().split(/\s+/).length;
+            } catch (err) {
+              if (watchdog.isCancelled() || err instanceof JobCancelledError) {
+                throw new JobCancelledError();
               }
-
-              // Log progress tiap LOG_INTERVAL_MS agar tidak spam
-              const now = Date.now();
-              if (now - lastLogTime >= LOG_INTERVAL_MS) {
-                const elapsedSec = Math.round((now - startTime) / 1000);
-                onLog(`[Transcribe] chunk_${chunkNum} streaming... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.length.toLocaleString('id-ID')} karakter]`);
-                lastLogTime = now;
-              }
+              throw err;
+            } finally {
+              watchdog.stop();
             }
 
             const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -498,31 +551,41 @@ Isi setiap field dengan lengkap:
           let lastLogTime = startTime;
           const LOG_INTERVAL_MS = 10_000;
 
-          const stream = await ai.models.generateContentStream({
-            model: modelName,
-            contents: promptText,
-            config: {
-              responseMimeType: 'application/json',
-              responseSchema: MINUTES_RESPONSE_SCHEMA,
-            },
+          const watchdog = createStreamWatchdog({
+            cancelChecker,
+            onSilence: (sec) => onLog(`[Minutes] Model ${modelName} masih memproses transkrip... [${sec}s tanpa keluaran teks, kemungkinan fase thinking]`),
           });
 
-          for await (const chunk of stream) {
-            if (cancelChecker && typeof cancelChecker === 'function') {
-              const isCancelled = await cancelChecker();
-              if (isCancelled) {
-                throw new JobCancelledError();
+          try {
+            const stream = await ai.models.generateContentStream({
+              model: modelName,
+              contents: promptText,
+              config: {
+                responseMimeType: 'application/json',
+                responseSchema: MINUTES_RESPONSE_SCHEMA,
+                abortSignal: watchdog.signal,
+              },
+            });
+
+            for await (const chunk of stream) {
+              watchdog.touch();
+
+              accumulated += chunk.text ?? '';
+
+              const now = Date.now();
+              if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                const elapsedSec = Math.round((now - startTime) / 1000);
+                onLog(`[Minutes] Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
+                lastLogTime = now;
               }
             }
-
-            accumulated += chunk.text ?? '';
-
-            const now = Date.now();
-            if (now - lastLogTime >= LOG_INTERVAL_MS) {
-              const elapsedSec = Math.round((now - startTime) / 1000);
-              onLog(`[Minutes] Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
-              lastLogTime = now;
+          } catch (err) {
+            if (watchdog.isCancelled() || err instanceof JobCancelledError) {
+              throw new JobCancelledError();
             }
+            throw err;
+          } finally {
+            watchdog.stop();
           }
 
           const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);

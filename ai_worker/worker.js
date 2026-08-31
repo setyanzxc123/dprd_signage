@@ -26,21 +26,26 @@ export async function getDbPool() {
 }
 
 /**
- * Startup Reset: Mengembalikan job in-progress yang menggantung saat server restart
- * ke status 'queued'. Hanya job basi (updated_at lebih tua dari threshold) yang
- * di-reset, agar tidak membatalkan job yang sedang diproses worker lain.
+ * Pemulihan job in-progress yang menggantung (worker mati/crash saat
+ * memproses) ke status 'queued'. Dijalankan saat startup dan secara berkala
+ * oleh daemon. Job yang sedang diproses worker ini dikecualikan agar tidak
+ * di-reset di tengah proses yang masih berjalan.
  */
-export async function performStartupReset(pool) {
+export async function performStartupReset(pool, excludeJobId = null) {
   const cutoff = new Date(Date.now() - config.worker.staleThresholdMinutes * 60 * 1000);
-  const [result] = await pool.execute(
+  const params = [cutoff];
+  let sql =
     `UPDATE meeting_transcription_jobs
-     SET status = 'queued', cancel_requested = 0, current_step = 'Menunggu antrean (dipulihkan dari restart)'
-     WHERE status IN ('chunking', 'transcribing', 'summarizing') AND updated_at < ?`,
-    [cutoff]
-  );
+     SET status = 'queued', cancel_requested = 0, current_step = 'Menunggu antrean (dipulihkan dari kondisi macet)'
+     WHERE status IN ('chunking', 'transcribing', 'summarizing') AND updated_at < ?`;
+  if (excludeJobId) {
+    sql += ' AND id <> ?';
+    params.push(excludeJobId);
+  }
+  const [result] = await pool.execute(sql, params);
 
   if (result.affectedRows > 0) {
-    log(`[Worker] Startup Reset: ${result.affectedRows} job in-progress basi berhasil di-reset ke 'queued'.`);
+    log(`[Worker] Pemulihan job basi: ${result.affectedRows} job in-progress di-reset ke 'queued'.`);
   }
 }
 
@@ -508,16 +513,29 @@ async function main() {
   log(`[Worker] Daemon aktif. Memantau antrean task (polling interval ${config.worker.pollIntervalMs / 1000}s)...`);
 
   let isRunning = true;
+  let activeJobId = null;
+
+  // Sweep berkala: pulihkan job macet (mis. worker mati saat memproses lalu
+  // restart terjadi < threshold kemudian) tanpa menunggu restart berikutnya.
+  const STALE_SWEEP_INTERVAL_MS = 60_000;
+  const sweepTimer = setInterval(() => {
+    performStartupReset(pool, activeJobId).catch((err) => {
+      warn('[Worker] Sweep job basi gagal:', err.message);
+    });
+  }, STALE_SWEEP_INTERVAL_MS);
 
   while (isRunning) {
     try {
       const job = await nextQueuedJobCandidate(pool);
       if (job) {
+        activeJobId = job.id;
         try {
           await processJob(pool, job);
         } catch (jobErr) {
           error(`[Worker] Error saat memproses Job #${job.id}:`, jobErr);
           await markJobFailure(pool, job.id, jobErr);
+        } finally {
+          activeJobId = null;
         }
       } else {
         if (!isDaemon) {
