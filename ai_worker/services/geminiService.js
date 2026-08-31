@@ -26,11 +26,14 @@ const STREAM_SILENCE_LOG_MS = 30_000;
 /**
  * Watchdog untuk stream Gemini: mengecek cancelChecker berkala (termasuk
  * saat stream belum mengeluarkan teks apa pun) dan membatalkan request
- * via AbortSignal, plus callback heartbeat saat stream senyap.
+ * via AbortSignal, plus callback heartbeat saat stream senyap. Fase senyap
+ * dibedakan antara belum tersambung (server belum merespons) dan sudah
+ * tersambung (model sedang prefill/thinking).
  */
 function createStreamWatchdog({ cancelChecker, onSilence }) {
   const controller = new AbortController();
   let cancelled = false;
+  let connected = false;
   let lastActivityAt = Date.now();
 
   const timer = setInterval(() => {
@@ -50,7 +53,7 @@ function createStreamWatchdog({ cancelChecker, onSilence }) {
       const silentForMs = Date.now() - lastActivityAt;
       if (onSilence && silentForMs >= STREAM_SILENCE_LOG_MS) {
         lastActivityAt = Date.now();
-        onSilence(Math.round(silentForMs / 1000));
+        onSilence(Math.round(silentForMs / 1000), connected);
       }
     })();
   }, CANCEL_POLL_MS);
@@ -58,6 +61,7 @@ function createStreamWatchdog({ cancelChecker, onSilence }) {
   return {
     signal: controller.signal,
     isCancelled: () => cancelled,
+    markConnected: () => { connected = true; },
     touch: () => { lastActivityAt = Date.now(); },
     stop: () => clearInterval(timer),
   };
@@ -308,7 +312,13 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
 
             const watchdog = createStreamWatchdog({
               cancelChecker,
-              onSilence: (sec) => onLog(`[Transcribe] chunk_${chunkNum} masih menunggu keluaran model... [${sec}s tanpa teks]`),
+              onSilence: (sec, isConnected) => {
+                if (isConnected) {
+                  onLog(`[Transcribe] chunk_${chunkNum} tersambung ke ${modelName}, model sedang memproses audio... [${sec}s tanpa keluaran teks]`);
+                } else {
+                  onLog(`[Transcribe] chunk_${chunkNum} belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
+                }
+              },
             });
 
             try {
@@ -330,6 +340,8 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
                 ],
                 config: { abortSignal: watchdog.signal },
               });
+              watchdog.markConnected();
+              onLog(`[Transcribe] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
 
               for await (const chunk of stream) {
                 watchdog.touch();
@@ -553,7 +565,13 @@ Isi setiap field dengan lengkap:
 
           const watchdog = createStreamWatchdog({
             cancelChecker,
-            onSilence: (sec) => onLog(`[Minutes] Model ${modelName} masih memproses transkrip... [${sec}s tanpa keluaran teks, kemungkinan fase thinking]`),
+            onSilence: (sec, isConnected) => {
+              if (isConnected) {
+                onLog(`[Minutes] Tersambung ke ${modelName}, model sedang memproses transkrip (prefill/thinking)... [${sec}s tanpa keluaran teks]`);
+              } else {
+                onLog(`[Minutes] Belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
+              }
+            },
           });
 
           try {
@@ -566,6 +584,8 @@ Isi setiap field dengan lengkap:
                 abortSignal: watchdog.signal,
               },
             });
+            watchdog.markConnected();
+            onLog(`[Minutes] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
 
             for await (const chunk of stream) {
               watchdog.touch();
