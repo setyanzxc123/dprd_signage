@@ -6,7 +6,7 @@ use CodeIgniter\Config\BaseConfig;
 
 class Otp extends BaseConfig
 {
-    public string $provider = 'internal';
+    public string $provider = 'hybrid';
     public string $fazpassApiUrl = 'https://api.fazpass.com';
     public string $fazpassApiPrefix = '/v1';
     public string $fazpassMerchantKey = '';
