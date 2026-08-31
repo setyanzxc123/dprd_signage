@@ -45,7 +45,7 @@
             color: #333;
         }
         .naskah {
-            text-align: justify;
+            text-align: left;
             white-space: pre-wrap;
             overflow-wrap: break-word;
             word-break: break-word;
