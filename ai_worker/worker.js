@@ -18,6 +18,46 @@ process.stderr?.on('error', (err) => {
 
 let dbPool = null;
 
+const LOCK_PATH = path.resolve(config.paths.logsDir, '..', 'worker.lock');
+
+function isPidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code === 'EPERM';
+  }
+}
+
+/**
+ * Kunci instance tunggal daemon: mencegah dua daemon berjalan bersamaan
+ * (double-claim antrean). Lock basi (PID sudah mati) otomatis diambil alih.
+ */
+function acquireDaemonLock() {
+  let existing = null;
+  try {
+    existing = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8'));
+  } catch {
+    // lock tidak ada / rusak: aman untuk diambil
+  }
+  if (existing && existing.pid !== process.pid && isPidAlive(existing.pid)) {
+    return { acquired: false, pid: existing.pid };
+  }
+  fs.writeFileSync(LOCK_PATH, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }));
+  return { acquired: true, pid: process.pid };
+}
+
+function releaseDaemonLock() {
+  try {
+    const existing = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8'));
+    if (existing && existing.pid === process.pid) {
+      fs.unlinkSync(LOCK_PATH);
+    }
+  } catch {
+    // lock sudah tidak ada: tidak ada yang perlu dibersihkan
+  }
+}
+
 export async function getDbPool() {
   if (!dbPool) {
     dbPool = mysql.createPool(config.db);
@@ -30,14 +70,21 @@ export async function getDbPool() {
  * memproses) ke status 'queued'. Dijalankan saat startup dan secara berkala
  * oleh daemon. Job yang sedang diproses worker ini dikecualikan agar tidak
  * di-reset di tengah proses yang masih berjalan.
+ *
+ * Saat kunci instance tunggal menjamin tidak ada worker lain
+ * (ignoreStaleness = true), semua job in-progress dipulihkan tanpa
+ * menunggu ambang kebasian - resume langsung setelah restart.
  */
-export async function performStartupReset(pool, excludeJobId = null) {
-  const cutoff = new Date(Date.now() - config.worker.staleThresholdMinutes * 60 * 1000);
-  const params = [cutoff];
+export async function performStartupReset(pool, excludeJobId = null, ignoreStaleness = false) {
+  const params = [];
   let sql =
     `UPDATE meeting_transcription_jobs
      SET status = 'queued', cancel_requested = 0, current_step = 'Menunggu antrean (dipulihkan dari kondisi macet)'
-     WHERE status IN ('chunking', 'transcribing', 'summarizing') AND updated_at < ?`;
+     WHERE status IN ('chunking', 'transcribing', 'summarizing')`;
+  if (!ignoreStaleness) {
+    sql += ' AND updated_at < ?';
+    params.push(new Date(Date.now() - config.worker.staleThresholdMinutes * 60 * 1000));
+  }
   if (excludeJobId) {
     sql += ' AND id <> ?';
     params.push(excludeJobId);
@@ -475,6 +522,7 @@ async function main() {
   // Registrasi handler sinyal penghentian proses (Ctrl+C / Kill)
   const handleExitSignal = async (signal) => {
     log(`\n[Worker] Menerima sinyal ${signal} (Ctrl+C). Menghentikan worker segera...`);
+    releaseDaemonLock();
     if (pool) {
       try {
         await pool.end();
@@ -485,6 +533,7 @@ async function main() {
 
   process.on('SIGINT', () => handleExitSignal('SIGINT'));
   process.on('SIGTERM', () => handleExitSignal('SIGTERM'));
+  process.on('exit', releaseDaemonLock);
 
   // Mode 1: Single Job manual
   if (jobIdArg) {
@@ -509,7 +558,13 @@ async function main() {
   }
 
   // Mode 2: Daemon Worker Loop (PM2 / background service)
-  await performStartupReset(pool);
+  const lock = acquireDaemonLock();
+  if (!lock.acquired) {
+    error(`[Worker] Daemon sudah berjalan (PID ${lock.pid}). Matikan daemon tersebut dulu agar tidak terjadi double-claim antrean.`);
+    process.exit(1);
+  }
+
+  await performStartupReset(pool, null, true);
   log(`[Worker] Daemon aktif. Memantau antrean task (polling interval ${config.worker.pollIntervalMs / 1000}s)...`);
 
   let isRunning = true;
