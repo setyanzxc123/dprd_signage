@@ -551,6 +551,46 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $showResponse->assertSee('Hentikan');
     }
 
+    public function testExportPdfReturnsServerSidePdfMatchingPreview(): void
+    {
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 102,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 45,
+            'audio_filename' => 'rapat_selesai.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 45,
+            'judul'       => 'RDP Komisi II',
+            'tanggal'     => '2026-08-30',
+            'waktu_mulai' => '13:30:00',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'id'                  => 102,
+            'job_id'              => 102,
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nRapat membahas Ranperda apotek hidup.\n\nII. POIN PEMBAHASAN\n1. [13:35] Topik: Keuangan\n\nIII. KESIMPULAN AKHIR\n1. Ranperda disetujui.",
+            'status_verifikasi'   => 'final',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->adminGet('/admin/notulen/export-pdf/102');
+
+        $response->assertOK();
+        $response->assertHeader('Content-Type');
+        $this->assertStringContainsString('application/pdf', $response->response()->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('no-store', $response->response()->getHeaderLine('Cache-Control'));
+        $this->assertSame('inline', str_getcsv($response->response()->getHeaderLine('Content-Disposition'), ';')[0]);
+        $this->assertStringContainsString('Risalah_RDP_Komisi_II_20260830.pdf', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->response()->getBody());
+    }
+
     public function testStopAndResumeButtonsAndLifecycleInNotulenShow(): void
     {
         $jobId = 105;

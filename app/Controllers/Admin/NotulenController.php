@@ -13,6 +13,7 @@ use App\Models\MeetingMinutesModel;
 use App\Models\MeetingTranscriptionJobModel;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\ResponseInterface;
+use Dompdf\Dompdf;
 
 class NotulenController extends BaseController
 {
@@ -461,10 +462,11 @@ class NotulenController extends BaseController
     }
 
     /**
-     * Halaman cetak resmi / export PDF risalah dengan kop surat DPRD (SSOT).
-     * Hanya dapat dicetak jika proses penyusunan AI telah selesai dan teks risalah tersedia.
+     * Export PDF server-side risalah rapat.
+     * Isi dokumen mengikuti preview tab risalah: header identitas, judul,
+     * metadata, lalu naskah lengkap tanpa kop surat dan kolom tanda tangan.
      */
-    public function exportPdf(int $minutesId): string|RedirectResponse
+    public function exportPdf(int $minutesId): ResponseInterface
     {
         $minutesModel = new MeetingMinutesModel();
         $minutes = $minutesModel->find($minutesId);
@@ -482,14 +484,36 @@ class NotulenController extends BaseController
 
         $schedule = $this->service->resolveScheduleInfo(
             (string) ($job['jadwal_type'] ?? 'umum'),
-            $job && $job['jadwal_id'] ? (int) $job['jadwal_id'] : null
+            $job['jadwal_id'] ? (int) $job['jadwal_id'] : null
         );
 
-        return view('admin/notulen/print', [
-            'pageTitle' => 'Cetak Risalah — ' . $schedule['judul'],
-            'minutes'   => $minutes,
-            'schedule'  => $schedule,
+        $judulRapat   = $schedule['judul'] !== '' ? $schedule['judul'] : (string) $job['audio_filename'];
+        $tanggalRapat = $schedule['tanggal'] !== '' ? $schedule['tanggal'] : substr((string) $job['created_at'], 0, 10);
+        $waktuMulai   = ! empty($schedule['waktu_mulai'])
+            ? substr((string) $schedule['waktu_mulai'], 0, 5) . ' WITA'
+            : '09:00 WITA';
+
+        $html = view('admin/notulen/pdf', [
+            'pageTitle'   => 'Risalah Rapat - ' . $judulRapat,
+            'minutes'     => $minutes,
+            'judulRapat'  => $judulRapat,
+            'tanggalRapat'=> $tanggalRapat,
+            'waktuMulai'  => $waktuMulai,
         ]);
+
+        $dompdf = new Dompdf(['isRemoteEnabled' => false]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $fileName = 'Risalah_' . preg_replace('/[^A-Za-z0-9]+/', '_', $judulRapat) . '_' . date('Ymd', strtotime((string) $tanggalRapat)) . '.pdf';
+
+        return $this->response
+            ->setStatusCode(200)
+            ->setContentType('application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
+            ->setHeader('Cache-Control', 'no-store, private')
+            ->setBody($dompdf->output());
     }
 
     private function audioUploader(): PostChunkAudioUpload
