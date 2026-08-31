@@ -47,7 +47,8 @@
         .naskah {
             text-align: justify;
             white-space: pre-wrap;
-            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
     </style>
 </head>
