@@ -38,7 +38,7 @@ final class BaileysProvider
 
         $payload = $this->payload($response->body);
         if ($response->error !== null || $payload === null || $response->statusCode >= 400) {
-            return new BaileysSendResult(false, error: $this->error($payload));
+            return new BaileysSendResult(false, error: $response->error ?? $this->error($payload));
         }
 
         $messageId = $this->string($payload['data']['messageId'] ?? null);
