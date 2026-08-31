@@ -49,6 +49,55 @@ final class BaileysProvider
         return new BaileysSendResult(true, $messageId);
     }
 
+    /** @return array<string, mixed> */
+    public function getStatus(): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'configured' => false,
+                'connected'  => false,
+                'status'     => 'unconfigured',
+                'phone'      => null,
+                'name'       => null,
+                'qr_url'     => $this->endpoint('/qr'),
+                'error'      => 'Baileys gateway belum dikonfigurasi.',
+            ];
+        }
+
+        $response = $this->transport->get(
+            $this->endpoint('/status'),
+            $this->headers(),
+            $this->config->baileysTimeoutSeconds,
+        );
+
+        $payload = $this->payload($response->body);
+        if ($response->error !== null || $payload === null || $response->statusCode >= 400) {
+            return [
+                'configured' => true,
+                'connected'  => false,
+                'status'     => 'offline',
+                'phone'      => null,
+                'name'       => null,
+                'qr_url'     => $this->endpoint('/qr'),
+                'error'      => $response->error ?? $this->error($payload),
+            ];
+        }
+
+        $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
+        $connected = ($data['connected'] ?? false) === true;
+        $user = is_array($data['user'] ?? null) ? $data['user'] : [];
+
+        return [
+            'configured' => true,
+            'connected'  => $connected,
+            'status'     => (string) ($data['status'] ?? ($connected ? 'connected' : 'disconnected')),
+            'phone'      => $this->string($user['phone'] ?? null),
+            'name'       => $this->string($user['name'] ?? null),
+            'qr_url'     => $this->endpoint('/qr'),
+            'error'      => null,
+        ];
+    }
+
     private function endpoint(string $path): string
     {
         return rtrim($this->config->baileysApiUrl, '/') . $path;

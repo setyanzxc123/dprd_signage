@@ -453,6 +453,21 @@ final class HybridRecordingTransport implements HttpTransportInterface
 
         return new HttpResponse(200, '{"status":"success","data":{"messageId":"DEFAULT-MSG"}}');
     }
+
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        $this->requestCount++;
+        $this->lastUrl = $url;
+        $this->lastHeaders = $headers;
+
+        foreach ($this->responses as $path => $response) {
+            if (str_ends_with($url, $path)) {
+                return $response;
+            }
+        }
+
+        return new HttpResponse(200, '{"status":"success","data":{"status":"connected","connected":true}}');
+    }
 }
 
 final class HybridOtpMemoryRepository implements OtpRepositoryInterface

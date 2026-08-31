@@ -17,4 +17,9 @@ interface HttpTransportInterface
      * @param array<string, mixed> $payload
      */
     public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse;
+
+    /**
+     * @param array<string, string> $headers
+     */
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse;
 }

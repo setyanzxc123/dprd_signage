@@ -87,4 +87,12 @@ final class FazpassRecordingTransport implements HttpTransportInterface
 
         return $this->response;
     }
+
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        $this->url = $url;
+        $this->headers = $headers;
+
+        return $this->response;
+    }
 }

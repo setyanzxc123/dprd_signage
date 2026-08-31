@@ -129,9 +129,10 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('notulen/unfinalize/(:num)',          'Admin\NotulenController::unfinalizeMinutes/$1');
     $routes->get( 'notulen/export-pdf/(:num)',          'Admin\NotulenController::exportPdf/$1');
 
-    // Pengaturan Signage
-    $routes->get( 'pengaturan',              'Admin\SettingController::index');
-    $routes->post('pengaturan/save',         'Admin\SettingController::save');
+    // Pengaturan Signage & Integrasi
+    $routes->get( 'pengaturan',                 'Admin\SettingController::index');
+    $routes->get( 'pengaturan/whatsapp/status', 'Admin\SettingController::whatsappStatus');
+    $routes->post('pengaturan/save',            'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
     $routes->post('pengaturan/media-upload/start',  'Admin\SettingController::startMediaUpload');
     $routes->post('pengaturan/media-upload/chunk',  'Admin\SettingController::uploadMediaChunk');

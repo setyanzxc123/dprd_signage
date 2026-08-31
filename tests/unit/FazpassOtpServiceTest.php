@@ -358,6 +358,11 @@ final class OtpRecordingTransport implements HttpTransportInterface
             ],
         ], JSON_THROW_ON_ERROR));
     }
+
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        return new HttpResponse(200, '{"status":true}');
+    }
 }
 
 final class OtpMemoryRepository implements OtpRepositoryInterface
