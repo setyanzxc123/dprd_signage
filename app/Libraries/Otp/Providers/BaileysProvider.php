@@ -186,6 +186,48 @@ final class BaileysProvider
         ];
     }
 
+    /** @return array<string, mixed> */
+    public function logoutDevice(): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'success' => false,
+                'message' => null,
+                'error'   => 'Baileys gateway belum dikonfigurasi.',
+            ];
+        }
+
+        $response = $this->transport->postJson(
+            $this->endpoint('/logout'),
+            $this->headers(),
+            [],
+            $this->config->baileysTimeoutSeconds,
+        );
+
+        $payload = $this->payload($response->body);
+        if ($response->error !== null || $payload === null || $response->statusCode >= 400) {
+            return [
+                'success' => false,
+                'message' => null,
+                'error'   => $response->error ?? $this->error($payload),
+            ];
+        }
+
+        if (($payload['status'] ?? '') !== 'success') {
+            return [
+                'success' => false,
+                'message' => null,
+                'error'   => $this->error($payload),
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => $this->string($payload['message'] ?? null),
+            'error'   => null,
+        ];
+    }
+
     private function endpoint(string $path): string
     {
         return rtrim($this->config->baileysApiUrl, '/') . $path;

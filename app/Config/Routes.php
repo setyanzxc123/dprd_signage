@@ -133,6 +133,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->get( 'pengaturan',                    'Admin\SettingController::index');
     $routes->get( 'pengaturan/whatsapp/status',    'Admin\SettingController::whatsappStatus');
     $routes->post('pengaturan/whatsapp/pair-code', 'Admin\SettingController::whatsappPairCode');
+    $routes->post('pengaturan/whatsapp/logout',    'Admin\SettingController::whatsappLogout');
     $routes->post('pengaturan/save',               'Admin\SettingController::save');
     $routes->post('pengaturan/media/delete', 'Admin\SettingController::deleteMedia');
     $routes->post('pengaturan/media-upload/start',  'Admin\SettingController::startMediaUpload');
@@ -144,7 +145,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('profile/update', 'Admin\ProfileController::update');
 });
 
-// ── API v1 CORS (lihat Config\Cors) ──────────────────────────────────
+// API v1 CORS (lihat ConfigCors)
 // Filter cors didaftukan paling awal di tiap grup api/v1 agar header CORS
 // terpasang sebelum filter auth memutus permintaan — respons 401/403 pun
 // tetap terbaca klien browser. Preflight OPTIONS dijawab oleh filter cors
@@ -152,7 +153,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 // OPTIONS ke path API akan 404 sebelum filter sempat berjalan.
 $routes->options('api/v1/(:any)', static fn () => service('response')->setStatusCode(204), ['filter' => 'cors']);
 
-// ── API v1 Publik (tanpa auth) ───────────────────────────────────────
+// API v1 Publik (tanpa auth)
 $routes->group('api/v1/publik', ['filter' => 'cors'], function ($routes) {
     $routes->get('jadwal', 'Api\PublicController::jadwal');
 });
@@ -161,17 +162,17 @@ $routes->group('api/v1/anggota', ['filter' => ['cors', 'memberapi']], function (
     $routes->get('jadwal', 'Api\MemberScheduleController::jadwal');
 });
 
-// ── API v1 Resolve resource jadwal (sesi web / bearer anggota) ──────
+// API v1 Resolve resource jadwal (sesi web / bearer anggota)
 $routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'memberapi']], static function ($routes) {
     $routes->get('(:segment)/(:num)/(materi|stream)', 'ScheduleResourceController::resolve/$1/$2/$3');
     $routes->get('(:segment)/(:num)/undangan', 'ScheduleDocumentController::undangan/$1/$2');
     $routes->get('(:segment)/(:num)/risalah', 'ScheduleMinutesController::show/$1/$2');
 });
 
-// ── API v1 Dokumen SK banmus (publik bila is_publik, selain itu anggota) ──
+// API v1 Dokumen SK banmus (publik bila is_publik, selain itu anggota)
 $routes->get('api/v1/dokumen-banmus/(:num)', 'ScheduleDocumentController::sk/$1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'cors']);
 
-// ── API v1 Auth mobile (bearer token) ───────────────────────────────
+// API v1 Auth mobile (bearer token)
 $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'cors'], static function ($routes) {
     $routes->post('login',       'AuthController::login');
     $routes->post('otp/request', 'AuthController::otpRequest');
@@ -180,7 +181,7 @@ $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1', 'filter'
     $routes->get('me',           'AuthController::me');
 });
 
-// ── API v1 CRUD admin (bearer token + grup admin) ──────────────────
+// API v1 CRUD admin (bearer token + grup admin)
 $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'apiadmin']], static function ($routes) {
     $routes->get('admin/agenda', 'AdminAgendaController::index');
     $routes->get('admin/profil', 'AdminProfileController::index');
@@ -252,7 +253,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->delete('jadwal-banmus/(:num)/item/(:num)/undangan', 'JadwalBanmusController::deleteItemInvitation/$1/$2');
 });
 
-// ── API Signage (backward compatible) ────────────────────────────────
+// API Signage (backward compatible)
 $routes->get('api/signage/jadwal', 'Api\SignageController::jadwal');
 $routes->get('api/signage/cuaca',  'Api\SignageController::cuaca');
 

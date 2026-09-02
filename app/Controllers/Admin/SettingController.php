@@ -422,4 +422,26 @@ class SettingController extends BaseController
             'phone'        => $result['phone'],
         ]);
     }
+
+    public function whatsappLogout()
+    {
+        $otpConfig = new OtpConfig();
+        $provider = new BaileysProvider(config: $otpConfig);
+        $result = $provider->logoutDevice();
+
+        if (! $result['success']) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status'  => 'error',
+                'message' => $result['error'] ?? 'Gagal memutus sesi WhatsApp.',
+            ]);
+        }
+
+        $status = $provider->getStatus();
+
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'message' => $result['message'] ?? 'Sesi WhatsApp telah diputus. Lakukan pairing ulang untuk menghubungkan kembali.',
+            'gateway' => $status,
+        ]);
+    }
 }

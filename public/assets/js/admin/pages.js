@@ -753,6 +753,12 @@
                 <p class="text-xs text-base-content/80 mt-1">
                     No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
                 </p>
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <button type="button" class="btn btn-error btn-outline btn-xs gap-1.5 font-semibold" id="btn-wa-logout">
+                        <i data-lucide="log-out" class="h-4 w-4"></i>
+                        <span>Putuskan Perangkat</span>
+                    </button>
+                </div>
             `;
             if (window.lucide) {
                 window.lucide.createIcons();
@@ -910,6 +916,69 @@
                     btnRequestPairCode.disabled = false;
                     if (spinnerPairCode) spinnerPairCode.hidden = true;
                     if (iconPairSend) iconPairSend.hidden = false;
+                }
+            });
+        }
+
+        // Tombol putuskan perangkat dirender ulang dinamis, gunakan delegasi pada kontainer status
+        const modalWaLogout = document.getElementById('modal_wa_logout');
+        const waLogoutError = document.getElementById('wa-logout-error');
+
+        if (waPrimaryStatus && modalWaLogout instanceof HTMLDialogElement) {
+            waPrimaryStatus.addEventListener('click', (event) => {
+                if ((event.target instanceof Element) && event.target.closest('#btn-wa-logout')) {
+                    if (waLogoutError) waLogoutError.hidden = true;
+                    modalWaLogout.showModal();
+                }
+            });
+        }
+
+        const waLogoutCancel = document.getElementById('btn-wa-logout-cancel');
+        if (waLogoutCancel && modalWaLogout instanceof HTMLDialogElement) {
+            waLogoutCancel.addEventListener('click', () => {
+                modalWaLogout.close();
+            });
+        }
+
+        const waLogoutConfirm = document.getElementById('btn-wa-logout-confirm');
+        const waLogoutSpinner = document.getElementById('spinner-wa-logout-confirm');
+        if (waLogoutConfirm && modalWaLogout instanceof HTMLDialogElement) {
+            waLogoutConfirm.addEventListener('click', async () => {
+                waLogoutConfirm.disabled = true;
+                if (waLogoutSpinner) waLogoutSpinner.hidden = false;
+                if (waLogoutError) waLogoutError.hidden = true;
+
+                try {
+                    const csrfInput = form.querySelector('input[name="<?= csrf_token() ?>"]') || document.querySelector('input[name="csrf_test_name"]');
+                    const csrfName = csrfInput ? csrfInput.name : 'csrf_test_name';
+                    const csrfHash = csrfInput ? csrfInput.value : '';
+
+                    const formData = new FormData();
+                    if (csrfName && csrfHash) formData.append(csrfName, csrfHash);
+
+                    const response = await fetch('/admin/pengaturan/whatsapp/logout', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok || data.status !== 'success') {
+                        throw new Error(data.message || 'Gagal memutus sesi WhatsApp.');
+                    }
+
+                    modalWaLogout.close();
+                    stopWaPolling();
+                    renderDisconnectedStatus(data.message || 'Sesi WhatsApp telah diputus. Lakukan pairing ulang untuk menghubungkan kembali.');
+                    startWaPolling(4000);
+                } catch (err) {
+                    if (waLogoutError) {
+                        waLogoutError.textContent = err.message || 'Terjadi kesalahan sistem.';
+                        waLogoutError.hidden = false;
+                    }
+                } finally {
+                    waLogoutConfirm.disabled = false;
+                    if (waLogoutSpinner) waLogoutSpinner.hidden = true;
                 }
             });
         }

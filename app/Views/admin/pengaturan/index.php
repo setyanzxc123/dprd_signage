@@ -129,67 +129,44 @@
                 </div>
             </div>
 
-            <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2" id="wa-status-grid">
-                <div class="rounded-box border border-base-300 bg-base-200 p-4 space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs font-bold uppercase tracking-wider opacity-70">Jalur Primer (Lokal)</span>
-                        <span class="badge badge-sm badge-success font-bold">Biaya Rp 0</span>
-                    </div>
-                    <div id="wa-primary-status">
-                        <?php if (! empty($whatsapp['connected'])): ?>
-                            <div class="flex items-center gap-2 text-success font-semibold">
-                                <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
-                                <span>WhatsApp Gateway Terhubung</span>
-                            </div>
-                            <p class="text-xs text-base-content/80 mt-1">
-                                No. Pengirim: <strong>+<?= esc($whatsapp['phone'] ?? '-') ?></strong>
-                                <?php if (! empty($whatsapp['name'])): ?>
-                                    (<?= esc($whatsapp['name']) ?>)
-                                <?php endif; ?>
-                            </p>
-                        <?php else: ?>
-                            <div class="flex items-center gap-2 text-error font-semibold">
-                                <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
-                                <span>WhatsApp Belum Terhubung</span>
-                            </div>
-                            <p class="text-xs text-base-content/80 mt-1" id="wa-error-text">
-                                <?= esc($whatsapp['error'] ?? 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.') ?>
-                            </p>
-                            <div class="pt-2">
-                                <button type="button" class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn"
-                                    onclick="document.getElementById('modal_wa_pairing').showModal()">
-                                    <i data-lucide="qr-code" class="h-4 w-4"></i>
-                                    <span>Buka Scan QR / Pairing Code</span>
-                                </button>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+            <div class="rounded-box border border-base-300 bg-base-200 p-4 space-y-3" id="wa-primary-status-card">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wider opacity-70">Status Koneksi Gateway</span>
                 </div>
-
-                <div class="rounded-box border border-base-300 bg-base-200 p-4 space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs font-bold uppercase tracking-wider opacity-70">Jalur Cadangan (Cloud Fallback)</span>
-                        <span class="badge badge-sm badge-info font-bold">Fazpass API</span>
-                    </div>
-                    <div>
-                        <?php if (! empty($otpConfig->fazpassFallbackEnabled)): ?>
-                            <div class="flex items-center gap-2 text-info font-semibold">
-                                <i data-lucide="shield-check" class="h-5 w-5 shrink-0"></i>
-                                <span>Fallback Otomatis Aktif</span>
-                            </div>
-                            <p class="text-xs text-base-content/80 mt-1">
-                                Jika service Baileys mati atau terputus, sistem otomatis mengalihkan OTP ke Fazpass Cloud tanpa gangguan.
-                            </p>
-                        <?php else: ?>
-                            <div class="flex items-center gap-2 text-warning font-semibold">
-                                <i data-lucide="shield-alert" class="h-5 w-5 shrink-0"></i>
-                                <span>Fallback Nonaktif</span>
-                            </div>
-                            <p class="text-xs text-base-content/80 mt-1">
-                                Failover ke Fazpass dimatikan melalui konfigurasi FAZPASS_FALLBACK_ENABLED=false.
-                            </p>
-                        <?php endif; ?>
-                    </div>
+                <div id="wa-primary-status">
+                    <?php if (! empty($whatsapp['connected'])): ?>
+                        <div class="flex items-center gap-2 text-success font-semibold">
+                            <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
+                            <span>WhatsApp Gateway Terhubung</span>
+                        </div>
+                        <p class="text-xs text-base-content/80 mt-1">
+                            No. Pengirim: <strong>+<?= esc($whatsapp['phone'] ?? '-') ?></strong>
+                            <?php if (! empty($whatsapp['name'])): ?>
+                                (<?= esc($whatsapp['name']) ?>)
+                            <?php endif; ?>
+                        </p>
+                        <div class="flex flex-wrap gap-2 pt-2">
+                            <button type="button" class="btn btn-error btn-outline btn-xs gap-1.5 font-semibold" id="btn-wa-logout">
+                                <i data-lucide="log-out" class="h-4 w-4"></i>
+                                <span>Putuskan Perangkat</span>
+                            </button>
+                        </div>
+                    <?php else: ?>
+                        <div class="flex items-center gap-2 text-error font-semibold">
+                            <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
+                            <span>WhatsApp Belum Terhubung</span>
+                        </div>
+                        <p class="text-xs text-base-content/80 mt-1" id="wa-error-text">
+                            <?= esc($whatsapp['error'] ?? 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.') ?>
+                        </p>
+                        <div class="pt-2">
+                            <button type="button" class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn"
+                                onclick="document.getElementById('modal_wa_pairing').showModal()">
+                                <i data-lucide="qr-code" class="h-4 w-4"></i>
+                                <span>Buka Scan QR / Pairing Code</span>
+                            </button>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -243,7 +220,7 @@
         <!-- Panel 1: Scan QR Code -->
         <div id="panel-wa-qr" class="space-y-3">
             <div class="text-xs text-base-content/70">
-                Buka WhatsApp di HP $\rightarrow$ <strong>Perangkat Tertaut</strong> $\rightarrow$ <strong>Tautkan Perangkat</strong> $\rightarrow$ scan kode berikut:
+                Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan Perangkat</strong>, lalu scan kode berikut:
             </div>
 
             <div class="flex flex-col items-center justify-center p-4 bg-base-200 rounded-box min-h-56">
@@ -285,7 +262,7 @@
                 <div class="text-xs font-bold uppercase tracking-wider text-primary">Kode Pairing Anda</div>
                 <div class="text-2xl font-black font-mono tracking-widest text-primary select-all" id="text-pairing-code">-</div>
                 <p class="text-xs text-base-content/80">
-                    Buka WhatsApp di HP $\rightarrow$ <strong>Perangkat Tertaut</strong> $\rightarrow$ <strong>Tautkan dengan nomor telepon</strong> $\rightarrow$ masukkan kode di atas.
+                    Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan dengan nomor telepon</strong>, lalu masukkan kode di atas.
                 </p>
             </div>
 
@@ -295,6 +272,27 @@
         <div class="modal-action border-t border-base-300 pt-3">
             <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal_wa_pairing').close()">
                 Tutup
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<!-- Konfirmasi pemutusan perangkat WhatsApp -->
+<dialog id="modal_wa_logout" class="modal">
+    <div class="modal-box max-w-sm space-y-4">
+        <h3 class="text-base font-bold flex items-center gap-2">
+            <i data-lucide="log-out" class="h-5 w-5 text-error"></i>
+            Putuskan Perangkat WhatsApp?
+        </h3>
+        <p class="text-sm text-base-content/80">
+            Sesi WhatsApp yang aktif akan dihapus dari gateway dan nomor pengirim berhenti menerima OTP sampai pairing dilakukan ulang.
+        </p>
+        <p class="text-xs font-semibold text-error" id="wa-logout-error" hidden></p>
+        <div class="modal-action">
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-wa-logout-cancel">Batal</button>
+            <button type="button" class="btn btn-error btn-sm gap-1.5 font-semibold" id="btn-wa-logout-confirm">
+                <span class="loading loading-spinner loading-xs" id="spinner-wa-logout-confirm" hidden></span>
+                Ya, Putuskan
             </button>
         </div>
     </div>

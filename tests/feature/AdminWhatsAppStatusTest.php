@@ -76,10 +76,19 @@ final class AdminWhatsAppStatusTest extends CIUnitTestCase
 
         $response->assertStatus(200);
         $response->assertSee('Integrasi WhatsApp OTP Gateway');
-        $response->assertSee('Jalur Primer (Lokal)');
-        $response->assertSee('Jalur Cadangan (Cloud Fallback)');
+        $response->assertSee('Status Koneksi Gateway');
         $response->assertSee('btn-refresh-wa-status');
         $response->assertSee('modal_wa_pairing');
+        $response->assertSee('modal_wa_logout');
+        $response->assertSee('btn-wa-logout');
+    }
+
+    public function testWhatsAppLogoutRequiresAdminSession(): void
+    {
+        $response = $this->post('/admin/pengaturan/whatsapp/logout', [
+            csrf_token() => csrf_hash(),
+        ]);
+        $response->assertRedirectTo(base_url('login?akses=admin'));
     }
 
     public function testWhatsAppPairCodeRequiresAdminSession(): void

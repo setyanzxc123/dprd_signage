@@ -181,6 +181,54 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertSame(['phone' => '08123456789'], $transport->payload);
     }
 
+    public function testLogoutDeviceClearsSessionOnSuccess(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status'  => 'success',
+            'message' => 'WhatsApp berhasil logout. Sesi lama telah dibersihkan. Lakukan pairing ulang via POST /pair-code atau GET /qr/raw.',
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->logoutDevice();
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('logout', (string) $result['message']);
+        $this->assertNull($result['error']);
+        $this->assertSame('http://127.0.0.1:3001/logout', $transport->url);
+        $this->assertSame([], $transport->payload);
+        $this->assertSame('baileys-key', $transport->headers['x-api-key']);
+    }
+
+    public function testLogoutDeviceReportsGatewayError(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(503, json_encode([
+            'status' => 'error',
+            'message' => 'WhatsApp Gateway belum terhubung. Silakan scan QR Code terlebih dahulu.',
+            'code'   => 'WA_GATEWAY_OFFLINE',
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->logoutDevice();
+
+        $this->assertFalse($result['success']);
+        $this->assertNull($result['message']);
+        $this->assertStringContainsString('belum terhubung', (string) $result['error']);
+    }
+
+    public function testLogoutDeviceFailsWithoutNetworkCallWhenUnconfigured(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, '{"status":"success"}'));
+        $config = new Otp();
+        $config->baileysApiKey = '';
+        $provider = new BaileysProvider($transport, $config);
+
+        $result = $provider->logoutDevice();
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('', $transport->url);
+        $this->assertStringContainsString('belum dikonfigurasi', (string) $result['error']);
+    }
+
     private function config(): Otp
     {
         $config = new Otp();
