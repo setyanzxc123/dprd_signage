@@ -684,15 +684,16 @@
     dialog.modal[open] {
         display: flex;
     }
+    /* Dim tunggal tanpa blur: backdrop-filter pada dua layer sekaligus
+       (::backdrop + .modal-backdrop) membuat scroll isi modal tersendat. */
     dialog.modal::backdrop {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(4px);
+        background: rgba(15, 23, 42, 0.55);
     }
+    /* Hanya area klik tutup; visual peredup diserahkan ke ::backdrop */
     .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(4px);
+        background: transparent;
     }
     .modal-backdrop > button {
         position: absolute;
@@ -703,6 +704,11 @@
         color: transparent;
         background: transparent;
         border: 0;
+    }
+    /* Kunci scroll halaman di belakang selama ada modal terbuka agar wheel
+       di luar area scroll modal tidak menggerakkan halaman (DataTable). */
+    body:has(dialog.modal[open]) {
+        overflow: hidden;
     }
     dialog.modal.modal-bottom {
         align-items: flex-end;
