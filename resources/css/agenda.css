@@ -2,10 +2,7 @@
 @source "../../app/Views/agenda/**/*.php";
 @source "../../app/Views/agenda/*.php";
 @source "../../node_modules/preline/dist/*.js";
-@plugin "daisyui" {
-    themes: light --default, dark --prefersdark;
-    logs: false;
-}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @view-transition {
@@ -46,5 +43,35 @@
 
   .agenda-unit-scroll::-webkit-scrollbar {
     display: none;
+  }
+
+  details.collapse > summary {
+    list-style: none;
+  }
+
+  details.collapse > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details.collapse-arrow > summary {
+    position: relative;
+  }
+
+  details.collapse-arrow > summary::after {
+    content: "";
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    height: 0.45rem;
+    width: 0.45rem;
+    border-style: solid;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-70%) rotate(45deg);
+    transition: transform 0.2s ease;
+    opacity: 0.5;
+  }
+
+  details.collapse-arrow[open] > summary::after {
+    transform: translateY(-30%) rotate(225deg);
   }
 }
