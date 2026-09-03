@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../../app/Views/agenda/**/*.php";
 @source "../../app/Views/agenda/*.php";
+@source "../../node_modules/preline/dist/*.js";
 @plugin "daisyui" {
     themes: light --default, dark --prefersdark;
     logs: false;

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "preline-mcp": {
+      "source": "htmlstreamofficial/preline",
+      "sourceType": "github",
+      "skillPath": "skills/preline-mcp/SKILL.md",
+      "computedHash": "ae3101deff15e2a4cf4620c751114263af4a2a51f2b224021edee9bb1c6df849"
+    },
+    "preline-theme-generator": {
+      "source": "htmlstreamofficial/preline",
+      "sourceType": "github",
+      "skillPath": "skills/theme-generator/SKILL.md",
+      "computedHash": "2c3a601ff530363ad83608ad4d19e0a84873cae17b3c3fa2b7c8ef1a9b4bb340"
+    }
+  }
+}

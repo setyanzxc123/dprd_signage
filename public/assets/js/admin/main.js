@@ -483,5 +483,6 @@
     } else {
         refreshAdminPage();
     }
+    window.addEventListener('load', initPreline);
 
 })();
