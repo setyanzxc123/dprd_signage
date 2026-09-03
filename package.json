@@ -20,7 +20,6 @@
     "@fontsource/outfit": "^5.2.8",
     "@hotwired/turbo": "^8.0.23",
     "@tailwindcss/cli": "^4.3.1",
-    "daisyui": "^5.5.23",
     "datatables.net": "^2.3.8",
     "datatables.net-dt": "^2.3.8",
     "esbuild": "^0.25.12",
