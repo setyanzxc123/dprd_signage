@@ -1,5 +1,6 @@
 @import "tailwindcss" source(none);
 @source "../../app/Views/signage/**/*.php";
+@source "../../node_modules/preline/dist/*.js";
 
 @plugin "daisyui" {
     themes: light --default, dark --prefersdark;
@@ -185,19 +186,32 @@ body {
     overflow: hidden;
 }
 
+[data-theme="dark"] #panel-ticker {
+    background-color: #0b132b;
+    border-top: 1px solid rgba(51, 65, 85, 0.7);
+}
+
+[data-theme="light"] #panel-ticker {
+    background-color: #0f172a;
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+}
+
 .ticker-track {
     display: flex;
     align-items: center;
     height: 100%;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 2.5%, black 97.5%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 2.5%, black 97.5%, transparent);
 }
 
 .ticker-text {
     padding-left: 100%;
-    color: var(--color-neutral-content);
-    font-size: 0.9vw;
+    color: #f8fafc;
+    font-size: clamp(13px, 0.92vw, 19px);
     font-weight: 500;
+    letter-spacing: 0.02em;
     white-space: nowrap;
-    animation: ticker-scroll 30s linear infinite;
+    animation: ticker-scroll 32s linear infinite;
 }
 
 .pulse {

@@ -248,12 +248,12 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
             </div>
         </section>
 
-        <div id="panel-ticker" class="alert alert-horizontal rounded-none border-x-0 border-b-0 border-base-300 bg-neutral p-0 text-neutral-content"
+        <div id="panel-ticker" class="flex items-center rounded-none p-0"
             role="status" v-if="runningTextAktif">
-            <span class="badge badge-primary h-full rounded-none border-0 px-[1.2vw] text-[0.75vw] font-bold uppercase tracking-[0.12em]">
+            <span class="flex h-full items-center justify-center bg-sky-600 px-[1.4vw] text-[clamp(11px,0.75vw,15px)] font-bold uppercase tracking-[0.14em] text-white shadow-sm shrink-0">
                 Pengumuman
             </span>
-            <div class="ticker-track min-w-0 flex-1 overflow-hidden">
+            <div class="ticker-track min-w-0 flex-1 overflow-hidden py-1">
                 <span class="ticker-text">{{ runningText }}</span>
             </div>
         </div>
