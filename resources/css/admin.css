@@ -1,4 +1,5 @@
 @import "tailwindcss" source(none);
+@import "../../node_modules/preline/variants.css";
 @source "../../app/Views/admin/**/*.php";
 @source "../../app/Views/admin/layouts/*.php";
 @source "../../app/Views/auth/**/*.php";
@@ -16,40 +17,40 @@
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Ruang Musyawarah: navy ink, brass accent (never for buttons), emerald live only */
 @theme {
     --font-sans: Inter, system-ui, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-    --color-brand-50: #ecf3ff;
-    --color-brand-100: #dde9ff;
-    --color-brand-500: #465fff;
-    --color-brand-600: #3641f5;
-    --color-brand-700: #2a31d8;
+    --color-base-100: #ffffff;
+    --color-base-200: #f8fafc;
+    --color-base-300: #e2e8f0;
+    --color-base-content: #0f172a;
+    --color-primary: #0f172a;
+    --color-primary-content: #ffffff;
+    --color-secondary: #b45309;
+    --color-secondary-content: #ffffff;
+    --color-accent: #b45309;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #0284c7;
+    --radius-box: 1rem;
+    --radius-field: 0.5rem;
     --shadow-tailadmin: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
 @layer base {
     :root {
-        --color-base-100: #ffffff;
-        --color-base-200: #f8fafc;
-        --color-base-300: #e2e8f0;
-        --color-base-content: #0f172a;
-        --color-primary: #059669;
-        --color-primary-content: #ffffff;
-        --color-success: #10b981;
-        --color-warning: #f59e0b;
-        --color-error: #ef4444;
-        --color-info: #0284c7;
-
         --od-bg: #f8fafc;
         --od-surface: #ffffff;
         --od-surface-warm: #f1f5f9;
         --od-fg: #0f172a;
         --od-fg2: #334155;
         --od-muted: #64748b;
-        --od-accent: #059669;
+        --od-accent: #b45309;
         --od-accent-on: #ffffff;
-        --od-accent-hover: #047857;
-        --od-meta: #059669;
+        --od-accent-hover: #92400e;
+        --od-meta: #b45309;
         --od-success: #10b981;
         --od-warn: #f59e0b;
         --od-danger: #ef4444;
@@ -80,19 +81,25 @@
         --od-shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
         --od-shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
         --od-ring: 0 0 0 1px var(--od-border);
-        --od-focus: 0 0 0 4px rgba(16, 185, 129, 0.16);
+        --od-focus: 0 0 0 4px rgba(180, 83, 9, 0.16);
         --od-ease: cubic-bezier(0.2, 0, 0, 1);
         --od-motion-fast: 120ms;
         --od-motion-base: 200ms;
     }
 
-    :where(.dark, [data-theme="dark"]) {
+    /* Same specificity tier as the @theme :root block, declared in a later
+       layer (base) so the dark values win without !important. */
+    .dark,
+    [data-theme="dark"] {
         --color-base-100: #0f172a;
         --color-base-200: #020617;
         --color-base-300: #1e293b;
         --color-base-content: #f8fafc;
-        --color-primary: #10b981;
-        --color-primary-content: #ffffff;
+        --color-primary: #e2e8f0;
+        --color-primary-content: #0f172a;
+        --color-secondary: #fbbf24;
+        --color-secondary-content: #0f172a;
+        --color-accent: #fbbf24;
         --color-success: #10b981;
         --color-warning: #f59e0b;
         --color-error: #ef4444;
@@ -104,16 +111,16 @@
         --od-fg: #f8fafc;
         --od-fg2: #cbd5e1;
         --od-muted: #94a3b8;
-        --od-accent: #10b981;
-        --od-accent-on: #ffffff;
-        --od-accent-hover: #059669;
-        --od-meta: #10b981;
+        --od-accent: #fbbf24;
+        --od-accent-on: #0f172a;
+        --od-accent-hover: #f59e0b;
+        --od-meta: #fbbf24;
         --od-success: #10b981;
         --od-warn: #f59e0b;
         --od-danger: #ef4444;
         --od-border: #1e293b;
         --od-border-soft: #0f172a;
-        --od-focus: 0 0 0 4px rgba(16, 185, 129, 0.25);
+        --od-focus: 0 0 0 4px rgba(251, 191, 36, 0.22);
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -131,7 +138,6 @@
     button, input, select, textarea { font: inherit; }
     button { cursor: pointer; }
     button:disabled { cursor: not-allowed; opacity: 0.55; }
-    /* Pastikan btn-primary tidak kehilangan warna saat disabled (daisyUI v5 reset ke base-200) */
     .btn-primary:disabled,
     .btn-primary[disabled] {
         background-color: var(--color-primary) !important;
@@ -155,9 +161,8 @@
     }
     code { font-family: var(--od-mono); font-size: 0.92em; color: currentColor; }
 
-    /* ── Browser autofill override ─────────────────────────────────────────── */
-    /* Chrome/Edge menerapkan background kebiruan/kuning saat autofill.         */
-    /* Override dengan box-shadow inset — satu-satunya cara yang didukung.      */
+    /* Chrome/Edge autofill menimpa background; satu-satunya override yang
+       didukung adalah box-shadow inset. */
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
     input:-webkit-autofill:focus,
@@ -189,12 +194,6 @@
     [data-admin-nav].menu-active i,
     [data-admin-nav].menu-active svg {
         color: inherit !important;
-    }
-    #mobile-nav a.dock-active {
-        color: #059669 !important;
-    }
-    :where(.dark, [data-theme="dark"]) #mobile-nav a.dock-active {
-        color: #34d399 !important;
     }
     [data-theme="dark"] .theme-icon-sun,
     .dark .theme-icon-sun {
@@ -256,6 +255,49 @@
         color: rgb(203, 213, 225) !important;
         border-color: rgba(71, 85, 105, 0.5) !important;
     }
+    .badge-sm {
+        padding: 0.0625rem 0.5rem;
+        font-size: 0.6875rem;
+        line-height: 0.875rem;
+    }
+    .badge-xs {
+        padding: 0.05rem 0.4rem;
+        font-size: 0.625rem;
+        line-height: 0.75rem;
+    }
+    .badge-ghost {
+        background-color: transparent !important;
+        border-color: transparent !important;
+        color: var(--od-fg2) !important;
+    }
+    .badge-soft {
+        background-color: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+        color: var(--color-primary) !important;
+        border-color: color-mix(in srgb, var(--color-primary) 22%, transparent) !important;
+    }
+    .badge-outline {
+        background-color: transparent !important;
+        border-color: currentColor !important;
+        color: var(--od-fg2) !important;
+    }
+    .badge-primary {
+        background-color: var(--color-primary) !important;
+        color: var(--color-primary-content) !important;
+        border-color: var(--color-primary) !important;
+    }
+    .badge-secondary {
+        background-color: color-mix(in srgb, var(--od-accent) 14%, transparent) !important;
+        color: var(--od-accent) !important;
+        border-color: color-mix(in srgb, var(--od-accent) 30%, transparent) !important;
+    }
+    .badge-error {
+        background-color: rgba(239, 68, 68, 0.15) !important;
+        color: rgb(220, 38, 38) !important;
+        border-color: rgba(239, 68, 68, 0.3) !important;
+    }
+    :where(.dark, [data-theme="dark"]) .badge-error {
+        color: rgb(248, 113, 113) !important;
+    }
 
     .btn {
         display: inline-flex;
@@ -281,13 +323,33 @@
         box-shadow: var(--od-focus);
     }
     .btn-primary {
-        background-color: #059669 !important;
-        color: #ffffff !important;
-        border-color: #059669 !important;
+        background-color: var(--color-primary) !important;
+        color: var(--color-primary-content) !important;
+        border-color: var(--color-primary) !important;
     }
     .btn-primary:hover {
-        background-color: #047857 !important;
-        border-color: #047857 !important;
+        background-color: #1e293b !important;
+        border-color: #1e293b !important;
+    }
+    :where(.dark, [data-theme="dark"]) .btn-primary:hover {
+        background-color: #f8fafc !important;
+        border-color: #f8fafc !important;
+    }
+    .btn-neutral {
+        background-color: #334155 !important;
+        color: #ffffff !important;
+        border-color: #334155 !important;
+    }
+    .btn-neutral:hover {
+        background-color: #1e293b !important;
+        border-color: #1e293b !important;
+    }
+    .btn-link {
+        background-color: transparent !important;
+        border-color: transparent !important;
+        color: var(--color-primary) !important;
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
     .btn-secondary {
         background-color: #334155 !important;
@@ -351,13 +413,13 @@
         background-color: var(--od-surface-warm) !important;
     }
     .btn-outline.btn-primary {
-        border-color: #059669 !important;
-        color: #059669 !important;
+        border-color: var(--color-primary) !important;
+        color: var(--color-primary) !important;
         background-color: transparent !important;
     }
     .btn-outline.btn-primary:hover {
-        background-color: #059669 !important;
-        color: #ffffff !important;
+        background-color: var(--color-primary) !important;
+        color: var(--color-primary-content) !important;
     }
     .btn-sm {
         padding: 0.375rem 0.75rem;
@@ -420,7 +482,7 @@
     .select:focus,
     .textarea:focus {
         outline: none;
-        border-color: #059669;
+        border-color: var(--od-accent);
         box-shadow: var(--od-focus);
     }
     .input-sm,
@@ -442,7 +504,7 @@
         border: 1px solid var(--od-border);
         background-color: var(--od-surface);
         cursor: pointer;
-        accent-color: #059669;
+        accent-color: var(--od-accent);
     }
     .toggle {
         width: 2.5rem;
@@ -455,13 +517,147 @@
         transition: background-color 0.2s ease;
     }
     .toggle:checked {
-        background-color: #059669;
+        background-color: var(--color-primary);
     }
     :where(.dark, [data-theme="dark"]) .toggle {
         background-color: #475569;
     }
     :where(.dark, [data-theme="dark"]) .toggle:checked {
-        background-color: #10b981;
+        background-color: var(--color-primary);
+    }
+
+    .radio {
+        width: 1.125rem;
+        height: 1.125rem;
+        flex: 0 0 auto;
+        border-radius: 9999px;
+        border: 1px solid var(--od-border);
+        background-color: var(--od-surface);
+        appearance: none;
+        cursor: pointer;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .radio:checked {
+        border-color: var(--od-accent);
+        background-image: radial-gradient(var(--od-accent) 0 44%, transparent 50%);
+    }
+    .radio:focus-visible {
+        outline: none;
+        box-shadow: var(--od-focus);
+    }
+    .radio-sm {
+        width: 0.9375rem;
+        height: 0.9375rem;
+    }
+    .radio-primary {
+        border-color: var(--od-border);
+    }
+
+    .file-input {
+        display: block;
+        width: 100%;
+        font-size: 0.875rem;
+        color: var(--od-fg);
+        cursor: pointer;
+    }
+    .file-input::file-selector-button {
+        margin-right: 0.75rem;
+        border: 0;
+        border-radius: 0.5rem;
+        background-color: var(--od-surface-warm);
+        color: var(--od-fg);
+        padding: 0.5rem 0.875rem;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+    .file-input::file-selector-button:hover {
+        background-color: var(--od-border);
+    }
+    .file-input-sm::file-selector-button {
+        padding: 0.375rem 0.625rem;
+        font-size: 0.75rem;
+    }
+
+    .progress {
+        display: block;
+        width: 100%;
+        height: 0.5rem;
+        border-radius: 9999px;
+        background-color: var(--od-surface-warm);
+        overflow: hidden;
+        appearance: none;
+    }
+    .progress::-webkit-progress-bar {
+        background-color: var(--od-surface-warm);
+    }
+    .progress::-webkit-progress-value {
+        background-color: var(--color-primary);
+        border-radius: 9999px;
+        transition: width 0.2s ease;
+    }
+    .progress::-moz-progress-bar {
+        background-color: var(--color-primary);
+    }
+    .progress-primary::-webkit-progress-value {
+        background-color: var(--od-accent);
+    }
+    .progress-primary::-moz-progress-bar {
+        background-color: var(--od-accent);
+    }
+    .progress-success::-webkit-progress-value {
+        background-color: var(--color-success);
+    }
+    .progress-success::-moz-progress-bar {
+        background-color: var(--color-success);
+    }
+
+    .tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--od-muted);
+        cursor: pointer;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .tab:hover {
+        color: var(--od-fg);
+    }
+    .tab-active {
+        background-color: var(--od-surface);
+        color: var(--od-fg);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    :where(.dark, [data-theme="dark"]) .tab-active {
+        background-color: #1e293b;
+    }
+
+    .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+    .menu li > * {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        border-radius: 0.5rem;
+        padding: 0.375rem 0.625rem;
+        text-align: left;
+    }
+    .menu li > *:hover {
+        background-color: var(--od-surface-warm);
+    }
+    .menu-xs li > * {
+        padding: 0.3125rem 0.5rem;
+        font-size: 0.75rem;
     }
 
     dialog.modal {
@@ -487,8 +683,23 @@
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(4px);
     }
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+    }
+    dialog.modal.modal-bottom {
+        align-items: flex-end;
+    }
+    @media (min-width: 640px) {
+        dialog.modal.modal-bottom {
+            align-items: center;
+        }
+    }
     .modal-box {
         position: relative;
+        z-index: 1;
         width: 100%;
         max-width: 32rem;
         max-height: calc(100vh - 4rem);
@@ -1042,11 +1253,7 @@
     }
 
 
-    /* ── DataTables ────────────────────────────────────────────────────────
-     *  Semua styling DT dikontrol murni via CSS — tidak ada class injection
-     *  dari JS untuk select & input. Hanya pagination button yang mendapat
-     *  class .btn dari JS (idempotent, hanya saat belum ada).
-     * ─────────────────────────────────────────────────────────────────── */
+    /* DataTables: semua styling dikontrol via CSS; hanya pagination button yang mendapat class .btn dari JS */
 
     .admin-data-table {
         width: 100% !important;
@@ -1111,7 +1318,7 @@
         white-space: nowrap;
     }
 
-    /* ── Select (page length) — styled natively, tanpa DaisyUI class injection ── */
+    /* Select page length styling native */
     .dt-container .dt-length select {
         appearance: auto;
         height: 32px;
@@ -1134,7 +1341,7 @@
         border-color: var(--od-accent);
     }
 
-    /* ── Search input — styled natively ── */
+    /* Search input styling native */
     .dt-container .dt-search input {
         height: 32px;
         min-height: 32px;
@@ -1163,7 +1370,7 @@
         font-weight: 600;
     }
 
-    /* ── Pagination buttons — class .btn/.btn-sm di-set JS (idempotent) ── */
+    /* Pagination buttons mendapat class .btn/.btn-sm dari JS (idempotent) */
     .dt-container .dt-paging {
         display: flex;
         flex-wrap: wrap;
@@ -1206,7 +1413,7 @@
         cursor: default;
     }
 
-    /* ── Table cell overrides ── */
+    /* Table cell overrides */
     table.dataTable.admin-data-table > thead > tr > th,
     table.dataTable.admin-data-table > thead > tr > td {
         border-bottom: 1px solid var(--od-border);
@@ -1216,12 +1423,7 @@
         text-align: left;
     }
 
-    /* ── DataTables Text Alignment Overrides ──
-     * DataTables 2.x otomatis mendeteksi tipe data (tanggal, angka, dsb) dan menambahkan
-     * class .dt-type-date / .dt-type-numeric yang memaksakan text-align: right.
-     * Kita paksa seluruh header dan sel default rata kiri,
-     * kecuali yang secara eksplisit diberi class .text-right atau .text-center.
-     */
+    /* DataTables 2.x menandai sel tanggal/angka dengan text-align right; paksa rata kiri kecuali class eksplisit */
     table.dataTable.admin-data-table th,
     table.dataTable.admin-data-table td,
     table.dataTable.admin-data-table th.dt-type-numeric,
@@ -1340,8 +1542,7 @@
         border-bottom: 0;
     }
 
-    /* ── Dark mode: DataTables CSS vars ──
-     * DT default CSS pakai :root.dark, tapi theme kita pakai data-theme=dark */
+    /* DT default CSS memakai :root.dark; theme ini memakai data-theme=dark */
     [data-theme="dark"] {
         --dt-row-hover: 255, 255, 255;
         --dt-row-stripe: 255, 255, 255;
@@ -1861,7 +2062,7 @@
         to { transform: translateX(-100%); }
     }
 
-    /* ── NOTULEN WORKSPACE CUSTOM STYLES (MOCKUP REFINEMENT) ── */
+    /* Notulen workspace custom styles */
     .notulen-stepper-track {
         position: relative;
         display: flex;
