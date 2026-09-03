@@ -8,6 +8,23 @@
 }
 @custom-variant dark (&:where(.dark, .dark *));
 
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.15s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@theme {
+    --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --color-parliament-navy: #0f172a;
+    --color-parliament-emerald: #10b981;
+    --color-parliament-gold: #f59e0b;
+}
+
 @layer base {
   [v-cloak] {
     display: none;

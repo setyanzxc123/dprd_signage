@@ -2,6 +2,7 @@
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $vueVersion = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
 $cssVersion = is_file(FCPATH . 'assets/css/agenda.css') ? filemtime(FCPATH . 'assets/css/agenda.css') : time();
+$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPATH . 'assets/images/logo_dprd.jpg') : time();
 $isMember = is_array($member ?? null);
 $isAdmin = ! $isMember && ! empty($isAdmin);
 $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
@@ -13,7 +14,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= esc($pageTitle) ?> - DPRD Provinsi Sulawesi Tengah</title>
     <meta name="description" content="Agenda dan jadwal rapat DPRD Provinsi Sulawesi Tengah." />
-    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
+    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -33,7 +34,9 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     <header class="relative z-50 border-b border-base-300 bg-base-100/95 backdrop-blur-xl sm:sticky sm:top-0">
         <div class="navbar min-h-16 w-full gap-1 px-3 py-2 sm:min-h-20 sm:gap-2 sm:px-4 xl:px-[2.5vw] xl:py-[0.8vh]">
             <a class="navbar-start w-auto min-w-0 flex-1 gap-2 sm:gap-3 xl:gap-[1vw]" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
-                <img class="h-10 w-10 shrink-0 rounded-box object-contain sm:h-14 sm:w-14" src="<?= esc($logoUrl) ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-emerald-500/40 bg-white shadow-sm p-0.5 sm:h-12 sm:w-12 sm:p-1">
+                    <img class="h-full w-full rounded-full object-contain" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+                </div>
                 <span class="min-w-0 leading-tight">
                     <span class="block truncate text-sm font-bold uppercase tracking-[0.06em] sm:text-[clamp(17px,1.08vw,24px)] sm:tracking-[0.08em]">
                         DPRD Provinsi
@@ -45,7 +48,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             </a>
 
             <div class="navbar-end w-auto shrink-0 gap-1">
-                <div class="stats stats-horizontal hidden border border-base-300 bg-base-200 shadow-sm xl:inline-grid">
+                <div class="stats stats-horizontal hidden border border-base-300/80 bg-base-200/80 backdrop-blur-md rounded-2xl shadow-sm xl:inline-grid">
                     <div class="stat place-items-center px-3 py-2">
                         <div class="stat-value flex items-center gap-2 text-xl">
                             <img v-if="weather.icon_url" :src="weather.icon_url" class="h-7 w-7 object-contain" alt="Ikon cuaca" />
