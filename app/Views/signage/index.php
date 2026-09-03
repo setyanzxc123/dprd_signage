@@ -119,14 +119,25 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 @load="handleMediaImageLoaded" @error="handleMediaError" />
 
             <div v-if="(!media.url && !mediaStatusPending) || mediaError"
-                class="media-state card-body absolute inset-0 z-[2] items-center justify-center text-center text-neutral-content">
-                <span class="badge badge-warning">Media tidak tersedia</span>
-                <p class="max-w-[28vw] text-[clamp(11px,0.75vw,15px)] text-neutral-content/70">
-                    Periksa file media pada Pengaturan Sistem.
-                </p>
+                class="media-state card-body absolute inset-0 z-[2] items-center justify-center text-center">
+                <div class="flex flex-col items-center gap-3 max-w-[28vw]">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-emerald-400 ring-1 ring-white/10 shadow-lg backdrop-blur-md">
+                        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-[clamp(14px,1.05vw,20px)] font-bold tracking-wide">
+                            Sekretariat DPRD Provinsi Sulawesi Tengah
+                        </div>
+                        <p class="text-[clamp(11px,0.72vw,14px)] opacity-70">
+                            Pusat Informasi & Layanan Digital
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <aside class="qr-panel card card-border bg-base-100/90 shadow-xl backdrop-blur-md"
+            <aside class="qr-panel card border border-base-300/80 bg-base-100/90 shadow-2xl backdrop-blur-md rounded-2xl"
                 v-if="qrBerkas || qrLive">
                 <div class="card-body items-center gap-[0.6vh] p-[clamp(10px,1vw,18px)]">
                     <div class="card-title text-[clamp(10px,0.65vw,13px)] uppercase tracking-[0.1em] text-base-content/60"
@@ -135,85 +146,99 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     </div>
                     <div class="card-title gap-[0.35vw] text-[clamp(10px,0.65vw,13px)] uppercase tracking-[0.1em] text-base-content/60"
                         v-else>
-                        <span class="badge badge-error badge-sm">LIVE</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[0.65vw] font-bold text-emerald-400 border border-emerald-500/40">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            LIVE
+                        </span>
                         Tonton Siaran
                     </div>
                     <div id="qr-display" :class="{ 'qr-fading': qrFading }"></div>
-                    <div v-if="qrBerkas && qrLive" class="flex gap-1">
-                        <span :class="['status status-xs', activeQR === 'berkas' ? 'status-primary' : 'status-neutral']"></span>
-                        <span :class="['status status-xs', activeQR === 'live' ? 'status-primary' : 'status-neutral']"></span>
+                    <div v-if="qrBerkas && qrLive" class="flex gap-1.5 mt-0.5">
+                        <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'berkas' ? 'bg-primary' : 'bg-base-300']"></span>
+                        <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'live' ? 'bg-primary' : 'bg-base-300']"></span>
                     </div>
                 </div>
             </aside>
         </section>
 
-        <section id="panel-info" class="card rounded-none bg-base-200">
+        <section id="panel-info" class="card rounded-none">
             <div class="card-body signage-schedule gap-0">
-                <h2 class="card-title border-b border-base-300 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
+                <h2 class="card-title border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
                     Agenda Hari Ini
                 </h2>
 
                 <div v-if="jadwal.length === 0 && upcoming.length === 0"
-                    class="flex flex-1 flex-col items-center justify-center gap-2 text-base-content/35">
-                    <span class="text-[3vw] leading-none">—</span>
-                    <p class="text-[clamp(12px,0.9vw,18px)]">Tidak ada jadwal rapat hari ini</p>
+                    class="flex flex-1 flex-col items-center justify-center gap-3 text-center py-[4vh]">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-base-300/60 ring-1 ring-base-content/10 shadow-inner">
+                        <svg class="h-8 w-8 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[clamp(15px,1.1vw,22px)] font-semibold tracking-wide">Tidak Ada Agenda Rapat Hari Ini</p>
+                        <p class="text-[clamp(11px,0.75vw,15px)] text-base-content/60">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
+                    </div>
                 </div>
 
                 <div v-else-if="jadwal.length === 0"
-                    class="py-[1vh] text-[clamp(11px,0.78vw,15px)] text-base-content/65">
-                    Tidak ada jadwal rapat hari ini
+                    class="rounded-xl border border-dashed border-base-300 bg-base-100/40 p-[1.5vh] text-center text-[clamp(12px,0.85vw,16px)] text-base-content/70">
+                    Tidak ada agenda rapat untuk hari ini. Silakan periksa agenda berikutnya di bawah.
                 </div>
 
                 <ul v-if="jadwal.length > 0" class="list mt-[1vh] gap-[0.8vh] p-0">
                     <li v-for="item in jadwal" :key="item.id"
-                        :class="['list-row grid-cols-[8vw_minmax(0,1fr)_auto] gap-[1.2vw] border border-base-300 bg-base-100 px-[1.4vw] py-[1.2vh] shadow-sm', scheduleItemClasses(item.status)]">
+                        :class="['list-row grid-cols-[8.5vw_minmax(0,1fr)_auto] gap-[1.2vw] meeting-card border px-[1.4vw] py-[1.2vh] shadow-sm', scheduleItemClasses(item.status)]">
                         <div>
                             <div class="text-[1.1vw] font-bold tabular-nums text-primary">
                                 {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                             </div>
-                            <div class="mt-0.5 text-[0.75vw] text-base-content/65">{{ item.ruangan }}</div>
+                            <div class="mt-0.5 text-[0.75vw] text-base-content/70 font-medium">{{ item.ruangan }}</div>
                         </div>
                         <div class="min-w-0">
                             <div class="text-[clamp(17px,1.18vw,28px)] font-bold leading-tight">
                                 {{ item.judul }}
                             </div>
-                            <div class="mt-0.5 text-[0.75vw] text-base-content/65">{{ item.komisi }}</div>
+                            <div class="mt-0.5 text-[0.75vw] text-base-content/70">{{ item.komisi }}</div>
                         </div>
                         <div class="self-center">
                             <span :class="statusClasses(item.status)">
-                                <span :class="statusDotClasses(item.status)"></span>
-                                {{ statusLabel(item.status) }}
+                                <span v-if="item.status === 'berlangsung'" class="relative flex h-2.5 w-2.5 items-center justify-center">
+                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                </span>
+                                <span v-else :class="statusDotClasses(item.status)"></span>
+                                <span>{{ statusLabel(item.status) }}</span>
                             </span>
                         </div>
                     </li>
                 </ul>
 
                 <div v-if="upcoming.length > 0" class="upcoming-section">
-                    <h2 class="card-title border-b border-base-300 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
+                    <h2 class="card-title border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
                         Agenda Berikutnya
                     </h2>
 
                     <ul class="list mt-[0.8vh] gap-[0.55vh] p-0">
                         <li v-for="item in upcoming" :key="'upcoming-' + item.id"
-                            class="list-row grid-cols-[8.2vw_minmax(0,1fr)_auto] gap-[0.9vw] border border-base-300 bg-base-100 px-[1.05vw] py-[0.85vh] shadow-sm">
+                            class="list-row grid-cols-[8.5vw_minmax(0,1fr)_auto] gap-[0.9vw] meeting-card border px-[1.05vw] py-[0.85vh] shadow-sm">
                             <div>
-                                <div class="text-[0.62vw] font-bold uppercase tracking-[0.1em] text-base-content/65">
+                                <div class="text-[0.62vw] font-bold uppercase tracking-[0.1em] text-base-content/70">
                                     {{ upcomingDateLabel(item.tanggal) }}
                                 </div>
                                 <div class="text-[0.9vw] font-bold tabular-nums text-primary">
                                     {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                                 </div>
-                                <div class="text-[0.68vw] text-base-content/65">{{ item.ruangan }}</div>
+                                <div class="text-[0.68vw] text-base-content/70 font-medium">{{ item.ruangan }}</div>
                             </div>
                             <div class="min-w-0">
                                 <div class="text-[clamp(14px,0.92vw,20px)] font-bold leading-tight">
                                     {{ item.judul }}
                                 </div>
-                                <div class="mt-0.5 text-[0.68vw] text-base-content/65">{{ item.komisi }}</div>
+                                <div class="mt-0.5 text-[0.68vw] text-base-content/70">{{ item.komisi }}</div>
                             </div>
                             <div class="self-center">
-                                <span class="badge badge-info gap-1 text-[0.7vw] font-bold uppercase tracking-wide">
-                                    <span class="status status-info status-xs"></span>
+                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-sky-400"></span>
                                     Mendatang
                                 </span>
                             </div>
@@ -792,9 +817,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
                 function statusLabel(status) {
                     const map = {
-                        berlangsung: 'Berlangsung',
+                        berlangsung: 'Sedang Berlangsung',
                         persiapan: 'Persiapan',
-                        menunggu: 'Menunggu',
+                        menunggu: 'Akan Datang',
                         selesai: 'Selesai',
                     };
                     return map[status] ?? status;
@@ -802,28 +827,29 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
                 function statusClasses(status) {
                     const map = {
-                        berlangsung: 'badge badge-error gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
-                        persiapan: 'badge badge-warning gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
-                        menunggu: 'badge badge-neutral gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
-                        selesai: 'badge badge-success gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
+                        berlangsung: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+                        persiapan: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30',
+                        menunggu: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/30',
+                        selesai: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-400 border border-slate-500/30',
                     };
-                    return map[status] ?? 'badge gap-1 text-[0.7vw] font-bold uppercase tracking-wide';
+                    return map[status] ?? 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-400 border border-slate-500/30';
                 }
 
                 function statusDotClasses(status) {
                     const map = {
-                        berlangsung: 'status status-error status-xs pulse',
-                        persiapan: 'status status-warning status-xs',
-                        menunggu: 'status status-neutral status-xs',
-                        selesai: 'status status-success status-xs',
+                        berlangsung: 'h-2 w-2 rounded-full bg-emerald-400',
+                        persiapan: 'h-2 w-2 rounded-full bg-amber-400',
+                        menunggu: 'h-2 w-2 rounded-full bg-sky-400',
+                        selesai: 'h-2 w-2 rounded-full bg-slate-400',
                     };
-                    return map[status] ?? 'status status-xs';
+                    return map[status] ?? 'h-2 w-2 rounded-full bg-slate-400';
                 }
 
                 function scheduleItemClasses(status) {
                     const map = {
-                        berlangsung: 'border-error/30 bg-error/10',
-                        selesai: 'opacity-50',
+                        berlangsung: 'border-emerald-500/40 bg-emerald-500/10 shadow-lg shadow-emerald-950/20 ring-1 ring-emerald-500/30',
+                        persiapan: 'border-amber-500/30 bg-amber-500/5',
+                        selesai: 'opacity-55',
                     };
                     return map[status] ?? '';
                 }

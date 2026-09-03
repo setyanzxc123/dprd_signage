@@ -26,6 +26,14 @@ body {
     font-family: "Inter", "Segoe UI", sans-serif;
 }
 
+[data-theme="dark"] body {
+    background-color: #020617;
+}
+
+[data-theme="light"] body {
+    background-color: #f8fafc;
+}
+
 #app {
     display: grid;
     width: 100vw;
@@ -42,8 +50,18 @@ body {
     --onde-height: clamp(38px, 6vh, 90px);
     grid-area: header;
     padding: 0.8vh 2.5vw;
-    /* ruang untuk gelombang animasi di tepi bawah header */
     padding-bottom: calc(0.8vh + var(--onde-height));
+    backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] #panel-header {
+    background-color: rgba(15, 23, 42, 0.9);
+    border-bottom-color: rgba(51, 65, 85, 0.6);
+}
+
+[data-theme="light"] #panel-header {
+    background-color: rgba(255, 255, 255, 0.94);
+    border-bottom-color: rgba(226, 232, 240, 0.9);
 }
 
 #panel-media {
@@ -52,11 +70,11 @@ body {
     grid-area: media;
     overflow: hidden;
     border-right: 1px solid var(--color-base-300);
-    background: var(--color-neutral);
+    background: #020617;
 }
 
 [data-theme="light"] #panel-media {
-    background: var(--color-base-100);
+    background: #0f172a;
 }
 
 #panel-media .media-bg,
@@ -97,6 +115,33 @@ body {
 #panel-info {
     grid-area: info;
     overflow: hidden;
+}
+
+[data-theme="dark"] #panel-info {
+    background-color: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(12px);
+}
+
+[data-theme="light"] #panel-info {
+    background-color: rgba(241, 245, 249, 0.7);
+    backdrop-filter: blur(12px);
+}
+
+.meeting-card {
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .meeting-card {
+    background-color: rgba(30, 41, 59, 0.65);
+    border-color: rgba(51, 65, 85, 0.7);
+    backdrop-filter: blur(8px);
+}
+
+[data-theme="light"] .meeting-card {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(226, 232, 240, 0.9);
+    backdrop-filter: blur(8px);
 }
 
 .signage-schedule {
