@@ -248,13 +248,13 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <details
                             v-for="item in paginatedAgendas"
                             :key="item.key"
-                            class="collapse collapse-arrow border border-base-300 bg-base-100"
-                            :class="{ 'outline outline-2 outline-base-content': expandedAgendaKey === item.key }"
+                            class="collapse collapse-arrow rounded-2xl border border-base-300/80 bg-base-100 shadow-sm transition-all duration-200"
+                            :class="{ 'border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-md bg-emerald-500/5': item.status === 'berlangsung', 'outline outline-2 outline-base-content': expandedAgendaKey === item.key }"
                             :open="expandedAgendaKey === item.key"
                             @toggle="handleAgendaToggle($event, item.key)"
                         >
                             <summary class="collapse-title grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 overflow-hidden py-3 pr-10 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:gap-3 sm:pr-12">
-                                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-box bg-base-200 text-center sm:h-12 sm:w-12">
+                                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-base-200/80 border border-base-300/50 text-center sm:h-12 sm:w-12">
                                     <span v-if="item.tanggal">
                                         <span class="block text-[10px] font-extrabold uppercase text-base-content/45">{{ shortMonth(item.tanggal) }}</span>
                                         <strong class="block text-lg leading-none">{{ dayNumber(item.tanggal) }}</strong>
@@ -267,10 +267,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 <span class="min-w-0">
                                     <span class="line-clamp-2 text-sm font-extrabold leading-5 sm:text-base">{{ item.judul }}</span>
                                     <span class="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-                                        <span v-if="item.source === 'banmus' || item.source === 'banmus_projection'" class="badge badge-info badge-soft badge-sm">
+                                        <span v-if="item.source === 'banmus' || item.source === 'banmus_projection'" class="badge badge-info badge-soft badge-sm font-semibold">
                                             Banmus
                                         </span>
-                                        <span v-if="item.source === 'jadwal_umum'" class="badge badge-secondary badge-soft badge-sm">
+                                        <span v-if="item.source === 'jadwal_umum'" class="badge badge-secondary badge-soft badge-sm font-semibold">
                                             Jadwal Umum
                                         </span>
                                         <?php if ($isMember): ?>
@@ -280,18 +280,30 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                                 data-tip="Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
                                                 aria-label="Internal DPRD. Agenda ini hanya terlihat oleh anggota DPRD yang masuk dan tidak tampil pada akses publik."
                                             >
-                                                <span class="badge badge-ghost badge-sm">Internal DPRD</span>
+                                                <span class="badge badge-ghost badge-sm font-semibold">Internal DPRD</span>
                                             </span>
-                                            <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm">Anda Peserta</span>
+                                            <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm font-semibold">Anda Peserta</span>
                                         <?php endif; ?>
                                         <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-semibold text-base-content/50">
                                             {{ item.periode_label || 'Periode belum ditentukan' }}
                                         </span>
                                         <span v-else class="truncate text-xs font-semibold text-base-content/50">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
-                                        <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">{{ statusLabel(item.status) }}</span>
+                                        <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">
+                                            <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
+                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            </span>
+                                            {{ statusLabel(item.status) }}
+                                        </span>
                                     </span>
                                 </span>
-                                <span :class="statusBadgeClass(item.status)" class="hidden sm:inline-flex">{{ statusLabel(item.status) }}</span>
+                                <span :class="statusBadgeClass(item.status)" class="hidden sm:inline-flex items-center gap-1.5">
+                                    <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
+                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    </span>
+                                    {{ statusLabel(item.status) }}
+                                </span>
                             </summary>
 
                             <div class="collapse-content min-w-0 border-t border-base-300 px-3 sm:px-4">
@@ -423,13 +435,13 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <details
                             v-for="item in paginatedGeneralAgendas"
                             :key="item.key"
-                            class="collapse collapse-arrow border border-base-300 bg-base-100"
-                            :class="{ 'outline outline-2 outline-base-content': expandedGeneralKey === item.key }"
+                            class="collapse collapse-arrow rounded-2xl border border-base-300/80 bg-base-100 shadow-sm transition-all duration-200"
+                            :class="{ 'border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-md bg-emerald-500/5': item.status === 'berlangsung', 'outline outline-2 outline-base-content': expandedGeneralKey === item.key }"
                             :open="expandedGeneralKey === item.key"
                             @toggle="handleGeneralToggle($event, item.key)"
                         >
                             <summary class="collapse-title grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 overflow-hidden py-3 pr-10 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:gap-3 sm:pr-12">
-                                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-box bg-base-200 text-center sm:h-12 sm:w-12">
+                                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-base-200/80 border border-base-300/50 text-center sm:h-12 sm:w-12">
                                     <span>
                                         <span class="block text-[10px] font-extrabold uppercase text-base-content/45">{{ shortMonth(item.tanggal) }}</span>
                                         <strong class="block text-lg leading-none">{{ dayNumber(item.tanggal) }}</strong>
@@ -438,16 +450,28 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 <span class="min-w-0">
                                     <span class="line-clamp-2 text-sm font-extrabold leading-5 sm:text-base">{{ item.judul }}</span>
                                     <span class="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-                                        <span class="badge badge-secondary badge-soft badge-sm">Jadwal Umum</span>
+                                        <span class="badge badge-secondary badge-soft badge-sm font-semibold">Jadwal Umum</span>
                                         <?php if ($isMember): ?>
-                                            <span v-if="!item.is_public" class="badge badge-ghost badge-sm">Internal DPRD</span>
-                                            <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm">Anda Peserta</span>
+                                            <span v-if="!item.is_public" class="badge badge-ghost badge-sm font-semibold">Internal DPRD</span>
+                                            <span v-if="item.is_participant" class="badge badge-primary badge-soft badge-sm font-semibold">Anda Peserta</span>
                                         <?php endif; ?>
                                         <span class="truncate text-xs font-semibold text-base-content/50">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
-                                        <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">{{ statusLabel(item.status) }}</span>
+                                        <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">
+                                            <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
+                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            </span>
+                                            {{ statusLabel(item.status) }}
+                                        </span>
                                     </span>
                                 </span>
-                                <span :class="statusBadgeClass(item.status)" class="hidden sm:inline-flex">{{ statusLabel(item.status) }}</span>
+                                <span :class="statusBadgeClass(item.status)" class="hidden sm:inline-flex items-center gap-1.5">
+                                    <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
+                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    </span>
+                                    {{ statusLabel(item.status) }}
+                                </span>
                             </summary>
 
                             <div class="collapse-content min-w-0 border-t border-base-300 px-3 sm:px-4">
@@ -966,8 +990,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             }
 
             function navButtonClass(value) {
-                const base = 'btn btn-sm whitespace-nowrap';
-                return activeNavigation.value === value ? `${base} btn-neutral` : `${base} btn-ghost`;
+                const base = 'btn btn-sm whitespace-nowrap rounded-full font-semibold transition-all duration-200';
+                return activeNavigation.value === value
+                    ? `${base} btn-neutral shadow-sm ring-2 ring-emerald-500/40`
+                    : `${base} btn-ghost border border-base-300/60 hover:border-base-300`;
             }
 
             function compactUnitName(name) {
@@ -981,20 +1007,20 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             function statusLabel(status) {
                 return {
                     proyeksi: 'Proyeksi',
-                    berlangsung: 'Berlangsung',
+                    berlangsung: 'Sedang Berlangsung',
                     persiapan: 'Persiapan',
-                    menunggu: 'Menunggu',
+                    menunggu: 'Akan Datang',
                     selesai: 'Selesai',
                 }[status] || status || '-';
             }
 
             function statusBadgeClass(status) {
                 return {
-                    proyeksi: 'badge badge-warning badge-soft badge-sm',
-                    berlangsung: 'badge badge-success badge-soft badge-sm',
-                    persiapan: 'badge badge-warning badge-soft badge-sm',
-                    menunggu: 'badge badge-ghost badge-sm',
-                    selesai: 'badge badge-info badge-soft badge-sm',
+                    proyeksi: 'badge badge-warning badge-soft badge-sm font-bold',
+                    berlangsung: 'badge badge-success badge-sm font-bold gap-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40',
+                    persiapan: 'badge badge-warning badge-sm font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40',
+                    menunggu: 'badge badge-info badge-sm font-bold bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/40',
+                    selesai: 'badge badge-ghost badge-sm text-base-content/60',
                 }[status] || 'badge badge-ghost badge-sm';
             }
 
