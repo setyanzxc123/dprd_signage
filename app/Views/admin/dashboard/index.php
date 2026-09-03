@@ -9,34 +9,42 @@
     </p>
 </div>
 
-<div class="dashboard-preview-stats stats stats-horizontal shadow bg-base-100 border border-base-300 w-full mb-4">
-    <div class="stat min-h-0! px-4! py-3!">
-        <div class="stat-figure text-primary">
-            <i data-lucide="calendar-check" class="w-5 h-5"></i>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+        <div>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Agenda Hari Ini</p>
+            <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white"><?= $stats['rapat_hari_ini'] ?></p>
         </div>
-        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Agenda Hari Ini</div>
-        <div class="stat-value text-2xl font-extrabold text-primary"><?= $stats['rapat_hari_ini'] ?></div>
+        <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <i data-lucide="calendar-check" class="size-5"></i>
+        </div>
     </div>
-    <div class="stat min-h-0! px-4! py-3!">
-        <div class="stat-figure text-info">
-            <i data-lucide="calendar-range" class="w-5 h-5"></i>
+    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+        <div>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Agenda Bulan Ini</p>
+            <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white"><?= $stats['agenda_bulan_ini'] ?></p>
         </div>
-        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Agenda Bulan Ini</div>
-        <div class="stat-value text-2xl font-extrabold text-info"><?= $stats['agenda_bulan_ini'] ?></div>
+        <div class="flex size-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <i data-lucide="calendar-range" class="size-5"></i>
+        </div>
     </div>
-    <div class="stat min-h-0! px-4! py-3!">
-        <div class="stat-figure text-success">
-            <i data-lucide="radio" class="w-5 h-5"></i>
+    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+        <div>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Berlangsung</p>
+            <p class="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400"><?= $stats['berlangsung'] ?></p>
         </div>
-        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Berlangsung</div>
-        <div class="stat-value text-2xl font-extrabold text-success"><?= $stats['berlangsung'] ?></div>
+        <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+            <i data-lucide="radio" class="size-5"></i>
+        </div>
     </div>
-    <div class="stat min-h-0! px-4! py-3!">
-        <div class="stat-figure text-warning">
-            <i data-lucide="clock-3" class="w-5 h-5"></i>
+    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+        <div>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Mendatang</p>
+            <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white"><?= $stats['mendatang'] ?></p>
         </div>
-        <div class="stat-title text-xs font-bold uppercase tracking-wider text-base-content/60">Mendatang</div>
-        <div class="stat-value text-2xl font-extrabold text-warning"><?= $stats['mendatang'] ?></div>
+        <div class="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <i data-lucide="clock-3" class="size-5"></i>
+        </div>
     </div>
 </div>
 
@@ -47,15 +55,15 @@
                 <h2 id="dashboard-calendar-title">Kalender Agenda <?= esc($monthLabel ?? '') ?></h2>
                 <p>Pilih tanggal untuk melihat agenda detail dan status operasionalnya.</p>
             </div>
-            <div class="dashboard-month-controls flex items-center gap-1">
-                <a href="<?= esc($prevMonthUrl) ?>" class="btn btn-sm btn-ghost btn-circle" title="Bulan sebelumnya">
-                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            <div class="dashboard-month-controls flex items-center gap-1.5">
+                <a href="<?= esc($prevMonthUrl) ?>" class="inline-flex justify-center items-center size-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Bulan sebelumnya">
+                    <i data-lucide="chevron-left" class="size-4"></i>
                 </a>
-                <a href="<?= esc($todayMonthUrl) ?>" class="btn btn-sm btn-outline btn-primary">
+                <a href="<?= esc($todayMonthUrl) ?>" class="inline-flex items-center py-1 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
                     Bulan Ini
                 </a>
-                <a href="<?= esc($nextMonthUrl) ?>" class="btn btn-sm btn-ghost btn-circle" title="Bulan berikutnya">
-                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                <a href="<?= esc($nextMonthUrl) ?>" class="inline-flex justify-center items-center size-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Bulan berikutnya">
+                    <i data-lucide="chevron-right" class="size-4"></i>
                 </a>
             </div>
         </header>
@@ -154,11 +162,11 @@
                 <section class="dashboard-agenda-panel <?= $isActive ? 'active' : '' ?>"
                          data-dashboard-panel="<?= esc($day['date']) ?>"
                          <?= $isActive ? '' : 'hidden' ?>>
-                    <div class="selected-date-card">
-                        <div class="selected-date-number"><?= esc((int) $day['date_num']) ?></div>
+                    <div class="selected-date-card flex items-center gap-3 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 mb-3">
+                        <div class="selected-date-number flex size-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-lg"><?= esc((int) $day['date_num']) ?></div>
                         <div>
-                            <h3><?= esc($day['day_name']) ?></h3>
-                            <p><?= esc($day['month']) ?> &bull; <?= (int) $day['count'] ?> agenda</p>
+                            <h3 class="text-xs font-bold text-slate-900 dark:text-white"><?= esc($day['day_name']) ?></h3>
+                            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400"><?= esc($day['month']) ?> &bull; <?= (int) $day['count'] ?> agenda</p>
                         </div>
                     </div>
 
@@ -166,26 +174,26 @@
                         <?php foreach ($day['meetings'] as $m): ?>
                             <?php $badge = status_badge($m['status']); ?>
                             <li>
-                                <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item list-row block! px-3! py-1.5!">
-                                    <div class="agenda-row-head">
-                                        <div class="agenda-time-block">
+                                <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item group block p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs transition mb-2">
+                                    <div class="agenda-row-head flex items-center justify-between gap-2 mb-1.5">
+                                        <div class="agenda-time-block text-xs font-bold text-slate-700 dark:text-slate-300">
                                             <?php if ($m['start'] === null): ?>
-                                                <strong>Sepanjang hari</strong>
+                                                <span>Sepanjang hari</span>
                                             <?php else: ?>
-                                                <strong><?= esc($m['start']) ?></strong>
+                                                <span><?= esc($m['start']) ?></span>
                                                 <?php if ($m['end'] !== null): ?>
                                                     <span aria-hidden="true">&ndash;</span>
                                                     <span><?= esc($m['end']) ?></span>
                                                 <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
-                                        <span class="badge <?= $badge['class'] ?> h-auto py-1 px-2 text-xs shrink-0 whitespace-nowrap font-semibold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-current <?= $m['status'] === 'berlangsung' ? 'animate-pulse' : '' ?>"></span>
+                                        <span class="badge <?= $badge['class'] ?>">
+                                            <span class="size-1.5 rounded-full bg-current <?= $m['status'] === 'berlangsung' ? 'animate-pulse' : '' ?>"></span>
                                             <?= $badge['label'] ?>
                                         </span>
                                     </div>
                                     <div class="agenda-content">
-                                        <h3><?= esc($m['title']) ?></h3>
+                                        <h3 class="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition leading-snug"><?= esc($m['title']) ?></h3>
                                     </div>
                                 </a>
                             </li>
