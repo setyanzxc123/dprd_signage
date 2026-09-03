@@ -28,11 +28,11 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 </head>
 
 <body class="min-h-screen overflow-x-hidden bg-base-200">
-    <label class="btn btn-ghost btn-circle fixed right-4 top-4 z-10 bg-base-100 shadow-sm"
+    <label class="inline-flex size-9 items-center justify-center rounded-xl border border-base-300 bg-base-100 text-base-content hover:bg-base-200 shadow-sm cursor-pointer transition fixed right-4 top-4 z-10"
         title="Ganti tema" aria-label="Ganti tema" data-theme-toggle>
-        <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
-        <i class="theme-icon-sun h-5 w-5" data-lucide="sun"></i>
-        <i class="theme-icon-moon h-5 w-5" data-lucide="moon"></i>
+        <input type="checkbox" value="dark" class="hidden" data-theme-toggle-input />
+        <i class="theme-icon-sun size-4" data-lucide="sun"></i>
+        <i class="theme-icon-moon size-4" data-lucide="moon"></i>
     </label>
 
     <main class="flex min-h-screen items-center justify-center px-3 py-5 min-[380px]:px-4 min-[380px]:py-8">
