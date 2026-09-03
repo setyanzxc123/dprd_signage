@@ -361,7 +361,6 @@ $scheduledCount = count($items) - $projectionCount;
 <dialog
     id="item_modal"
     class="modal"
-    tabindex="0"
     data-banmus-item-dialog
     data-store-url="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/store") ?>"
     data-update-url-template="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/__ITEM_ID__/update") ?>">
@@ -378,7 +377,7 @@ $scheduledCount = count($items) - $projectionCount;
             </form>
         </div>
 
-        <form id="item_form" action="" method="post" enctype="multipart/form-data" class="flex min-h-0 flex-1 flex-col" data-turbo="false">
+        <form id="item_form" action="" method="post" enctype="multipart/form-data" class="flex min-h-0 flex-1 flex-col">
             <?= csrf_field() ?>
 
             <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
@@ -456,7 +455,7 @@ $scheduledCount = count($items) - $projectionCount;
                             </div>
 
                             <div class="space-y-3">
-                                <div role="alert" class="alert alert-info alert-soft px-3 py-2 text-xs">
+                                <div role="alert" class="alert alert-info px-3 py-2 text-xs">
                                     <i data-lucide="info" class="h-4 w-4 shrink-0"></i>
                                     <span>Status dihitung otomatis. Data yang belum lengkap disimpan sebagai <strong>Proyeksi</strong>.</span>
                                 </div>
@@ -551,7 +550,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <input class="file-input file-input-sm w-full" id="field_undangan_file" name="undangan_file" type="file"
                                     accept="application/pdf,.pdf" />
                                 <p class="label text-xs">PDF maksimal 10 MB. Hanya dapat dibuka oleh anggota yang sudah login.</p>
-                                <div class="alert alert-soft hidden" id="field_undangan_existing">
+                                <div class="alert alert-info hidden" id="field_undangan_existing">
                                     <i data-lucide="file-check-2" class="h-4 w-4"></i>
                                     <span class="min-w-0 flex-1 truncate" id="field_undangan_name"></span>
                                     <label class="label cursor-pointer gap-2" for="field_hapus_undangan">
