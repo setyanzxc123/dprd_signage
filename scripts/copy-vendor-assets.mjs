@@ -9,6 +9,7 @@ const files = [
   ['node_modules/datatables.net/js/dataTables.min.js', 'public/assets/vendor/datatables/dataTables.min.js'],
   ['node_modules/datatables.net-dt/css/dataTables.dataTables.min.css', 'public/assets/vendor/datatables/dataTables.dataTables.min.css'],
   ['node_modules/qrcodejs/qrcode.min.js', 'public/assets/vendor/qrcodejs/qrcode.min.js'],
+  ['node_modules/preline/dist/preline.js', 'public/assets/vendor/preline/preline.js'],
 ];
 
 const fonts = [
