@@ -177,7 +177,7 @@
 
         <div class="space-y-0">
 
-            <!-- ── Kelompok 1: Data Rapat ──────────────────────────────── -->
+            <!-- Kelompok 1: Data Rapat -->
             <div class="rounded-box border border-base-300 bg-base-100 divide-y divide-base-200">
 
                 <div class="px-3.5 py-2.5">
@@ -269,7 +269,7 @@
 
             </div>
 
-            <!-- ── Kelompok 2: Berkas Audio ────────────────────────────── -->
+            <!-- Kelompok 2: Berkas Audio -->
             <div class="mt-3">
                 <!-- Input file asli — tersembunyi, dikontrol via dropzone -->
                 <input type="file" id="modal_audio_file"
