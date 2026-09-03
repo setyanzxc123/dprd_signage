@@ -25,8 +25,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
     <div id="app" v-cloak>
 
-        <header id="panel-header" class="navbar border-b border-base-300 bg-base-100">
-            <div class="navbar-start min-w-0 gap-[1vw]">
+        <header id="panel-header" class="relative flex items-center justify-between border-b border-base-300">
+            <div class="flex min-w-0 flex-1 items-center gap-[1vw]">
                 <div class="flex h-[clamp(52px,8.5vh,100px)] w-[clamp(52px,8.5vh,100px)] shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-emerald-500/40 bg-white shadow-md p-1">
                     <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>"
                         alt="Logo DPRD Provinsi Sulawesi Tengah"
@@ -42,45 +42,49 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 </div>
             </div>
 
-            <div class="navbar-end w-auto min-w-max">
-                <div class="stats stats-horizontal border border-base-300 bg-base-200 shadow-sm">
-                    <div class="stat place-items-center px-[1vw] py-[0.7vh]">
-                        <div class="stat-value flex items-center gap-[0.4vw] text-[clamp(20px,1.2vw,28px)]">
+            <div class="flex w-auto min-w-max items-center justify-end">
+                <div class="flex items-stretch divide-x divide-base-300 rounded-2xl border border-base-300 bg-base-200 shadow-sm">
+                    <div class="flex flex-col items-center justify-center gap-[0.4vh] px-[1vw] text-center">
+                        <div class="flex items-center gap-[0.4vw] text-[clamp(20px,1.2vw,28px)]">
                             <img v-if="cuaca.icon_url" :src="cuaca.icon_url"
                                 class="h-[clamp(24px,1.8vw,34px)] w-[clamp(24px,1.8vw,34px)] object-contain"
                                 alt="Ikon cuaca" />
-                            <span v-else class="status status-info status-lg"></span>
+                            <svg v-else class="h-[clamp(18px,1.4vw,26px)] w-[clamp(18px,1.4vw,26px)] opacity-60"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                    d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
+                            </svg>
                             <span>{{ cuaca.suhu }}</span>
                         </div>
-                        <div class="stat-desc text-[clamp(11px,0.68vw,14px)] font-semibold">
+                        <div class="text-[clamp(11px,0.68vw,14px)] font-semibold opacity-80">
                             {{ cuaca.kondisi }}
                         </div>
                     </div>
 
-                    <div class="stat px-[1vw] py-[0.7vh]">
-                        <div class="stat-title text-[clamp(11px,0.72vw,15px)] font-bold" v-if="cuaca.desa">
+                    <div class="flex flex-col justify-center gap-[0.25vh] px-[1vw]">
+                        <div class="text-[clamp(11px,0.72vw,15px)] font-bold" v-if="cuaca.desa">
                             {{ cuaca.desa }}, {{ cuaca.kecamatan }}
                         </div>
-                        <div class="stat-value mt-[0.25vh] text-[clamp(10px,0.62vw,13px)] font-medium">
+                        <div class="text-[clamp(10px,0.62vw,13px)] font-medium">
                             Kelembapan {{ cuaca.kelembapan }} · Angin {{ cuaca.kec_angin }}
                         </div>
-                        <div class="stat-desc text-[clamp(9px,0.58vw,12px)] italic">
+                        <div class="text-[clamp(9px,0.58vw,12px)] italic opacity-70">
                             Sumber: BMKG
                         </div>
                     </div>
 
-                    <div class="stat place-items-center px-[1.4vw] py-[0.7vh] text-center">
-                        <div class="stat-title text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-[0.12em]">
+                    <div class="flex flex-col items-center justify-center px-[1.4vw] text-center">
+                        <div class="text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-[0.12em]">
                             {{ dateDay }}
                         </div>
-                        <div class="stat-value text-[clamp(14px,1vw,20px)]">{{ dateFull }}</div>
+                        <div class="text-[clamp(14px,1vw,20px)]">{{ dateFull }}</div>
                     </div>
 
-                    <div class="stat place-items-center px-[1.4vw] py-[0.7vh] text-center">
-                        <div class="stat-value font-mono text-[clamp(34px,3vw,60px)] tabular-nums leading-none">
+                    <div class="flex flex-col items-center justify-center px-[1.4vw] text-center">
+                        <div class="font-mono text-[clamp(34px,3vw,60px)] tabular-nums leading-none">
                             {{ clock }}
                         </div>
-                        <div class="stat-desc mt-[0.25vh] uppercase tracking-[0.18em]">WITA</div>
+                        <div class="mt-[0.25vh] text-[clamp(11px,0.68vw,14px)] uppercase tracking-[0.18em] opacity-70">WITA</div>
                     </div>
                 </div>
             </div>
@@ -102,7 +106,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
             </div>
         </header>
 
-        <section id="panel-media" class="card rounded-none bg-neutral">
+        <section id="panel-media" class="rounded-none">
             <canvas ref="mediaBackdrop" class="media-bg" v-if="media.mode === 'video' && media.url"
                 aria-hidden="true"></canvas>
             <img class="media-bg" v-if="media.mode === 'image' && media.url"
@@ -118,8 +122,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 :src="media.url" alt="Media Signage DPRD"
                 @load="handleMediaImageLoaded" @error="handleMediaError" />
 
-            <div v-if="(!media.url && !mediaStatusPending) || mediaError"
-                class="media-state card-body absolute inset-0 z-[2] items-center justify-center text-center">
+            <div v-if="(!media.url && !mediaStatusPending) || mediaError" class="media-state">
                 <div class="flex flex-col items-center gap-3 max-w-[28vw]">
                     <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-emerald-400 ring-1 ring-white/10 shadow-lg backdrop-blur-md">
                         <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,14 +140,14 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 </div>
             </div>
 
-            <aside class="qr-panel card border border-base-300/80 bg-base-100/90 shadow-2xl backdrop-blur-md rounded-2xl"
+            <aside class="qr-panel flex flex-col border border-base-300/80 bg-base-100/90 shadow-2xl backdrop-blur-md rounded-2xl"
                 v-if="qrBerkas || qrLive">
-                <div class="card-body items-center gap-[0.6vh] p-[clamp(10px,1vw,18px)]">
-                    <div class="card-title text-[clamp(10px,0.65vw,13px)] uppercase tracking-[0.1em] text-base-content/60"
+                <div class="flex flex-col items-center gap-[0.6vh] p-[clamp(10px,1vw,18px)]">
+                    <div class="flex items-center text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-[0.1em] text-base-content/60"
                         v-if="activeQR === 'berkas'">
                         Unduh Berkas Rapat
                     </div>
-                    <div class="card-title gap-[0.35vw] text-[clamp(10px,0.65vw,13px)] uppercase tracking-[0.1em] text-base-content/60"
+                    <div class="flex items-center gap-[0.35vw] text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-[0.1em] text-base-content/60"
                         v-else>
                         <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[0.65vw] font-bold text-emerald-400 border border-emerald-500/40">
                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -161,9 +164,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
             </aside>
         </section>
 
-        <section id="panel-info" class="card rounded-none">
-            <div class="card-body signage-schedule gap-0">
-                <h2 class="card-title border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
+        <section id="panel-info" class="flex flex-col rounded-none">
+            <div class="signage-schedule flex flex-1 flex-col gap-0">
+                <h2 class="border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] font-bold uppercase tracking-[0.14em] text-base-content/70">
                     Agenda Hari Ini
                 </h2>
 
@@ -185,9 +188,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     Tidak ada agenda rapat untuk hari ini. Silakan periksa agenda berikutnya di bawah.
                 </div>
 
-                <ul v-if="jadwal.length > 0" class="list mt-[1vh] gap-[0.8vh] p-0">
+                <ul v-if="jadwal.length > 0" class="mt-[1vh] flex flex-col gap-[0.8vh] p-0">
                     <li v-for="item in jadwal" :key="item.id"
-                        :class="['list-row grid-cols-[8.5vw_minmax(0,1fr)_auto] gap-[1.2vw] meeting-card border px-[1.4vw] py-[1.2vh] shadow-sm', scheduleItemClasses(item.status)]">
+                        :class="['grid grid-cols-[8.5vw_minmax(0,1fr)_auto] items-center gap-[1.2vw] meeting-card border px-[1.4vw] py-[1.2vh] shadow-sm', scheduleItemClasses(item.status)]">
                         <div>
                             <div class="text-[1.1vw] font-bold tabular-nums text-primary">
                                 {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
@@ -214,13 +217,13 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 </ul>
 
                 <div v-if="upcoming.length > 0" class="upcoming-section">
-                    <h2 class="card-title border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
+                    <h2 class="border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] font-bold uppercase tracking-[0.14em] text-base-content/70">
                         Agenda Berikutnya
                     </h2>
 
-                    <ul class="list mt-[0.8vh] gap-[0.55vh] p-0">
+                    <ul class="mt-[0.8vh] flex flex-col gap-[0.55vh] p-0">
                         <li v-for="item in upcoming" :key="'upcoming-' + item.id"
-                            class="list-row grid-cols-[8.5vw_minmax(0,1fr)_auto] gap-[0.9vw] meeting-card border px-[1.05vw] py-[0.85vh] shadow-sm">
+                            class="grid grid-cols-[8.5vw_minmax(0,1fr)_auto] items-center gap-[0.9vw] meeting-card border px-[1.05vw] py-[0.85vh] shadow-sm">
                             <div>
                                 <div class="text-[0.62vw] font-bold uppercase tracking-[0.1em] text-base-content/70">
                                     {{ upcomingDateLabel(item.tanggal) }}
