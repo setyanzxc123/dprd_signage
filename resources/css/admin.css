@@ -3,11 +3,22 @@
 @source "../../app/Views/admin/layouts/*.php";
 @source "../../app/Views/auth/**/*.php";
 @source "../../app/Views/member/**/*.php";
+@source "../../node_modules/preline/dist/*.js";
 @plugin "daisyui" {
     themes: light --default, dark --prefersdark;
     logs: false;
 }
 @custom-variant dark (&:where(.dark, .dark *));
+
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.15s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 @theme {
     --font-sans: Inter, system-ui, sans-serif;
