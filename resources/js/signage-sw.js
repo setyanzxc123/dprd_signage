@@ -85,7 +85,7 @@ async function networkFirstSignage(request) {
 
 async function cacheFirstAsset(request) {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request, { ignoreSearch: true });
+    const cached = await cache.match(request);
     if (cached) return cached;
 
     const response = await fetch(request);

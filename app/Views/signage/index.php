@@ -1566,7 +1566,16 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                     const workerUrl = `/signage-sw.js?v=${encodeURIComponent(SIGNAGE_WORKER_VERSION)}`;
                     try {
-                        const registration = await navigator.serviceWorker.register(workerUrl, { scope: '/' });
+                        const signageScope = window.location.pathname.replace(/\/+$/, '') + '/';
+                        const existingRegs = await navigator.serviceWorker.getRegistrations();
+                        for (const reg of existingRegs) {
+                            const regPath = new URL(reg.scope).pathname.replace(/\/+$/, '');
+                            if (regPath === '' || regPath === '/' || !regPath.endsWith('signage')) {
+                                await reg.unregister();
+                            }
+                        }
+
+                        const registration = await navigator.serviceWorker.register(workerUrl, { scope: signageScope });
                         if (registration.waiting) {
                             queueServiceWorkerUpdate(registration.waiting);
                         }
