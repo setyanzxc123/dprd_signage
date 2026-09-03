@@ -230,13 +230,13 @@
                                 data-general-options="<?= esc(json_encode($generalJson), 'attr') ?>"
                                 data-banmus-options="<?= esc(json_encode($banmusJson), 'attr') ?>" />
 
-                            <div class="dropdown w-full" id="um_agenda_dropdown">
+                            <div class="hs-dropdown relative w-full" id="um_agenda_dropdown">
                                 <button type="button" id="um_agenda_trigger" tabindex="0"
-                                    class="input input-bordered input-sm w-full flex items-center justify-between font-normal text-xs px-3 bg-base-100 cursor-pointer hover:border-base-content/40 focus:border-primary focus:outline-none">
+                                    class="hs-dropdown-toggle input input-bordered input-sm w-full flex items-center justify-between font-normal text-xs px-3 bg-base-100 cursor-pointer hover:border-base-content/40 focus:border-primary focus:outline-none">
                                     <span id="um_agenda_selected_label" class="truncate text-left flex-1 text-base-content">— Tanpa Relasi Agenda —</span>
                                     <i data-lucide="chevron-down" class="h-4 w-4 shrink-0 text-base-content/50 ml-1"></i>
                                 </button>
-                                <div tabindex="0" class="dropdown-content z-50 mt-1 w-full rounded-box border border-base-300 bg-base-100 p-2 shadow-xl">
+                                <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 hs-dropdown-open:block opacity-0 hidden transition-[opacity,margin] duration-200 z-50 mt-1 w-full rounded-box border border-base-300 bg-base-100 p-2 shadow-xl">
                                     <div class="relative mb-1.5">
                                         <input type="text" id="um_agenda_search_input"
                                             placeholder="Cari nama agenda atau tanggal..."

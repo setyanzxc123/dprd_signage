@@ -114,7 +114,7 @@
         document.documentElement.dataset.adminAlertBound = '1';
         document.addEventListener('click', function (e) {
             const btn = e.target.closest('.alert-close-btn, .ta-alert-close');
-            if (btn) dismissAdminAlert(btn.closest('.alert, .ta-alert'));
+            if (btn) dismissAdminAlert(btn.closest('[data-admin-alert], .alert, .ta-alert'));
         });
     }
 
@@ -358,10 +358,6 @@
         document.querySelectorAll('table[data-admin-datatable]').forEach(function (table) {
             if (window.jQuery.fn.DataTable.isDataTable(table)) {
                 try {
-                    /* destroy(false) = lepas DataTables dari tabel dan bersihkan
-                     * event handler-nya, tapi TIDAK menghapus node <table> dari DOM.
-                     * Ini penting untuk Turbo: snapshot cache akan menyimpan
-                     * <table> asli, dan saat restore turbo:load akan re-init DT. */
                     window.jQuery(table).DataTable().destroy(false);
                 } catch (e) {
                     /* abaikan error saat destroy */

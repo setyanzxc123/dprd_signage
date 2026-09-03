@@ -1613,6 +1613,10 @@
                 judulInput.value = title || '';
             }
 
+            if (agendaDropdown && window.HSDropdown) {
+                window.HSDropdown.close(agendaDropdown);
+            }
+
             if (document.activeElement && typeof document.activeElement.blur === 'function') {
                 document.activeElement.blur();
             }

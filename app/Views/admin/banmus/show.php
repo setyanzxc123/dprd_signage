@@ -304,8 +304,8 @@ $scheduledCount = count($items) - $projectionCount;
                                         </span>
                                         <?php if ($item['status'] === 'proyeksi' && $missingFields !== []): ?>
                                             <span
-                                                class="tooltip tooltip-left inline-flex"
-                                                data-tip="<?= esc($projectionWarning, 'attr') ?>"
+                                                class="inline-flex"
+                                                title="<?= esc($projectionWarning, 'attr') ?>"
                                                 aria-label="<?= esc($projectionWarning, 'attr') ?>">
                                                 <span class="badge badge-warning badge-soft badge-xs gap-1 whitespace-nowrap">
                                                     <i data-lucide="triangle-alert" class="h-3 w-3"></i>

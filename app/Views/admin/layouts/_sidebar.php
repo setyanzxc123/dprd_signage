@@ -54,10 +54,7 @@ $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPAT
                     </summary>
                     <div class="mt-1 ps-7 pe-1 space-y-1 border-s border-slate-100 dark:border-slate-800 ms-5">
                         <a href="<?= base_url('admin/jadwal-banmus') ?>" data-path="/admin/jadwal-banmus" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Agenda Banmus</a>
-                        <a href="<?= base_url('admin/jadwal-umum') ?>" data-path="/admin/jadwal-umum" data-admin-nav class="flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                            <span>Jadwal Umum</span>
-                            <span class="inline-flex items-center py-0.5 px-1.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hidden" id="badge-jadwal"></span>
-                        </a>
+                        <a href="<?= base_url('admin/jadwal-umum') ?>" data-path="/admin/jadwal-umum" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Jadwal Umum</a>
                         <a href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Kalender Agenda</a>
                         <a href="<?= base_url('admin/notulen') ?>" data-path="/admin/notulen" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Notulensi &amp; Risalah AI</a>
                     </div>
