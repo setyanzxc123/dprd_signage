@@ -193,7 +193,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     </header>
 
     <main class="mx-auto grid w-full min-w-0 gap-3 px-2.5 py-3 sm:gap-4 sm:px-4 sm:py-6 xl:w-[min(1480px,calc(100%-32px))] xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:px-0 xl:items-start">
-        <section class="card card-border min-w-0 bg-base-100 shadow-sm">
+        <section class="card rounded-2xl border border-base-300/80 bg-base-100/95 backdrop-blur-sm shadow-sm overflow-hidden">
             <div class="card-body gap-0 p-0">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-3 py-3 sm:px-6 sm:py-4">
                     <h1 class="text-xl font-black uppercase tracking-tight sm:text-2xl">Agenda Rapat</h1>
@@ -341,26 +341,30 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </dl>
 
                                 <div class="mt-4 flex flex-wrap items-center gap-2">
-                                    <a v-if="item.status === 'proyeksi'" class="btn btn-outline btn-sm" :href="item.projection_url">
+                                    <a v-if="item.status === 'proyeksi'" class="btn btn-outline btn-sm min-h-[40px] rounded-xl px-3.5 font-semibold gap-1.5" :href="item.projection_url">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                         Lihat Proyeksi &amp; SK
                                     </a>
                                     <template v-else>
                                         <?php if ($isMember): ?>
-                                            <a v-if="item.has_undangan" class="btn btn-outline btn-sm" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
+                                            <a v-if="item.has_undangan" class="btn btn-outline btn-sm min-h-[40px] rounded-xl px-3.5 font-semibold gap-1.5" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                                 Undangan
                                             </a>
                                         <?php endif; ?>
-                                        <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
+                                        <a v-if="item.has_materi" class="btn btn-outline btn-sm min-h-[40px] rounded-xl px-3.5 font-semibold gap-1.5" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
                                             Bahan Rapat
-                                            <span v-if="item.materi_access_label" class="badge badge-ghost badge-xs">{{ item.materi_access_label }}</span>
+                                            <span v-if="item.materi_access_label" class="badge badge-ghost badge-xs font-semibold">{{ item.materi_access_label }}</span>
                                         </a>
-                                        <a v-if="item.has_stream" class="btn btn-outline btn-sm" :href="item.stream_url" target="_blank" rel="noopener noreferrer">
+                                        <a v-if="item.has_stream" class="btn btn-outline btn-sm min-h-[40px] rounded-xl px-3.5 font-semibold gap-1.5" :href="item.stream_url" target="_blank" rel="noopener noreferrer">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                                             Live / Video
-                                            <span v-if="item.stream_access_label" class="badge badge-ghost badge-xs">{{ item.stream_access_label }}</span>
+                                            <span v-if="item.stream_access_label" class="badge badge-ghost badge-xs font-semibold">{{ item.stream_access_label }}</span>
                                         </a>
                                         <?php if ($isMember): ?>
-                                            <span v-if="item.materi_restricted" class="badge badge-warning badge-soft badge-sm">Bahan khusus peserta</span>
-                                            <span v-if="item.stream_restricted" class="badge badge-warning badge-soft badge-sm">Live/video khusus peserta</span>
+                                            <span v-if="item.materi_restricted" class="badge badge-warning badge-soft badge-sm py-2">Bahan khusus peserta</span>
+                                            <span v-if="item.stream_restricted" class="badge badge-warning badge-soft badge-sm py-2">Live/video khusus peserta</span>
                                         <?php endif; ?>
                                         <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.materi_restricted && !item.stream_restricted" class="text-xs font-semibold text-base-content/45">Belum ada undangan, bahan, atau tautan video.</span>
                                     </template>
@@ -381,7 +385,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             </div>
         </section>
 
-        <section class="card card-border min-w-0 bg-base-100 shadow-sm">
+        <section class="card rounded-2xl border border-base-300/80 bg-base-100/95 backdrop-blur-sm shadow-sm overflow-hidden">
             <div class="card-body gap-0 p-0">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-3 py-3 sm:px-6 sm:py-4">
                     <h1 class="text-xl font-black uppercase tracking-tight sm:text-2xl">Jadwal Umum</h1>
@@ -497,21 +501,24 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                                 <div class="mt-4 flex flex-wrap items-center gap-2">
                                     <?php if ($isMember): ?>
-                                        <a v-if="item.has_undangan" class="btn btn-outline btn-sm" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
+                                        <a v-if="item.has_undangan" class="btn btn-outline btn-sm min-h-[40px] rounded-xl px-3.5 font-semibold gap-1.5" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                             Undangan
                                         </a>
                                     <?php endif; ?>
-                                    <a v-if="item.has_materi" class="btn btn-outline btn-sm" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
+                                    <a v-if="item.has_materi" class="btn btn-outline btn-sm min-h-[40px] rounded-xl px-3.5 font-semibold gap-1.5" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
                                         Bahan Rapat
-                                        <span v-if="item.materi_access_label" class="badge badge-ghost badge-xs">{{ item.materi_access_label }}</span>
+                                        <span v-if="item.materi_access_label" class="badge badge-ghost badge-xs font-semibold">{{ item.materi_access_label }}</span>
                                     </a>
-                                    <a v-if="item.has_stream" class="btn btn-outline btn-sm" :href="item.stream_url" target="_blank" rel="noopener noreferrer">
+                                    <a v-if="item.has_stream" class="btn btn-outline btn-sm min-h-[40px] rounded-xl px-3.5 font-semibold gap-1.5" :href="item.stream_url" target="_blank" rel="noopener noreferrer">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                                         Live / Video
-                                        <span v-if="item.stream_access_label" class="badge badge-ghost badge-xs">{{ item.stream_access_label }}</span>
+                                        <span v-if="item.stream_access_label" class="badge badge-ghost badge-xs font-semibold">{{ item.stream_access_label }}</span>
                                     </a>
                                     <?php if ($isMember): ?>
-                                        <span v-if="item.materi_restricted" class="badge badge-warning badge-soft badge-sm">Bahan khusus peserta</span>
-                                        <span v-if="item.stream_restricted" class="badge badge-warning badge-soft badge-sm">Live/video khusus peserta</span>
+                                        <span v-if="item.materi_restricted" class="badge badge-warning badge-soft badge-sm py-2">Bahan khusus peserta</span>
+                                        <span v-if="item.stream_restricted" class="badge badge-warning badge-soft badge-sm py-2">Live/video khusus peserta</span>
                                     <?php endif; ?>
                                     <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.materi_restricted && !item.stream_restricted" class="text-xs font-semibold text-base-content/45">Belum ada undangan, bahan, atau tautan video.</span>
                                 </div>
