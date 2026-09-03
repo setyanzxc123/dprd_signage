@@ -34,6 +34,11 @@ class SecurityHeadersFilter implements FilterInterface
             $response->setHeader('Strict-Transport-Security', $value);
         }
 
+        if (! $response->hasHeader('Cache-Control')) {
+            $response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            $response->setHeader('Pragma', 'no-cache');
+        }
+
         return $response;
     }
 
