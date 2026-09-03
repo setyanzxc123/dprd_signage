@@ -53,20 +53,9 @@
         });
     }
 
-    /* patchReadyCallbacksForTurbo dihapus — monkey-patch document.addEventListener
-     * sangat berbahaya dan menyebabkan konflik dengan jQuery/DataTables.
-     * Turbo sudah firing turbo:load setelah setiap navigasi, yang kita gunakan
-     * di bawah (lihat bagian Bootstrap). */
-
     function closeTransientShellUi() {
         document.body.classList.remove('mobile-agenda-open');
         if (window.matchMedia('(max-width: 1023px)').matches) setDrawerOpen(false);
-    }
-
-    function disableTurboFormSubmissions() {
-        document.querySelectorAll('form:not([data-turbo])').forEach(function (form) {
-            form.setAttribute('data-turbo', 'false');
-        });
     }
 
     function bindFormConfirmations() {
@@ -468,50 +457,31 @@
         });
     }
 
+    function initPreline() {
+        if (window.HSStaticMethods && typeof window.HSStaticMethods.autoInit === 'function') {
+            window.HSStaticMethods.autoInit();
+        }
+    }
+
     function refreshAdminPage() {
         initThemeControls();
         initSidebar();
         applyActiveNavigation();
         renderAdminIcons();
-        disableTurboFormSubmissions();
         initAutoDismissAlerts();
         initAdminDataTables();
-        renderAdminIcons(); /* re-render ikon setelah DT menambah elemen baru */
+        initPreline();
+        renderAdminIcons();
     }
 
-    /* ── Bootstrap ──────────────────────────────────────────────────────── */
-    /* Script dimuat dengan defer; DOM awal sudah siap saat bootstrap berjalan.
-     *
-     * Alur Hotwire Turbo:
-     *  - turbo:load         → halaman baru selesai di-render (navigasi penuh / restore)
-     *  - turbo:before-cache → sebelum halaman saat ini di-cache Turbo
-     *
-     * Kita destroy DataTables SEBELUM halaman di-cache sehingga Turbo menyimpan
-     * markup tabel yang bersih (tanpa wrapper DT). Saat halaman di-restore,
-     * turbo:load akan re-init DataTables kembali.
-     *
-     * CATATAN: turbo:render TIDAK digunakan karena ia firing baik saat fresh
-     * navigation MAUPUN saat restore cache (setelah turbo:load sudah firing),
-     * sehingga menyebabkan double-init yang bisa merusak DataTables.
-     * turbo:load sudah cukup — ia meng-cover semua skenario.
-     */
     bindAlertHandlers();
     bindFormConfirmations();
     bindAutoSubmitControls();
-    refreshAdminPage();
-    document.addEventListener('turbo:load', function () {
-        refreshAdminPage();
-    });
 
-    document.addEventListener('turbo:before-cache', function () {
-        /* destroy(false) = lepas DataTables dari tabel tapi TIDAK hapus <table> dari DOM.
-         * Turbo menyimpan snapshot dengan <table> yang bersih (tanpa wrapper DT).
-         * Saat halaman di-restore, turbo:load akan re-init DataTables kembali. */
-        destroyAdminDataTables();
-        closeTransientShellUi();
-        document.querySelectorAll('[data-admin-alert]').forEach(function (alert) {
-            alert.remove();
-        });
-    });
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refreshAdminPage);
+    } else {
+        refreshAdminPage();
+    }
 
 })();

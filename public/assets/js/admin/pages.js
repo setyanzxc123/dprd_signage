@@ -129,7 +129,7 @@
     }
 
     let dashboardController = null;
-    document.addEventListener('turbo:load', () => {
+    document.addEventListener('DOMContentLoaded', () => {
         dashboardController?.abort();
         dashboardController = new AbortController();
         setDate();
@@ -311,7 +311,7 @@
         syncTargetCount();
     };
 
-    document.addEventListener('turbo:load', initScheduleForm);
+    document.addEventListener('DOMContentLoaded', initScheduleForm);
     })();
 
 (() => {
@@ -989,11 +989,11 @@
             startWaPolling(4000);
         }
 
-        document.addEventListener('turbo:before-cache', stopWaPolling, { once: true });
-        document.addEventListener('turbo:before-visit', stopWaPolling, { once: true });
+        window.addEventListener('beforeunload', stopWaPolling, { once: true });
+        window.addEventListener('pagehide', stopWaPolling, { once: true });
     }
 
-    document.addEventListener('turbo:load', initSettingsPage);
+    document.addEventListener('DOMContentLoaded', initSettingsPage);
 })();
 
 (function() {
@@ -1158,7 +1158,7 @@
         syncMemberValidity(false);
     };
 
-    document.addEventListener('turbo:load', initUnitForm);
+    document.addEventListener('DOMContentLoaded', initUnitForm);
     })();
 
 (() => {
@@ -1223,7 +1223,7 @@
             refreshItems();
         };
 
-        document.addEventListener('turbo:load', initializeBanmusForm);
+        document.addEventListener('DOMContentLoaded', initializeBanmusForm);
     })();
 
 (() => {
@@ -1345,11 +1345,7 @@
         roomField.addEventListener('change', syncLocationDisclosure);
     };
 
-    document.addEventListener('turbo:load', initializeBanmusItemWorkspace);
-    document.addEventListener('turbo:before-cache', () => {
-        const dialog = document.querySelector('[data-banmus-item-dialog]');
-        if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close();
-    });
+    document.addEventListener('DOMContentLoaded', initializeBanmusItemWorkspace);
 })();
 
 (() => {
@@ -2205,18 +2201,11 @@
         }
     };
 
-    document.addEventListener('turbo:load', initializeNotulenUploadWorkspace);
     if (document.readyState !== 'loading') {
         initializeNotulenUploadWorkspace();
     } else {
         document.addEventListener('DOMContentLoaded', initializeNotulenUploadWorkspace);
     }
-    document.addEventListener('turbo:before-cache', () => {
-        const modal = document.getElementById('modal_upload_notulen');
-        if (modal instanceof HTMLDialogElement && modal.open) modal.close();
-        const confirmDialog = document.getElementById('um_confirm_dialog');
-        if (confirmDialog instanceof HTMLDialogElement && confirmDialog.open) confirmDialog.close();
-    });
 })();
 
 
@@ -2567,17 +2556,13 @@
         }
     });
 
-    document.addEventListener('turbo:before-visit', (e) => {
-        if (isNotulenDirty) {
-            const confirmLeave = window.confirm('Terdapat perubahan draf risalah yang belum disimpan. Yakin ingin berpindah halaman?');
-            if (!confirmLeave) {
-                e.preventDefault();
-            }
-        }
-    });
+    if (document.readyState !== 'loading') {
+        initializeNotulenShowWorkspace();
+    } else {
+        document.addEventListener('DOMContentLoaded', initializeNotulenShowWorkspace);
+    }
 
-    document.addEventListener('turbo:load', initializeNotulenShowWorkspace);
-    document.addEventListener('turbo:before-cache', () => {
+    window.addEventListener('pagehide', () => {
         if (notulenPollTimer) {
             clearInterval(notulenPollTimer);
             notulenPollTimer = null;
