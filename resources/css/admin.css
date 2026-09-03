@@ -177,55 +177,6 @@
 }
 
 @layer components {
-    .sidebar-toggle {
-        position: absolute;
-        right: -13px;
-        top: 18px;
-        z-index: 60;
-        width: 26px;
-        height: 26px;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid var(--od-border);
-        border-radius: 9999px;
-        background: var(--od-surface);
-        color: var(--od-fg2);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        transition: transform 0.2s ease, background 0.15s ease;
-    }
-    .sidebar-toggle:hover {
-        background: var(--od-surface-warm);
-        color: var(--od-fg);
-    }
-    .sidebar-toggle:focus-visible {
-        outline: none;
-        box-shadow: var(--od-focus);
-    }
-    #admin-drawer:not(:checked) ~ * #sidebarToggle svg,
-    #admin-drawer:not(:checked) ~ * #sidebarToggle i {
-        transform: rotate(180deg);
-    }
-
-    @media (min-width: 64rem) {
-        #admin-drawer:not(:checked) ~ * .sidebar-label,
-        #admin-drawer:not(:checked) ~ * [data-admin-nav-group] > ul {
-            display: none !important;
-        }
-        #admin-drawer:not(:checked) ~ * .sidebar-item-link {
-            justify-content: center !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-        }
-        #admin-drawer:not(:checked) ~ * .sidebar-brand-text {
-            display: none !important;
-        }
-        #admin-drawer:not(:checked) ~ * .sidebar-brand-container {
-            justify-content: center !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-        }
-    }
-
     [data-admin-nav].menu-active {
         background-color: #0f172a !important;
         color: #ffffff !important;

@@ -1,7 +1,7 @@
 /* Admin shell — Vanilla JS, tanpa Vue. */
 (function () {
 
-    /* ── Icon renderer ─────────────────────────────────────────────────── */
+    /* Icon renderer */
     function renderAdminIcons() {
         if (window.lucide) window.lucide.createIcons();
     }
@@ -55,7 +55,10 @@
 
     function closeTransientShellUi() {
         document.body.classList.remove('mobile-agenda-open');
-        if (window.matchMedia('(max-width: 1023px)').matches) setDrawerOpen(false);
+        const sidebar = document.getElementById('application-sidebar');
+        if (sidebar && window.HSOverlay && window.matchMedia('(max-width: 1023px)').matches) {
+            window.HSOverlay.close(sidebar);
+        }
     }
 
     function bindFormConfirmations() {
@@ -79,7 +82,7 @@
         });
     }
 
-    /* ── Alert close handler ────────────────────────────────────────────── */
+    /* Alert close handler */
     function dismissAdminAlert(alert) {
         if (!alert || alert.dataset.dismissed === '1') return;
         alert.dataset.dismissed = '1';
@@ -115,126 +118,43 @@
         });
     }
 
-    /* ── Sidebar ────────────────────────────────────────────────────────── */
-    function isMobilePrimaryPath(current, path) {
-        if (path === '/admin/dashboard') {
-            return current === '/admin' || isActivePath(current, path);
-        }
-
-        return isActivePath(current, path);
-    }
-
-    function isCurrentMobileMenuSection() {
-        const current = window.location.pathname.replace(/\/$/, '') || '/';
-        if (!current.startsWith('/admin')) return false;
-
-        return ![
-            '/admin/dashboard',
-            '/admin/jadwal-banmus',
-            '/admin/jadwal-umum',
-        ].some(function (path) {
-            return isMobilePrimaryPath(current, path);
-        });
-    }
-
-    function syncDrawerState() {
-        const drawer = document.getElementById('admin-drawer');
-        const isOpen = Boolean(drawer?.checked);
-        const shouldActivate = isOpen || isCurrentMobileMenuSection();
-
-        const desktopToggle = document.getElementById('sidebarToggle');
-        if (desktopToggle) {
-            desktopToggle.setAttribute('aria-expanded', String(isOpen));
-            desktopToggle.setAttribute('aria-label', isOpen ? 'Ciutkan sidebar' : 'Perluas sidebar');
-            desktopToggle.setAttribute('title', isOpen ? 'Ciutkan sidebar' : 'Perluas sidebar');
-        }
-
-        document.querySelectorAll('[data-mobile-menu-toggle]').forEach(function (button) {
-            button.classList.toggle('dock-active', shouldActivate);
-            button.setAttribute('aria-expanded', String(isOpen));
-            button.setAttribute('aria-label', isOpen ? 'Tutup menu lainnya' : 'Buka menu lainnya');
-        });
-    }
-
-    function setDrawerOpen(open) {
-        const drawer = document.getElementById('admin-drawer');
-        if (drawer) drawer.checked = Boolean(open);
-        syncDrawerState();
-    }
-
-    function applyResponsiveDrawerState() {
-        const drawer = document.getElementById('admin-drawer');
-        if (!drawer) return;
-
-        drawer.checked = window.matchMedia('(min-width: 1024px)').matches
-            ? localStorage.getItem(ADMIN_SIDEBAR_STORAGE_KEY) !== 'collapsed'
-            : false;
-        syncDrawerState();
-    }
-
+    /* Sidebar */
     function initSidebar() {
-        applyResponsiveDrawerState();
-
         if (document.documentElement.dataset.adminSidebarBound === '1') return;
         document.documentElement.dataset.adminSidebarBound = '1';
 
-        document.addEventListener('change', function (event) {
-            if (event.target.matches('#admin-drawer')) syncDrawerState();
-        });
-
         document.addEventListener('click', function (event) {
-            const drawer = document.getElementById('admin-drawer');
-
-            if (event.target.closest('#sidebarToggle') && drawer) {
-                drawer.checked = !drawer.checked;
-                localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, drawer.checked ? 'expanded' : 'collapsed');
-                syncDrawerState();
-                return;
-            }
-
-            const collapsedGroup = event.target.closest('[data-admin-nav-group] > summary');
-            if (collapsedGroup && drawer && !drawer.checked && window.matchMedia('(min-width: 1024px)').matches) {
-                event.preventDefault();
-                drawer.checked = true;
-                localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, 'expanded');
-                collapsedGroup.parentElement.open = true;
-                syncDrawerState();
-                return;
-            }
-
-            if (event.target.closest('#sidebar a') && window.matchMedia('(max-width: 1023px)').matches) {
-                setDrawerOpen(false);
+            if (event.target.closest('#application-sidebar a') && window.matchMedia('(max-width: 1023px)').matches) {
+                const sidebar = document.getElementById('application-sidebar');
+                if (sidebar && window.HSOverlay) {
+                    window.HSOverlay.close(sidebar);
+                }
             }
         });
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') closeTransientShellUi();
         });
-
-        window.matchMedia('(min-width: 1024px)').addEventListener('change', applyResponsiveDrawerState);
     }
 
-    /* ── Active navigation ──────────────────────────────────────────────── */
+    /* Active navigation */
     function applyActiveNavigation() {
         const current = window.location.pathname.replace(/\/$/, '') || '/';
-        document.querySelectorAll('[data-admin-nav][data-path], #mobile-nav a[data-path]').forEach(function (link) {
-            const path = link.getAttribute('data-path');
-            const active = isMobilePrimaryPath(current, path);
-            link.classList.toggle('menu-active', active && link.matches('[data-admin-nav]'));
-            link.classList.toggle('dock-active', active && Boolean(link.closest('#mobile-nav')));
-            if (active) link.setAttribute('aria-current', 'page');
-            else link.removeAttribute('aria-current');
+        document.querySelectorAll('[data-admin-nav][data-path]').forEach(function (link) {
+            const path = (link.getAttribute('data-path') || '').replace(/\/$/, '');
+            const active = path && (current === path || (path !== '/admin' && current.startsWith(path + '/')));
+            link.classList.toggle('menu-active', Boolean(active));
+            if (active) {
+                link.setAttribute('aria-current', 'page');
+                const group = link.closest('[data-admin-nav-group]');
+                if (group) group.open = true;
+            } else {
+                link.removeAttribute('aria-current');
+            }
         });
-        document.querySelectorAll('[data-admin-nav-group]').forEach(function (group) {
-            const hasActiveChild = Boolean(group.querySelector('[data-admin-nav].menu-active'));
-            group.open = hasActiveChild;
-        });
-        syncDrawerState();
     }
 
-    /* ── Clock ──────────────────────────────────────────────────────────── */
-    /* ── WA status (topbar) ─────────────────────────────────────────────── */
-    /* ── DataTables ─────────────────────────────────────────────────────── */
+    /* DataTables */
 
     function parseDataTableOrder(table) {
         const raw = table.getAttribute('data-dt-order');
@@ -265,14 +185,7 @@
         });
     }
 
-    /* ── DataTables column filters (client-side) ────────────────────────── */
-    /*
-     * Membaca atribut data-dt-col-filters pada <table> (JSON array):
-     *   [{"col": <index>, "label": "Label", "all": "Semua ..."}]
-     *   atau [{"column": <index>, "label": "Label"}]
-     * Lalu meng-inject dropdown DaisyUI ke area toolbar DataTables
-     * sehingga admin bisa filter Jenis / Status tanpa reload halaman.
-     */
+    /* DataTables column filters */
     function buildDtColumnFilters(table, api) {
         var raw = table.getAttribute('data-dt-col-filters');
         if (!raw) return;

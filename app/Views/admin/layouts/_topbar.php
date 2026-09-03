@@ -10,21 +10,19 @@ $userInit  = strtoupper(substr($userName, 0, 1));
 $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
 ?>
 
-<header id="topbar" class="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 px-4 sm:px-6 backdrop-blur-md shadow-xs">
-    <div class="flex items-center min-w-0 flex-1 gap-3">
-        <label for="admin-drawer" class="inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs lg:hidden cursor-pointer" aria-label="Buka navigasi utama">
-            <i data-lucide="menu" class="size-4.5"></i>
-        </label>
+<header class="sticky top-0 inset-x-0 z-40 flex flex-wrap md:justify-start md:flex-nowrap w-full bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800/80 text-sm py-2.5 sm:py-3.5 lg:ps-64 backdrop-blur-md">
+    <nav class="w-full mx-auto px-4 sm:px-6 flex items-center justify-between">
+        <div class="flex items-center gap-x-3">
+            <button type="button" class="py-2 px-2.5 inline-flex justify-center items-center gap-x-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs lg:hidden transition cursor-pointer" data-hs-overlay="#application-sidebar" aria-controls="application-sidebar" aria-label="Buka navigasi">
+                <i data-lucide="menu" class="size-4.5"></i>
+            </button>
 
-        <div class="flex min-w-0 items-center gap-2.5 lg:hidden">
-            <div class="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-emerald-500/40 bg-white shadow-xs p-0.5">
-                <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" alt="Logo DPRD" class="h-full w-full rounded-full object-contain" />
+            <div class="flex min-w-0 items-center gap-2 lg:hidden">
+                <div class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-emerald-500/40 bg-white shadow-xs p-0.5">
+                    <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" alt="Logo DPRD" class="h-full w-full rounded-full object-contain" />
+                </div>
+                <strong class="truncate text-xs font-black uppercase text-slate-900 dark:text-white">DPRD Sulteng</strong>
             </div>
-            <span class="min-w-0 leading-tight">
-                <strong class="block truncate text-xs font-black uppercase text-slate-900 dark:text-white">DPRD Sulteng</strong>
-                <span class="block truncate text-[11px] font-medium text-slate-400 dark:text-slate-500"><?= esc($pageTitle) ?></span>
-            </span>
-        </div>
 
         <nav class="hidden min-w-0 lg:block" aria-label="Breadcrumb">
             <ol class="flex items-center whitespace-nowrap gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
