@@ -2235,35 +2235,19 @@
         const dirtyBadge = document.getElementById('dirty_indicator');
         const audioPlayer = document.getElementById('audio_player');
 
-        // Main Tabs Switcher (Ringkasan & Risalah)
+        // Main Tabs Switcher (Ringkasan & Risalah) — state visual digerakkan aria-selected via CSS
         const tabBtns = document.querySelectorAll('.notulen-main-tab-btn');
+        const panelRingkasan = document.getElementById('tab_panel_ringkasan');
+        const panelRisalah = document.getElementById('tab_panel_risalah');
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetId = btn.dataset.tabTarget;
                 if (!targetId) return;
 
-                // Deactivate all tab buttons
-                tabBtns.forEach(b => {
-                    b.setAttribute('aria-selected', 'false');
-                    b.classList.remove('bg-base-100', 'text-base-content', 'shadow-xs', 'border', 'border-base-300/40');
-                    b.classList.add('text-base-content/70');
-                });
+                tabBtns.forEach(b => b.setAttribute('aria-selected', String(b === btn)));
 
-                // Activate clicked button
-                btn.setAttribute('aria-selected', 'true');
-                btn.classList.add('bg-base-100', 'text-base-content', 'shadow-xs', 'border', 'border-base-300/40');
-                btn.classList.remove('text-base-content/70');
-
-                // Toggle panels
-                const panelRingkasan = document.getElementById('tab_panel_ringkasan');
-                const panelRisalah = document.getElementById('tab_panel_risalah');
                 if (panelRingkasan) panelRingkasan.classList.toggle('hidden', targetId !== 'tab_panel_ringkasan');
                 if (panelRisalah) panelRisalah.classList.toggle('hidden', targetId !== 'tab_panel_risalah');
-
-                // Trigger lucide icons inside revealed tab if needed
-                if (window.lucide && window.lucide.createIcons) {
-                    window.lucide.createIcons();
-                }
             });
         });
 

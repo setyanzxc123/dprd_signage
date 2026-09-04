@@ -33,7 +33,7 @@ if ($job['jadwal_type'] === 'banmus') {
 
 <div class="space-y-5">
 
-    <!-- ── 1. ALUR PROSES AI (4 LANGKAH RINGKAS & NON-TEKNIS) ───────── -->
+    <!-- 1. Alur proses AI (4 langkah ringkas dan non-teknis) -->
     <div id="live_progress_card"
          role="status"
          aria-live="polite"
@@ -252,7 +252,7 @@ if ($job['jadwal_type'] === 'banmus') {
         </div>
     </div>
 
-    <!-- ── 2. CARD IDENTITAS RAPAT (MEETING HEADER) ────────────────────── -->
+    <!-- 2. Card identitas rapat -->
     <div class="card card-border bg-base-100 shadow-sm border-base-200">
         <div class="card-body p-4 sm:p-5 flex flex-col md:flex-row items-start justify-between gap-4">
             
@@ -296,30 +296,29 @@ if ($job['jadwal_type'] === 'banmus') {
         </div>
     </div>
 
-    <!-- ── 3. DUA TAB UTAMA: RINGKASAN & RISALAH ──────────────────────── -->
+    <!-- 3. Dua tab utama: Ringkasan & Risalah -->
     <div class="space-y-3 w-full">
-        
-        <!-- Tab Bar Switcher (Pill) -->
-        <div role="tablist" class="inline-flex items-center bg-base-200/80 p-1 rounded-xl border border-base-300 gap-1">
-            <button type="button" 
+
+        <div role="tablist" class="inline-flex items-center gap-1 bg-base-200/80 p-1 rounded-xl border border-base-300">
+            <button type="button"
                     role="tab"
                     id="tab_btn_ringkasan"
                     data-tab-target="tab_panel_ringkasan"
-                    class="notulen-main-tab-btn font-bold text-xs sm:text-sm px-6 py-2 rounded-lg transition-all duration-150 bg-base-100 text-base-content shadow-xs border border-base-300/40" 
+                    class="notulen-main-tab-btn px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors"
                     aria-selected="true">
                 Ringkasan
             </button>
-            <button type="button" 
+            <button type="button"
                     role="tab"
                     id="tab_btn_risalah"
                     data-tab-target="tab_panel_risalah"
-                    class="notulen-main-tab-btn font-bold text-xs sm:text-sm px-6 py-2 rounded-lg transition-all duration-150 text-base-content/70 hover:text-base-content" 
+                    class="notulen-main-tab-btn px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors"
                     aria-selected="false">
                 Risalah
             </button>
         </div>
 
-        <!-- ── TAB 1: RINGKASAN ───────────────────────────────────────────── -->
+        <!-- Tab 1: Ringkasan -->
         <div id="tab_panel_ringkasan" role="tabpanel" class="w-full bg-base-100 border border-base-200 rounded-box p-4 sm:p-6 shadow-xs space-y-4">
             
             <!-- Dashboard 3 Kartu Sejajar Sesuai Mockup -->
@@ -433,7 +432,7 @@ if ($job['jadwal_type'] === 'banmus') {
 
         </div>
 
-        <!-- ── TAB 2: RISALAH (FORMAT NASKAH DINAS) ──────────────────────── -->
+        <!-- Tab 2: Risalah (format naskah dinas) -->
         <div id="tab_panel_risalah" role="tabpanel" class="w-full bg-base-100 border border-base-200 rounded-box p-6 sm:p-10 shadow-xs space-y-6 hidden">
             
             <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
@@ -627,7 +626,7 @@ if ($job['jadwal_type'] === 'banmus') {
         </div>
     </div>
 
-    <!-- ── 4. BOTTOM SECTION: AUDIO ASLI & AKSI CEPAT ─────────────────── -->
+    <!-- 4. Bagian bawah: audio asli dan aksi cepat -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         <!-- Kiri: Hub Pemutar Audio Rapat Asli (7 Kolom) -->
@@ -734,7 +733,7 @@ if ($job['jadwal_type'] === 'banmus') {
 
     </div>
 
-    <!-- ── 5. FOOTER BANNER RESMI ─────────────────────────────────────── -->
+    <!-- 5. Banner footer resmi -->
     <div class="alert alert-warning/10 border border-warning/20 py-3 px-4 text-xs flex items-center gap-3 text-base-content/90 rounded-xl">
         <i data-lucide="shield-alert" class="h-5 w-5 shrink-0 text-warning"></i>
         <span><strong>Dokumen ini bersifat resmi.</strong> Rekaman transkripsi dan intisari risalah AI bersumber langsung dari rekaman audio rapat asli untuk memitigasi manipulasi dan menjamin akuntabilitas data kedewanan.</span>
@@ -742,7 +741,7 @@ if ($job['jadwal_type'] === 'banmus') {
 
 </div>
 
-<!-- ── 6. MODAL DIALOG: RIWAYAT PROSES & AUDIT LOG ───────────────────── -->
+<!-- 6. Modal riwayat proses dan audit log -->
 <dialog id="modal_riwayat_proses" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box max-w-lg">
         <div class="flex items-start gap-3 border-b border-base-200 pb-3">
