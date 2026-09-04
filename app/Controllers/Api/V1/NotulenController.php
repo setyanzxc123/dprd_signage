@@ -129,6 +129,39 @@ class NotulenController extends BaseController
     }
 
     /**
+     * GET api/v1/notulen/jobs/{id}/transkrip/unduh
+     * Unduh transkrip percakapan utuh dalam format berkas .txt attachment.
+     */
+    public function downloadTranscript(int $id): ResponseInterface
+    {
+        $job = (new MeetingTranscriptionJobModel())->find($id);
+
+        if ($job === null) {
+            return $this->apiError('Job notulen tidak ditemukan.', 404);
+        }
+
+        if ($job['status'] !== MeetingTranscriptionJobModel::STATUS_COMPLETED) {
+            return $this->apiError('Berkas transkrip belum dapat diunduh karena proses transkripsi AI belum selesai.', 422);
+        }
+
+        $transcripts = $this->service->readTranscripts($id);
+        $fullText = $transcripts['full_text'];
+
+        if ($fullText === '') {
+            return $this->apiError('Berkas transkrip belum tersedia atau kosong.', 404);
+        }
+
+        $filename = "transkrip_rapat_job_{$id}.txt";
+
+        return $this->response
+            ->setStatusCode(200)
+            ->setHeader('Content-Type', 'text/plain; charset=UTF-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setHeader('Cache-Control', 'no-store, private')
+            ->setBody($fullText);
+    }
+
+    /**
      * GET api/v1/notulen/jobs/{id}/audio - streaming dengan dukungan Range.
      */
     public function audio(int $id): ResponseInterface
@@ -321,6 +354,46 @@ class NotulenController extends BaseController
             'status_verifikasi' => $result['status_verifikasi'],
             'message' => $result['message'],
         ]]);
+    }
+
+    /**
+     * GET api/v1/notulen/risalah/{minutesId}/pdf
+     * Export risalah rapat resmi siap cetak dalam format PDF.
+     */
+    public function exportPdf(int $minutesId): ResponseInterface
+    {
+        $rendered = $this->service->renderMinutesPdf($minutesId);
+
+        if (isset($rendered['error'])) {
+            return $this->apiError($rendered['error'], $rendered['code'] ?? 422);
+        }
+
+        return $this->response
+            ->setStatusCode(200)
+            ->setContentType('application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="' . $rendered['filename'] . '"')
+            ->setHeader('Cache-Control', 'no-store, private')
+            ->setBody($rendered['pdf']);
+    }
+
+    /**
+     * GET api/v1/notulen/jobs/{jobId}/pdf
+     * Alias export risalah rapat PDF berdasarkan ID job notulen.
+     */
+    public function exportJobPdf(int $jobId): ResponseInterface
+    {
+        $rendered = $this->service->renderJobMinutesPdf($jobId);
+
+        if (isset($rendered['error'])) {
+            return $this->apiError($rendered['error'], $rendered['code'] ?? 422);
+        }
+
+        return $this->response
+            ->setStatusCode(200)
+            ->setContentType('application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="' . $rendered['filename'] . '"')
+            ->setHeader('Cache-Control', 'no-store, private')
+            ->setBody($rendered['pdf']);
     }
 
     /**

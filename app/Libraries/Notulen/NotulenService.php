@@ -10,6 +10,7 @@ use App\Models\MeetingTranscriptionJobModel;
 use App\Models\RuanganModel;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\HTTP\Files\UploadedFile;
+use Dompdf\Dompdf;
 
 /**
  * Service Layer Pengelolaan Notulensi & Risalah Rapat DPRD (Google Gemini AI).
@@ -806,6 +807,98 @@ class NotulenService
             'status_verifikasi' => MeetingMinutesModel::STATUS_DRAFT,
             'message'           => 'Kunci naskah risalah berhasil dibuka. Mode penyuntingan/revisi kini aktif.',
         ];
+    }
+
+    /**
+     * Render PDF risalah rapat server-side.
+     *
+     * @return array{success: true, pdf: string, filename: string, job_id: int}|array{success: false, error: string, code: int, job_id?: int}
+     */
+    public function renderMinutesPdf(int $minutesId): array
+    {
+        $minutesModel = new MeetingMinutesModel($this->db);
+        $minutes = $minutesModel->find($minutesId);
+
+        if (! $minutes) {
+            return [
+                'success' => false,
+                'error'   => 'Data risalah rapat tidak ditemukan.',
+                'code'    => 404,
+            ];
+        }
+
+        $jobId = (int) $minutes['job_id'];
+        $job = (new MeetingTranscriptionJobModel($this->db))->find($jobId);
+
+        if (! $job || $job['status'] !== MeetingTranscriptionJobModel::STATUS_COMPLETED || empty($minutes['ringkasan_eksekutif'])) {
+            return [
+                'success' => false,
+                'error'   => 'Risalah rapat belum dapat dicetak karena proses penyusunan AI belum selesai.',
+                'code'    => 422,
+                'job_id'  => $jobId,
+            ];
+        }
+
+        $hasSchedule = ! empty($job['jadwal_id']);
+        $schedule = $this->resolveScheduleInfo(
+            (string) ($job['jadwal_type'] ?? 'umum'),
+            $hasSchedule ? (int) $job['jadwal_id'] : null
+        );
+
+        $judulRapat = $hasSchedule && $schedule['judul'] !== ''
+            ? $schedule['judul']
+            : (string) pathinfo((string) $job['audio_filename'], PATHINFO_FILENAME);
+        if ($judulRapat === '') {
+            $judulRapat = $schedule['judul'] !== '' ? $schedule['judul'] : 'Risalah Rapat';
+        }
+        $tanggalRapat = $schedule['tanggal'] !== '' ? $schedule['tanggal'] : substr((string) $job['created_at'], 0, 10);
+        $waktuMulai   = ! empty($schedule['waktu_mulai'])
+            ? substr((string) $schedule['waktu_mulai'], 0, 5) . ' WITA'
+            : '09:00 WITA';
+
+        $html = view('admin/notulen/pdf', [
+            'pageTitle'    => 'Risalah Rapat - ' . $judulRapat,
+            'minutes'      => $minutes,
+            'judulRapat'   => $judulRapat,
+            'tanggalRapat' => $tanggalRapat,
+            'waktuMulai'   => $waktuMulai,
+        ]);
+
+        $dompdf = new Dompdf(['isRemoteEnabled' => false]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $fileName = 'Risalah_' . preg_replace('/[^A-Za-z0-9]+/', '_', $judulRapat) . '_' . date('Ymd', strtotime((string) $tanggalRapat)) . '.pdf';
+
+        return [
+            'success'  => true,
+            'pdf'      => (string) $dompdf->output(),
+            'filename' => $fileName,
+            'job_id'   => $jobId,
+        ];
+    }
+
+    /**
+     * Render PDF risalah rapat berdasarkan ID job notulensi.
+     *
+     * @return array{success: true, pdf: string, filename: string, job_id: int}|array{success: false, error: string, code: int, job_id?: int}
+     */
+    public function renderJobMinutesPdf(int $jobId): array
+    {
+        $minutesModel = new MeetingMinutesModel($this->db);
+        $minutes = $minutesModel->where('job_id', $jobId)->first();
+
+        if (! $minutes) {
+            return [
+                'success' => false,
+                'error'   => 'Data risalah rapat tidak ditemukan.',
+                'code'    => 404,
+                'job_id'  => $jobId,
+            ];
+        }
+
+        return $this->renderMinutesPdf((int) $minutes['id']);
     }
 
     /**

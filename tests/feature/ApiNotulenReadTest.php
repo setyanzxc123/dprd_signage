@@ -362,6 +362,127 @@ final class ApiNotulenReadTest extends CIUnitTestCase
         $this->assertFalse(is_dir(WRITEPATH . 'uploads/audio-chunks/' . $payload['upload_id']));
     }
 
+    public function testDownloadTranscriptRequiresAdminBearerToken(): void
+    {
+        $this->get('/api/v1/notulen/jobs/40/transkrip/unduh')->assertStatus(401);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ANGGOTA_TOKEN])
+            ->get('/api/v1/notulen/jobs/40/transkrip/unduh');
+
+        $response->assertStatus(403);
+    }
+
+    public function testDownloadTranscriptRejectedWhenNotCompleted(): void
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/jobs/40/transkrip/unduh');
+
+        $response->assertStatus(422);
+        $body = json_decode((string) $response->response()->getBody(), true);
+        $this->assertSame('error', $body['status']);
+        $this->assertStringContainsString('belum selesai', $body['message']);
+    }
+
+    public function testDownloadTranscriptMissingJobReturns404(): void
+    {
+        $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/jobs/9999/transkrip/unduh')
+            ->assertStatus(404);
+    }
+
+    public function testDownloadTranscriptReturnsTxtAttachmentWhenCompleted(): void
+    {
+        $this->apiDb->table('meeting_transcription_jobs')->where('id', 40)->update(['status' => 'completed']);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/jobs/40/transkrip/unduh');
+
+        $response->assertOK();
+        $response->assertHeader('Content-Type', 'text/plain; charset=UTF-8');
+        $this->assertSame('attachment', str_getcsv($response->response()->getHeaderLine('Content-Disposition'), ';')[0]);
+        $this->assertStringContainsString('transkrip_rapat_job_40.txt', $response->response()->getHeaderLine('Content-Disposition'));
+
+        $body = (string) $response->response()->getBody();
+        $this->assertStringContainsString('Isi transkrip bagian pertama rapat.', $body);
+        $this->assertStringContainsString('Isi transkrip bagian kedua rapat.', $body);
+
+        $altResponse = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/jobs/40/transkrip-unduhan');
+
+        $altResponse->assertOK();
+        $this->assertStringContainsString('transkrip_rapat_job_40.txt', $altResponse->response()->getHeaderLine('Content-Disposition'));
+    }
+
+    public function testExportPdfRequiresAdminBearerToken(): void
+    {
+        $this->get('/api/v1/notulen/risalah/1/pdf')->assertStatus(401);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ANGGOTA_TOKEN])
+            ->get('/api/v1/notulen/risalah/1/pdf');
+
+        $response->assertStatus(403);
+    }
+
+    public function testExportPdfReturns404WhenMinutesNotFound(): void
+    {
+        $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/risalah/9999/pdf')
+            ->assertStatus(404);
+    }
+
+    public function testExportPdfReturns422WhenJobNotCompleted(): void
+    {
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/risalah/1/pdf');
+
+        $response->assertStatus(422);
+        $body = json_decode((string) $response->response()->getBody(), true);
+        $this->assertSame('error', $body['status']);
+        $this->assertStringContainsString('belum dapat dicetak', $body['message']);
+    }
+
+    public function testExportPdfReturnsBinaryPdfPayloadWhenCompleted(): void
+    {
+        $this->apiDb->table('meeting_transcription_jobs')->where('id', 40)->update(['status' => 'completed']);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/risalah/1/pdf');
+
+        $response->assertOK();
+        $this->assertStringContainsString('application/pdf', $response->response()->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('no-store', $response->response()->getHeaderLine('Cache-Control'));
+        $this->assertStringContainsString('Risalah_sidang_paripurna', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', (string) $response->response()->getBody());
+    }
+
+    public function testExportJobPdfAliasReturnsBinaryPdfPayload(): void
+    {
+        $this->apiDb->table('meeting_transcription_jobs')->where('id', 40)->update(['status' => 'completed']);
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/jobs/40/pdf');
+
+        $response->assertOK();
+        $this->assertStringContainsString('application/pdf', $response->response()->getHeaderLine('Content-Type'));
+        $this->assertStringStartsWith('%PDF-', (string) $response->response()->getBody());
+
+        $missing = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get('/api/v1/notulen/jobs/9999/pdf');
+
+        $missing->assertStatus(404);
+    }
+
     /**
      * Owner sesi diturunkan di controller dari user pemilik bearer token
      * dengan rumus yang direplikasi persis di sini (user id 1 = admin seed).

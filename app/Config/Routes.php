@@ -191,12 +191,16 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->get('notulen/jobs',                  'NotulenController::index');
     $routes->get('notulen/jobs/(:num)',           'NotulenController::show/$1');
     $routes->get('notulen/jobs/(:num)/transkrip', 'NotulenController::transkrip/$1');
+    $routes->get('notulen/jobs/(:num)/transkrip/unduh', 'NotulenController::downloadTranscript/$1');
+    $routes->get('notulen/jobs/(:num)/transkrip-unduhan', 'NotulenController::downloadTranscript/$1');
     $routes->get('notulen/jobs/(:num)/audio',     'NotulenController::audio/$1');
     $routes->post('notulen/jobs/(:num)/cancel',   'NotulenController::cancel/$1');
     $routes->post('notulen/jobs/(:num)/retry',    'NotulenController::retry/$1');
     $routes->delete('notulen/jobs/(:num)',        'NotulenController::delete/$1');
     $routes->delete('notulen/jobs/(:num)/rekaman', 'NotulenController::purgeRecording/$1');
     $routes->get('notulen/risalah/(:num)',               'NotulenController::showMinutes/$1');
+    $routes->get('notulen/risalah/(:num)/pdf',           'NotulenController::exportPdf/$1');
+    $routes->get('notulen/jobs/(:num)/pdf',              'NotulenController::exportJobPdf/$1');
     $routes->put('notulen/risalah/(:num)',               'NotulenController::updateMinutes/$1');
     $routes->post('notulen/risalah/(:num)/finalisasi',   'NotulenController::finalizeMinutes/$1');
     $routes->post('notulen/risalah/(:num)/unfinalisasi', 'NotulenController::unfinalizeMinutes/$1');

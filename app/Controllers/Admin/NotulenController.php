@@ -466,54 +466,24 @@ class NotulenController extends BaseController
      * Isi dokumen mengikuti preview tab risalah: header identitas, judul,
      * metadata, lalu naskah lengkap tanpa kop surat dan kolom tanda tangan.
      */
-    public function exportPdf(int $minutesId): ResponseInterface
+    public function exportPdf(int $minutesId): ResponseInterface|RedirectResponse
     {
-        $minutesModel = new MeetingMinutesModel();
-        $minutes = $minutesModel->find($minutesId);
+        $rendered = $this->service->renderMinutesPdf($minutesId);
 
-        if (! $minutes) {
-            session()->setFlashdata('error', 'Data risalah rapat tidak ditemukan.');
-            return redirect()->to(base_url('admin/notulen'));
+        if (isset($rendered['error'])) {
+            session()->setFlashdata('error', $rendered['error']);
+            $redirectPath = isset($rendered['job_id'])
+                ? 'admin/notulen/' . $rendered['job_id']
+                : 'admin/notulen';
+            return redirect()->to(base_url($redirectPath));
         }
-
-        $job = (new MeetingTranscriptionJobModel())->find((int) $minutes['job_id']);
-        if (! $job || $job['status'] !== MeetingTranscriptionJobModel::STATUS_COMPLETED || empty($minutes['ringkasan_eksekutif'])) {
-            session()->setFlashdata('error', 'Risalah rapat belum dapat dicetak karena proses penyusunan AI belum selesai.');
-            return redirect()->to(base_url('admin/notulen/' . ($job['id'] ?? '')));
-        }
-
-        $schedule = $this->service->resolveScheduleInfo(
-            (string) ($job['jadwal_type'] ?? 'umum'),
-            $job['jadwal_id'] ? (int) $job['jadwal_id'] : null
-        );
-
-        $judulRapat   = $schedule['judul'] !== '' ? $schedule['judul'] : (string) $job['audio_filename'];
-        $tanggalRapat = $schedule['tanggal'] !== '' ? $schedule['tanggal'] : substr((string) $job['created_at'], 0, 10);
-        $waktuMulai   = ! empty($schedule['waktu_mulai'])
-            ? substr((string) $schedule['waktu_mulai'], 0, 5) . ' WITA'
-            : '09:00 WITA';
-
-        $html = view('admin/notulen/pdf', [
-            'pageTitle'   => 'Risalah Rapat - ' . $judulRapat,
-            'minutes'     => $minutes,
-            'judulRapat'  => $judulRapat,
-            'tanggalRapat'=> $tanggalRapat,
-            'waktuMulai'  => $waktuMulai,
-        ]);
-
-        $dompdf = new Dompdf(['isRemoteEnabled' => false]);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        $fileName = 'Risalah_' . preg_replace('/[^A-Za-z0-9]+/', '_', $judulRapat) . '_' . date('Ymd', strtotime((string) $tanggalRapat)) . '.pdf';
 
         return $this->response
             ->setStatusCode(200)
             ->setContentType('application/pdf')
-            ->setHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
+            ->setHeader('Content-Disposition', 'inline; filename="' . $rendered['filename'] . '"')
             ->setHeader('Cache-Control', 'no-store, private')
-            ->setBody($dompdf->output());
+            ->setBody($rendered['pdf']);
     }
 
     private function audioUploader(): PostChunkAudioUpload
