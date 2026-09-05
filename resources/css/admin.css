@@ -469,8 +469,28 @@
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .input:focus,
+    .input:focus-within,
     .select:focus,
     .textarea:focus {
+        outline: none;
+        border-color: var(--od-accent);
+        box-shadow: var(--od-focus);
+    }
+    .otp-input {
+        width: 100%;
+        padding: 0.75rem 0;
+        text-align: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1.25rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--od-border);
+        background-color: var(--od-surface);
+        color: var(--od-fg);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .otp-input:focus {
         outline: none;
         border-color: var(--od-accent);
         box-shadow: var(--od-focus);

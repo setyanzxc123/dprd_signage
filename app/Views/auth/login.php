@@ -104,13 +104,18 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                         <?php if (($member_step ?? 'request') === 'verify'): ?>
                             <form action="<?= base_url('login/anggota/verifikasi') ?>" method="POST" data-login-form>
                                 <?= csrf_field() ?>
-                                <label class="block text-sm font-semibold text-base-content" for="member-otp">
+                                <label class="block text-sm font-semibold text-base-content" for="member-otp-1">
                                     Kode OTP
                                 </label>
-                                <input type="text" class="input input-lg mt-1 w-full text-center text-2xl tracking-[0.25em] min-[380px]:tracking-[0.35em]"
-                                    id="member-otp" name="otp" placeholder="000000" inputmode="numeric"
-                                    pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code"
-                                    data-digits-only data-max-digits="6" autofocus required />
+                                <div class="mt-1 grid grid-cols-6 gap-2 min-[380px]:gap-3" data-otp-group>
+                                    <?php for ($digit = 1; $digit <= 6; $digit++): ?>
+                                        <input type="text" class="otp-input" id="member-otp-<?= $digit ?>"
+                                            inputmode="numeric" maxlength="1" data-otp-input
+                                            <?= $digit === 1 ? 'autocomplete="one-time-code" autofocus' : '' ?>
+                                            aria-label="Digit ke-<?= $digit ?>" <?= $digit === 1 ? 'required' : '' ?> />
+                                    <?php endfor; ?>
+                                </div>
+                                <input type="hidden" id="member-otp" name="otp" required />
                                 <button type="submit" class="btn btn-primary btn-block mt-5" data-login-button
                                     data-loading-label="Memverifikasi...">
                                     <i data-lucide="shield-check" class="h-4 w-4"></i>
@@ -139,9 +144,10 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                                 <label class="block text-sm font-semibold text-base-content" for="member-phone">
                                     Nomor WhatsApp
                                 </label>
-                                <label class="input mt-1 flex w-full items-center gap-2">
-                                    <span class="text-sm font-semibold text-base-content/60">+62</span>
-                                    <input type="tel" class="grow" id="member-phone" name="no_wa"
+                                <label class="input mt-1 w-full flex items-center gap-2" for="member-phone">
+                                    <span class="select-none text-sm font-semibold text-base-content/60">+62</span>
+                                    <input type="tel" class="w-full grow border-0 bg-transparent p-0 text-sm font-medium text-base-content outline-none placeholder:text-base-content/40 focus:outline-none"
+                                        id="member-phone" name="no_wa"
                                         value="<?= esc($old_phone ?? '') ?>" placeholder="8123456789"
                                         inputmode="numeric" pattern="8[0-9]{7,11}" minlength="8" maxlength="12"
                                         autocomplete="tel" data-digits-only data-max-digits="12" required />
@@ -265,6 +271,84 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                 input.addEventListener('input', sanitizeDigits);
                 sanitizeDigits();
             });
+
+            const otpGroup = document.querySelector('[data-otp-group]');
+            if (otpGroup) {
+                const boxes = Array.from(otpGroup.querySelectorAll('[data-otp-input]'));
+                const hiddenOtp = document.getElementById('member-otp');
+                const digitsOf = function (value) {
+                    return value.replace(/[^0-9]/g, '');
+                };
+
+                const syncHiddenOtp = function () {
+                    hiddenOtp.value = boxes.map(function (box) { return box.value; }).join('');
+                };
+
+                const focusBox = function (index) {
+                    (boxes[index] || boxes[boxes.length - 1]).focus();
+                };
+
+                const fillDigits = function (digits, startIndex) {
+                    let index = startIndex;
+                    digits.split('').every(function (digit) {
+                        if (index >= boxes.length) return false;
+                        boxes[index].value = digit;
+                        index += 1;
+                        return true;
+                    });
+                    syncHiddenOtp();
+                    focusBox(Math.min(index, boxes.length - 1));
+                };
+
+                boxes.forEach(function (box, index) {
+                    box.addEventListener('input', function () {
+                        const digits = digitsOf(box.value);
+                        if (digits.length > 1) {
+                            box.value = '';
+                            fillDigits(digits, index);
+                            return;
+                        }
+                        box.value = digits;
+                        syncHiddenOtp();
+                        if (digits !== '' && index < boxes.length - 1) focusBox(index + 1);
+                    });
+
+                    box.addEventListener('keydown', function (event) {
+                        if (event.key === 'Backspace' && box.value === '' && index > 0) {
+                            boxes[index - 1].value = '';
+                            syncHiddenOtp();
+                            focusBox(index - 1);
+                            event.preventDefault();
+                            return;
+                        }
+                        if (event.key === 'ArrowLeft' && index > 0) {
+                            focusBox(index - 1);
+                            event.preventDefault();
+                        } else if (event.key === 'ArrowRight' && index < boxes.length - 1) {
+                            focusBox(index + 1);
+                            event.preventDefault();
+                        } else if (event.key.length === 1 && ! /[0-9]/.test(event.key)) {
+                            event.preventDefault();
+                        }
+                    });
+
+                    box.addEventListener('paste', function (event) {
+                        const digits = digitsOf(event.clipboardData.getData('text'));
+                        if (digits === '') return;
+                        event.preventDefault();
+                        fillDigits(digits.slice(0, boxes.length - index), index);
+                    });
+                });
+
+                otpGroup.closest('form').addEventListener('submit', function (event) {
+                    syncHiddenOtp();
+                    if (hiddenOtp.value.length < boxes.length) {
+                        event.preventDefault();
+                        const firstEmpty = boxes.find(function (box) { return box.value === ''; });
+                        (firstEmpty || boxes[boxes.length - 1]).focus();
+                    }
+                });
+            }
 
             const countdownMarkup = function (remaining) {
                 const hours = Math.floor(remaining / 3600);
