@@ -300,7 +300,20 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                     focusBox(Math.min(index, boxes.length - 1));
                 };
 
+                const firstEmptyIndex = function () {
+                    return boxes.findIndex(function (box) { return box.value === ''; });
+                };
+
                 boxes.forEach(function (box, index) {
+                    // Digits must be entered in order: focusing a box beyond the
+                    // first empty one is redirected to that empty box.
+                    box.addEventListener('focus', function () {
+                        const empty = firstEmptyIndex();
+                        if (empty !== -1 && index > empty) {
+                            boxes[empty].focus();
+                        }
+                    });
+
                     box.addEventListener('input', function () {
                         const digits = digitsOf(box.value);
                         if (digits.length > 1) {
