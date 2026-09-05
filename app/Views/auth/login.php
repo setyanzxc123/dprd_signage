@@ -179,9 +179,17 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                             <label class="mt-3 block text-sm font-semibold text-base-content" for="admin-password">
                                 Password
                             </label>
-                            <input type="password" class="input mt-1 w-full" id="admin-password"
-                                name="password" placeholder="Masukkan password"
-                                autocomplete="current-password" required />
+                            <div class="relative mt-1">
+                                <input type="password" class="input w-full pe-10" id="admin-password"
+                                    name="password" placeholder="Masukkan password"
+                                    autocomplete="current-password" required />
+                                <button type="button"
+                                    class="absolute inset-y-0 end-0 flex w-10 items-center justify-center rounded-lg text-base-content/60 hover:text-base-content transition"
+                                    data-password-toggle aria-label="Tampilkan password" aria-pressed="false">
+                                    <i data-lucide="eye" class="size-4" data-password-icon-show></i>
+                                    <i data-lucide="eye-off" class="size-4 hidden" data-password-icon-hide></i>
+                                </button>
+                            </div>
 
                             <button type="submit" class="btn btn-primary btn-block mt-5" data-login-button>
                                 <i data-lucide="shield-check" class="h-4 w-4"></i>
@@ -271,6 +279,23 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                 input.addEventListener('input', sanitizeDigits);
                 sanitizeDigits();
             });
+
+            const passwordToggle = document.querySelector('[data-password-toggle]');
+            if (passwordToggle) {
+                const passwordInput = document.getElementById('admin-password');
+                const showIcon = passwordToggle.querySelector('[data-password-icon-show]');
+                const hideIcon = passwordToggle.querySelector('[data-password-icon-hide]');
+
+                passwordToggle.addEventListener('click', function () {
+                    const reveal = passwordInput.type === 'password';
+                    passwordInput.type = reveal ? 'text' : 'password';
+                    showIcon.classList.toggle('hidden', reveal);
+                    hideIcon.classList.toggle('hidden', !reveal);
+                    passwordToggle.setAttribute('aria-pressed', String(reveal));
+                    passwordToggle.setAttribute('aria-label', reveal ? 'Sembunyikan password' : 'Tampilkan password');
+                    passwordInput.focus({ preventScroll: true });
+                });
+            }
 
             const otpGroup = document.querySelector('[data-otp-group]');
             if (otpGroup) {
