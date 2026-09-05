@@ -242,12 +242,12 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <details
                             v-for="item in paginatedAgendas"
                             :key="item.key"
-                            class="group collapse collapse-arrow rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
+                            class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
                             :class="{ 'border-emerald-500/50 ring-1 ring-emerald-500/30 bg-emerald-500/5': item.status === 'berlangsung', 'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedAgendaKey === item.key }"
                             :open="expandedAgendaKey === item.key"
                             @toggle="handleAgendaToggle($event, item.key)"
                         >
-                            <summary class="collapse-title grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2.5 overflow-hidden py-3.5 pr-10 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:gap-3.5 sm:pr-12 cursor-pointer">
+                            <summary class="grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2.5 overflow-hidden py-3.5 pr-10 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:gap-3.5 sm:pr-12 cursor-pointer">
                                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-center sm:h-12 sm:w-12">
                                     <span v-if="item.tanggal">
                                         <span class="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{{ shortMonth(item.tanggal) }}</span>
@@ -299,7 +299,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </span>
                             </summary>
 
-                            <div class="collapse-content min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pb-4 pt-2">
+                            <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pb-4 pt-2">
                                 <p v-if="item.keterangan" class="pt-2 text-sm font-normal leading-relaxed text-slate-600 dark:text-slate-300">{{ item.keterangan }}</p>
 
                                 <dl v-if="item.status === 'proyeksi'" class="mt-3 grid gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 p-3.5 border border-slate-100 dark:border-slate-800 sm:grid-cols-2">
@@ -432,12 +432,12 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <details
                             v-for="item in paginatedGeneralAgendas"
                             :key="item.key"
-                            class="group collapse collapse-arrow rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
+                            class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
                             :class="{ 'border-emerald-500/50 ring-1 ring-emerald-500/30 bg-emerald-500/5': item.status === 'berlangsung', 'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedGeneralKey === item.key }"
                             :open="expandedGeneralKey === item.key"
                             @toggle="handleGeneralToggle($event, item.key)"
                         >
-                            <summary class="collapse-title grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2.5 overflow-hidden py-3.5 pr-10 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:gap-3.5 sm:pr-12 cursor-pointer">
+                            <summary class="grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2.5 overflow-hidden py-3.5 pr-10 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:gap-3.5 sm:pr-12 cursor-pointer">
                                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-center sm:h-12 sm:w-12">
                                     <span>
                                         <span class="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{{ shortMonth(item.tanggal) }}</span>
@@ -471,7 +471,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </span>
                             </summary>
 
-                            <div class="collapse-content min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pb-4 pt-2">
+                            <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pb-4 pt-2">
                                 <p v-if="item.keterangan" class="pt-2 text-sm font-normal leading-relaxed text-slate-600 dark:text-slate-300">{{ item.keterangan }}</p>
                                 <dl class="mt-3 grid gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 p-3.5 border border-slate-100 dark:border-slate-800 sm:grid-cols-2">
                                     <div>

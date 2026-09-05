@@ -45,19 +45,16 @@
     display: none;
   }
 
-  details.collapse > summary {
+  details.agenda-collapse > summary {
     list-style: none;
-  }
-
-  details.collapse > summary::-webkit-details-marker {
-    display: none;
-  }
-
-  details.collapse-arrow > summary {
     position: relative;
   }
 
-  details.collapse-arrow > summary::after {
+  details.agenda-collapse > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details.agenda-collapse > summary::after {
     content: "";
     position: absolute;
     right: 1.25rem;
@@ -71,7 +68,7 @@
     opacity: 0.5;
   }
 
-  details.collapse-arrow[open] > summary::after {
+  details.agenda-collapse[open] > summary::after {
     transform: translateY(-30%) rotate(225deg);
   }
 }
