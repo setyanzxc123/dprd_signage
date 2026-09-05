@@ -1,5 +1,16 @@
 <?php
 $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPATH . 'assets/images/logo_dprd.jpg') : time();
+
+// Submenu groups open only when the current page belongs to them, resolved
+// server-side so the sidebar renders its final state on first paint.
+$currentPath = '/' . ltrim(service('uri')->getRoutePath(), '/');
+$currentPath = $currentPath === '/' ? '/' : rtrim($currentPath, '/');
+$isActivePath = static function (string $path) use ($currentPath): bool {
+    $path = rtrim($path, '/');
+    return $path !== '' && $path !== '/' && ($currentPath === $path || str_starts_with($currentPath, $path . '/'));
+};
+$masterActive = $isActivePath('/admin/anggota') || $isActivePath('/admin/unit-rapat') || $isActivePath('/admin/ruangan');
+$agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/jadwal-umum') || $isActivePath('/admin/kalender') || $isActivePath('/admin/notulen');
 ?>
 <aside id="application-sidebar" class="hs-overlay [--auto-close:lg] hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform hidden fixed top-0 start-0 bottom-0 z-[60] w-64 bg-white border-e border-slate-200/80 overflow-y-auto lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 dark:bg-slate-900 dark:border-slate-800" tabindex="-1" aria-label="Navigasi Utama">
     <div class="relative flex flex-col h-full max-h-full">
@@ -27,7 +38,7 @@ $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPAT
             </div>
 
             <div>
-                <details data-admin-nav-group class="group">
+                <details data-admin-nav-group class="group<?= $masterActive ? ' open' : '' ?>">
                     <summary class="sidebar-item-link flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer list-none">
                         <span class="flex items-center gap-x-3 min-w-0">
                             <i data-lucide="database" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
@@ -44,7 +55,7 @@ $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPAT
             </div>
 
             <div>
-                <details data-admin-nav-group class="group" open>
+                <details data-admin-nav-group class="group<?= $agendaActive ? ' open' : '' ?>">
                     <summary class="sidebar-item-link flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer list-none">
                         <span class="flex items-center gap-x-3 min-w-0">
                             <i data-lucide="calendar-days" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
