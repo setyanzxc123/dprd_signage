@@ -10,7 +10,7 @@
     </h1>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" class="room-form" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="POST" class="room-form">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>

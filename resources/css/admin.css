@@ -7,16 +7,6 @@
 @source "../../node_modules/preline/dist/*.js";
 @custom-variant dark (&:where(.dark, .dark *));
 
-@view-transition {
-    navigation: auto;
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-    animation-duration: 0.15s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Ruang Musyawarah: navy ink, brass accent (never for buttons), emerald live only */
 @theme {
     --font-sans: Inter, system-ui, sans-serif;

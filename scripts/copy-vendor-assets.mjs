@@ -3,7 +3,6 @@ import { dirname, resolve } from 'node:path';
 
 const files = [
   ['node_modules/vue/dist/vue.global.prod.js', 'public/assets/vendor/vue/vue.global.prod.js'],
-  ['node_modules/@hotwired/turbo/dist/turbo.es2017-umd.js', 'public/assets/vendor/turbo/turbo.es2017-umd.js'],
   ['node_modules/lucide/dist/umd/lucide.min.js', 'public/assets/vendor/lucide/lucide.min.js'],
   ['node_modules/jquery/dist/jquery.min.js', 'public/assets/vendor/jquery/jquery.min.js'],
   ['node_modules/datatables.net/js/dataTables.min.js', 'public/assets/vendor/datatables/dataTables.min.js'],

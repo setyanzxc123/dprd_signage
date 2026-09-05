@@ -13,7 +13,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="post" enctype="multipart/form-data" class="schedule-form min-w-0 max-w-full" data-require-targets="false" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="post" enctype="multipart/form-data" class="schedule-form min-w-0 max-w-full" data-require-targets="false">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>

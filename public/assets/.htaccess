@@ -1,0 +1,7 @@
+# Semua berkas di bawah assets/ adalah artefak build yang dibusting
+# lewat parameter ?v=filemtime di view, jadi aman di-cache permanen.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|mjs|woff2?|ttf|otf|jpg|jpeg|png|gif|webp|avif|svg|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

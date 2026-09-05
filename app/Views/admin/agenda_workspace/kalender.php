@@ -55,7 +55,7 @@ $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
 <section class="card card-border mb-4 bg-base-100 shadow-sm">
     <div class="card-body p-4">
-        <form action="<?= base_url('admin/kalender') ?>" method="get" data-turbo="true">
+        <form action="<?= base_url('admin/kalender') ?>" method="get">
             <input type="hidden" name="view" value="<?= esc($view_mode) ?>" />
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <fieldset class="fieldset">

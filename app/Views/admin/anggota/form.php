@@ -19,7 +19,7 @@ if (str_starts_with($whatsAppValue, '62')) {
     </h1>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form min-w-0" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="POST" id="anggota-form" class="member-form min-w-0">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>

@@ -14,7 +14,7 @@
     <h1 class="page-title"><?= esc($pageTitle) ?></h1>
 </div>
 
-<form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form" data-turbo="true">
+<form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form">
     <?= csrf_field() ?>
 
     <?php if (! empty($form_error)): ?>

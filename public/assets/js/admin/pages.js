@@ -1,4 +1,4 @@
-/* Page controllers for the Turbo-powered admin area. */
+/* Page controllers for the admin area. */
 (() => {
     const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const dayNames   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -2175,11 +2175,7 @@
                     setProgress(100, 'Selesai! Mengalihkan ke halaman notulensi...');
                     if (res.redirect) {
                         setTimeout(() => {
-                            if (window.Turbo) {
-                                window.Turbo.visit(res.redirect);
-                            } else {
-                                window.location.href = res.redirect;
-                            }
+                            window.location.href = res.redirect;
                         }, 500);
                     }
                 })
@@ -2518,11 +2514,7 @@
                         if (isNotulenDirty) return;
 
                         setTimeout(() => {
-                            if (window.Turbo) {
-                                window.Turbo.visit(window.location.href, { action: 'replace' });
-                            } else {
-                                window.location.reload();
-                            }
+                            window.location.reload();
                         }, 1200);
                     }
                 })

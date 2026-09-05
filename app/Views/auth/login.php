@@ -3,6 +3,7 @@ $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH .
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
 $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPATH . 'assets/images/logo_dprd.jpg') : time();
+$adminThemeJsVersion = is_file(FCPATH . 'assets/js/admin/theme-init.js') ? filemtime(FCPATH . 'assets/js/admin/theme-init.js') : time();
 $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 ?>
 <!DOCTYPE html>
@@ -11,16 +12,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script {csp-script-nonce}>
-        (() => {
-            const stored = localStorage.getItem('dprd-admin-theme');
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = stored === 'dark' || stored === 'light'
-                ? stored
-                : (prefersDark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+    <script src="<?= base_url('assets/js/admin/theme-init.js?v=' . $adminThemeJsVersion) ?>"></script>
     <title><?= esc($pageTitle ?? 'Sistem Informasi Agenda dan Jadwal Rapat DPRD') ?></title>
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" />
@@ -220,6 +212,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
             syncThemeLabel(isDark);
             themeInput.addEventListener('change', function () {
                 const theme = themeInput.checked ? 'dark' : 'light';
+                document.documentElement.classList.toggle('dark', theme === 'dark');
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('dprd-admin-theme', theme);
                 syncThemeLabel(theme === 'dark');
