@@ -523,19 +523,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                             Banmus
                                         </span>
                                         <?php if ($isMember): ?>
-                                            <span
-                                                v-if="!item.is_public"
-                                                class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                                                title="Agenda internal hanya dapat dilihat oleh anggota DPRD yang login."
-                                            >
-                                                Internal DPRD
-                                            </span>
                                             <span v-if="item.is_participant" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Anda Peserta</span>
                                         <?php endif; ?>
-                                        <?php if ($isMember): ?>
-                                            <span v-if="item.status !== 'proyeksi' && item.is_public !== false" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Terbuka</span>
-                                            <span v-else-if="item.status !== 'proyeksi'" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">Khusus Peserta</span>
-                                        <?php endif; ?>
+                                        <span v-if="item.status !== 'proyeksi' && item.is_public !== false" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Terbuka</span>
+                                        <span v-else-if="item.status !== 'proyeksi'" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">Khusus Peserta</span>
                                         <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
                                             {{ item.periode_label || 'Periode belum ditentukan' }}
                                         </span>
@@ -717,12 +708,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                     <span class="line-clamp-2 text-sm font-bold leading-snug text-slate-900 dark:text-white sm:text-base [text-wrap:pretty]">{{ item.judul }}</span>
                                     <span class="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
                                         <?php if ($isMember): ?>
-                                            <span v-if="!item.is_public" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Internal DPRD</span>
                                             <span v-if="item.is_participant" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Anda Peserta</span>
-                                        <?php endif; ?>
-                                        <?php if ($isMember): ?>
-                                            <span v-if="item.is_public !== false" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Terbuka</span>
-                                            <span v-else class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">Khusus Peserta</span>
                                         <?php endif; ?>
                                         <span class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
                                         <span v-if="item.status !== 'proyeksi'" :class="statusBadgeClass(item.status)" class="inline-flex shrink-0 sm:hidden">
