@@ -619,7 +619,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     </template>
                     </div>
 
-                    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div v-if="totalPages > 1" class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Menampilkan {{ pageStart }}–{{ pageEnd }} dari {{ orderedAgendas.length }}</span>
                             <label class="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
@@ -817,7 +817,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         </details>
                     </div>
 
-                    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div v-if="generalTotalPages > 1" class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Menampilkan {{ generalPageStart }}–{{ generalPageEnd }} dari {{ orderedGeneralAgendas.length }}</span>
                             <label class="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
@@ -946,7 +946,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             const activeNavigation = ref('all');
             const memberScope = ref(IS_MEMBER ? 'saya' : 'semua');
             const periodMode = ref('month');
-            const generalPeriodMode = ref('month');
             const pageSize = ref(10);
             const generalPageSize = ref(10);
             const currentPage = ref(1);
@@ -1215,10 +1214,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 const requestId = ++requestSequence;
                 refreshing.value = true;
                 try {
-                    const requestedMonths = Array.from(new Set([
-                        ...periodMonths(periodMode.value),
-                        ...periodMonths(generalPeriodMode.value),
-                    ]));
+                    const requestedMonths = periodMonths(periodMode.value);
                     const payloads = await Promise.all(requestedMonths.map(fetchMonth));
                     if (requestId !== requestSequence) {
                         return;
@@ -1388,7 +1384,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             }
 
             function changePeriod() {
-                generalPeriodMode.value = periodMode.value;
                 resetAgendaSelection();
                 resetGeneralSelection();
                 updateUrl();
@@ -1420,12 +1415,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
             function streamUrl(item) {
                 return item ? (item.stream_url || '#') : '#';
-            }
-
-            function changeGeneralPeriod() {
-                resetGeneralSelection();
-                updateUrl();
-                loadAgenda();
             }
 
             function handleAgendaToggle(event, key) {
@@ -1588,9 +1577,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 if (['quarter', 'semester'].includes(params.get('periode'))) {
                     periodMode.value = params.get('periode');
                 }
-                if (['quarter', 'semester'].includes(params.get('periode_umum'))) {
-                    generalPeriodMode.value = params.get('periode_umum');
-                }
                 if ([10, 25, 50, 100].includes(Number(params.get('tampil')))) {
                     pageSize.value = Number(params.get('tampil'));
                 }
@@ -1654,7 +1640,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 activeNavigation,
                 memberScope,
                 periodMode,
-                generalPeriodMode,
                 pageSize,
                 generalPageSize,
                 currentPage,
@@ -1688,7 +1673,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 scrollUnitFilters,
                 setMemberScope,
                 changePeriod,
-                changeGeneralPeriod,
                 handleAgendaToggle,
                 handleGeneralToggle,
                 changePageSize,
