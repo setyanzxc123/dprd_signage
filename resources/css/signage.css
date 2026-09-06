@@ -78,22 +78,63 @@ body {
 }
 
 #panel-header {
-    --onde-height: clamp(38px, 6vh, 90px);
+    --onde-height: clamp(38px, 5.2vh, 58px);
     position: relative;
     grid-area: header;
-    padding: 0.8vh 2.5vw;
+    padding: 1vh 2vw;
     padding-bottom: calc(0.8vh + var(--onde-height));
     backdrop-filter: blur(12px);
+    overflow: hidden;
 }
 
 [data-theme="dark"] #panel-header {
-    background-color: rgba(15, 23, 42, 0.9);
-    border-bottom-color: rgba(51, 65, 85, 0.6);
+    background-color: rgba(15, 23, 42, 0.95);
+    border-bottom-color: rgba(51, 65, 85, 0.8);
 }
 
 [data-theme="light"] #panel-header {
-    background-color: rgba(255, 255, 255, 0.94);
-    border-bottom-color: rgba(226, 232, 240, 0.9);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-bottom-color: rgba(226, 232, 240, 0.8);
+}
+
+.signage-header-motif {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: clamp(14rem, 16vw, 22rem);
+    right: 0;
+    z-index: 0;
+    pointer-events: none;
+    mask-image: linear-gradient(to right, transparent, black 6rem, black calc(100% - 6rem), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 6rem, black calc(100% - 6rem), transparent);
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.signage-header-motif::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgb(16 185 129 / 0.2);
+    mask-image: url('../images/motif_batik_palu_band.png');
+    mask-repeat: repeat-x;
+    mask-size: auto clamp(165px, 18vh, 230px);
+    mask-position: left calc(-1 * clamp(42px, 4.8vh, 65px));
+    -webkit-mask-image: url('../images/motif_batik_palu_band.png');
+    -webkit-mask-repeat: repeat-x;
+    -webkit-mask-size: auto clamp(165px, 18vh, 230px);
+    -webkit-mask-position: left calc(-1 * clamp(42px, 4.8vh, 65px));
+}
+
+@media (min-width: 640px) {
+    .signage-header-motif {
+        left: clamp(14rem, 16vw, 22rem);
+    }
+}
+
+[data-theme="dark"] .signage-header-motif::before,
+.dark .signage-header-motif::before {
+    background-color: rgb(52 211 153 / 0.15);
 }
 
 #panel-media {
@@ -109,7 +150,6 @@ body {
     background: #0f172a;
 }
 
-/* Overlay saat media tidak tersedia */
 .media-state {
     position: absolute;
     inset: 0;
@@ -191,11 +231,11 @@ body {
 .signage-schedule {
     height: 100%;
     overflow: hidden;
-    padding: 1.5vh 2.5vw;
+    padding: 1.2vh 1.8vw;
 }
 
 .upcoming-section {
-    margin-top: 1.4vh;
+    margin-top: 1vh;
 }
 
 .qr-panel {
@@ -267,7 +307,6 @@ body {
     }
 }
 
-/* Gelombang animasi di tepi bawah header */
 .ondebox {
     position: absolute;
     inset-inline: 0;
@@ -283,38 +322,40 @@ body {
     height: 100%;
 }
 
-/* Lapisan wave sesuai tema */
 [data-theme="light"] .parallaxonde > use:nth-child(1) {
-    fill: rgba(17, 170, 159, 0.6);
+    fill: rgba(16, 185, 129, 0.20);
 }
 
 [data-theme="light"] .parallaxonde > use:nth-child(2) {
-    fill: rgba(17, 170, 159, 0.4);
+    fill: rgba(20, 184, 166, 0.32);
 }
 
 [data-theme="light"] .parallaxonde > use:nth-child(3) {
-    fill: rgba(17, 170, 159, 0.1);
+    fill: rgba(16, 185, 129, 0.45);
 }
 
 [data-theme="light"] .parallaxonde > use:nth-child(4) {
-    fill: rgba(17, 170, 159, 0.9);
+    fill: rgba(13, 148, 136, 0.70);
 }
 
-/* Tema dark: Bioluminescent Deep Teal (bercahaya & berdimensi) */
-[data-theme="dark"] .parallaxonde > use:nth-child(1) {
-    fill: rgba(6, 182, 212, 0.22);
+[data-theme="dark"] .parallaxonde > use:nth-child(1),
+.dark .parallaxonde > use:nth-child(1) {
+    fill: rgba(52, 211, 153, 0.15);
 }
 
-[data-theme="dark"] .parallaxonde > use:nth-child(2) {
-    fill: rgba(20, 184, 166, 0.42);
+[data-theme="dark"] .parallaxonde > use:nth-child(2),
+.dark .parallaxonde > use:nth-child(2) {
+    fill: rgba(45, 212, 191, 0.28);
 }
 
-[data-theme="dark"] .parallaxonde > use:nth-child(3) {
-    fill: rgba(13, 148, 136, 0.68);
+[data-theme="dark"] .parallaxonde > use:nth-child(3),
+.dark .parallaxonde > use:nth-child(3) {
+    fill: rgba(16, 185, 129, 0.45);
 }
 
-[data-theme="dark"] .parallaxonde > use:nth-child(4) {
-    fill: rgba(15, 76, 73, 0.92);
+[data-theme="dark"] .parallaxonde > use:nth-child(4),
+.dark .parallaxonde > use:nth-child(4) {
+    fill: rgba(6, 78, 70, 0.72);
 }
 
 .parallaxonde > use {
@@ -353,6 +394,8 @@ body {
 
 @media (max-width: 768px) {
     #panel-header {
-        --onde-height: 40px;
+        --onde-height: 28px;
+        padding-bottom: calc(0.4vh + 28px);
     }
 }
+

@@ -25,66 +25,68 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
     <div id="app" v-cloak>
 
-        <header id="panel-header" class="relative flex items-center justify-between border-b border-base-300">
-            <div class="flex min-w-0 flex-1 items-center gap-[1vw]">
-                <div class="flex h-[clamp(52px,8.5vh,100px)] w-[clamp(52px,8.5vh,100px)] shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-emerald-500/40 bg-white shadow-md p-1">
-                    <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>"
-                        alt="Logo DPRD Provinsi Sulawesi Tengah"
-                        class="h-full w-full rounded-full object-contain" />
-                </div>
-                <div class="min-w-0 leading-tight">
-                    <div class="text-[clamp(17px,1.08vw,24px)] font-bold uppercase tracking-[0.08em]">
-                        DPRD Provinsi
-                    </div>
-                    <div class="text-[clamp(13px,0.82vw,18px)] uppercase tracking-[0.08em] text-base-content/70">
-                        Sulawesi Tengah
-                    </div>
-                </div>
-            </div>
+        <header id="panel-header" class="relative z-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
+            <div class="signage-header-motif" aria-hidden="true"></div>
 
-            <div class="flex w-auto min-w-max items-center justify-end">
-                <div class="flex items-stretch divide-x divide-base-300 rounded-2xl border border-base-300 bg-base-200 shadow-sm">
-                    <div class="flex flex-col items-center justify-center gap-[0.4vh] px-[1vw] text-center">
-                        <div class="flex items-center gap-[0.4vw] text-[clamp(20px,1.2vw,28px)]">
+            <div class="flex w-full items-center justify-between gap-[1.2vw] relative z-10">
+                <div class="flex items-center gap-[1vw] min-w-0 flex-1">
+                    <div class="flex h-[clamp(56px,7.2vh,84px)] w-[clamp(56px,7.2vh,84px)] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1 shadow-sm">
+                        <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>"
+                            alt="Logo DPRD Provinsi Sulawesi Tengah"
+                            class="h-full w-full rounded-full object-contain" />
+                    </div>
+                    <span class="min-w-0 leading-tight">
+                        <span class="block truncate text-[clamp(17px,1.2vw,24px)] font-black uppercase tracking-[0.08em] text-slate-900 dark:text-white">
+                            DPRD Provinsi
+                        </span>
+                        <span class="block truncate text-[clamp(12px,0.85vw,17px)] uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 font-semibold">
+                            Sulawesi Tengah
+                        </span>
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-[0.8vw] py-[0.45vh] shadow-xs">
+                        <div class="flex items-center gap-[0.6vw] px-[1vw] py-[0.35vh]">
                             <img v-if="cuaca.icon_url" :src="cuaca.icon_url"
-                                class="h-[clamp(24px,1.8vw,34px)] w-[clamp(24px,1.8vw,34px)] object-contain"
+                                class="h-[clamp(28px,2vw,40px)] w-[clamp(28px,2vw,40px)] object-contain"
                                 alt="Ikon cuaca" />
-                            <svg v-else class="h-[clamp(18px,1.4vw,26px)] w-[clamp(18px,1.4vw,26px)] opacity-60"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                    d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
-                            </svg>
-                            <span>{{ cuaca.suhu }}</span>
+                            <span v-else class="h-3 w-3 rounded-full bg-sky-500"></span>
+                            <div class="text-left">
+                                <span class="block text-[clamp(18px,1.3vw,26px)] font-black leading-tight text-slate-900 dark:text-white">{{ cuaca.suhu }}</span>
+                                <span class="block max-w-[9.5vw] truncate text-[clamp(11px,0.75vw,15px)] font-medium text-slate-500 dark:text-slate-400">{{ cuaca.kondisi }}</span>
+                            </div>
                         </div>
-                        <div class="text-[clamp(11px,0.68vw,14px)] font-semibold opacity-80">
-                            {{ cuaca.kondisi }}
-                        </div>
-                    </div>
 
-                    <div class="flex flex-col justify-center gap-[0.25vh] px-[1vw]">
-                        <div class="text-[clamp(11px,0.72vw,15px)] font-bold" v-if="cuaca.desa">
-                            {{ cuaca.desa }}, {{ cuaca.kecamatan }}
+                        <div class="flex flex-col justify-center px-[1vw] py-[0.35vh] text-left">
+                            <span class="block max-w-[15vw] truncate text-[clamp(12px,0.8vw,16px)] font-bold text-slate-800 dark:text-slate-200" v-if="cuaca.desa || cuaca.kecamatan">
+                                {{ cuaca.desa ? (cuaca.desa + ', ' + cuaca.kecamatan) : cuaca.kecamatan }}
+                            </span>
+                            <span class="block text-[clamp(10px,0.68vw,13.5px)] font-medium text-slate-500 dark:text-slate-400">
+                                Kelembapan {{ cuaca.kelembapan }} · Angin {{ cuaca.kec_angin }}
+                            </span>
+                            <span class="block text-[clamp(9px,0.6vw,12px)] font-medium italic text-slate-400 dark:text-slate-500">
+                                Sumber: BMKG
+                            </span>
                         </div>
-                        <div class="text-[clamp(10px,0.62vw,13px)] font-medium">
-                            Kelembapan {{ cuaca.kelembapan }} · Angin {{ cuaca.kec_angin }}
-                        </div>
-                        <div class="text-[clamp(9px,0.58vw,12px)] italic opacity-70">
-                            Sumber: BMKG
-                        </div>
-                    </div>
 
-                    <div class="flex flex-col items-center justify-center px-[1.4vw] text-center">
-                        <div class="text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-[0.12em]">
-                            {{ dateDay }}
+                        <div class="flex flex-col items-center justify-center px-[1.1vw] py-[0.35vh] text-center">
+                            <span class="block text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                {{ dateDay }}
+                            </span>
+                            <span class="block text-[clamp(13.5px,0.95vw,19px)] font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                                {{ dateFull }}
+                            </span>
                         </div>
-                        <div class="text-[clamp(14px,1vw,20px)]">{{ dateFull }}</div>
-                    </div>
 
-                    <div class="flex flex-col items-center justify-center px-[1.4vw] text-center">
-                        <div class="font-mono text-[clamp(34px,3vw,60px)] tabular-nums leading-none">
-                            {{ clock }}
+                        <div class="flex flex-col items-center justify-center px-[1.2vw] py-[0.35vh] text-center">
+                            <span class="block font-mono text-[clamp(30px,2.4vw,48px)] font-black tabular-nums leading-none text-slate-900 dark:text-white">
+                                {{ clock }}
+                            </span>
+                            <span class="block text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                WITA
+                            </span>
                         </div>
-                        <div class="mt-[0.25vh] text-[clamp(11px,0.68vw,14px)] uppercase tracking-[0.18em] opacity-70">WITA</div>
                     </div>
                 </div>
             </div>
@@ -97,10 +99,10 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                             d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352Z" />
                     </defs>
                     <g class="parallaxonde">
-                        <use href="#onda" x="48" y="0" fill="rgba(17,170,159,0.6)" />
-                        <use href="#onda" x="48" y="3" fill="rgba(17,170,159,0.4)" />
-                        <use href="#onda" x="48" y="5" fill="rgba(17,170,159,0.1)" />
-                        <use href="#onda" x="48" y="7" fill="#0b6e67" />
+                        <use href="#onda" x="48" y="0" fill="rgba(16,185,129,0.20)" />
+                        <use href="#onda" x="48" y="3" fill="rgba(20,184,166,0.32)" />
+                        <use href="#onda" x="48" y="5" fill="rgba(16,185,129,0.45)" />
+                        <use href="#onda" x="48" y="7" fill="rgba(13,148,136,0.70)" />
                     </g>
                 </svg>
             </div>
@@ -123,18 +125,18 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 @load="handleMediaImageLoaded" @error="handleMediaError" />
 
             <div v-if="(!media.url && !mediaStatusPending) || mediaError" class="media-state">
-                <div class="flex flex-col items-center gap-3 max-w-[28vw]">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-emerald-400 ring-1 ring-white/10 shadow-lg backdrop-blur-md">
-                        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                <div class="flex flex-col items-center gap-3 text-center px-4 max-w-[28vw]">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-slate-400">
+                        <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                     </div>
                     <div class="space-y-1">
-                        <div class="text-[clamp(14px,1.05vw,20px)] font-bold tracking-wide">
-                            Sekretariat DPRD Provinsi Sulawesi Tengah
+                        <div class="text-[clamp(14px,1.05vw,19px)] font-bold tracking-wide text-slate-200">
+                            {{ mediaError ? 'Media Gagal Dimuat' : 'Media Tidak Tersedia' }}
                         </div>
-                        <p class="text-[clamp(11px,0.72vw,14px)] opacity-70">
-                            Pusat Informasi & Layanan Digital
+                        <p class="text-[clamp(11px,0.72vw,14px)] text-slate-400">
+                            {{ mediaError ? 'Terjadi kendala saat memuat berkas media' : 'Belum ada tayangan media yang diatur' }}
                         </p>
                     </div>
                 </div>
@@ -166,7 +168,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
         <section id="panel-info" class="flex flex-col rounded-none">
             <div class="signage-schedule flex flex-1 flex-col gap-0">
-                <h2 class="border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] font-bold uppercase tracking-[0.14em] text-base-content/70">
+                <h2 class="border-b border-base-300/80 pb-[0.8vh] text-[clamp(13px,0.9vw,17px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
                     Agenda Hari Ini
                 </h2>
 
@@ -178,30 +180,36 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                         </svg>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-[clamp(15px,1.1vw,22px)] font-semibold tracking-wide">Tidak Ada Agenda Rapat Hari Ini</p>
-                        <p class="text-[clamp(11px,0.75vw,15px)] text-base-content/60">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
+                        <p class="text-[clamp(16px,1.2vw,24px)] font-semibold tracking-wide">Tidak Ada Agenda Rapat Hari Ini</p>
+                        <p class="text-[clamp(12px,0.8vw,16px)] text-base-content/60">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
                     </div>
                 </div>
 
                 <div v-else-if="jadwal.length === 0"
-                    class="rounded-xl border border-dashed border-base-300 bg-base-100/40 p-[1.5vh] text-center text-[clamp(12px,0.85vw,16px)] text-base-content/70">
+                    class="rounded-xl border border-dashed border-base-300 bg-base-100/40 p-[1.4vh] text-center text-[clamp(13px,0.85vw,16px)] text-base-content/75 font-medium">
                     Tidak ada agenda rapat untuk hari ini. Silakan periksa agenda berikutnya di bawah.
                 </div>
 
-                <ul v-if="jadwal.length > 0" class="mt-[1vh] flex flex-col gap-[0.8vh] p-0">
+                <ul v-if="jadwal.length > 0" class="mt-[0.8vh] flex flex-col gap-[0.6vh] p-0">
                     <li v-for="item in jadwal" :key="item.id"
-                        :class="['grid grid-cols-[8.5vw_minmax(0,1fr)_auto] items-center gap-[1.2vw] meeting-card border px-[1.4vw] py-[1.2vh] shadow-sm', scheduleItemClasses(item.status)]">
+                        :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.2vw] meeting-card border px-[1.2vw] py-[0.85vh] shadow-xs', scheduleItemClasses(item.status)]">
                         <div>
-                            <div class="text-[1.1vw] font-bold tabular-nums text-primary">
+                            <div class="text-[clamp(15px,1.05vw,21px)] font-extrabold tabular-nums text-primary leading-tight">
                                 {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                             </div>
-                            <div class="mt-0.5 text-[0.75vw] text-base-content/70 font-medium">{{ item.ruangan }}</div>
+                            <div class="mt-1 flex items-center gap-1.5 text-[clamp(12px,0.82vw,16px)] font-bold text-slate-800 dark:text-slate-200">
+                                <svg class="h-3.5 w-3.5 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span class="truncate">{{ item.ruangan }}</span>
+                            </div>
                         </div>
                         <div class="min-w-0">
-                            <div class="text-[clamp(17px,1.18vw,28px)] font-bold leading-tight">
+                            <div class="text-[clamp(16px,1.15vw,23px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
                                 {{ item.judul }}
                             </div>
-                            <div class="mt-0.5 text-[0.75vw] text-base-content/70">{{ item.komisi }}</div>
+                            <div class="mt-1 text-[clamp(11.5px,0.78vw,15px)] font-medium text-base-content/75 truncate">{{ item.komisi }}</div>
                         </div>
                         <div class="self-center">
                             <span :class="statusClasses(item.status)">
@@ -217,30 +225,36 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 </ul>
 
                 <div v-if="upcoming.length > 0" class="upcoming-section">
-                    <h2 class="border-b border-base-300/80 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] font-bold uppercase tracking-[0.14em] text-base-content/70">
+                    <h2 class="border-b border-base-300/80 pb-[0.6vh] text-[clamp(12px,0.82vw,16px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
                         Agenda Berikutnya
                     </h2>
 
-                    <ul class="mt-[0.8vh] flex flex-col gap-[0.55vh] p-0">
+                    <ul class="mt-[0.6vh] flex flex-col gap-[0.5vh] p-0">
                         <li v-for="item in upcoming" :key="'upcoming-' + item.id"
-                            class="grid grid-cols-[8.5vw_minmax(0,1fr)_auto] items-center gap-[0.9vw] meeting-card border px-[1.05vw] py-[0.85vh] shadow-sm">
+                            class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh] shadow-xs">
                             <div>
-                                <div class="text-[0.62vw] font-bold uppercase tracking-[0.1em] text-base-content/70">
+                                <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/70">
                                     {{ upcomingDateLabel(item.tanggal) }}
                                 </div>
-                                <div class="text-[0.9vw] font-bold tabular-nums text-primary">
+                                <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
                                     {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                                 </div>
-                                <div class="text-[0.68vw] text-base-content/70 font-medium">{{ item.ruangan }}</div>
+                                <div class="mt-0.5 flex items-center gap-1 text-[clamp(11px,0.72vw,14px)] font-semibold text-slate-800 dark:text-slate-200">
+                                    <svg class="h-3 w-3 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    <span class="truncate">{{ item.ruangan }}</span>
+                                </div>
                             </div>
                             <div class="min-w-0">
-                                <div class="text-[clamp(14px,0.92vw,20px)] font-bold leading-tight">
+                                <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
                                     {{ item.judul }}
                                 </div>
-                                <div class="mt-0.5 text-[0.68vw] text-base-content/70">{{ item.komisi }}</div>
+                                <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/75 truncate">{{ item.komisi }}</div>
                             </div>
                             <div class="self-center">
-                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30">
                                     <span class="inline-block h-1.5 w-1.5 rounded-full bg-sky-400"></span>
                                     Mendatang
                                 </span>
@@ -253,7 +267,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
         <div id="panel-ticker" class="flex items-center rounded-none p-0"
             role="status" v-if="runningTextAktif">
-            <span class="flex h-full items-center justify-center bg-sky-600 px-[1.4vw] text-[clamp(11px,0.75vw,15px)] font-bold uppercase tracking-[0.14em] text-white shadow-sm shrink-0">
+            <span class="flex h-full items-center justify-center bg-sky-600 px-[1.4vw] text-[clamp(12px,0.85vw,16px)] font-bold uppercase tracking-[0.14em] text-white shadow-sm shrink-0">
                 Pengumuman
             </span>
             <div class="ticker-track min-w-0 flex-1 overflow-hidden py-1">
@@ -830,29 +844,29 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
                 function statusClasses(status) {
                     const map = {
-                        berlangsung: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
-                        persiapan: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30',
-                        menunggu: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-400 border border-sky-500/30',
-                        selesai: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-400 border border-slate-500/30',
+                        berlangsung: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30',
+                        persiapan: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30',
+                        menunggu: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30',
+                        selesai: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30',
                     };
-                    return map[status] ?? 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,14px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-400 border border-slate-500/30';
+                    return map[status] ?? 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30';
                 }
 
                 function statusDotClasses(status) {
                     const map = {
-                        berlangsung: 'h-2 w-2 rounded-full bg-emerald-400',
-                        persiapan: 'h-2 w-2 rounded-full bg-amber-400',
-                        menunggu: 'h-2 w-2 rounded-full bg-sky-400',
-                        selesai: 'h-2 w-2 rounded-full bg-slate-400',
+                        berlangsung: 'h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400',
+                        persiapan: 'h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400',
+                        menunggu: 'h-2 w-2 rounded-full bg-sky-500 dark:bg-sky-400',
+                        selesai: 'h-2 w-2 rounded-full bg-slate-500 dark:bg-slate-400',
                     };
-                    return map[status] ?? 'h-2 w-2 rounded-full bg-slate-400';
+                    return map[status] ?? 'h-2 w-2 rounded-full bg-slate-500 dark:bg-slate-400';
                 }
 
                 function scheduleItemClasses(status) {
                     const map = {
                         berlangsung: 'border-emerald-500/40 bg-emerald-500/10 shadow-lg shadow-emerald-950/20 ring-1 ring-emerald-500/30',
                         persiapan: 'border-amber-500/30 bg-amber-500/5',
-                        selesai: 'opacity-55',
+                        selesai: 'opacity-70',
                     };
                     return map[status] ?? '';
                 }
