@@ -45,6 +45,22 @@
     display: none;
   }
 
+  .agenda-scroll-mask,
+  .agenda-scroll-mask-both {
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+  }
+
+  .agenda-scroll-mask-right {
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+  }
+
+  .agenda-scroll-mask-left {
+    mask-image: linear-gradient(to right, transparent, black 24px);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px);
+  }
+
   details.agenda-collapse > summary {
     list-style: none;
     position: relative;

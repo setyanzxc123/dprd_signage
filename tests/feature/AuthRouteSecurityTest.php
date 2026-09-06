@@ -135,7 +135,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('Semester ini', $body);
         $this->assertStringContainsString('Jumlah agenda per halaman', $body);
         $this->assertStringContainsString('Jumlah jadwal umum per halaman', $body);
-        $this->assertStringContainsString('collapse collapse-arrow', $body);
+        $this->assertStringContainsString('agenda-collapse', $body);
         $this->assertStringContainsString('handleAgendaToggle($event, item.key)', $body);
         $this->assertSame(2, substr_count($body, ':href="item.materi_url"'));
         $this->assertSame(2, substr_count($body, ':href="item.stream_url"'));
