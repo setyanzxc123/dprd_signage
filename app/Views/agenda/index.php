@@ -325,7 +325,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <div v-for="item in upcomingTodayAgendas" :key="'today-' + item.key" class="py-2.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span :class="statusBadgeClass(item.status)" class="text-[10px] py-0.5 px-2">
+                            <span :class="statusBadgeClass(item.status)" class="inline-flex items-center text-[10px] py-0.5 px-2">
                                 {{ statusLabel(item.status) }}
                             </span>
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || 'Ruangan belum ditentukan' }}</span>
@@ -483,11 +483,13 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                             </span>
                                             <span v-if="item.is_participant" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Anda Peserta</span>
                                         <?php endif; ?>
+                                        <span v-if="item.status !== 'proyeksi' && item.is_public !== false" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Terbuka untuk Umum</span>
+                                        <span v-else-if="item.status !== 'proyeksi'" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">Khusus Peserta</span>
                                         <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
                                             {{ item.periode_label || 'Periode belum ditentukan' }}
                                         </span>
                                         <span v-else class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
-                                        <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">
+                                        <span :class="statusBadgeClass(item.status)" class="inline-flex shrink-0 sm:hidden">
                                             <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
                                                 <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                                                 <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -709,8 +711,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                             <span v-if="!item.is_public" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Internal DPRD</span>
                                             <span v-if="item.is_participant" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Anda Peserta</span>
                                         <?php endif; ?>
+                                        <span v-if="item.is_public !== false" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Terbuka untuk Umum</span>
+                                        <span v-else class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">Khusus Peserta</span>
                                         <span class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
-                                        <span :class="statusBadgeClass(item.status)" class="shrink-0 sm:hidden">
+                                        <span :class="statusBadgeClass(item.status)" class="inline-flex shrink-0 sm:hidden">
                                             <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
                                                 <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                                                 <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -1525,7 +1529,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             }
 
             function statusBadgeClass(status) {
-                const base = 'inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-semibold';
+                const base = 'items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-semibold';
                 return {
                     proyeksi: `${base} bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30`,
                     berlangsung: `${base} bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30`,
