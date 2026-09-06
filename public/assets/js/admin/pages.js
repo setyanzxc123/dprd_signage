@@ -692,11 +692,13 @@
                 if (panelQr) panelQr.hidden = false;
                 if (panelPair) panelPair.hidden = true;
                 loadWaQrCode();
+                startWaPolling(3000);
             } else {
                 tabPair?.classList.add('tab-active');
                 tabQr?.classList.remove('tab-active');
                 if (panelPair) panelPair.hidden = false;
                 if (panelQr) panelQr.hidden = true;
+                stopWaPolling();
             }
         };
 
@@ -722,18 +724,29 @@
                     return;
                 }
 
-                if (qr.qr_data_url) {
+                if (gw.status === 'offline') {
+                    stopWaPolling();
+                    waQrLoading.hidden = true;
+                    if (waQrError) {
+                        waQrError.textContent = qr?.error || gw.error || 'WhatsApp Gateway sedang offline.';
+                        waQrError.hidden = false;
+                    }
+                    return;
+                }
+
+                if (qr?.qr_data_url) {
                     waQrImage.src = qr.qr_data_url;
                     waQrImage.hidden = false;
                     waQrLoading.hidden = true;
                 } else {
                     waQrLoading.hidden = true;
                     if (waQrError) {
-                        waQrError.textContent = qr.error || gw.error || 'QR Code belum siap atau gateway sedang offline.';
+                        waQrError.textContent = qr?.error || gw.error || 'QR Code belum siap atau gateway sedang offline.';
                         waQrError.hidden = false;
                     }
                 }
             } catch (e) {
+                stopWaPolling();
                 waQrLoading.hidden = true;
                 if (waQrError) {
                     waQrError.textContent = 'Gagal terhubung ke service WhatsApp Gateway.';
@@ -807,6 +820,12 @@
                     return;
                 }
 
+                if (gw.status === 'offline') {
+                    stopWaPolling();
+                    renderDisconnectedStatus(gw.error || 'WhatsApp Gateway sedang offline.');
+                    return;
+                }
+
                 if (updateQrIfModalOpen && modalWaPairing && modalWaPairing.open && qr.qr_data_url && waQrImage) {
                     if (waQrImage.src !== qr.qr_data_url) {
                         waQrImage.src = qr.qr_data_url;
@@ -816,7 +835,7 @@
                     if (waQrError) waQrError.hidden = true;
                 }
             } catch (e) {
-                // Polling error silently handled
+                stopWaPolling();
             }
         };
 
@@ -825,7 +844,7 @@
                 refreshWaBtn.disabled = true;
                 if (refreshWaIcon) refreshWaIcon.classList.add('animate-spin');
                 try {
-                    const response = await fetch('/admin/pengaturan/whatsapp/status', {
+                    const response = await fetch('/admin/pengaturan/whatsapp/status?refresh=1', {
                         headers: { Accept: 'application/json' },
                         credentials: 'same-origin',
                     });
@@ -835,10 +854,11 @@
                         stopWaPolling();
                         renderConnectedStatus(gw);
                     } else {
+                        stopWaPolling();
                         renderDisconnectedStatus(gw.error || 'Gateway belum terhubung. Silakan scan QR Code.');
-                        startWaPolling(4000);
                     }
                 } catch (e) {
+                    stopWaPolling();
                     renderDisconnectedStatus('Gagal terhubung ke service WhatsApp Gateway.');
                 } finally {
                     refreshWaBtn.disabled = false;
@@ -970,7 +990,6 @@
                     modalWaLogout.close();
                     stopWaPolling();
                     renderDisconnectedStatus(data.message || 'Sesi WhatsApp telah diputus. Lakukan pairing ulang untuk menghubungkan kembali.');
-                    startWaPolling(4000);
                 } catch (err) {
                     if (waLogoutError) {
                         waLogoutError.textContent = err.message || 'Terjadi kesalahan sistem.';
@@ -981,12 +1000,6 @@
                     if (waLogoutSpinner) waLogoutSpinner.hidden = true;
                 }
             });
-        }
-
-        // Jika gateway terdeteksi belum terhubung saat buka halaman, jalankan gentle polling
-        const isCurrentlyConnected = document.getElementById('wa-integration-card')?.dataset.connected === '1';
-        if (!isCurrentlyConnected) {
-            startWaPolling(4000);
         }
 
         window.addEventListener('beforeunload', stopWaPolling, { once: true });
