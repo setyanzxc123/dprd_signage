@@ -438,8 +438,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 name="agenda-banmus-accordion"
                                 class="group agenda-collapse rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600"
                                 :class="{
-                                    'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
-                                    'outline outline-2 outline-emerald-600 dark:outline-emerald-400 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 relative z-10': expandedAgendaKey === item.key
+                                    'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung' && expandedAgendaKey !== item.key,
+                                    'border-emerald-600 outline outline-2 outline-emerald-600 bg-white dark:border-emerald-400 dark:outline-emerald-400 dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 relative z-10': expandedAgendaKey === item.key
                                 }"
                                 :open="expandedAgendaKey === item.key"
                                 @toggle="handleAgendaToggle($event, item.key)"
@@ -624,8 +624,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             name="agenda-general-accordion"
                             class="group agenda-collapse rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600"
                             :class="{
-                                'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
-                                'outline outline-2 outline-emerald-600 dark:outline-emerald-400 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 relative z-10': expandedGeneralKey === item.key
+                                'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung' && expandedGeneralKey !== item.key,
+                                'border-emerald-600 outline outline-2 outline-emerald-600 bg-white dark:border-emerald-400 dark:outline-emerald-400 dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 relative z-10': expandedGeneralKey === item.key
                             }"
                             :open="expandedGeneralKey === item.key"
                             @toggle="handleGeneralToggle($event, item.key)"
