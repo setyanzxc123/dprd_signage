@@ -104,6 +104,22 @@
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
+  details.agenda-collapse.agenda-flash {
+    animation: agenda-flash 1.2s ease-out 1;
+  }
+
+  @keyframes agenda-flash {
+    0% {
+      box-shadow: 0 0 0 0 rgb(16 185 129 / 0.35);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgb(16 185 129 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(16 185 129 / 0);
+    }
+  }
+
   details.agenda-collapse > summary {
     list-style: none;
     position: relative;
@@ -189,6 +205,10 @@
 
   details.agenda-collapse::details-content {
     transition: none;
+  }
+
+  details.agenda-collapse.agenda-flash {
+    animation: none;
   }
 }
 

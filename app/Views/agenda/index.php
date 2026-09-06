@@ -985,9 +985,14 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 }
                 nextTick(() => {
                     const card = document.getElementById('agenda-card-' + item.key);
-                    if (card) {
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (!card) {
+                        return;
                     }
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.remove('agenda-flash');
+                    void card.offsetWidth;
+                    card.classList.add('agenda-flash');
+                    window.setTimeout(() => card.classList.remove('agenda-flash'), 1300);
                 });
             }
             const totalPages = computed(() =>
