@@ -324,7 +324,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             <ol class="space-y-1.5">
                 <li v-for="item in [...activeLiveAgendas, ...upcomingTodayAgendas]" :key="'today-card-' + item.key" class="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs px-3 py-1.5 flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">{{ executionTime(item) }}</span>
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 tabular-nums whitespace-nowrap">{{ executionTime(item) }}</span>
                         <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center shrink-0">
                             <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
                             <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500"></span>
@@ -383,7 +383,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
                     <div class="min-w-0">
                         <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Agenda Rapat &amp; Sidang</h2>
-                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 truncate">Paripurna, Komisi, dan Banmus</p>
+                        <p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-1 truncate">Paripurna, Komisi, dan Banmus</p>
                     </div>
                     <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredAgendas.length }} agenda
@@ -435,7 +435,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 :key="item.key"
                                 :id="'agenda-card-' + item.key"
                                 name="agenda-banmus-accordion"
-                                class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
+                                class="group agenda-collapse rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600"
                                 :class="{
                                     'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
                                     'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedAgendaKey === item.key
@@ -465,10 +465,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                             <span v-if="item.is_participant" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Anda Peserta</span>
                                         <?php endif; ?>
                                         <span v-if="item.status !== 'proyeksi' && !item.is_public" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">Khusus Peserta</span>
-                                        <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                                        <span v-if="item.status === 'proyeksi'" class="truncate text-xs font-medium text-slate-600 dark:text-slate-400">
                                             {{ item.periode_label || 'Periode belum ditentukan' }}
                                         </span>
-                                        <span v-else class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
+                                        <span v-else class="truncate text-xs font-medium text-slate-600 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
                                         <span v-if="item.status !== 'proyeksi'" :class="statusBadgeClass(item.status)" class="inline-flex shrink-0 sm:hidden">
                                             <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
                                                 <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
@@ -490,7 +490,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                             <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pt-3 pb-4 sm:px-5 sm:pt-3.5 sm:pb-5 space-y-2.5">
                                 <div v-if="item.keterangan">
-                                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Pokok bahasan</p>
+                                    <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Pokok bahasan</p>
                                     <p class="mt-0.5 text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line">{{ item.keterangan }}</p>
                                 </div>
 
@@ -586,7 +586,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
                     <div class="min-w-0">
                         <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Kegiatan &amp; Audiensi Publik</h2>
-                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 truncate">Audiensi publik &amp; kunjungan kerja</p>
+                        <p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-1 truncate">Audiensi publik &amp; kunjungan kerja</p>
                     </div>
                     <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredGeneralAgendas.length }} agenda
@@ -621,7 +621,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             :key="item.key"
                             :id="'agenda-card-' + item.key"
                             name="agenda-general-accordion"
-                            class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
+                            class="group agenda-collapse rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600"
                             :class="{
                                 'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
                                 'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedGeneralKey === item.key
@@ -643,7 +643,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                         <?php if ($isMember): ?>
                                             <span v-if="item.is_participant" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Anda Peserta</span>
                                         <?php endif; ?>
-                                        <span class="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
+                                        <span class="truncate text-xs font-medium text-slate-600 dark:text-slate-400">{{ executionTime(item) }} · {{ item.ruangan || '-' }}</span>
                                         <span v-if="item.status !== 'proyeksi'" :class="statusBadgeClass(item.status)" class="inline-flex shrink-0 sm:hidden">
                                             <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
                                                 <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
@@ -665,7 +665,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                             <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pt-3 pb-4 sm:px-5 sm:pt-3.5 sm:pb-5 space-y-2.5">
                                 <div v-if="item.keterangan">
-                                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Deskripsi</p>
+                                    <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Deskripsi</p>
                                     <p class="mt-0.5 text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line">{{ item.keterangan }}</p>
                                 </div>
 
