@@ -91,7 +91,7 @@ final class ScheduleReadService
     {
         $date = $this->validDate($date) ? $date : date('Y-m-d', ($this->clock)());
         $todayRows = $this->repository->findSchedules(true, $date, null, null);
-        $upcomingRows = $this->repository->findUpcomingPublic($date, 15);
+        $upcomingRows = $this->repository->findUpcomingPublic($date, 10);
 
         return [
             'date'     => $date,

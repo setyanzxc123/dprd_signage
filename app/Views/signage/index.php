@@ -184,7 +184,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
         </section>
 
         <section id="panel-info" class="flex flex-col rounded-none">
-            <div class="signage-schedule flex flex-1 flex-col gap-0">
+            <div ref="scheduleContainer" class="signage-schedule flex flex-1 flex-col gap-0 min-h-0">
                 <div class="flex items-center justify-between border-b border-base-300/80 pb-[0.8vh]">
                     <h2 class="text-[clamp(13px,0.9vw,17px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
                         Agenda Hari Ini
@@ -218,15 +218,15 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     Tidak ada agenda rapat untuk hari ini. Silakan periksa agenda berikutnya di bawah.
                 </div>
 
-                <ul v-if="jadwal.length > 0" class="mt-[0.8vh] flex flex-col gap-[0.6vh] p-0">
+                <ul v-if="jadwal.length > 0" class="mt-[0.6vh] flex flex-col gap-[0.7vh] p-0">
                     <li v-for="item in paginatedJadwal" :key="item.id"
-                        :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.2vw] meeting-card border px-[1.2vw] py-[0.85vh] shadow-xs', scheduleItemClasses(item.status)]">
+                        :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh]', scheduleItemClasses(item.status)]">
                         <div>
-                            <div class="text-[clamp(15px,1.05vw,21px)] font-extrabold tabular-nums text-primary leading-tight">
+                            <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
                                 {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                             </div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[clamp(12px,0.82vw,16px)] font-bold text-slate-800 dark:text-slate-200">
-                                <svg class="h-3.5 w-3.5 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="mt-0.5 flex items-center gap-1 text-[clamp(11px,0.72vw,14px)] font-semibold text-slate-800 dark:text-slate-200">
+                                <svg class="h-3 w-3 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
@@ -234,16 +234,16 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                             </div>
                         </div>
                         <div class="min-w-0">
-                            <div class="text-[clamp(16px,1.15vw,23px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
+                            <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
                                 {{ item.judul }}
                             </div>
-                            <div class="mt-1 text-[clamp(11.5px,0.78vw,15px)] font-medium text-base-content/75 truncate">{{ item.komisi }}</div>
+                            <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/75 truncate">{{ item.komisi }}</div>
                         </div>
                         <div class="self-center">
                             <span :class="statusClasses(item.status)">
-                                <span v-if="item.status === 'berlangsung'" class="relative flex h-2.5 w-2.5 items-center justify-center">
-                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
+                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
                                 </span>
                                 <span v-else :class="statusDotClasses(item.status)"></span>
                                 <span>{{ statusLabel(item.status) }}</span>
@@ -257,20 +257,11 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                         <h2 class="text-[clamp(12px,0.82vw,16px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
                             Agenda Berikutnya
                         </h2>
-                        <div v-if="totalUpcomingPages > 1"
-                            class="flex items-center gap-2 text-[clamp(10.5px,0.68vw,13px)] font-bold text-base-content/70">
-                            <span>Hal {{ currentUpcomingPage }} / {{ totalUpcomingPages }}</span>
-                            <div class="flex items-center gap-1">
-                                <span v-for="page in totalUpcomingPages" :key="'up-page-' + page"
-                                    :class="['h-1.5 rounded-full transition-all duration-300', page === currentUpcomingPage ? 'w-4 bg-primary' : 'w-1.5 bg-base-300']">
-                                </span>
-                            </div>
-                        </div>
                     </div>
 
-                    <ul class="mt-[0.6vh] flex flex-col gap-[0.5vh] p-0">
-                        <li v-for="item in paginatedUpcoming" :key="'upcoming-' + item.id"
-                            class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh] shadow-xs">
+                    <ul class="mt-[0.6vh] flex flex-col gap-[0.7vh] p-0">
+                        <li v-for="item in displayedUpcoming" :key="'upcoming-' + item.id"
+                            class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh]">
                             <div>
                                 <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/70">
                                     {{ upcomingDateLabel(item.tanggal) }}
@@ -330,23 +321,13 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 const upcoming = ref([]);
                 const SCHEDULE_ITEMS_PER_PAGE = 4;
                 const currentSchedulePage = ref(1);
-                const currentUpcomingPage = ref(1);
+                const scheduleContainer = ref(null);
+                const maxUpcomingSlots = ref(4);
                 let schedulePageTimer = null;
-
-                const UPCOMING_ITEMS_PER_PAGE = computed(() => {
-                    if (!jadwal.value || jadwal.value.length === 0) return 5;
-                    if (jadwal.value.length >= 4) return 3;
-                    return 4;
-                });
 
                 const totalSchedulePages = computed(() => {
                     if (!jadwal.value || jadwal.value.length === 0) return 1;
                     return Math.ceil(jadwal.value.length / SCHEDULE_ITEMS_PER_PAGE);
-                });
-
-                const totalUpcomingPages = computed(() => {
-                    if (!upcoming.value || upcoming.value.length === 0) return 1;
-                    return Math.ceil(upcoming.value.length / UPCOMING_ITEMS_PER_PAGE.value);
                 });
 
                 const paginatedJadwal = computed(() => {
@@ -357,12 +338,32 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     return jadwal.value.slice(start, start + SCHEDULE_ITEMS_PER_PAGE);
                 });
 
-                const paginatedUpcoming = computed(() => {
-                    if (!upcoming.value || upcoming.value.length <= UPCOMING_ITEMS_PER_PAGE.value) {
-                        return upcoming.value;
-                    }
-                    const start = (currentUpcomingPage.value - 1) * UPCOMING_ITEMS_PER_PAGE.value;
-                    return upcoming.value.slice(start, start + UPCOMING_ITEMS_PER_PAGE.value);
+                const displayedUpcoming = computed(() => {
+                    if (!upcoming.value || upcoming.value.length === 0 || maxUpcomingSlots.value <= 0) return [];
+                    return upcoming.value.slice(0, maxUpcomingSlots.value);
+                });
+
+                function recalculateUpcomingSlots() {
+                    const todayCount = paginatedJadwal.value.length;
+                    const baseLimit = todayCount === 0 ? 5 : Math.max(1, 6 - todayCount);
+                    maxUpcomingSlots.value = Math.min(upcoming.value.length, baseLimit);
+                    nextTick(fitUpcomingToContainer);
+                }
+
+                function fitUpcomingToContainer() {
+                    nextTick(() => {
+                        const container = scheduleContainer.value || document.querySelector('.signage-schedule');
+                        if (!container) return;
+
+                        if (container.scrollHeight > container.clientHeight && maxUpcomingSlots.value > 1) {
+                            maxUpcomingSlots.value--;
+                            nextTick(fitUpcomingToContainer);
+                        }
+                    });
+                }
+
+                watch([currentSchedulePage, paginatedJadwal, upcoming], () => {
+                    recalculateUpcomingSlots();
                 });
 
                 function syncSchedulePaging() {
@@ -371,21 +372,12 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                         schedulePageTimer = null;
                     }
 
-                    const hasSchedulePages = totalSchedulePages.value > 1;
-                    const hasUpcomingPages = totalUpcomingPages.value > 1;
-
-                    if (hasSchedulePages || hasUpcomingPages) {
+                    if (totalSchedulePages.value > 1) {
                         schedulePageTimer = setInterval(() => {
-                            if (hasSchedulePages) {
-                                currentSchedulePage.value = (currentSchedulePage.value % totalSchedulePages.value) + 1;
-                            }
-                            if (hasUpcomingPages) {
-                                currentUpcomingPage.value = (currentUpcomingPage.value % totalUpcomingPages.value) + 1;
-                            }
+                            currentSchedulePage.value = (currentSchedulePage.value % totalSchedulePages.value) + 1;
                         }, 12000);
                     } else {
                         currentSchedulePage.value = 1;
-                        currentUpcomingPage.value = 1;
                     }
                 }
 
@@ -959,17 +951,17 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
                 function statusClasses(status) {
                     const map = {
-                        berlangsung: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30',
-                        persiapan: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30',
-                        menunggu: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30',
-                        selesai: 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30',
+                        berlangsung: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30',
+                        persiapan: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30',
+                        menunggu: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30',
+                        selesai: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30',
                     };
-                    return map[status] ?? 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[clamp(11px,0.75vw,14.5px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30';
+                    return map[status] ?? 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30';
                 }
 
                 function statusDotClasses(status) {
                     const map = {
-                        berlangsung: 'h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400',
+                        berlangsung: 'h-2 w-2 rounded-full bg-red-500 dark:bg-red-400',
                         persiapan: 'h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400',
                         menunggu: 'h-2 w-2 rounded-full bg-sky-500 dark:bg-sky-400',
                         selesai: 'h-2 w-2 rounded-full bg-slate-500 dark:bg-slate-400',
@@ -979,7 +971,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
                 function scheduleItemClasses(status) {
                     const map = {
-                        berlangsung: 'border-emerald-500/40 bg-emerald-500/10 shadow-lg shadow-emerald-950/20 ring-1 ring-emerald-500/30',
+                        berlangsung: 'is-berlangsung',
                         persiapan: 'border-amber-500/30 bg-amber-500/5',
                         selesai: 'opacity-70',
                     };
@@ -1192,9 +1184,6 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     upcoming.value = data.upcoming;
                     if (currentSchedulePage.value > totalSchedulePages.value) {
                         currentSchedulePage.value = 1;
-                    }
-                    if (currentUpcomingPage.value > totalUpcomingPages.value) {
-                        currentUpcomingPage.value = 1;
                     }
                     syncSchedulePaging();
                     const aktif = jadwal.value.find(item => item.status === 'berlangsung');
@@ -1830,6 +1819,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     }, 5000);
                     document.addEventListener('visibilitychange', handleMediaVisibilityChange);
                     window.addEventListener('resize', updateCanvasBounds);
+                    window.addEventListener('resize', recalculateUpcomingSlots);
                     window.addEventListener('offline', handleNetworkOffline);
                     window.addEventListener('online', handleNetworkOnline);
                     if (navigator.onLine === false) handleNetworkOffline();
@@ -1850,6 +1840,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     clearWorkerUpdateTimer();
                     document.removeEventListener('visibilitychange', handleMediaVisibilityChange);
                     window.removeEventListener('resize', updateCanvasBounds);
+                    window.removeEventListener('resize', recalculateUpcomingSlots);
                     window.removeEventListener('offline', handleNetworkOffline);
                     window.removeEventListener('online', handleNetworkOnline);
                     navigator.serviceWorker?.removeEventListener('message', handleMediaWorkerMessage);
@@ -1863,7 +1854,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     mediaOfflineStatus, mediaOfflineSize, storagePersistent, mediaStatusPending,
                     cuaca, qrBerkas, qrLive, activeQR, qrFading,
                     jadwal, paginatedJadwal, currentSchedulePage, totalSchedulePages,
-                    upcoming, paginatedUpcoming, currentUpcomingPage, totalUpcomingPages,
+                    upcoming, displayedUpcoming, scheduleContainer, maxUpcomingSlots,
                     runningText, runningTextAktif, media,
                     mediaVideo, mediaBackdrop, mediaError,
                     ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
