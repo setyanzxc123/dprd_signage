@@ -205,7 +205,20 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </button>
                             </div>
 
-                            <div class="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <div class="mt-3 flex items-center gap-1.5">
+                                <button
+                                    v-for="preset in calendarPresets"
+                                    :key="preset.key"
+                                    type="button"
+                                    class="flex-1 py-1.5 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition"
+                                    :class="presetChipClass(preset.key)"
+                                    @click="setCalendarScope(preset.key)"
+                                >
+                                    {{ preset.label }}
+                                </button>
+                            </div>
+
+                            <div class="mt-2.5 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
                             </div>
                             <div class="mt-1 grid grid-cols-7 gap-1">
@@ -280,30 +293,17 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             </div>
 
             <div class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="flex-1 sm:w-44">
-                    <select
-                        class="py-2 px-3 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs"
-                        v-model="periodMode"
-                        @change="changePeriod"
-                        aria-label="Filter periode agenda"
-                    >
-                        <option value="month">Bulan ini</option>
-                        <option value="quarter">Triwulan ini</option>
-                        <option value="semester">Semester ini</option>
-                    </select>
-                </div>
-
                 <button
-                    class="inline-flex items-center justify-center gap-x-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 shadow-xs transition shrink-0"
+                    class="inline-flex items-center justify-center gap-x-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-700/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 text-xs font-bold shadow-xs transition shrink-0"
                     type="button"
                     ref="calendarAnchor"
                     aria-haspopup="dialog"
                     :aria-expanded="isCalendarOpen"
-                    aria-label="Buka kalender agenda"
+                    aria-label="Pilih periode agenda lewat kalender"
                     @click="toggleCalendar"
                 >
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span class="hidden sm:inline">Kalender</span>
+                    <span class="hidden sm:inline">{{ calendarButtonLabel }}</span>
                 </button>
 
                 <button
@@ -315,7 +315,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 >
                     <span v-if="refreshing" class="inline-block size-3.5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent dark:border-emerald-400"></span>
                     <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-emerald-600 dark:text-emerald-400"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span>Perbarui</span>
+                    <span class="hidden sm:inline">Perbarui</span>
                 </button>
             </div>
         </div>
@@ -901,7 +901,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 </div>
 
 <script {csp-script-nonce}>
-    const { createApp, ref, computed, nextTick, onMounted, onUnmounted } = Vue;
+    const { createApp, ref, computed, nextTick, onMounted, onUnmounted, watch } = Vue;
 
     createApp({
         setup() {
@@ -1199,17 +1199,16 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             }
 
             function periodMonths(mode = periodMode.value) {
-                const current = now.value;
-                let firstMonth = current.getMonth();
-                let count = 1;
-
-                if (mode === 'quarter') {
-                    firstMonth = Math.floor(current.getMonth() / 3) * 3;
-                    count = 3;
-                } else if (mode === 'semester') {
-                    firstMonth = current.getMonth() < 6 ? 0 : 6;
-                    count = 6;
+                if (mode === 'month') {
+                    const cursor = calendarCursor.value;
+                    return [monthKey(cursor)];
                 }
+
+                const current = now.value;
+                const firstMonth = mode === 'quarter'
+                    ? Math.floor(current.getMonth() / 3) * 3
+                    : (current.getMonth() < 6 ? 0 : 6);
+                const count = mode === 'quarter' ? 3 : 6;
 
                 return Array.from({ length: count }, (_, offset) =>
                     monthKey(new Date(current.getFullYear(), firstMonth + offset, 1)));
@@ -1269,7 +1268,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 const requestId = ++requestSequence;
                 refreshing.value = true;
                 try {
-                    const requestedMonths = periodMonths(periodMode.value);
+                    const requestedMonths = Array.from(new Set([
+                        ...periodMonths(),
+                        monthKey(calendarCursor.value),
+                    ]));
                     const payloads = await Promise.all(requestedMonths.map(fetchMonth));
                     if (requestId !== requestSequence) {
                         return;
@@ -1415,8 +1417,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     isCalendarOpen.value = false;
                     return;
                 }
-                const current = now.value;
-                calendarCursor.value = new Date(current.getFullYear(), current.getMonth(), 1);
                 const btn = calendarAnchor.value;
                 if (btn) {
                     const rect = btn.getBoundingClientRect();
@@ -1524,11 +1524,40 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 loadAgenda();
             }
 
-            function changePeriod() {
+            watch([calendarCursor, periodMode], () => {
                 resetAgendaSelection();
                 resetGeneralSelection();
                 updateUrl();
                 loadAgenda();
+            });
+
+            const calendarPresets = [
+                { key: 'month', label: 'Bulan ini' },
+                { key: 'quarter', label: 'Triwulan ini' },
+                { key: 'semester', label: 'Semester ini' },
+            ];
+            const calendarButtonLabel = computed(() => {
+                if (periodMode.value === 'quarter') {
+                    return 'Triwulan ini';
+                }
+                if (periodMode.value === 'semester') {
+                    return 'Semester ini';
+                }
+                const cursor = calendarCursor.value;
+                return `${shortMonths[cursor.getMonth()]} ${cursor.getFullYear()}`;
+            });
+
+            function presetChipClass(key) {
+                const base = 'transition';
+                return periodMode.value === key
+                    ? `${base} bg-emerald-600 text-white shadow-xs`
+                    : `${base} border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800`;
+            }
+
+            function setCalendarScope(mode) {
+                const current = now.value;
+                calendarCursor.value = new Date(current.getFullYear(), current.getMonth(), 1);
+                periodMode.value = mode;
             }
 
             function mobileTabClass(tab) {
@@ -1615,7 +1644,12 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 const url = new URL(window.location.href);
                 setOptionalParam(url, 'menu', activeNavigation.value, 'all');
                 setOptionalParam(url, 'scope', memberScope.value, IS_MEMBER ? 'saya' : 'semua');
-                setOptionalParam(url, 'periode', periodMode.value, 'month');
+                if (periodMode.value === 'month') {
+                    const currentMonthKey = monthKey(new Date(now.value.getFullYear(), now.value.getMonth(), 1));
+                    setOptionalParam(url, 'periode', monthKey(calendarCursor.value), currentMonthKey);
+                } else {
+                    url.searchParams.set('periode', periodMode.value);
+                }
                 setOptionalParam(url, 'tampil', String(pageSize.value), '10');
                 setOptionalParam(url, 'tampil_umum', String(generalPageSize.value), '10');
                 setOptionalParam(url, 'halaman', String(currentPage.value), '1');
@@ -1715,9 +1749,19 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 if (IS_MEMBER && ['saya', 'semua'].includes(params.get('scope'))) {
                     memberScope.value = params.get('scope');
                 }
-                if (['quarter', 'semester'].includes(params.get('periode'))) {
-                    periodMode.value = params.get('periode');
+                const requestedPeriode = params.get('periode') || '';
+                let cursorDate = null;
+                if (/^\d{4}-\d{2}$/.test(requestedPeriode)) {
+                    const [year, month] = requestedPeriode.split('-').map(Number);
+                    periodMode.value = 'month';
+                    cursorDate = new Date(year, month - 1, 1);
+                } else if (['quarter', 'semester'].includes(requestedPeriode)) {
+                    periodMode.value = requestedPeriode;
                 }
+                if (cursorDate === null) {
+                    cursorDate = new Date(now.value.getFullYear(), now.value.getMonth(), 1);
+                }
+                calendarCursor.value = cursorDate;
                 if ([10, 25, 50, 100].includes(Number(params.get('tampil')))) {
                     pageSize.value = Number(params.get('tampil'));
                 }
@@ -1733,7 +1777,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 if (params.get('tab') === 'umum') {
                     activeMobileTab.value = 'umum';
                 }
-                loadAgenda();
                 loadWeather();
                 agendaTimer = setInterval(loadAgenda, 60000);
                 clockTimer = setInterval(() => {
@@ -1778,6 +1821,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 toggleCalendar,
                 shiftCalendar,
                 pickCalendarDay,
+                calendarPresets,
+                calendarButtonLabel,
+                presetChipClass,
+                setCalendarScope,
                 unitScroller,
                 canScrollUnitsLeft,
                 canScrollUnitsRight,
@@ -1823,7 +1870,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 unitScrollMaskClass,
                 scrollUnitFilters,
                 setMemberScope,
-                changePeriod,
                 handleAgendaToggle,
                 handleGeneralToggle,
                 changePageSize,
