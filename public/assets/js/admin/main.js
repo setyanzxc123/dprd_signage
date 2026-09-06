@@ -61,14 +61,69 @@
         }
     }
 
+    let pendingConfirmForm = null;
+
     function bindFormConfirmations() {
         if (document.documentElement.dataset.adminConfirmBound === '1') return;
         document.documentElement.dataset.adminConfirmBound = '1';
 
+        const confirmModal = document.getElementById('admin-confirm-modal');
+        const confirmMessage = document.getElementById('admin-confirm-modal-message');
+        const confirmSubmitBtn = document.getElementById('admin-confirm-modal-submit');
+
+        if (confirmSubmitBtn) {
+            confirmSubmitBtn.addEventListener('click', function () {
+                if (pendingConfirmForm) {
+                    const formToSubmit = pendingConfirmForm;
+                    pendingConfirmForm = null;
+                    formToSubmit.dataset.confirmed = '1';
+                    if (window.HSOverlay && confirmModal) {
+                        window.HSOverlay.close(confirmModal);
+                    }
+                    formToSubmit.submit();
+                }
+            });
+        }
+
         document.addEventListener('submit', function (event) {
             const form = event.target.closest('form[data-confirm-message]');
-            if (!form || window.confirm(form.dataset.confirmMessage || 'Lanjutkan tindakan ini?')) return;
+            if (!form) return;
+
+            if (form.dataset.confirmed === '1') {
+                delete form.dataset.confirmed;
+                return;
+            }
+
             event.preventDefault();
+            pendingConfirmForm = form;
+
+            const msg = form.dataset.confirmMessage || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+            if (confirmMessage) {
+                confirmMessage.textContent = msg;
+            }
+
+            if (window.HSOverlay && confirmModal) {
+                window.HSOverlay.open(confirmModal);
+            } else if (window.confirm(msg)) {
+                form.dataset.confirmed = '1';
+                form.submit();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            const copyBtn = event.target.closest('[data-copy-otp]');
+            if (!copyBtn) return;
+            const code = copyBtn.dataset.code;
+            if (!code) return;
+            navigator.clipboard.writeText(code).then(function () {
+                const label = document.getElementById('copy-otp-label');
+                if (label) {
+                    label.textContent = 'Tersalin!';
+                    setTimeout(function () {
+                        label.textContent = 'Salin Kode';
+                    }, 2000);
+                }
+            });
         });
     }
 
@@ -170,11 +225,8 @@
         if (!wrapper) return;
 
         wrapper.querySelectorAll('.dt-paging .dt-paging-button').forEach(function (btn) {
-            if (!btn.classList.contains('btn')) {
-                btn.classList.add('btn', 'btn-sm');
-            }
-            btn.classList.toggle('btn-active', btn.classList.contains('current'));
-            btn.classList.toggle('btn-disabled', btn.disabled || btn.classList.contains('disabled'));
+            btn.classList.toggle('current', btn.classList.contains('current'));
+            btn.classList.toggle('disabled', Boolean(btn.disabled || btn.classList.contains('disabled')));
         });
     }
 
@@ -203,7 +255,7 @@
         if (wrapper.querySelector('.dt-col-filter-bar')) return;
 
         var bar = document.createElement('div');
-        bar.className = 'dt-col-filter-bar flex flex-wrap gap-2 items-center mt-2 mb-1';
+        bar.className = 'dt-col-filter-bar flex flex-wrap gap-2 items-center';
 
         defs.forEach(function (def) {
             var colIdx  = def.col !== undefined ? def.col : def.column;
@@ -237,11 +289,11 @@
             wrap.className = 'flex items-center gap-1.5';
 
             var lbl = document.createElement('span');
-            lbl.className = 'text-xs font-bold text-base-content/50 whitespace-nowrap';
+            lbl.className = 'text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap';
             lbl.textContent = label + ':';
 
             var sel = document.createElement('select');
-            sel.className = 'select select-sm dt-col-filter-select';
+            sel.className = 'py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-emerald-500 focus:ring-emerald-500 shadow-xs cursor-pointer dt-col-filter-select';
             sel.setAttribute('data-dt-filter-col', colIdx);
             sel.setAttribute('aria-label', 'Filter ' + label);
 

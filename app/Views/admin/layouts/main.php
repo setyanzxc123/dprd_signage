@@ -80,6 +80,72 @@ $flashError = session()->getFlashdata('error');
         </main>
     </div>
 
+    <!-- Preline Confirmation Modal Global -->
+    <div id="admin-confirm-modal" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="admin-confirm-modal-label">
+        <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+            <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
+                <div class="p-5 sm:p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+                            <i data-lucide="triangle-alert" class="size-6"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h3 id="admin-confirm-modal-label" class="text-base font-bold text-slate-900 dark:text-white">
+                                Konfirmasi Tindakan
+                            </h3>
+                            <p id="admin-confirm-modal-message" class="mt-1 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                Apakah Anda yakin ingin melanjutkan tindakan ini?
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end items-center gap-x-2">
+                        <button type="button" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition cursor-pointer" data-hs-overlay="#admin-confirm-modal">
+                            Batal
+                        </button>
+                        <button type="button" id="admin-confirm-modal-submit" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-rose-600 text-white hover:bg-rose-700 focus:outline-hidden focus:bg-rose-700 shadow-xs transition cursor-pointer">
+                            Lanjutkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php if ($emergencyOtp = (session()->getFlashdata('emergency_otp') ?? ($emergency_otp ?? null))): ?>
+    <div id="admin-emergency-otp-modal" class="hs-overlay size-full fixed top-0 start-0 z-[85] overflow-x-hidden overflow-y-auto" role="dialog" tabindex="-1" aria-labelledby="admin-emergency-otp-label">
+        <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-100 ease-out transition-all sm:max-w-md sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+            <div class="w-full flex flex-col bg-white border border-amber-200 shadow-2xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-amber-900/50">
+                <div class="p-6 text-center">
+                    <div class="mx-auto flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
+                        <i data-lucide="key-round" class="size-6"></i>
+                    </div>
+                    <h3 id="admin-emergency-otp-label" class="mt-3 text-base font-bold text-slate-900 dark:text-white">
+                        OTP Darurat Berhasil Dibuat
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Untuk: <strong class="text-slate-700 dark:text-slate-200"><?= esc($emergencyOtp['member'] ?? 'Anggota DPRD') ?></strong>
+                    </p>
+                    <div class="my-4 p-4 rounded-xl border border-dashed border-amber-300 dark:border-amber-700/60 bg-amber-50/60 dark:bg-amber-950/20">
+                        <div id="emergency-otp-code" class="font-mono text-3xl font-black text-amber-600 dark:text-amber-400 select-all tracking-widest"><?= esc($emergencyOtp['code'] ?? '') ?></div>
+                        <p class="mt-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                            Berlaku sampai <?= esc($emergencyOtp['expires_at'] ?? '15 menit') ?> &bull; Hanya tampil sekali
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-center gap-2">
+                        <button type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer" data-copy-otp data-code="<?= esc($emergencyOtp['code'] ?? '') ?>">
+                            <i data-lucide="copy" class="size-4"></i>
+                            <span id="copy-otp-label">Salin Kode</span>
+                        </button>
+                        <button type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition cursor-pointer" data-hs-overlay="#admin-emergency-otp-modal">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <?= $this->renderSection('scripts') ?>
 
 </body>
