@@ -252,13 +252,24 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     </li>
                 </ul>
 
-                <div v-if="upcoming.length > 0 && (totalSchedulePages === 1 || currentSchedulePage === totalSchedulePages)" class="upcoming-section">
-                    <h2 class="border-b border-base-300/80 pb-[0.6vh] text-[clamp(12px,0.82vw,16px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
-                        Agenda Berikutnya
-                    </h2>
+                <div v-if="upcoming.length > 0" class="upcoming-section">
+                    <div class="flex items-center justify-between border-b border-base-300/80 pb-[0.6vh]">
+                        <h2 class="text-[clamp(12px,0.82vw,16px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
+                            Agenda Berikutnya
+                        </h2>
+                        <div v-if="totalUpcomingPages > 1"
+                            class="flex items-center gap-2 text-[clamp(10.5px,0.68vw,13px)] font-bold text-base-content/70">
+                            <span>Hal {{ currentUpcomingPage }} / {{ totalUpcomingPages }}</span>
+                            <div class="flex items-center gap-1">
+                                <span v-for="page in totalUpcomingPages" :key="'up-page-' + page"
+                                    :class="['h-1.5 rounded-full transition-all duration-300', page === currentUpcomingPage ? 'w-4 bg-primary' : 'w-1.5 bg-base-300']">
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                     <ul class="mt-[0.6vh] flex flex-col gap-[0.5vh] p-0">
-                        <li v-for="item in upcoming.slice(0, 2)" :key="'upcoming-' + item.id"
+                        <li v-for="item in paginatedUpcoming" :key="'upcoming-' + item.id"
                             class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh] shadow-xs">
                             <div>
                                 <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/70">
@@ -319,11 +330,23 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 const upcoming = ref([]);
                 const SCHEDULE_ITEMS_PER_PAGE = 4;
                 const currentSchedulePage = ref(1);
+                const currentUpcomingPage = ref(1);
                 let schedulePageTimer = null;
+
+                const UPCOMING_ITEMS_PER_PAGE = computed(() => {
+                    if (!jadwal.value || jadwal.value.length === 0) return 5;
+                    if (jadwal.value.length >= 4) return 3;
+                    return 4;
+                });
 
                 const totalSchedulePages = computed(() => {
                     if (!jadwal.value || jadwal.value.length === 0) return 1;
                     return Math.ceil(jadwal.value.length / SCHEDULE_ITEMS_PER_PAGE);
+                });
+
+                const totalUpcomingPages = computed(() => {
+                    if (!upcoming.value || upcoming.value.length === 0) return 1;
+                    return Math.ceil(upcoming.value.length / UPCOMING_ITEMS_PER_PAGE.value);
                 });
 
                 const paginatedJadwal = computed(() => {
@@ -334,18 +357,35 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     return jadwal.value.slice(start, start + SCHEDULE_ITEMS_PER_PAGE);
                 });
 
+                const paginatedUpcoming = computed(() => {
+                    if (!upcoming.value || upcoming.value.length <= UPCOMING_ITEMS_PER_PAGE.value) {
+                        return upcoming.value;
+                    }
+                    const start = (currentUpcomingPage.value - 1) * UPCOMING_ITEMS_PER_PAGE.value;
+                    return upcoming.value.slice(start, start + UPCOMING_ITEMS_PER_PAGE.value);
+                });
+
                 function syncSchedulePaging() {
                     if (schedulePageTimer) {
                         clearInterval(schedulePageTimer);
                         schedulePageTimer = null;
                     }
 
-                    if (totalSchedulePages.value > 1) {
+                    const hasSchedulePages = totalSchedulePages.value > 1;
+                    const hasUpcomingPages = totalUpcomingPages.value > 1;
+
+                    if (hasSchedulePages || hasUpcomingPages) {
                         schedulePageTimer = setInterval(() => {
-                            currentSchedulePage.value = (currentSchedulePage.value % totalSchedulePages.value) + 1;
+                            if (hasSchedulePages) {
+                                currentSchedulePage.value = (currentSchedulePage.value % totalSchedulePages.value) + 1;
+                            }
+                            if (hasUpcomingPages) {
+                                currentUpcomingPage.value = (currentUpcomingPage.value % totalUpcomingPages.value) + 1;
+                            }
                         }, 12000);
                     } else {
                         currentSchedulePage.value = 1;
+                        currentUpcomingPage.value = 1;
                     }
                 }
 
@@ -1153,6 +1193,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     if (currentSchedulePage.value > totalSchedulePages.value) {
                         currentSchedulePage.value = 1;
                     }
+                    if (currentUpcomingPage.value > totalUpcomingPages.value) {
+                        currentUpcomingPage.value = 1;
+                    }
                     syncSchedulePaging();
                     const aktif = jadwal.value.find(item => item.status === 'berlangsung');
                     activeJadwalId.value = aktif?.id ?? null;
@@ -1820,7 +1863,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     mediaOfflineStatus, mediaOfflineSize, storagePersistent, mediaStatusPending,
                     cuaca, qrBerkas, qrLive, activeQR, qrFading,
                     jadwal, paginatedJadwal, currentSchedulePage, totalSchedulePages,
-                    upcoming, runningText, runningTextAktif, media,
+                    upcoming, paginatedUpcoming, currentUpcomingPage, totalUpcomingPages,
+                    runningText, runningTextAktif, media,
                     mediaVideo, mediaBackdrop, mediaError,
                     ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
                     handleMediaWaiting, handleMediaEnded, handleMediaImageLoaded, handleMediaError,
