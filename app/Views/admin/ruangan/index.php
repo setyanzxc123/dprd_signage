@@ -4,11 +4,6 @@
 
 <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <nav class="flex items-center gap-x-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <a href="<?= base_url('admin/dashboard') ?>" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition">Dashboard</a>
-            <i data-lucide="chevron-right" class="size-3 text-slate-400"></i>
-            <span class="font-medium text-slate-800 dark:text-slate-200">Ruangan Rapat</span>
-        </nav>
         <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ruangan Rapat</h1>
     </div>
     <a href="<?= base_url('admin/ruangan/create') ?>" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition">

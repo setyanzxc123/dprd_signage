@@ -8,17 +8,14 @@
     $unitNama = $unit['nama'] ?? '';
 ?>
 
-<div class="mb-5 flex items-center justify-between">
+<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <nav class="flex items-center gap-x-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <a href="<?= base_url('admin/dashboard') ?>" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition">Dashboard</a>
-            <i data-lucide="chevron-right" class="size-3 text-slate-400"></i>
-            <a href="<?= base_url('admin/unit-rapat') ?>" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition">Kelompok Peserta</a>
-            <i data-lucide="chevron-right" class="size-3 text-slate-400"></i>
-            <span class="font-medium text-slate-800 dark:text-slate-200"><?= $unit ? 'Edit Kelompok' : 'Tambah Kelompok' ?></span>
-        </nav>
         <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white"><?= esc($pageTitle) ?></h1>
     </div>
+    <a href="<?= base_url('admin/unit-rapat') ?>" class="py-2 px-3 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition sm:w-auto">
+        <i data-lucide="arrow-left" class="size-4"></i>
+        Kembali ke Kelompok Peserta
+    </a>
 </div>
 
 <form action="<?= esc($action_url) ?>" method="POST" id="unit-form" class="participant-group-form max-w-5xl">
@@ -184,8 +181,7 @@
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="mt-6 flex items-center justify-end gap-3 sticky bottom-4 z-10 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-lg max-w-5xl">
+    <div class="mt-6 flex items-center justify-end gap-3 max-w-5xl">
         <a href="<?= base_url('admin/unit-rapat') ?>" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
             <i data-lucide="arrow-left" class="size-4"></i>
             Batal

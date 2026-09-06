@@ -130,6 +130,9 @@ class GeneralScheduleController extends BaseController
     {
         return [
             'pageTitle'       => $title,
+            'breadcrumbs'     => [
+                ['label' => 'Jadwal Umum', 'url' => 'admin/jadwal-umum'],
+            ],
             'schedule'        => $schedule,
             'rooms'           => $this->roomOptions((int) ($schedule['ruangan_id'] ?? 0)),
             'unit_rapat_list' => $this->unitOptions(),

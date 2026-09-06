@@ -25,15 +25,9 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
 
 <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <nav class="flex items-center gap-x-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-            <a href="<?= base_url('admin/dashboard') ?>" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition">Dashboard</a>
-            <i data-lucide="chevron-right" class="size-3 text-slate-400"></i>
-            <span class="font-medium text-slate-800 dark:text-slate-200">Kalender Agenda</span>
-        </nav>
         <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Kalender Agenda</h1>
     </div>
 
-    <!-- Segmented View Toggle -->
     <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
         <a href="<?= esc($list_url) ?>"
             class="py-1.5 px-3 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg transition <?= $view_mode === 'list' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' ?>">

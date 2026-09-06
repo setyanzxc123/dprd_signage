@@ -37,9 +37,12 @@ class JadwalBanmusController extends BaseController
     public function create(): string
     {
         return view('admin/banmus/form', [
-            'pageTitle'  => 'Tambah SK Banmus',
-            'document'   => null,
-            'action_url' => base_url('admin/jadwal-banmus/store'),
+            'pageTitle'   => 'Tambah SK Banmus',
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => null,
+            'action_url'  => base_url('admin/jadwal-banmus/store'),
         ]);
     }
 
@@ -82,14 +85,17 @@ class JadwalBanmusController extends BaseController
         $items = $itemModel->attachUnitIds($items);
 
         return view('admin/banmus/show', [
-            'pageTitle' => "Agenda SK Banmus No. {$document['nomor_sk']}",
-            'document'  => $document,
-            'items'     => $items,
-            'rooms'     => (new RuanganModel())
+            'pageTitle'   => "Agenda SK Banmus No. {$document['nomor_sk']}",
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => $document,
+            'items'       => $items,
+            'rooms'       => (new RuanganModel())
                 ->where('tersedia', 1)
                 ->orderBy('name', 'ASC')
                 ->findAll(),
-            'units'     => (new UnitRapatModel())
+            'units'       => (new UnitRapatModel())
                 ->where('aktif', 1)
                 ->orderBy('urutan', 'ASC')
                 ->orderBy('nama', 'ASC')
@@ -107,9 +113,12 @@ class JadwalBanmusController extends BaseController
         }
 
         return view('admin/banmus/form', [
-            'pageTitle'  => 'Edit SK Banmus',
-            'document'   => $document,
-            'action_url' => base_url("admin/jadwal-banmus/{$id}/update"),
+            'pageTitle'   => 'Edit SK Banmus',
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => $document,
+            'action_url'  => base_url("admin/jadwal-banmus/{$id}/update"),
         ]);
     }
 
@@ -278,9 +287,12 @@ class JadwalBanmusController extends BaseController
         ];
 
         return $this->formViewErrorResponse('admin/banmus/form', [
-            'pageTitle'  => $id === null ? 'Tambah SK Banmus' : 'Edit SK Banmus',
-            'document'   => $document,
-            'action_url' => $id === null ? base_url('admin/jadwal-banmus/store') : base_url("admin/jadwal-banmus/{$id}/update"),
+            'pageTitle'   => $id === null ? 'Tambah SK Banmus' : 'Edit SK Banmus',
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => $document,
+            'action_url'  => $id === null ? base_url('admin/jadwal-banmus/store') : base_url("admin/jadwal-banmus/{$id}/update"),
         ], $message);
     }
 }

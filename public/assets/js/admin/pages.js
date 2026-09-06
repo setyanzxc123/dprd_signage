@@ -1290,7 +1290,11 @@
         const btnSelectProyeksi = dialog.querySelector('#btn-select-proyeksi');
         const btnSelectPasti = dialog.querySelector('#btn-select-pasti');
         const btnBackToStep1 = dialog.querySelector('#btn-back-to-step1');
+        const btnSwitchToPasti = dialog.querySelector('#btn-switch-to-pasti');
         const formModeIndicator = dialog.querySelector('#form-mode-indicator');
+        const formGrid = dialog.querySelector('#banmus-form-grid');
+        const scheduleFields = dialog.querySelector('#banmus-schedule-fields');
+        const publicationFields = dialog.querySelector('#banmus-publication-fields');
 
         const title = dialog.querySelector('#modal_title');
         const dateField = dialog.querySelector('#field_tanggal');
@@ -1357,14 +1361,35 @@
                 form.classList.remove('hidden');
                 form.classList.add('flex');
 
+                const isProyeksi = mode === 'proyeksi';
+
                 if (formModeIndicator) {
-                    if (mode === 'proyeksi') {
-                        formModeIndicator.textContent = 'Mode: Rencana / Proyeksi';
+                    if (isProyeksi) {
+                        formModeIndicator.textContent = 'Proyeksi';
                         formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60';
                     } else {
-                        formModeIndicator.textContent = 'Mode: Jadwal Pasti';
+                        formModeIndicator.textContent = 'Jadwal Pasti';
                         formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60';
                     }
+                }
+
+                scheduleFields?.classList.toggle('hidden', isProyeksi);
+                publicationFields?.classList.toggle('hidden', isProyeksi);
+
+                if (btnSwitchToPasti) {
+                    btnSwitchToPasti.classList.toggle('hidden', !isProyeksi || !btnBackToStep1?.classList.contains('hidden'));
+                }
+
+                if (formGrid) {
+                    if (isProyeksi) {
+                        formGrid.classList.remove('lg:grid-cols-2');
+                    } else {
+                        formGrid.classList.add('lg:grid-cols-2');
+                    }
+                }
+
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
                 }
             }
         };
@@ -1375,11 +1400,22 @@
             form.action = dialog.dataset.storeUrl || '';
             if (title) title.textContent = 'Tambah Item Agenda Banmus';
             btnBackToStep1?.classList.remove('hidden');
+            btnSwitchToPasti?.classList.add('hidden');
             setWizardStep(1);
             showDialog();
         };
 
         btnSelectProyeksi?.addEventListener('click', () => {
+            dateField.value = '';
+            field('field_jam_mulai').value = '';
+            field('field_jam_selesai').value = '';
+            roomField.value = '';
+            if (locationField) locationField.value = '';
+            unitCheckboxes.forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+            field('field_materi_url').value = '';
+            field('field_stream_url').value = '';
             setWizardStep(2, 'proyeksi');
             field('field_agenda')?.focus();
         });
@@ -1391,6 +1427,11 @@
 
         btnBackToStep1?.addEventListener('click', () => {
             setWizardStep(1);
+        });
+
+        btnSwitchToPasti?.addEventListener('click', () => {
+            setWizardStep(2, 'pasti');
+            dateField?.focus();
         });
 
         const parseUnitIds = (value) => {

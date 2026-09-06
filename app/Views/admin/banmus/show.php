@@ -342,7 +342,7 @@ $scheduledCount = count($items) - $projectionCount;
     data-banmus-item-dialog
     data-store-url="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/store") ?>"
     data-update-url-template="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/__ITEM_ID__/update") ?>">
-    <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-4xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+    <div id="item_modal_dialog" class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-4xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
         <div class="w-full flex flex-col bg-white border border-slate-200 shadow-2xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
             <!-- Header Dialog -->
             <div class="flex shrink-0 items-center justify-between border-b border-slate-100 dark:border-slate-800 px-5 py-4">
@@ -361,39 +361,38 @@ $scheduledCount = count($items) - $projectionCount;
 
             <!-- STEP 1: Branching Cards (Hanya saat Tambah Baru) -->
             <div id="banmus-wizard-step1" class="p-5 sm:p-6">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Langkah 1 dari 2</p>
-                <h4 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Pilih Status Kesiapan Agenda</h4>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Tentukan apakah agenda ini masih berupa perkiraan rencana atau sudah memiliki tanggal dan ruangan pasti.</p>
+                <h4 class="text-base font-bold text-slate-900 dark:text-white">Pilih Kesiapan Agenda</h4>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Pilih format input sesuai kesiapan data agenda.</p>
 
-                <div class="grid sm:grid-cols-2 gap-4 mt-5">
-                    <!-- Kartu 1: Rencana / Proyeksi -->
-                    <button type="button" id="btn-select-proyeksi" class="p-5 text-start rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-500 bg-white dark:bg-slate-800/60 hover:bg-amber-50/20 dark:hover:bg-amber-950/20 shadow-xs transition group cursor-pointer">
+                <div class="grid sm:grid-cols-2 gap-4 mt-4">
+                    <!-- Kartu 1: Proyeksi -->
+                    <button type="button" id="btn-select-proyeksi" class="p-4 sm:p-5 text-start rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-500 bg-white dark:bg-slate-800/60 hover:bg-amber-50/20 dark:hover:bg-amber-950/20 shadow-xs transition group cursor-pointer">
                         <div class="flex size-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 group-hover:scale-110 transition">
                             <i data-lucide="calendar-clock" class="size-5"></i>
                         </div>
-                        <h5 class="mt-4 text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:hover:text-amber-400 transition">
-                            Rencana / Proyeksi
+                        <h5 class="mt-3.5 text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:hover:text-amber-400 transition">
+                            Proyeksi
                         </h5>
-                        <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Belum ada tanggal, jam, atau ruangan pasti. Cukup input uraian agenda dan perkiraan periode (misal: "Minggu ke-2 Juli").
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Cukup isi uraian agenda dan perkiraan periode. Jadwal dan lokasi dilengkapi kemudian.
                         </p>
-                        <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        <span class="mt-3.5 inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
                             Pilih Proyeksi &rarr;
                         </span>
                     </button>
 
                     <!-- Kartu 2: Jadwal Pasti -->
-                    <button type="button" id="btn-select-pasti" class="p-5 text-start rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 bg-white dark:bg-slate-800/60 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 shadow-xs transition group cursor-pointer">
+                    <button type="button" id="btn-select-pasti" class="p-4 sm:p-5 text-start rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 bg-white dark:bg-slate-800/60 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 shadow-xs transition group cursor-pointer">
                         <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 group-hover:scale-110 transition">
                             <i data-lucide="calendar-check-2" class="size-5"></i>
                         </div>
-                        <h5 class="mt-4 text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                        <h5 class="mt-3.5 text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
                             Jadwal Pasti
                         </h5>
-                        <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Sudah ada tanggal, jam, ruangan rapat, dan kelompok peserta yang ditetapkan secara resmi oleh pimpinan.
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Entri lengkap mencakup tanggal, waktu, ruangan rapat, dan peserta.
                         </p>
-                        <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span class="mt-3.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                             Pilih Jadwal Pasti &rarr;
                         </span>
                     </button>
@@ -407,17 +406,23 @@ $scheduledCount = count($items) - $projectionCount;
                 <div class="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/60 dark:bg-slate-800/30">
                     <button type="button" id="btn-back-to-step1" class="inline-flex items-center gap-x-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition cursor-pointer">
                         <i data-lucide="arrow-left" class="size-3.5"></i>
-                        <span>Kembali ke Pilihan Kesiapan</span>
+                        <span>Kembali</span>
                     </button>
-                    <span id="form-mode-indicator" class="inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        Mode
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btn-switch-to-pasti" class="hidden inline-flex items-center gap-1 py-1 px-2.5 rounded-lg text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition cursor-pointer">
+                            <i data-lucide="calendar-plus" class="size-3.5"></i>
+                            <span>Lengkapi Jadwal Pasti &rarr;</span>
+                        </button>
+                        <span id="form-mode-indicator" class="inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            Mode
+                        </span>
+                    </div>
                 </div>
 
                 <div class="max-h-[calc(100dvh-15rem)] overflow-y-auto p-5 sm:p-6 space-y-5">
-                    <div class="grid gap-5 lg:grid-cols-2">
+                    <div id="banmus-form-grid" class="grid gap-5 lg:grid-cols-2">
                         <!-- Informasi Agenda Dasar -->
-                        <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
+                        <div id="banmus-info-agenda-card" class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
                             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
                                 <i data-lucide="file-text" class="size-4 text-emerald-500"></i>
                                 Informasi Agenda SK
@@ -547,7 +552,7 @@ $scheduledCount = count($items) - $projectionCount;
                     </div>
 
                     <!-- Bagian Publikasi & Bahan -->
-                    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
+                    <div id="banmus-publication-fields" class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
                             <i data-lucide="eye" class="size-4 text-emerald-500"></i>
                             Publikasi &amp; Tautan Dokumen

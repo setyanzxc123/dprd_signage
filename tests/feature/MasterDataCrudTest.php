@@ -154,6 +154,20 @@ final class MasterDataCrudTest extends CIUnitTestCase
         $this->assertSame(0, (int) $member['aktif']);
     }
 
+    public function testMasterDataBreadcrumbsAreInHeaderAndNotInCrudContent(): void
+    {
+        $session = ['auth_user' => $this->adminSession()];
+
+        foreach (['/admin/ruangan/create', '/admin/anggota/create', '/admin/unit-rapat/create'] as $url) {
+            $response = $this->withSession($session)->get($url);
+            $response->assertOK();
+            $body = $response->response()->getBody();
+
+            $this->assertStringContainsString('aria-label="Breadcrumb"', $body);
+            $this->assertStringNotContainsString('mb-1"><a href="' . base_url('admin/dashboard'), $body);
+        }
+    }
+
     private function adminPost(string $path, array $payload)
     {
         return $this->withSession(['auth_user' => $this->adminSession()])->post($path, [

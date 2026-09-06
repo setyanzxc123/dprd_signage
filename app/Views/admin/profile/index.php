@@ -75,7 +75,7 @@
         </div>
     </section>
 
-    <div class="sticky bottom-0 z-10 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 p-4 sm:p-6 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-neutral-800 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+    <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <a href="<?= base_url('admin/dashboard') ?>" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-800 shadow-xs hover:bg-gray-50 focus:outline-hidden dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 w-full sm:w-auto">Batal</a>
         <button type="submit" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 focus:outline-hidden focus:bg-emerald-700 w-full sm:w-auto shadow-xs">
             <i data-lucide="save" class="size-4"></i>
