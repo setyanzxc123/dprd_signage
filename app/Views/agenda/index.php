@@ -185,6 +185,53 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         </div>
                     </teleport>
 
+                    <teleport to="body">
+                        <div
+                            v-if="isCalendarOpen"
+                            ref="calendarRef"
+                            :style="calendarStyle"
+                            role="dialog"
+                            aria-label="Kalender agenda"
+                            class="fixed z-[60] w-72 rounded-2xl border border-slate-200/90 dark:border-slate-700/90 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 shadow-xl"
+                            @click.stop
+                        >
+                            <div class="flex items-center justify-between gap-2">
+                                <button type="button" class="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition" aria-label="Bulan sebelumnya" @click="shiftCalendar(-1)">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </button>
+                                <span class="text-sm font-extrabold text-slate-900 dark:text-white">{{ calendarLabel }}</span>
+                                <button type="button" class="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition" aria-label="Bulan berikutnya" @click="shiftCalendar(1)">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </button>
+                            </div>
+
+                            <div class="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
+                            </div>
+                            <div class="mt-1 grid grid-cols-7 gap-1">
+                                <template v-for="(week, wi) in calendarWeeks" :key="'cal-week-' + wi">
+                                    <button
+                                        v-for="(cell, ci) in week"
+                                        :key="(cell ? cell.key : 'cal-blank-' + wi + '-' + ci)"
+                                        type="button"
+                                        :disabled="!cell || cell.count === 0"
+                                        class="relative flex h-9 flex-col items-center justify-center rounded-lg text-xs font-semibold transition disabled:cursor-default"
+                                        :class="cell && cell.count > 0 ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-bold hover:bg-emerald-500/20' : 'text-slate-500 dark:text-slate-400'"
+                                        @click="pickCalendarDay(cell)"
+                                    >
+                                        <span>{{ cell ? cell.day : '' }}</span>
+                                        <span v-if="cell && cell.count > 0" class="absolute bottom-1 flex items-center gap-0.5">
+                                            <span v-for="n in Math.min(cell.count, 3)" :key="n" class="size-1 rounded-full bg-emerald-500"></span>
+                                        </span>
+                                        <span v-if="cell && cell.isToday" class="absolute inset-0 rounded-lg ring-1 ring-emerald-500/60 pointer-events-none"></span>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <p class="mt-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">Klik tanggal beragenda untuk membuka kartunya.</p>
+                        </div>
+                    </teleport>
+
                     <button
                         :class="{ 'invisible pointer-events-none': !canScrollUnitsRight }"
                         class="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition"
@@ -233,7 +280,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             </div>
 
             <div class="flex items-center gap-2 w-full sm:w-auto">
-                <div class="flex-1 sm:w-48">
+                <div class="flex-1 sm:w-44">
                     <select
                         class="py-2 px-3 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs"
                         v-model="periodMode"
@@ -245,6 +292,19 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <option value="semester">Semester ini</option>
                     </select>
                 </div>
+
+                <button
+                    class="inline-flex items-center justify-center gap-x-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 shadow-xs transition shrink-0"
+                    type="button"
+                    ref="calendarAnchor"
+                    aria-haspopup="dialog"
+                    :aria-expanded="isCalendarOpen"
+                    aria-label="Buka kalender agenda"
+                    @click="toggleCalendar"
+                >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span class="hidden sm:inline">Kalender</span>
+                </button>
 
                 <button
                     class="inline-flex items-center justify-center gap-x-1.5 py-2 px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-700/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 text-xs font-bold shadow-xs transition shrink-0 active:scale-[0.98]"
@@ -1311,6 +1371,82 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 setNavigation(value);
             }
 
+            const isCalendarOpen = ref(false);
+            const calendarAnchor = ref(null);
+            const calendarRef = ref(null);
+            const calendarStyle = ref({});
+            const calendarCursor = ref(new Date());
+            const calendarLabel = computed(() =>
+                `${monthNames[calendarCursor.value.getMonth()]} ${calendarCursor.value.getFullYear()}`);
+            const calendarWeeks = computed(() => {
+                const cursor = calendarCursor.value;
+                const year = cursor.getFullYear();
+                const month = cursor.getMonth();
+                const counts = {};
+                [...filteredAgendas.value, ...filteredGeneralAgendas.value].forEach((item) => {
+                    if (!item.tanggal || item.status === 'proyeksi') {
+                        return;
+                    }
+                    counts[item.tanggal] = (counts[item.tanggal] || 0) + 1;
+                });
+                const today = todayDateKey.value;
+                const cells = [];
+                const startOffset = (new Date(year, month, 1).getDay() + 6) % 7;
+                for (let i = 0; i < startOffset; i++) {
+                    cells.push(null);
+                }
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    cells.push({ day, key, count: counts[key] || 0, isToday: key === today });
+                }
+                while (cells.length % 7 !== 0) {
+                    cells.push(null);
+                }
+                const weeks = [];
+                for (let i = 0; i < cells.length; i += 7) {
+                    weeks.push(cells.slice(i, i + 7));
+                }
+                return weeks;
+            });
+
+            function toggleCalendar() {
+                if (isCalendarOpen.value) {
+                    isCalendarOpen.value = false;
+                    return;
+                }
+                const current = now.value;
+                calendarCursor.value = new Date(current.getFullYear(), current.getMonth(), 1);
+                const btn = calendarAnchor.value;
+                if (btn) {
+                    const rect = btn.getBoundingClientRect();
+                    const left = Math.min(Math.max(8, rect.right - 288), window.innerWidth - 296);
+                    calendarStyle.value = {
+                        top: `${Math.round(rect.bottom + 6)}px`,
+                        left: `${Math.round(left)}px`,
+                    };
+                }
+                isCalendarOpen.value = true;
+            }
+
+            function shiftCalendar(delta) {
+                const cursor = calendarCursor.value;
+                calendarCursor.value = new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1);
+            }
+
+            function pickCalendarDay(cell) {
+                if (!cell || cell.count === 0) {
+                    return;
+                }
+                const pool = [...filteredAgendas.value, ...filteredGeneralAgendas.value];
+                const target = pool.find((item) =>
+                    item.tanggal === cell.key && item.status !== 'proyeksi');
+                isCalendarOpen.value = false;
+                if (target) {
+                    focusAgenda(target);
+                }
+            }
+
             function handleDocumentClick(event) {
                 if (isKomisiOpen.value) {
                     const btn = komisiButtonRef.value;
@@ -1319,11 +1455,21 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     if (menu && menu.contains(event.target)) return;
                     isKomisiOpen.value = false;
                 }
+                if (isCalendarOpen.value) {
+                    const btn = calendarAnchor.value;
+                    const menu = calendarRef.value;
+                    if (btn && btn.contains(event.target)) return;
+                    if (menu && menu.contains(event.target)) return;
+                    isCalendarOpen.value = false;
+                }
             }
 
             function handleWindowScroll() {
                 if (isKomisiOpen.value) {
                     isKomisiOpen.value = false;
+                }
+                if (isCalendarOpen.value) {
+                    isCalendarOpen.value = false;
                 }
             }
 
@@ -1623,6 +1769,15 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 komisiButtonClass,
                 toggleKomisiDropdown,
                 selectKomisiFilter,
+                isCalendarOpen,
+                calendarAnchor,
+                calendarRef,
+                calendarStyle,
+                calendarLabel,
+                calendarWeeks,
+                toggleCalendar,
+                shiftCalendar,
+                pickCalendarDay,
                 unitScroller,
                 canScrollUnitsLeft,
                 canScrollUnitsRight,
