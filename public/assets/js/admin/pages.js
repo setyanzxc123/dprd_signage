@@ -215,8 +215,8 @@
                 || waktuMulaiInput.value.slice(0, 10) === waktuSelesaiInput.value.slice(0, 10);
             const valid = !!(start && end && end > start && sameDate);
 
-            waktuMulaiInput.classList.toggle('input-error', !valid && !!waktuMulaiInput.value);
-            waktuSelesaiInput.classList.toggle('input-error', !valid && !!waktuSelesaiInput.value);
+            waktuMulaiInput.classList.toggle('border-rose-500', !valid && !!waktuMulaiInput.value);
+            waktuSelesaiInput.classList.toggle('border-rose-500', !valid && !!waktuSelesaiInput.value);
             if (waktuError) waktuError.classList.toggle('hidden', valid || !waktuMulaiInput.value || !waktuSelesaiInput.value);
 
             waktuSelesaiInput.setCustomValidity(valid ? '' : 'Waktu selesai harus setelah waktu mulai pada tanggal yang sama.');
@@ -240,8 +240,10 @@
             if (!option) return;
 
             option.classList.toggle('is-selected', input.checked);
-            option.classList.toggle('bg-primary/10', input.checked);
-            option.classList.toggle('text-primary', input.checked);
+            option.classList.toggle('bg-emerald-50', input.checked);
+            option.classList.toggle('dark:bg-emerald-950/30', input.checked);
+            option.classList.toggle('text-emerald-700', input.checked);
+            option.classList.toggle('dark:text-emerald-300', input.checked);
             option.classList.toggle('font-semibold', input.checked);
         };
 
@@ -384,10 +386,8 @@
 
         const preparePanel = (hasMediaFile) => {
             panel.hidden = false;
-            panel.classList.remove('alert-error');
-            panel.classList.add('alert-info');
-            bar.classList.remove('progress-error');
-            bar.classList.add('progress-primary');
+            panel.classList.remove('bg-rose-50', 'border-rose-200', 'text-rose-800', 'dark:bg-rose-950/40', 'dark:border-rose-800', 'dark:text-rose-300');
+            panel.classList.add('bg-sky-50', 'border-sky-200', 'text-sky-800', 'dark:bg-sky-950/40', 'dark:border-sky-800', 'dark:text-sky-300');
             if (speed) {
                 speed.textContent = 'Mengukur kecepatan...';
                 speed.hidden = !hasMediaFile;
@@ -397,10 +397,8 @@
         const showError = (message) => {
             const currentValue = Number(bar.value) || 0;
             panel.hidden = false;
-            panel.classList.remove('alert-info');
-            panel.classList.add('alert-error');
-            bar.classList.remove('progress-primary');
-            bar.classList.add('progress-error');
+            panel.classList.remove('bg-sky-50', 'border-sky-200', 'text-sky-800', 'dark:bg-sky-950/40', 'dark:border-sky-800', 'dark:text-sky-300');
+            panel.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800', 'dark:bg-rose-950/40', 'dark:border-rose-800', 'dark:text-rose-300');
             if (speed) speed.hidden = true;
             setProgress(currentValue, message || 'Gagal menyimpan pengaturan.');
             setBusy(false);
@@ -665,6 +663,20 @@
 
         let waPollInterval = null;
 
+        const isWaModalOpen = () => Boolean(
+            modalWaPairing && (!modalWaPairing.classList.contains('hidden') || modalWaPairing.open)
+        );
+
+        const closeWaPairingModal = () => {
+            if (!modalWaPairing) return;
+            if (window.HSOverlay) {
+                window.HSOverlay.close(modalWaPairing);
+            }
+            if (typeof modalWaPairing.close === 'function') {
+                modalWaPairing.close();
+            }
+        };
+
         const stopWaPolling = () => {
             if (waPollInterval) {
                 clearInterval(waPollInterval);
@@ -675,10 +687,12 @@
         const startWaPolling = (intervalMs = 3000) => {
             stopWaPolling();
             waPollInterval = setInterval(async () => {
-                const isModalOpen = Boolean(modalWaPairing && modalWaPairing.open);
-                await checkWaStatus(isModalOpen);
+                await checkWaStatus(isWaModalOpen());
             }, intervalMs);
         };
+
+        const activeTabClasses = ['bg-white', 'text-gray-800', 'shadow-xs', 'dark:bg-neutral-800', 'dark:text-neutral-200'];
+        const inactiveTabClasses = ['text-gray-500', 'hover:text-gray-800', 'dark:text-neutral-400', 'dark:hover:text-neutral-200'];
 
         window.switchWaTab = (tab) => {
             const tabQr = document.getElementById('tab-btn-qr');
@@ -687,15 +701,19 @@
             const panelPair = document.getElementById('panel-wa-pair');
 
             if (tab === 'qr') {
-                tabQr?.classList.add('tab-active');
-                tabPair?.classList.remove('tab-active');
+                tabQr?.classList.remove(...inactiveTabClasses);
+                tabQr?.classList.add(...activeTabClasses);
+                tabPair?.classList.remove(...activeTabClasses);
+                tabPair?.classList.add(...inactiveTabClasses);
                 if (panelQr) panelQr.hidden = false;
                 if (panelPair) panelPair.hidden = true;
                 loadWaQrCode();
                 startWaPolling(3000);
             } else {
-                tabPair?.classList.add('tab-active');
-                tabQr?.classList.remove('tab-active');
+                tabPair?.classList.remove(...inactiveTabClasses);
+                tabPair?.classList.add(...activeTabClasses);
+                tabQr?.classList.remove(...activeTabClasses);
+                tabQr?.classList.add(...inactiveTabClasses);
                 if (panelPair) panelPair.hidden = false;
                 if (panelQr) panelQr.hidden = true;
                 stopWaPolling();
@@ -718,7 +736,7 @@
                 const qr = result?.qr || {};
 
                 if (gw.connected) {
-                    if (modalWaPairing && modalWaPairing.open) modalWaPairing.close();
+                    if (isWaModalOpen()) closeWaPairingModal();
                     stopWaPolling();
                     renderConnectedStatus(gw);
                     return;
@@ -759,16 +777,16 @@
             if (!waPrimaryStatus) return;
             const nameStr = gw.name ? ` (${gw.name})` : '';
             waPrimaryStatus.innerHTML = `
-                <div class="flex items-center gap-2 text-success font-semibold">
-                    <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
+                <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+                    <i data-lucide="check-circle-2" class="size-5 shrink-0"></i>
                     <span>WhatsApp Gateway Terhubung</span>
                 </div>
-                <p class="text-xs text-base-content/80 mt-1">
+                <p class="text-xs text-gray-600 dark:text-neutral-400 mt-1">
                     No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
                 </p>
                 <div class="flex flex-wrap gap-2 pt-2">
-                    <button type="button" class="btn btn-error btn-outline btn-xs gap-1.5 font-semibold" id="btn-wa-logout">
-                        <i data-lucide="log-out" class="h-4 w-4"></i>
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-900/20" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
+                        <i data-lucide="log-out" class="size-4"></i>
                         <span>Putuskan Perangkat</span>
                     </button>
                 </div>
@@ -781,17 +799,17 @@
         const renderDisconnectedStatus = (errorMsg) => {
             if (!waPrimaryStatus) return;
             waPrimaryStatus.innerHTML = `
-                <div class="flex items-center gap-2 text-error font-semibold">
-                    <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
+                <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold text-sm">
+                    <i data-lucide="alert-triangle" class="size-5 shrink-0"></i>
                     <span>WhatsApp Belum Terhubung</span>
                 </div>
-                <p class="text-xs text-base-content/80 mt-1">
+                <p class="text-xs text-gray-600 dark:text-neutral-400 mt-1">
                     ${errorMsg}
                 </p>
                 <div class="pt-2">
-                    <button type="button" class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn"
-                        onclick="document.getElementById('modal_wa_pairing').showModal(); window.switchWaTab('qr');">
-                        <i data-lucide="qr-code" class="h-4 w-4"></i>
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-amber-500 text-white hover:bg-amber-600 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
+                        data-hs-overlay="#modal_wa_pairing" onclick="window.switchWaTab('qr');">
+                        <i data-lucide="qr-code" class="size-4"></i>
                         <span>Buka Scan QR / Pairing Code</span>
                     </button>
                 </div>
@@ -814,7 +832,7 @@
                 const qr = result?.qr || {};
 
                 if (gw.connected) {
-                    if (modalWaPairing && modalWaPairing.open) modalWaPairing.close();
+                    if (isWaModalOpen()) closeWaPairingModal();
                     stopWaPolling();
                     renderConnectedStatus(gw);
                     return;
@@ -944,25 +962,43 @@
         const modalWaLogout = document.getElementById('modal_wa_logout');
         const waLogoutError = document.getElementById('wa-logout-error');
 
-        if (waPrimaryStatus && modalWaLogout instanceof HTMLDialogElement) {
+        const openWaLogoutModal = () => {
+            if (!modalWaLogout) return;
+            if (waLogoutError) waLogoutError.hidden = true;
+            if (window.HSOverlay) {
+                window.HSOverlay.open(modalWaLogout);
+            } else if (modalWaLogout instanceof HTMLDialogElement) {
+                modalWaLogout.showModal();
+            }
+        };
+
+        const closeWaLogoutModal = () => {
+            if (!modalWaLogout) return;
+            if (window.HSOverlay) {
+                window.HSOverlay.close(modalWaLogout);
+            } else if (modalWaLogout instanceof HTMLDialogElement) {
+                modalWaLogout.close();
+            }
+        };
+
+        if (waPrimaryStatus) {
             waPrimaryStatus.addEventListener('click', (event) => {
                 if ((event.target instanceof Element) && event.target.closest('#btn-wa-logout')) {
-                    if (waLogoutError) waLogoutError.hidden = true;
-                    modalWaLogout.showModal();
+                    openWaLogoutModal();
                 }
             });
         }
 
         const waLogoutCancel = document.getElementById('btn-wa-logout-cancel');
-        if (waLogoutCancel && modalWaLogout instanceof HTMLDialogElement) {
+        if (waLogoutCancel) {
             waLogoutCancel.addEventListener('click', () => {
-                modalWaLogout.close();
+                closeWaLogoutModal();
             });
         }
 
         const waLogoutConfirm = document.getElementById('btn-wa-logout-confirm');
         const waLogoutSpinner = document.getElementById('spinner-wa-logout-confirm');
-        if (waLogoutConfirm && modalWaLogout instanceof HTMLDialogElement) {
+        if (waLogoutConfirm) {
             waLogoutConfirm.addEventListener('click', async () => {
                 waLogoutConfirm.disabled = true;
                 if (waLogoutSpinner) waLogoutSpinner.hidden = false;
@@ -987,7 +1023,7 @@
                         throw new Error(data.message || 'Gagal memutus sesi WhatsApp.');
                     }
 
-                    modalWaLogout.close();
+                    closeWaLogoutModal();
                     stopWaPolling();
                     renderDisconnectedStatus(data.message || 'Sesi WhatsApp telah diputus. Lakukan pairing ulang untuk menghubungkan kembali.');
                 } catch (err) {
@@ -1049,8 +1085,11 @@
             allCheckboxes.forEach(function(cb) {
                 const src = cb.closest('.anggota-source');
                 if (src) {
-                    src.classList.toggle('bg-primary/10', cb.checked);
-                    src.classList.toggle('text-primary', cb.checked);
+                    src.classList.toggle('bg-emerald-50/70', cb.checked);
+                    src.classList.toggle('dark:bg-emerald-950/30', cb.checked);
+                    src.classList.toggle('text-emerald-700', cb.checked);
+                    src.classList.toggle('dark:text-emerald-300', cb.checked);
+                    src.classList.toggle('font-semibold', cb.checked);
                 }
             });
 
@@ -1067,9 +1106,9 @@
 
             if (count === 0) {
                 const div = document.createElement('div');
-                div.className = 'flex flex-col items-center justify-center text-base-content/50 py-4 gap-1';
+                div.className = 'flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-8 gap-1.5';
                 div.id = 'target-empty';
-                div.innerHTML = '<i data-lucide="shuffle" class="w-5 h-5 opacity-40"></i><small>Pilih anggota dari panel kiri</small>';
+                div.innerHTML = '<i data-lucide="shuffle" class="size-5 text-slate-300 dark:text-slate-600"></i><span class="text-xs">Pilih anggota dari panel kiri</span>';
                 targetList.appendChild(div);
                 window.renderAdminIcons?.();
                 syncMemberValidity(true);
@@ -1081,38 +1120,38 @@
                 if (!src) return;
 
                 const id = src.getAttribute('data-id');
-                const name = src.querySelector('.font-semibold')?.textContent || '';
+                const name = src.querySelector('.text-xs')?.textContent || '';
                 const detail = src.querySelector('.member-detail')?.textContent?.trim() || '';
                 const initial = name.trim().charAt(0).toUpperCase();
 
                 const el = document.createElement('div');
-                el.className = 'flex items-center gap-2 px-3 py-1 border-b transfer-target-item min-h-[42px]';
+                el.className = 'flex items-center gap-2.5 px-3 py-2 transfer-target-item min-h-[44px]';
                 el.id = 'target-' + id;
                 el.setAttribute('data-id', id);
 
                 const avatar = document.createElement('span');
-                avatar.className = 'inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content w-7 h-7 text-xs font-bold';
+                avatar.className = 'inline-flex items-center justify-center rounded-lg shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 size-7 text-xs font-bold';
                 avatar.textContent = initial;
 
                 const memberContent = document.createElement('div');
                 memberContent.className = 'flex-1 min-w-0';
 
                 const memberName = document.createElement('div');
-                memberName.className = 'text-xs font-semibold truncate';
+                memberName.className = 'text-xs font-semibold text-slate-900 dark:text-white truncate';
                 memberName.textContent = name;
 
                 const memberDetail = document.createElement('div');
-                memberDetail.className = 'text-[11px] text-base-content/60 truncate';
+                memberDetail.className = 'text-[11px] text-slate-500 dark:text-slate-400 truncate';
                 memberDetail.textContent = detail;
 
                 const removeButton = document.createElement('button');
                 removeButton.type = 'button';
-                removeButton.className = 'btn btn-sm btn-ghost btn-circle text-error w-6 h-6 min-h-6 leading-none';
-                removeButton.title = 'Hapus dari unit';
+                removeButton.className = 'size-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer';
+                removeButton.title = 'Hapus dari kelompok';
 
                 const removeIcon = document.createElement('i');
                 removeIcon.setAttribute('data-lucide', 'x');
-                removeIcon.className = 'w-3.5 h-3.5';
+                removeIcon.className = 'size-3.5';
 
                 memberContent.append(memberName, memberDetail);
                 removeButton.appendChild(removeIcon);
@@ -1242,16 +1281,25 @@
 (() => {
     const initializeBanmusItemWorkspace = () => {
         const dialog = document.querySelector('[data-banmus-item-dialog]');
-        if (!(dialog instanceof HTMLDialogElement)) return;
+        if (!dialog) return;
         if (dialog.dataset.initialized === 'true') return;
         dialog.dataset.initialized = 'true';
 
         const form = dialog.querySelector('#item_form');
-        const title = dialog.querySelector('#modal_title span');
+        const wizardStep1 = dialog.querySelector('#banmus-wizard-step1');
+        const btnSelectProyeksi = dialog.querySelector('#btn-select-proyeksi');
+        const btnSelectPasti = dialog.querySelector('#btn-select-pasti');
+        const btnBackToStep1 = dialog.querySelector('#btn-back-to-step1');
+        const formModeIndicator = dialog.querySelector('#form-mode-indicator');
+
+        const title = dialog.querySelector('#modal_title');
         const dateField = dialog.querySelector('#field_tanggal');
         const roomField = dialog.querySelector('#field_ruangan_id');
         const locationField = dialog.querySelector('#field_lokasi_lainnya');
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
+        const roomWrapper = dialog.querySelector('#banmus-room-wrapper');
+        const streamWrapper = dialog.querySelector('#banmus-stream-wrapper');
+        const unitsWrapper = dialog.querySelector('#banmus-units-wrapper');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
         const agendaTypeFields = [...dialog.querySelectorAll('input[name="jenis_agenda"]')];
         const invitationExisting = dialog.querySelector('#field_undangan_existing');
@@ -1269,9 +1317,56 @@
             locationWrapper?.classList.toggle('hidden', roomField.value !== 'other');
         };
 
+        const syncAgendaTypeFields = () => {
+            const isNonRapat = agendaTypeFields.find((r) => r.checked)?.value === 'non_rapat';
+            roomWrapper?.classList.toggle('hidden', isNonRapat);
+            if (isNonRapat) {
+                locationWrapper?.classList.add('hidden');
+            } else {
+                syncLocationDisclosure();
+            }
+            streamWrapper?.classList.toggle('hidden', isNonRapat);
+            unitsWrapper?.classList.toggle('hidden', isNonRapat);
+        };
+
         const showDialog = () => {
             syncLocationDisclosure();
-            if (!dialog.open) dialog.showModal();
+            syncAgendaTypeFields();
+            if (window.HSOverlay && typeof window.HSOverlay.open === 'function') {
+                window.HSOverlay.open(dialog);
+            } else {
+                dialog.classList.remove('hidden');
+            }
+        };
+
+        const hideDialog = () => {
+            if (window.HSOverlay && typeof window.HSOverlay.close === 'function') {
+                window.HSOverlay.close(dialog);
+            } else {
+                dialog.classList.add('hidden');
+            }
+        };
+
+        const setWizardStep = (step, mode = 'proyeksi') => {
+            if (step === 1) {
+                wizardStep1?.classList.remove('hidden');
+                form.classList.add('hidden');
+                form.classList.remove('flex');
+            } else {
+                wizardStep1?.classList.add('hidden');
+                form.classList.remove('hidden');
+                form.classList.add('flex');
+
+                if (formModeIndicator) {
+                    if (mode === 'proyeksi') {
+                        formModeIndicator.textContent = 'Mode: Rencana / Proyeksi';
+                        formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60';
+                    } else {
+                        formModeIndicator.textContent = 'Mode: Jadwal Pasti';
+                        formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60';
+                    }
+                }
+            }
         };
 
         const openCreateDialog = () => {
@@ -1279,8 +1374,24 @@
             invitationExisting?.classList.add('hidden');
             form.action = dialog.dataset.storeUrl || '';
             if (title) title.textContent = 'Tambah Item Agenda Banmus';
+            btnBackToStep1?.classList.remove('hidden');
+            setWizardStep(1);
             showDialog();
         };
+
+        btnSelectProyeksi?.addEventListener('click', () => {
+            setWizardStep(2, 'proyeksi');
+            field('field_agenda')?.focus();
+        });
+
+        btnSelectPasti?.addEventListener('click', () => {
+            setWizardStep(2, 'pasti');
+            field('field_agenda')?.focus();
+        });
+
+        btnBackToStep1?.addEventListener('click', () => {
+            setWizardStep(1);
+        });
 
         const parseUnitIds = (value) => {
             if (Array.isArray(value)) return value.map(Number);
@@ -1294,12 +1405,8 @@
             }
         };
 
-        const openEditDialog = (item) => {
+        const populateItemForm = (item) => {
             form.reset();
-            form.action = (dialog.dataset.updateUrlTemplate || '')
-                .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
-
-            if (title) title.textContent = 'Edit Item Agenda Banmus';
             field('field_agenda').value = item.agenda || '';
             field('field_periode_label').value = item.periode_label || '';
             const agendaType = ['rapat', 'non_rapat'].includes(item.jenis_agenda)
@@ -1333,8 +1440,34 @@
             unitCheckboxes.forEach((checkbox) => {
                 checkbox.checked = unitIds.includes(Number(checkbox.value));
             });
+        };
 
+        const openEditDialog = (item) => {
+            populateItemForm(item);
+            form.action = (dialog.dataset.updateUrlTemplate || '')
+                .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
+
+            if (title) title.textContent = 'Edit Item Agenda Banmus';
+            btnBackToStep1?.classList.add('hidden');
+            const mode = item.status === 'proyeksi' ? 'proyeksi' : 'pasti';
+            setWizardStep(2, mode);
             showDialog();
+        };
+
+        const openScheduleDialog = (item) => {
+            populateItemForm(item);
+            form.action = (dialog.dataset.updateUrlTemplate || '')
+                .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
+
+            if (title) title.textContent = 'Tetapkan Jadwal Agenda Banmus';
+            btnBackToStep1?.classList.add('hidden');
+            setWizardStep(2, 'pasti');
+            if (formModeIndicator) {
+                formModeIndicator.textContent = 'Penetapan Jadwal Pasti';
+                formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60';
+            }
+            showDialog();
+            setTimeout(() => dateField?.focus(), 150);
         };
 
         document.querySelectorAll('[data-banmus-item-open]').forEach((button) => {
@@ -1346,16 +1479,27 @@
                 try {
                     openEditDialog(JSON.parse(button.dataset.item || '{}'));
                 } catch {
-                    // Payload edit invalid: biarkan dialog tetap tertutup.
+                    // Payload edit invalid
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-banmus-item-schedule]').forEach((button) => {
+            button.addEventListener('click', () => {
+                try {
+                    openScheduleDialog(JSON.parse(button.dataset.item || '{}'));
+                } catch {
+                    // Payload schedule invalid
                 }
             });
         });
 
         dialog.querySelectorAll('[data-banmus-item-close]').forEach((button) => {
-            button.addEventListener('click', () => dialog.close());
+            button.addEventListener('click', hideDialog);
         });
 
         roomField.addEventListener('change', syncLocationDisclosure);
+        agendaTypeFields.forEach((radio) => radio.addEventListener('change', syncAgendaTypeFields));
     };
 
     document.addEventListener('DOMContentLoaded', initializeBanmusItemWorkspace);
