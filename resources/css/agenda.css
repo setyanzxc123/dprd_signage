@@ -184,3 +184,15 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-ping,
+  .animate-pulse,
+  .animate-spin {
+    animation: none;
+  }
+
+  details.agenda-collapse::details-content {
+    transition: none;
+  }
+}
+

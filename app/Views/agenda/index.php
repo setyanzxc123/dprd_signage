@@ -161,7 +161,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 <path d="m6 9 6 6 6-6"/>
                             </svg>
                         </button>
-                        <button v-for="unit in nonKomisiUnits" :key="unit.id" :class="navButtonClass('unit:' + unit.id)" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
+                        <button v-for="unit in nonKomisiUnits" :key="unit.id" :class="navButtonClass('unit:' + unit.id)" :title="unit.nama" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
                     </div>
 
                     <teleport to="body">
@@ -289,7 +289,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     <span v-else-if="upcomingTodayAgendas.length > 0" class="text-slate-600 dark:text-slate-300 font-semibold">
                         {{ upcomingTodayAgendas.length }} Agenda Terjadwal
                     </span>
-                    <span v-else class="text-slate-400 dark:text-slate-500">
+                    <span v-else class="text-slate-600 dark:text-slate-300">
                         Gedung Tenang
                     </span>
                 </div>
@@ -510,7 +510,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                             <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pt-3.5 pb-4 sm:px-5 sm:pt-4 sm:pb-5 space-y-3">
                                 <div v-if="item.keterangan" class="rounded-xl bg-slate-50/80 dark:bg-slate-800/40 p-3 sm:p-3.5 border border-slate-100 dark:border-slate-800/70">
-                                    <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                                    <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                                         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                         <span>Pokok Bahasan / Agenda</span>
                                     </div>
@@ -521,14 +521,14 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                     <div class="flex items-start gap-2 text-slate-600 dark:text-slate-300">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Periode Proyeksi</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Periode Proyeksi</span>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.periode_label || 'Belum ditentukan' }}</span>
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-2 text-slate-600 dark:text-slate-300">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Dokumen SK Banmus</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Dokumen SK Banmus</span>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.document_title }}</span>
                                             <span v-if="item.document_number" class="block text-[11px] text-slate-500 dark:text-slate-400">Nomor: {{ item.document_number }}</span>
                                         </div>
@@ -539,21 +539,21 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                     <div v-if="item.komisi" class="flex items-start gap-2 text-slate-600 dark:text-slate-300">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pelaksana / Komisi</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pelaksana / Komisi</span>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.komisi }}</span>
                                         </div>
                                     </div>
                                     <div v-if="item.pihak_eksternal" class="flex items-start gap-2 text-slate-600 dark:text-slate-300">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pihak Eksternal</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pihak Eksternal</span>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.pihak_eksternal }}</span>
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-2 text-slate-600 dark:text-slate-300" :class="{ 'sm:col-span-2': !item.komisi || !item.pihak_eksternal }">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Akses Kehadiran Publik</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Akses Kehadiran Publik</span>
                                             <span v-if="item.is_public !== false" class="font-semibold text-emerald-700 dark:text-emerald-400">Terbuka untuk Umum (Balkon Sidang / Akses Publik)</span>
                                             <span v-else class="font-semibold text-amber-700 dark:text-amber-400">Rapat Internal Khusus Peserta &amp; Undangan</span>
                                         </div>
@@ -598,7 +598,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                                 </span>
                                             <?php endif; ?>
 
-                                            <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.has_risalah && !item.risalah_status && !item.materi_restricted && !item.stream_restricted" class="text-xs font-medium text-slate-400 dark:text-slate-500">
+                                            <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.has_risalah && !item.risalah_status && !item.materi_restricted && !item.stream_restricted" class="text-xs font-medium text-slate-500 dark:text-slate-400">
                                                 Belum ada berkas atau tautan terlampir.
                                             </span>
                                         </template>
@@ -735,7 +735,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                             <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pt-3.5 pb-4 sm:px-5 sm:pt-4 sm:pb-5 space-y-3">
                                 <div v-if="item.keterangan" class="rounded-xl bg-slate-50/80 dark:bg-slate-800/40 p-3 sm:p-3.5 border border-slate-100 dark:border-slate-800/70">
-                                    <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                                    <div class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                                         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                         <span>Deskripsi Kegiatan / Agenda</span>
                                     </div>
@@ -746,21 +746,21 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                     <div v-if="item.komisi" class="flex items-start gap-2 text-slate-600 dark:text-slate-300">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pelaksana / Bidang</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pelaksana / Bidang</span>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.komisi }}</span>
                                         </div>
                                     </div>
                                     <div v-if="item.pihak_eksternal" class="flex items-start gap-2 text-slate-600 dark:text-slate-300">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pihak Eksternal / Tamu</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pihak Eksternal / Tamu</span>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.pihak_eksternal }}</span>
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-2 text-slate-600 dark:text-slate-300" :class="{ 'sm:col-span-2': !item.komisi || !item.pihak_eksternal }">
                                         <svg class="size-4 shrink-0 text-slate-400 dark:text-slate-500 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                         <div class="min-w-0">
-                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Akses Kehadiran Publik</span>
+                                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Akses Kehadiran Publik</span>
                                             <span v-if="item.is_public !== false" class="font-semibold text-emerald-700 dark:text-emerald-400">Terbuka untuk Umum / Liputan Media</span>
                                             <span v-else class="font-semibold text-amber-700 dark:text-amber-400">Kegiatan Khusus Peserta &amp; Tamu Terundang</span>
                                         </div>

@@ -44,7 +44,7 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
             <div class="flex items-center gap-2 shrink-0">
                 <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-3.5 py-1.5 shadow-xs">
                     <div class="flex items-center gap-2.5 px-3 py-1">
-                        <img data-weather-icon class="hidden h-7 w-7 object-contain" src="" alt="Ikon cuaca" />
+                        <img data-weather-icon class="hidden h-7 w-7 object-contain" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="Ikon cuaca" />
                         <span data-weather-fallback class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>
                         <div class="text-left">
                             <span data-weather-temperature class="block text-sm font-bold text-slate-900 dark:text-white leading-tight">--°C</span>
