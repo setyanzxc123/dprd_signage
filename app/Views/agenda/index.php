@@ -290,8 +290,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <span class="sm:hidden">Hari Ini</span>
                 <span class="hidden sm:inline">Sidang &amp; Kegiatan Hari Ini</span>
             </h2>
-            <span v-if="activeLiveAgendas.length > 0" class="text-[11px] font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">{{ activeLiveAgendas.length }} Berlangsung</span>
-            <span v-else-if="upcomingTodayAgendas.length > 0" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ upcomingTodayAgendas.length }} Terjadwal</span>
+            <span v-if="upcomingTodayAgendas.length > 0 && activeLiveAgendas.length === 0" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ upcomingTodayAgendas.length }} Terjadwal</span>
             <div class="flex items-center gap-2 ml-auto shrink-0">
                 <button
                     class="inline-flex items-center justify-center gap-x-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-700/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 text-xs font-bold shadow-xs transition shrink-0"
