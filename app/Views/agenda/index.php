@@ -322,7 +322,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
         <div v-if="todayAgendas.length > 0" class="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-xs p-2 mt-3">
             <ol class="space-y-1.5">
-                <li v-for="item in [...activeLiveAgendas, ...upcomingTodayAgendas]" :key="'today-card-' + item.key" class="rounded-lg border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs px-3 py-1.5 flex items-center justify-between gap-3" :class="item.status === 'berlangsung' ? 'border-rose-500/60 bg-rose-50 ring-1 ring-rose-500/30 dark:bg-rose-500/[0.06]' : ''">
+                <li v-for="item in [...activeLiveAgendas, ...upcomingTodayAgendas]" :key="'today-card-' + item.key" class="rounded-lg border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs px-3 py-1.5 flex items-center justify-between gap-3" :class="item.status === 'berlangsung' ? 'bg-white dark:bg-slate-900 shadow-md shadow-slate-900/10 dark:shadow-black/30 relative z-[1]' : ''">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 tabular-nums whitespace-nowrap">{{ executionTime(item) }}</span>
                         <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center shrink-0">
