@@ -241,7 +241,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </template>
                             </div>
 
-                            <p class="mt-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">Klik tanggal beragenda untuk membuka kartunya.</p>
+                            <p class="mt-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">Klik tanggal bertanda untuk membuka kartunya.</p>
                         </div>
                     </teleport>
 
@@ -329,7 +329,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     </span>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                         <span class="sm:hidden">Hari Ini</span>
-                        <span class="hidden sm:inline">Situasi Sidang &amp; Kegiatan Hari Ini</span>
+                        <span class="hidden sm:inline">Sidang &amp; Kegiatan Hari Ini</span>
                     </h3>
                 </div>
                 <div class="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -340,7 +340,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         {{ upcomingTodayAgendas.length }} Agenda Terjadwal
                     </span>
                     <span v-else class="text-slate-600 dark:text-slate-300">
-                        Gedung Tenang
+                        Tidak ada sidang berlangsung
                     </span>
                 </div>
             </div>
@@ -364,7 +364,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             <span>Tonton Live</span>
                         </a>
                         <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition">
-                            <span>Buka Detail</span>
+                            <span>Buka</span>
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
                     </div>
@@ -385,7 +385,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition">
-                            <span>Lihat di Daftar</span>
+                            <span>Buka</span>
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
                     </div>
@@ -443,7 +443,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             <span class="size-2 rounded-full bg-emerald-500 shrink-0"></span>
                             <h2 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">Agenda Rapat &amp; Sidang</h2>
                         </div>
-                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">Rapat Paripurna, Komisi, dan Badan Musyawarah (Banmus)</p>
+                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">Paripurna, Komisi, dan Banmus</p>
                     </div>
                     <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredAgendas.length }} agenda
@@ -650,7 +650,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                             <?php endif; ?>
 
                                             <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.has_risalah && !item.risalah_status && !item.materi_restricted && !item.stream_restricted" class="text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                Belum ada berkas atau tautan terlampir.
+                                                Belum ada berkas.
                                             </span>
                                         </template>
                                     </div>
@@ -704,7 +704,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             <span class="size-2 rounded-full bg-purple-500 shrink-0"></span>
                             <h2 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">Kegiatan &amp; Audiensi Publik</h2>
                         </div>
-                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">Audiensi publik, kunjungan kerja, dan agenda kedewanan</p>
+                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">Audiensi publik &amp; kunjungan kerja</p>
                     </div>
                     <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredGeneralAgendas.length }} agenda
@@ -831,7 +831,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                                         <a v-if="item.has_materi" class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 shadow-xs transition" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
                                             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-slate-500 dark:text-slate-400"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                                            <span>Bahan Acara</span>
+                                            <span>Bahan Rapat</span>
                                             <span v-if="item.materi_access_label" class="py-0.5 px-1.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">{{ item.materi_access_label }}</span>
                                         </a>
 
@@ -852,8 +852,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                             </span>
                                         <?php endif; ?>
 
-                                        <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.has_risalah && !item.risalah_status && !item.materi_restricted && !item.stream_restricted" class="text-xs font-medium text-slate-400 dark:text-slate-500">
-                                            Belum ada berkas atau tautan terlampir.
+                                        <span v-if="!item.has_undangan && !item.has_materi && !item.has_stream && !item.has_risalah && !item.risalah_status && !item.materi_restricted && !item.stream_restricted" class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            Belum ada berkas.
                                         </span>
                                     </div>
 
@@ -898,7 +898,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     <footer class="border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 py-6 text-slate-500 dark:text-slate-400">
         <div class="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 text-xs font-medium sm:px-6 lg:px-8 sm:flex-row sm:items-center sm:justify-between">
             <span>DPRD Provinsi Sulawesi Tengah &copy; <?= date('Y') ?></span>
-            <span><?= $isMember ? 'Akses anggota' : 'Akses publik' ?> · diperbarui otomatis setiap 60 detik</span>
+            <span><?= $isMember ? 'Akses anggota' : 'Akses publik' ?></span>
         </div>
     </footer>
 </div>
@@ -1687,7 +1687,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
             function statusLabel(status) {
                 return {
-                    proyeksi: 'Proyeksi',
+                    proyeksi: 'Rencana',
                     berlangsung: 'Sedang Berlangsung',
                     persiapan: 'Persiapan',
                     menunggu: 'Akan Datang',
