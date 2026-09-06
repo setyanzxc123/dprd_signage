@@ -278,10 +278,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
         <?php endif; ?>
     </header>
 
-    <div class="mx-auto w-full px-3 pt-4 sm:px-6 sm:pt-6 xl:w-[min(1480px,calc(100%-32px))] xl:px-0">
+    <div class="mx-auto w-full px-3 pt-2.5 sm:px-6 sm:pt-3.5 xl:w-[min(1480px,calc(100%-32px))] xl:px-0">
         <h1 class="sr-only">Agenda DPRD Provinsi Sulawesi Tengah</h1>
 
-        <div class="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-2.5">
+        <div class="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-2">
             <span class="relative flex h-2.5 w-2.5 items-center justify-center shrink-0">
                 <span v-if="activeLiveAgendas.length > 0" class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
                 <span class="relative inline-flex h-2 w-2 rounded-full" :class="activeLiveAgendas.length > 0 ? 'bg-rose-500' : 'bg-slate-400 dark:bg-slate-500'"></span>
@@ -319,7 +319,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             </div>
         </div>
 
-        <div v-if="todayAgendas.length > 0" class="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-xs p-2 mt-3">
+        <div v-if="todayAgendas.length > 0" class="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-xs p-2 mt-2">
             <ol class="space-y-1.5">
                 <li v-for="item in [...activeLiveAgendas, ...upcomingTodayAgendas]" :key="'today-card-' + item.key" class="rounded-lg border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs px-3 py-1.5 flex items-center justify-between gap-3" :class="item.status === 'berlangsung' ? 'bg-white dark:bg-slate-900 shadow-md shadow-slate-900/10 dark:shadow-black/30 relative z-[1]' : ''">
                     <div class="flex items-center gap-2.5 min-w-0">
