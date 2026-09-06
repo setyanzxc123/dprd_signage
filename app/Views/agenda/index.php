@@ -437,7 +437,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 name="agenda-banmus-accordion"
                                 class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
                                 :class="{
-                                    'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-500/[0.03]': item.status === 'berlangsung',
+                                    'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
                                     'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedAgendaKey === item.key
                                 }"
                                 :open="expandedAgendaKey === item.key"
@@ -623,7 +623,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             name="agenda-general-accordion"
                             class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
                             :class="{
-                                'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-500/[0.03]': item.status === 'berlangsung',
+                                'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
                                 'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedGeneralKey === item.key
                             }"
                             :open="expandedGeneralKey === item.key"
