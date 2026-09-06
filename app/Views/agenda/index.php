@@ -439,7 +439,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 class="group agenda-collapse rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600"
                                 :class="{
                                     'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
-                                    'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedAgendaKey === item.key
+                                    'outline outline-2 outline-emerald-600 dark:outline-emerald-400 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 relative z-10': expandedAgendaKey === item.key
                                 }"
                                 :open="expandedAgendaKey === item.key"
                                 @toggle="handleAgendaToggle($event, item.key)"
@@ -489,7 +489,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </span>
                             </summary>
 
-                            <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pt-3 pb-4 sm:px-5 sm:pt-3.5 sm:pb-5 space-y-2.5">
+                            <div class="min-w-0 rounded-b-2xl border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/20 px-4 pt-3 pb-4 sm:px-5 sm:pt-3.5 sm:pb-5 space-y-2.5">
                                 <div v-if="item.keterangan">
                                     <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Pokok bahasan</p>
                                     <p class="mt-0.5 text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line">{{ item.keterangan }}</p>
@@ -625,7 +625,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             class="group agenda-collapse rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-600"
                             :class="{
                                 'border-rose-500/60 ring-1 ring-rose-500/30 bg-rose-50 dark:bg-rose-500/[0.06]': item.status === 'berlangsung',
-                                'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedGeneralKey === item.key
+                                'outline outline-2 outline-emerald-600 dark:outline-emerald-400 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 relative z-10': expandedGeneralKey === item.key
                             }"
                             :open="expandedGeneralKey === item.key"
                             @toggle="handleGeneralToggle($event, item.key)"
@@ -664,7 +664,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </span>
                             </summary>
 
-                            <div class="min-w-0 border-t border-slate-100 dark:border-slate-800 px-4 pt-3 pb-4 sm:px-5 sm:pt-3.5 sm:pb-5 space-y-2.5">
+                            <div class="min-w-0 rounded-b-2xl border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/20 px-4 pt-3 pb-4 sm:px-5 sm:pt-3.5 sm:pb-5 space-y-2.5">
                                 <div v-if="item.keterangan">
                                     <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Deskripsi</p>
                                     <p class="mt-0.5 text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-line">{{ item.keterangan }}</p>

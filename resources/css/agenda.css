@@ -104,10 +104,6 @@
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
-  details.agenda-collapse[open] {
-    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.05);
-  }
-
   details.agenda-collapse > summary {
     list-style: none;
     position: relative;
