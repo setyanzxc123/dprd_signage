@@ -210,11 +210,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         </svg>
                     </button>
                 </div>
-
-                <a class="inline-flex items-center justify-center gap-x-2 py-2 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 shadow-xs transition shrink-0" href="<?= base_url('agenda/jadwal-banmus') ?>">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/></svg>
-                    Proyeksi Banmus
-                </a>
             </div>
         </nav>
 
@@ -241,7 +236,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <div>
-                    <h1 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight">Jadwal &amp; Agenda Kegiatan</h1>
+                    <h1 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight">Agenda DPRD</h1>
                     <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                         Diperbarui {{ lastRefreshedTime ? lastRefreshedTime + ' WITA' : 'otomatis setiap 60 detik' }}
                     </p>
@@ -254,7 +249,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         class="py-2 px-3 block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs"
                         v-model="periodMode"
                         @change="changePeriod"
-                        aria-label="Filter periode agenda rapat dan Filter periode jadwal umum"
+                        aria-label="Filter periode agenda"
                     >
                         <option value="month">Bulan ini</option>
                         <option value="quarter">Triwulan ini</option>
@@ -369,7 +364,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 :class="mobileTabClass('rapat')"
                 class="flex-1 py-2 px-3 rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5"
             >
-                <span>Agenda Rapat</span>
+                <span>Rapat &amp; Sidang</span>
                 <span class="py-0.5 px-1.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">{{ filteredAgendas.length }}</span>
             </button>
             <button
@@ -380,7 +375,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 :class="mobileTabClass('umum')"
                 class="flex-1 py-2 px-3 rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5"
             >
-                <span>Jadwal Umum</span>
+                <span>Kegiatan &amp; Audiensi</span>
                 <span class="py-0.5 px-1.5 rounded-full text-[10px] font-extrabold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">{{ filteredGeneralAgendas.length }}</span>
             </button>
         </div>
@@ -423,25 +418,43 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     <div>
                         <svg class="mx-auto text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/></svg>
                         <h2 class="mt-4 text-base font-bold text-slate-900 dark:text-white">Belum ada agenda rapat</h2>
-                        <p class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Tidak ada jadwal rapat untuk kelompok dan periode yang dipilih.</p>
+                        <p class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Tidak ada jadwal atau rencana rapat untuk kelompok peserta dan periode yang dipilih.</p>
                     </div>
                 </div>
 
                 <div v-else class="min-w-0 p-3 sm:p-6">
                     <div class="grid gap-2.5">
-                        <details
-                            v-for="item in paginatedAgendas"
-                            :key="item.key"
-                            :id="'agenda-card-' + item.key"
-                            name="agenda-banmus-accordion"
-                            class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
-                            :class="{
-                                'border-emerald-500/60 ring-1 ring-emerald-500/30 bg-emerald-500/[0.03]': item.status === 'berlangsung',
-                                'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedAgendaKey === item.key
-                            }"
-                            :open="expandedAgendaKey === item.key"
-                            @toggle="handleAgendaToggle($event, item.key)"
-                        >
+                        <template v-for="row in agendaShelf" :key="row.key">
+                            <div v-if="row.kind === 'scheduled-header'" class="flex items-baseline gap-2 px-1 pt-1">
+                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Jadwal Pasti</h3>
+                                <span class="text-[11px] font-medium text-slate-400 dark:text-slate-500">tanggal &amp; ruangan sudah ditetapkan</span>
+                            </div>
+                            <p v-else-if="row.kind === 'scheduled-empty'" class="flex items-center gap-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 px-3.5 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <span>Belum ada jadwal rapat bertanggal untuk periode ini.</span>
+                            </p>
+                            <div v-else-if="row.kind === 'plan-header'" class="px-1 pt-1">
+                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400">Rencana SK Banmus</h3>
+                                <p class="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">Rencana resmi hasil SK Badan Musyawarah; tanggal dan ruangan menyusul ditetapkan.</p>
+                            </div>
+                            <a v-else-if="row.kind === 'plan-more'" class="justify-self-start inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 shadow-xs transition" href="<?= base_url('agenda/jadwal-banmus') ?>">
+                                <span>Lihat semua rencana ({{ row.count }})</span>
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                            </a>
+                            <template v-else>
+                            <details
+                                v-for="item in [row.item]"
+                                :key="item.key"
+                                :id="'agenda-card-' + item.key"
+                                name="agenda-banmus-accordion"
+                                class="group agenda-collapse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700"
+                                :class="{
+                                    'border-emerald-500/60 ring-1 ring-emerald-500/30 bg-emerald-500/[0.03]': item.status === 'berlangsung',
+                                    'outline outline-2 outline-slate-800 dark:outline-slate-200': expandedAgendaKey === item.key
+                                }"
+                                :open="expandedAgendaKey === item.key"
+                                @toggle="handleAgendaToggle($event, item.key)"
+                            >
                             <summary class="grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-3 overflow-hidden py-3.5 px-3.5 pr-10 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:gap-3.5 sm:px-4 sm:pr-12 cursor-pointer select-none">
                                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-center sm:h-12 sm:w-12">
                                     <span v-if="item.tanggal">
@@ -600,6 +613,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 </div>
                             </div>
                         </details>
+                        </template>
+                    </template>
                     </div>
 
                     <div class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -634,7 +649,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     <div class="min-w-0">
                         <div class="flex items-center gap-2">
                             <span class="size-2 rounded-full bg-purple-500 shrink-0"></span>
-                            <h2 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">Jadwal Kegiatan &amp; Audiensi</h2>
+                            <h2 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">Kegiatan &amp; Audiensi Publik</h2>
                         </div>
                         <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">Audiensi publik, kunjungan kerja, dan agenda kedewanan</p>
                     </div>
@@ -650,7 +665,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <div v-else-if="loadError" class="p-4 sm:p-6">
                     <div role="alert" class="flex items-center gap-3 p-4 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 text-sm">
                         <div class="flex-1">
-                            <p class="font-semibold">Jadwal umum gagal dimuat.</p>
+                            <p class="font-semibold">Kegiatan &amp; audiensi gagal dimuat.</p>
                             <button class="mt-1 text-xs font-bold underline hover:no-underline" type="button" @click="loadAgenda">Coba lagi</button>
                         </div>
                     </div>
@@ -659,8 +674,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <div v-else-if="filteredGeneralAgendas.length === 0" class="grid min-h-80 place-items-center p-8 text-center">
                     <div>
                         <svg class="mx-auto text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/></svg>
-                        <h2 class="mt-4 text-base font-bold text-slate-900 dark:text-white">Belum ada jadwal umum</h2>
-                        <p class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Tidak ada jadwal umum untuk kelompok dan periode yang dipilih.</p>
+                        <h2 class="mt-4 text-base font-bold text-slate-900 dark:text-white">Belum ada kegiatan &amp; audiensi</h2>
+                        <p class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Tidak ada kegiatan untuk kelompok peserta dan periode yang dipilih.</p>
                     </div>
                 </div>
 
@@ -690,9 +705,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                 <span class="min-w-0">
                                     <span class="line-clamp-2 text-sm font-bold leading-snug text-slate-900 dark:text-white sm:text-base [text-wrap:pretty]">{{ item.judul }}</span>
                                     <span class="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
-                                        <span class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
-                                            Jadwal Umum
-                                        </span>
                                         <?php if ($isMember): ?>
                                             <span v-if="!item.is_public" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Internal DPRD</span>
                                             <span v-if="item.is_participant" class="inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">Anda Peserta</span>
@@ -805,8 +817,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Menampilkan {{ generalPageStart }}–{{ generalPageEnd }} dari {{ orderedGeneralAgendas.length }}</span>
                             <label class="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                                <span class="sr-only">Jumlah jadwal umum per halaman</span>
-                                <select class="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs" v-model.number="generalPageSize" @change="changeGeneralPageSize" aria-label="Jumlah jadwal umum per halaman">
+                                <span class="sr-only">Jumlah kegiatan per halaman</span>
+                                <select class="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs" v-model.number="generalPageSize" @change="changeGeneralPageSize" aria-label="Jumlah kegiatan per halaman">
                                     <option :value="10">10</option>
                                     <option :value="25">25</option>
                                     <option :value="50">50</option>
@@ -1079,6 +1091,28 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             const paginatedAgendas = computed(() => {
                 const offset = (currentPage.value - 1) * pageSize.value;
                 return orderedAgendas.value.slice(offset, offset + pageSize.value);
+            });
+            const agendaShelf = computed(() => {
+                const scheduled = paginatedAgendas.value.filter((item) => item.status !== 'proyeksi');
+                const projections = paginatedAgendas.value.filter((item) => item.status === 'proyeksi');
+                const projectionTotal = orderedAgendas.value.filter((item) => item.status === 'proyeksi').length;
+                const scheduledTotal = orderedAgendas.value.length - projectionTotal;
+                const rows = [];
+                if (scheduled.length > 0) {
+                    rows.push({ kind: 'scheduled-header', key: 'shelf:scheduled' });
+                    scheduled.forEach((item) => rows.push({ kind: 'item', key: item.key, item }));
+                } else if (scheduledTotal === 0 && projectionTotal > 0) {
+                    rows.push({ kind: 'scheduled-empty', key: 'shelf:scheduled-empty' });
+                }
+                if (projections.length > 0) {
+                    rows.push({ kind: 'plan-header', key: 'shelf:plan' });
+                    const visibleProjections = projections.slice(0, 3);
+                    visibleProjections.forEach((item) => rows.push({ kind: 'item', key: item.key, item }));
+                    if (projectionTotal > visibleProjections.length) {
+                        rows.push({ kind: 'plan-more', key: 'shelf:plan-more', count: projectionTotal });
+                    }
+                }
+                return rows;
             });
             const generalTotalPages = computed(() =>
                 Math.max(1, Math.ceil(orderedGeneralAgendas.value.length / generalPageSize.value)));
@@ -1631,6 +1665,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 nearestUpcomingAgenda,
                 focusAgenda,
                 paginatedAgendas,
+                agendaShelf,
                 paginatedGeneralAgendas,
                 totalPages,
                 generalTotalPages,
