@@ -691,8 +691,8 @@
             }, intervalMs);
         };
 
-        const activeTabClasses = ['bg-white', 'text-gray-800', 'shadow-xs', 'dark:bg-neutral-800', 'dark:text-neutral-200'];
-        const inactiveTabClasses = ['text-gray-500', 'hover:text-gray-800', 'dark:text-neutral-400', 'dark:hover:text-neutral-200'];
+        const activeTabClasses = ['bg-white', 'text-slate-800', 'shadow-xs', 'dark:bg-slate-900', 'dark:text-slate-200'];
+        const inactiveTabClasses = ['text-slate-500', 'hover:text-slate-800', 'dark:text-slate-400', 'dark:hover:text-slate-200'];
 
         window.switchWaTab = (tab) => {
             const tabQr = document.getElementById('tab-btn-qr');
@@ -781,11 +781,11 @@
                     <i data-lucide="check-circle-2" class="size-5 shrink-0"></i>
                     <span>WhatsApp Gateway Terhubung</span>
                 </div>
-                <p class="text-xs text-gray-600 dark:text-neutral-400 mt-1">
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
                     No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
                 </p>
                 <div class="flex flex-wrap gap-2 pt-2">
-                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-900/20" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
                         <i data-lucide="log-out" class="size-4"></i>
                         <span>Putuskan Perangkat</span>
                     </button>
@@ -803,7 +803,7 @@
                     <i data-lucide="alert-triangle" class="size-5 shrink-0"></i>
                     <span>WhatsApp Belum Terhubung</span>
                 </div>
-                <p class="text-xs text-gray-600 dark:text-neutral-400 mt-1">
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
                     ${errorMsg}
                 </p>
                 <div class="pt-2">
