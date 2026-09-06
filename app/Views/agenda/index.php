@@ -109,19 +109,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             </div>
         </div>
 
-        <div class="grid min-w-0 grid-cols-3 border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 xl:hidden divide-x divide-slate-200/80 dark:divide-slate-800/80 py-2">
-            <div class="min-w-0 px-2 text-center">
-                <span class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Cuaca · BMKG</span>
-                <span class="mt-0.5 block truncate text-xs font-black text-slate-800 dark:text-slate-200">{{ weatherLabel }}</span>
-            </div>
-            <div class="min-w-0 px-2 text-center">
-                <span class="block truncate text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
-                <span class="mt-0.5 block truncate text-xs font-black text-slate-800 dark:text-slate-200">{{ headerDate }}</span>
-            </div>
-            <div class="min-w-0 px-2 text-center">
-                <span class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Jam</span>
-                <span class="mt-0.5 block truncate text-xs font-black tabular-nums text-slate-900 dark:text-white">{{ headerTime }} WITA</span>
-            </div>
+        <div class="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 xl:hidden px-3 py-1.5 text-center">
+            <span class="block truncate text-xs font-bold text-slate-800 dark:text-slate-200 tabular-nums">{{ weatherLabel }} · {{ headerShortDate }} · {{ headerTime }} WITA</span>
         </div>
 
         <nav class="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md" aria-label="Navigasi agenda">
@@ -279,7 +268,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <span class="relative inline-flex h-2 w-2 rounded-full" :class="activeLiveAgendas.length > 0 ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-500'"></span>
                     </span>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        Situasi Sidang &amp; Kegiatan Hari Ini
+                        <span class="sm:hidden">Hari Ini</span>
+                        <span class="hidden sm:inline">Situasi Sidang &amp; Kegiatan Hari Ini</span>
                     </h3>
                 </div>
                 <div class="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -362,7 +352,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 :aria-selected="activeMobileTab === 'rapat'"
                 @click="setMobileTab('rapat')"
                 :class="mobileTabClass('rapat')"
-                class="flex-1 py-2 px-3 rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5"
+                class="flex-1 py-2.5 px-3 rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5"
             >
                 <span>Rapat &amp; Sidang</span>
                 <span class="py-0.5 px-1.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">{{ filteredAgendas.length }}</span>
@@ -373,7 +363,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 :aria-selected="activeMobileTab === 'umum'"
                 @click="setMobileTab('umum')"
                 :class="mobileTabClass('umum')"
-                class="flex-1 py-2 px-3 rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5"
+                class="flex-1 py-2.5 px-3 rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5"
             >
                 <span>Kegiatan &amp; Audiensi</span>
                 <span class="py-0.5 px-1.5 rounded-full text-[10px] font-extrabold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">{{ filteredGeneralAgendas.length }}</span>
@@ -633,9 +623,9 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             </label>
                         </div>
                         <div class="inline-flex items-center gap-x-1">
-                            <button class="inline-flex items-center gap-x-1 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1">Sebelumnya</button>
+                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1">Sebelumnya</button>
                             <span class="inline-flex items-center justify-center size-8 rounded-lg bg-emerald-600 text-xs font-black text-white shadow-xs">{{ currentPage }}</span>
-                            <button class="inline-flex items-center gap-x-1 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages">Berikutnya</button>
+                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages">Berikutnya</button>
                         </div>
                     </div>
                 </div>
@@ -831,9 +821,9 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             </label>
                         </div>
                         <div class="inline-flex items-center gap-x-1">
-                            <button class="inline-flex items-center gap-x-1 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToGeneralPage(currentGeneralPage - 1)" :disabled="currentGeneralPage <= 1">Sebelumnya</button>
+                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToGeneralPage(currentGeneralPage - 1)" :disabled="currentGeneralPage <= 1">Sebelumnya</button>
                             <span class="inline-flex items-center justify-center size-8 rounded-lg bg-emerald-600 text-xs font-black text-white shadow-xs">{{ currentGeneralPage }}</span>
-                            <button class="inline-flex items-center gap-x-1 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToGeneralPage(currentGeneralPage + 1)" :disabled="currentGeneralPage >= generalTotalPages">Berikutnya</button>
+                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToGeneralPage(currentGeneralPage + 1)" :disabled="currentGeneralPage >= generalTotalPages">Berikutnya</button>
                         </div>
                     </div>
                 </div>
@@ -974,6 +964,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',
+            }).format(now.value));
+            const headerShortDate = computed(() => new Intl.DateTimeFormat('id-ID', {
+                timeZone: 'Asia/Makassar',
+                day: 'numeric',
+                month: 'short',
             }).format(now.value));
             const headerTime = computed(() => now.value.toLocaleTimeString('id-ID', {
                 timeZone: 'Asia/Makassar',
@@ -1493,7 +1488,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             }
 
             function navButtonClass(value) {
-                const base = 'inline-flex items-center gap-x-1.5 py-1.5 px-3.5 whitespace-nowrap rounded-full text-xs font-bold transition-all duration-150 shrink-0';
+                const base = 'inline-flex items-center gap-x-1.5 min-h-[40px] sm:min-h-0 py-2 sm:py-1.5 px-3.5 whitespace-nowrap rounded-full text-xs font-bold transition-all duration-150 shrink-0';
                 return activeNavigation.value === value
                     ? `${base} bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-500/30`
                     : `${base} border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300`;
@@ -1636,6 +1631,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 weatherLocation,
                 headerDay,
                 headerDate,
+                headerShortDate,
                 headerTime,
                 activeNavigation,
                 memberScope,
