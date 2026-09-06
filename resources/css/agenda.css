@@ -45,6 +45,45 @@
     display: none;
   }
 
+  .agenda-header-motif {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 11.5rem;
+    right: 0;
+    z-index: -1;
+    pointer-events: none;
+    mask-image: linear-gradient(to right, transparent, black 6rem, black calc(100% - 6rem), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 6rem, black calc(100% - 6rem), transparent);
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+  }
+
+  .agenda-header-motif::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgb(16 185 129 / 0.2);
+    mask-image: url('../images/motif_batik_palu_band.png');
+    mask-repeat: repeat-x;
+    mask-size: auto 140%;
+    mask-position: left bottom;
+    -webkit-mask-image: url('../images/motif_batik_palu_band.png');
+    -webkit-mask-repeat: repeat-x;
+    -webkit-mask-size: auto 140%;
+    -webkit-mask-position: left bottom;
+  }
+
+  @media (min-width: 640px) {
+    .agenda-header-motif {
+      left: 16rem;
+    }
+  }
+
+  .dark .agenda-header-motif::before {
+    background-color: rgb(52 211 153 / 0.15);
+  }
+
   .agenda-scroll-mask,
   .agenda-scroll-mask-both {
     mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
