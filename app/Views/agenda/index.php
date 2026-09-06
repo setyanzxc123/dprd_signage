@@ -382,11 +382,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             <div class="p-0">
                 <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
                     <div class="min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="size-2 rounded-full bg-emerald-500 shrink-0"></span>
-                            <h2 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">Agenda Rapat &amp; Sidang</h2>
-                        </div>
-                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">Paripurna, Komisi, dan Banmus</p>
+                        <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Agenda Rapat &amp; Sidang</h2>
+                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 truncate">Paripurna, Komisi, dan Banmus</p>
                     </div>
                     <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredAgendas.length }} agenda
@@ -418,16 +415,15 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <div v-else class="min-w-0 p-3 sm:p-6">
                     <div class="grid gap-2.5">
                         <template v-for="row in agendaShelf" :key="row.key">
-                            <div v-if="row.kind === 'scheduled-header'" class="flex items-baseline gap-2 px-1 pt-1">
-                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Jadwal Pasti</h3>
+                            <div v-if="row.kind === 'scheduled-header'" class="flex items-baseline px-1 pt-1">
+                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400" title="Jadwal dengan tanggal dan ruangan yang sudah ditetapkan">Jadwal Pasti</h3>
                             </div>
                             <p v-else-if="row.kind === 'scheduled-empty'" class="flex items-center gap-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 px-3.5 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">
                                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                 <span>Belum ada jadwal rapat bertanggal untuk periode ini.</span>
                             </p>
                             <div v-else-if="row.kind === 'plan-header'" class="px-1 pt-1">
-                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400">Rencana SK Banmus</h3>
-                                <p class="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">Tanggal &amp; ruangan menyusul.</p>
+                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400" title="Rencana resmi hasil SK Badan Musyawarah; tanggal dan ruangan menyusul ditetapkan">Rencana SK Banmus</h3>
                             </div>
                             <a v-else-if="row.kind === 'plan-more'" class="justify-self-start inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 shadow-xs transition" href="<?= base_url('agenda/jadwal-banmus') ?>">
                                 <span>Lihat semua rencana ({{ row.count }})</span>
@@ -589,11 +585,8 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             <div class="p-0">
                 <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
                     <div class="min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="size-2 rounded-full bg-purple-500 shrink-0"></span>
-                            <h2 class="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white truncate">Kegiatan &amp; Audiensi Publik</h2>
-                        </div>
-                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">Audiensi publik &amp; kunjungan kerja</p>
+                        <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Kegiatan &amp; Audiensi Publik</h2>
+                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 truncate">Audiensi publik &amp; kunjungan kerja</p>
                     </div>
                     <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredGeneralAgendas.length }} agenda
