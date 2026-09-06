@@ -28,7 +28,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
         </div>
     <?php endif; ?>
 
-    <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden min-w-0 max-w-full">
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-w-0 max-w-full">
         <div class="p-4 sm:p-6 space-y-5">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <i data-lucide="file-text" class="size-5 text-emerald-500"></i>

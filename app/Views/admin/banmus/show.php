@@ -32,7 +32,7 @@ $scheduledCount = count($items) - $projectionCount;
     </button>
 </div>
 
-<div class="mb-4 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex flex-wrap items-center justify-between gap-3">
+<div class="mb-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-wrap items-center justify-between gap-3">
     <div class="flex flex-wrap items-center gap-2">
         <span class="inline-flex items-center py-1 px-2.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
             Semester <?= (int) $document['semester'] ?> &bull; <?= (int) $document['tahun'] ?>
@@ -67,7 +67,7 @@ $scheduledCount = count($items) - $projectionCount;
 </div>
 
 <!-- DataTable Item Agenda Banmus -->
-<section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden min-w-0">
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-w-0">
     <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-4 py-3 sm:px-5">
         <div class="flex min-w-0 items-center gap-3">
             <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">

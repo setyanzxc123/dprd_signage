@@ -12,7 +12,7 @@
     </a>
 </div>
 
-<section class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
+<section class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
     <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
         <div class="flex items-center gap-2.5">
             <div class="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">

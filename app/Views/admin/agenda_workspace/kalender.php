@@ -44,22 +44,22 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
 
 <!-- Stats Strip -->
 <section class="mb-4 grid grid-cols-3 gap-2.5 sm:gap-4">
-    <div class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
+    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
         <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Ditampilkan</span>
         <div class="mt-1 text-xl sm:text-2xl font-black text-slate-900 dark:text-white"><?= number_format($counts['total'], 0, ',', '.') ?></div>
     </div>
-    <div class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
+    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
         <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Banmus</span>
         <div class="mt-1 text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400"><?= number_format($counts['banmus'], 0, ',', '.') ?></div>
     </div>
-    <div class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
+    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
         <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Jadwal Umum</span>
         <div class="mt-1 text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400"><?= number_format($counts['jadwal_umum'], 0, ',', '.') ?></div>
     </div>
 </section>
 
 <!-- Collapsible Filter Workspace -->
-<section class="mb-4 bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
+<section class="mb-4 bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
     <div class="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
             <i data-lucide="sliders-horizontal" class="size-4 text-emerald-500"></i>
@@ -158,7 +158,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
 </section>
 
 <!-- Main Workspace Card -->
-<section class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
+<section class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
     <div class="flex flex-col gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-2">
             <i data-lucide="<?= $view_mode === 'list' ? 'list' : 'calendar-range' ?>" class="size-4 text-emerald-500"></i>

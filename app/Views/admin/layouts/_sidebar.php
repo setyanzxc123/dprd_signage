@@ -12,16 +12,16 @@ $isActivePath = static function (string $path) use ($currentPath): bool {
 $masterActive = $isActivePath('/admin/anggota') || $isActivePath('/admin/unit-rapat') || $isActivePath('/admin/ruangan');
 $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/jadwal-umum') || $isActivePath('/admin/kalender') || $isActivePath('/admin/notulen');
 ?>
-<aside id="application-sidebar" class="hs-overlay [--auto-close:lg] hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform hidden fixed top-0 start-0 bottom-0 z-[60] w-64 bg-white border-e border-slate-200/80 overflow-y-auto lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 dark:bg-slate-900 dark:border-slate-800" tabindex="-1" aria-label="Navigasi Utama">
+<aside id="application-sidebar" class="hs-overlay [--auto-close:lg] hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform hidden fixed top-0 start-0 bottom-0 z-[60] w-64 bg-white border-e border-slate-200 overflow-y-auto lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 dark:bg-slate-900 dark:border-slate-800" tabindex="-1" aria-label="Navigasi Utama">
     <div class="relative flex flex-col h-full max-h-full">
-        <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+        <div class="h-16 px-4 sm:px-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shrink-0">
             <a href="<?= base_url('admin/dashboard') ?>" class="flex items-center gap-3 min-w-0" aria-label="Dashboard Admin">
-                <div class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-emerald-500/40 bg-white shadow-xs p-0.5">
+                <div class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-xs p-0.5">
                     <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" alt="Logo DPRD" class="h-full w-full rounded-full object-contain" />
                 </div>
                 <div class="min-w-0 leading-tight">
-                    <strong class="block truncate text-xs font-black uppercase text-slate-900 dark:text-white tracking-wide">DPRD Sulteng</strong>
-                    <span class="block truncate text-[11px] font-medium text-slate-400 dark:text-slate-500">Panel Administrasi</span>
+                    <strong class="block text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">E-Agenda</strong>
+                    <span class="block truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">DPRD Sulawesi Tengah</span>
                 </div>
             </a>
             <button type="button" class="lg:hidden size-8 inline-flex justify-center items-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 transition" data-hs-overlay="#application-sidebar" aria-label="Tutup sidebar">

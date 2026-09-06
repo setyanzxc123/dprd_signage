@@ -10,7 +10,7 @@
 </div>
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
-    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
         <div>
             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Agenda Hari Ini</p>
             <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white"><?= $stats['rapat_hari_ini'] ?></p>
@@ -19,7 +19,7 @@
             <i data-lucide="calendar-check" class="size-5"></i>
         </div>
     </div>
-    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
         <div>
             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Agenda Bulan Ini</p>
             <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white"><?= $stats['agenda_bulan_ini'] ?></p>
@@ -28,7 +28,7 @@
             <i data-lucide="calendar-range" class="size-5"></i>
         </div>
     </div>
-    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
         <div>
             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Berlangsung</p>
             <p class="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400"><?= $stats['berlangsung'] ?></p>
@@ -37,7 +37,7 @@
             <i data-lucide="radio" class="size-5"></i>
         </div>
     </div>
-    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs flex items-center justify-between">
+    <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
         <div>
             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Mendatang</p>
             <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white"><?= $stats['mendatang'] ?></p>
@@ -174,7 +174,7 @@
                         <?php foreach ($day['meetings'] as $m): ?>
                             <?php $badge = status_badge($m['status']); ?>
                             <li>
-                                <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item group block p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs transition mb-2">
+                                <a href="<?= esc($m['detail_url']) ?>" class="dashboard-agenda-item group block p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs transition mb-2">
                                     <div class="agenda-row-head flex items-center justify-between gap-2 mb-1.5">
                                         <div class="agenda-time-block text-xs font-bold text-slate-700 dark:text-slate-300">
                                             <?php if ($m['start'] === null): ?>

@@ -46,13 +46,13 @@ $flashError = session()->getFlashdata('error');
     <?= $this->renderSection('styles') ?>
 </head>
 
-<body class="min-h-screen overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
+<body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
 
     <?= $this->include('admin/layouts/_sidebar') ?>
 
     <?= $this->include('admin/layouts/_topbar') ?>
 
-    <div class="w-full lg:ps-64 min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div class="w-full lg:ps-64 min-h-screen bg-slate-100 dark:bg-slate-950">
         <main id="content" class="p-4 sm:p-6 lg:p-8 space-y-6">
 
             <?php if ($flashSuccess): ?>

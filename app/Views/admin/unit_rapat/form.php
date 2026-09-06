@@ -30,7 +30,7 @@
 
     <div class="space-y-5 participant-group-grid">
         <!-- Informasi Kelompok -->
-        <div class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+        <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-4">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <i data-lucide="users-round" class="size-4 text-emerald-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Informasi Kelompok</h2>
@@ -62,7 +62,7 @@
         </div>
 
         <!-- Anggota Kelompok (Transfer List Panels) -->
-        <div class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-4">
+        <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-4">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2">
                     <i data-lucide="contact-round" class="size-4 text-emerald-500"></i>

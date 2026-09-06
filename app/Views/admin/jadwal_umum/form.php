@@ -29,7 +29,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         </div>
     <?php endif; ?>
 
-    <div class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-6 max-w-5xl">
+    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-6 max-w-5xl">
         <!-- Informasi Agenda Dasar -->
         <div class="space-y-4">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">

@@ -18,7 +18,7 @@
     <?= csrf_field() ?>
     <input type="hidden" name="media_upload_key" id="media_upload_key" value="">
 
-    <section class="bg-white border border-slate-200 rounded-xl shadow-xs dark:bg-slate-900 dark:border-slate-800 min-w-0 max-w-full">
+    <section class="bg-white border border-slate-200 rounded-xl shadow-sm dark:bg-slate-900 dark:border-slate-800 min-w-0 max-w-full">
         <div class="p-4 sm:p-5 min-w-0 space-y-5">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <i data-lucide="tv" class="size-5 text-emerald-600 dark:text-emerald-400"></i>
@@ -110,7 +110,7 @@
         </div>
     </section>
 
-    <section class="bg-white border border-slate-200 rounded-xl shadow-xs dark:bg-slate-900 dark:border-slate-800 min-w-0 max-w-full" id="wa-integration-card"
+    <section class="bg-white border border-slate-200 rounded-xl shadow-sm dark:bg-slate-900 dark:border-slate-800 min-w-0 max-w-full" id="wa-integration-card"
         data-connected="<?= ! empty($whatsapp['connected']) ? '1' : '0' ?>">
         <div class="p-4 sm:p-5 min-w-0 space-y-5">
             <div class="flex flex-wrap items-center justify-between gap-3">

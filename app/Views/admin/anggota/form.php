@@ -31,7 +31,7 @@ if (str_starts_with($whatsAppValue, '62')) {
         </div>
     <?php endif; ?>
 
-    <div class="bg-white border border-slate-200 shadow-xs rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-6 max-w-4xl">
+    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-6 max-w-4xl">
         <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <i data-lucide="user-round" class="size-4 text-emerald-500"></i>
             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Data Anggota</h2>
