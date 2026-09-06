@@ -174,7 +174,8 @@ body {
     height: 116%;
     object-fit: cover;
     filter: blur(24px) saturate(1.15) brightness(0.62);
-    transform: scale(1.04);
+    transform: scale(1.04) translate3d(0, 0, 0);
+    will-change: transform;
     opacity: 0.82;
     pointer-events: none;
 }
@@ -247,16 +248,19 @@ body {
     transform: translateX(-50%);
 }
 
-#qr-display {
+#qr-display,
+.qr-panel .qr-box {
     opacity: 1;
     transition: opacity 0.3s ease;
 }
 
-#qr-display.qr-fading {
+#qr-display.qr-fading,
+.qr-panel .qr-box.qr-fading {
     opacity: 0;
 }
 
-#qr-display canvas {
+#qr-display canvas,
+.qr-panel .qr-box canvas {
     display: block;
     border-radius: 0.5rem;
 }
@@ -294,16 +298,17 @@ body {
     font-weight: 500;
     letter-spacing: 0.02em;
     white-space: nowrap;
+    will-change: transform;
     animation: ticker-scroll 32s linear infinite;
 }
 
 @keyframes ticker-scroll {
     0% {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
     }
 
     100% {
-        transform: translateX(-100%);
+        transform: translate3d(-100%, 0, 0);
     }
 }
 

@@ -83,9 +83,23 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                             <span class="block font-mono text-[clamp(30px,2.4vw,48px)] font-black tabular-nums leading-none text-slate-900 dark:text-white">
                                 {{ clock }}
                             </span>
-                            <span class="block text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mt-0.5">
-                                WITA
-                            </span>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="block text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                    WITA
+                                </span>
+                                <span v-if="connectionStatus === 'offline'"
+                                    class="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-1.5 py-0.5 border border-rose-500/30 text-[clamp(9px,0.55vw,11px)] font-semibold text-rose-600 dark:text-rose-400"
+                                    title="Perangkat sedang offline">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                    OFFLINE
+                                </span>
+                                <span v-else-if="connectionStatus === 'degraded'"
+                                    class="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 border border-amber-500/30 text-[clamp(9px,0.55vw,11px)] font-semibold text-amber-600 dark:text-amber-400"
+                                    title="Sinkronisasi data tertunda / menggunakan cache">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                    CACHE
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -157,7 +171,10 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                         </span>
                         Tonton Siaran
                     </div>
-                    <div id="qr-display" :class="{ 'qr-fading': qrFading }"></div>
+                    <div class="relative w-[110px] h-[110px] flex items-center justify-center">
+                        <div id="qr-display-berkas" class="qr-box" v-show="activeQR === 'berkas'" :class="{ 'qr-fading': qrFading }"></div>
+                        <div id="qr-display-live" class="qr-box" v-show="activeQR === 'live'" :class="{ 'qr-fading': qrFading }"></div>
+                    </div>
                     <div v-if="qrBerkas && qrLive" class="flex gap-1.5 mt-0.5">
                         <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'berkas' ? 'bg-primary' : 'bg-base-300']"></span>
                         <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'live' ? 'bg-primary' : 'bg-base-300']"></span>
@@ -386,6 +403,26 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 const MEDIA_COMMIT_STABLE_MS = 10000;
                 const RECONNECT_RETRY_DELAYS_MS = [5000, 15000, 30000, 60000, 120000];
 
+                let cachedCanvasWidth = 0;
+                let cachedCanvasHeight = 0;
+
+                function updateCanvasBounds() {
+                    const canvas = mediaBackdrop.value;
+                    if (!canvas) {
+                        cachedCanvasWidth = 0;
+                        cachedCanvasHeight = 0;
+                        return;
+                    }
+                    const bounds = canvas.getBoundingClientRect();
+                    if (bounds.width <= 0 || bounds.height <= 0) return;
+                    cachedCanvasWidth = Math.max(1, Math.min(720, Math.round(bounds.width)));
+                    cachedCanvasHeight = Math.max(1, Math.round(cachedCanvasWidth * bounds.height / bounds.width));
+                    if (canvas.width !== cachedCanvasWidth || canvas.height !== cachedCanvasHeight) {
+                        canvas.width = cachedCanvasWidth;
+                        canvas.height = cachedCanvasHeight;
+                    }
+                }
+
                 function paintMediaBackdrop(timestamp = 0) {
                     const video = mediaVideo.value;
                     const canvas = mediaBackdrop.value;
@@ -396,27 +433,22 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     }
 
                     if (timestamp - lastBackdropPaint >= 66 && video.readyState >= 2 && video.videoWidth > 0) {
-                        const bounds = canvas.getBoundingClientRect();
-                        if (bounds.width <= 0 || bounds.height <= 0) {
+                        if (cachedCanvasWidth <= 0 || cachedCanvasHeight <= 0) {
+                            updateCanvasBounds();
+                        }
+                        if (cachedCanvasWidth <= 0 || cachedCanvasHeight <= 0) {
                             mediaBackdropFrame = requestAnimationFrame(paintMediaBackdrop);
                             return;
-                        }
-                        const canvasWidth = Math.max(1, Math.min(720, Math.round(bounds.width)));
-                        const canvasHeight = Math.max(1, Math.round(canvasWidth * bounds.height / bounds.width));
-
-                        if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
-                            canvas.width = canvasWidth;
-                            canvas.height = canvasHeight;
                         }
 
                         const context = canvas.getContext('2d', { alpha: false });
                         if (context) {
                             const scale = Math.max(
-                                canvas.width / video.videoWidth,
-                                canvas.height / video.videoHeight
+                                cachedCanvasWidth / video.videoWidth,
+                                cachedCanvasHeight / video.videoHeight
                             );
-                            const sourceWidth = canvas.width / scale;
-                            const sourceHeight = canvas.height / scale;
+                            const sourceWidth = cachedCanvasWidth / scale;
+                            const sourceHeight = cachedCanvasHeight / scale;
                             const sourceX = (video.videoWidth - sourceWidth) / 2;
                             const sourceY = (video.videoHeight - sourceHeight) / 2;
 
@@ -428,8 +460,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                                 sourceHeight,
                                 0,
                                 0,
-                                canvas.width,
-                                canvas.height
+                                cachedCanvasWidth,
+                                cachedCanvasHeight
                             );
                         }
 
@@ -894,7 +926,10 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     }).format(date);
                 }
 
-                function makeQR(containerId, url, size = 120) {
+                let lastRenderedBerkasUrl = '';
+                let lastRenderedLiveUrl = '';
+
+                function makeQR(containerId, url, size = 110) {
                     nextTick(() => {
                         const container = document.getElementById(containerId);
                         if (!container) return;
@@ -914,42 +949,59 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     });
                 }
 
-                // Render QR ke container tunggal #qr-display
                 function renderActiveQR() {
                     if (!activeJadwalId.value || (!qrBerkas.value && !qrLive.value)) {
-                        makeQR('qr-display', '', 110);
+                        lastRenderedBerkasUrl = '';
+                        lastRenderedLiveUrl = '';
+                        makeQR('qr-display-berkas', '', 110);
+                        makeQR('qr-display-live', '', 110);
                         return;
                     }
 
-                    const url = `${BASE_URL}/go/jadwal-banmus/${activeJadwalId.value}/${activeQR.value}`;
-                    makeQR('qr-display', url, 110);
+                    if (qrBerkas.value) {
+                        const berkasUrl = `${BASE_URL}/go/jadwal-banmus/${activeJadwalId.value}/berkas`;
+                        if (berkasUrl !== lastRenderedBerkasUrl) {
+                            makeQR('qr-display-berkas', berkasUrl, 110);
+                            lastRenderedBerkasUrl = berkasUrl;
+                        }
+                    } else if (lastRenderedBerkasUrl) {
+                        lastRenderedBerkasUrl = '';
+                        makeQR('qr-display-berkas', '', 110);
+                    }
+
+                    if (qrLive.value) {
+                        const liveUrl = `${BASE_URL}/go/jadwal-banmus/${activeJadwalId.value}/live`;
+                        if (liveUrl !== lastRenderedLiveUrl) {
+                            makeQR('qr-display-live', liveUrl, 110);
+                            lastRenderedLiveUrl = liveUrl;
+                        }
+                    } else if (lastRenderedLiveUrl) {
+                        lastRenderedLiveUrl = '';
+                        makeQR('qr-display-live', '', 110);
+                    }
                 }
 
-                // Fade-out, ganti QR, lalu fade-in
                 function switchQR() {
                     qrFading.value = true;
                     setTimeout(() => {
                         activeQR.value = activeQR.value === 'berkas' ? 'live' : 'berkas';
-                        renderActiveQR();
                         setTimeout(() => { qrFading.value = false; }, 50);
                     }, 300);
                 }
 
-                // Kelola slide timer berdasarkan ketersediaan QR
                 function syncQrSlide() {
                     clearInterval(qrSlideTimer);
                     qrSlideTimer = null;
 
                     if (!qrBerkas.value && !qrLive.value) {
-                        makeQR('qr-display', '', 110);
+                        renderActiveQR();
                         return;
                     }
 
                     if (qrBerkas.value && qrLive.value) {
-                        // Keduanya ada - jalankan slide setiap 8 detik
                         qrSlideTimer = setInterval(switchQR, 8000);
                     }
-                    // Pastikan activeQR valid (jika salah satu hilang)
+
                     if (!qrBerkas.value && activeQR.value === 'berkas') activeQR.value = 'live';
                     if (!qrLive.value   && activeQR.value === 'live')   activeQR.value = 'berkas';
 
@@ -1687,6 +1739,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                         }
                     }, 5000);
                     document.addEventListener('visibilitychange', handleMediaVisibilityChange);
+                    window.addEventListener('resize', updateCanvasBounds);
                     window.addEventListener('offline', handleNetworkOffline);
                     window.addEventListener('online', handleNetworkOnline);
                     if (navigator.onLine === false) handleNetworkOffline();
@@ -1705,6 +1758,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     clearReconnectRetryTimer();
                     clearWorkerUpdateTimer();
                     document.removeEventListener('visibilitychange', handleMediaVisibilityChange);
+                    window.removeEventListener('resize', updateCanvasBounds);
                     window.removeEventListener('offline', handleNetworkOffline);
                     window.removeEventListener('online', handleNetworkOnline);
                     navigator.serviceWorker?.removeEventListener('message', handleMediaWorkerMessage);
