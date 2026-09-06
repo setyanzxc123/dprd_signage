@@ -252,12 +252,12 @@ body {
 .signage-schedule {
     height: 100%;
     overflow: hidden;
-    padding: 1vh 1.6vw;
+    padding: 1.2vh 1.8vw;
     box-sizing: border-box;
 }
 
 .upcoming-section {
-    margin-top: 0.6vh;
+    margin-top: 1.2vh;
     min-height: 0;
 }
 

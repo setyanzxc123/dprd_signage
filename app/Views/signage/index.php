@@ -218,9 +218,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     Tidak ada agenda rapat untuk hari ini. Silakan periksa agenda berikutnya di bawah.
                 </div>
 
-                <ul v-if="jadwal.length > 0" class="mt-[0.6vh] flex flex-col gap-[0.7vh] p-0">
+                <ul v-if="jadwal.length > 0" class="mt-[0.8vh] flex flex-col gap-[1vh] p-0">
                     <li v-for="item in paginatedJadwal" :key="item.id"
-                        :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh]', scheduleItemClasses(item.status)]">
+                        :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1.1vw] py-[0.8vh]', scheduleItemClasses(item.status)]">
                         <div>
                             <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
                                 {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
@@ -259,9 +259,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                         </h2>
                     </div>
 
-                    <ul class="mt-[0.6vh] flex flex-col gap-[0.7vh] p-0">
+                    <ul class="mt-[0.8vh] flex flex-col gap-[1vh] p-0">
                         <li v-for="item in displayedUpcoming" :key="'upcoming-' + item.id"
-                            class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh]">
+                            class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1.1vw] py-[0.8vh]">
                             <div>
                                 <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/70">
                                     {{ upcomingDateLabel(item.tanggal) }}
