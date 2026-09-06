@@ -185,9 +185,20 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
         <section id="panel-info" class="flex flex-col rounded-none">
             <div class="signage-schedule flex flex-1 flex-col gap-0">
-                <h2 class="border-b border-base-300/80 pb-[0.8vh] text-[clamp(13px,0.9vw,17px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
-                    Agenda Hari Ini
-                </h2>
+                <div class="flex items-center justify-between border-b border-base-300/80 pb-[0.8vh]">
+                    <h2 class="text-[clamp(13px,0.9vw,17px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
+                        Agenda Hari Ini
+                    </h2>
+                    <div v-if="totalSchedulePages > 1"
+                        class="flex items-center gap-2 text-[clamp(11px,0.72vw,14px)] font-bold text-base-content/70">
+                        <span>Hal {{ currentSchedulePage }} / {{ totalSchedulePages }}</span>
+                        <div class="flex items-center gap-1">
+                            <span v-for="page in totalSchedulePages" :key="page"
+                                :class="['h-1.5 rounded-full transition-all duration-300', page === currentSchedulePage ? 'w-4 bg-primary' : 'w-1.5 bg-base-300']">
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
                 <div v-if="jadwal.length === 0 && upcoming.length === 0"
                     class="flex flex-1 flex-col items-center justify-center gap-3 text-center py-[4vh]">
@@ -208,7 +219,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 </div>
 
                 <ul v-if="jadwal.length > 0" class="mt-[0.8vh] flex flex-col gap-[0.6vh] p-0">
-                    <li v-for="item in jadwal" :key="item.id"
+                    <li v-for="item in paginatedJadwal" :key="item.id"
                         :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.2vw] meeting-card border px-[1.2vw] py-[0.85vh] shadow-xs', scheduleItemClasses(item.status)]">
                         <div>
                             <div class="text-[clamp(15px,1.05vw,21px)] font-extrabold tabular-nums text-primary leading-tight">
@@ -241,13 +252,13 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     </li>
                 </ul>
 
-                <div v-if="upcoming.length > 0" class="upcoming-section">
+                <div v-if="upcoming.length > 0 && (totalSchedulePages === 1 || currentSchedulePage === totalSchedulePages)" class="upcoming-section">
                     <h2 class="border-b border-base-300/80 pb-[0.6vh] text-[clamp(12px,0.82vw,16px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
                         Agenda Berikutnya
                     </h2>
 
                     <ul class="mt-[0.6vh] flex flex-col gap-[0.5vh] p-0">
-                        <li v-for="item in upcoming" :key="'upcoming-' + item.id"
+                        <li v-for="item in upcoming.slice(0, 2)" :key="'upcoming-' + item.id"
                             class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1vw] py-[0.7vh] shadow-xs">
                             <div>
                                 <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/70">
@@ -295,7 +306,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
     </div>
 
     <script {csp-script-nonce}>
-        const { createApp, ref, watch, nextTick, onMounted, onUnmounted } = Vue;
+        const { createApp, ref, computed, watch, nextTick, onMounted, onUnmounted } = Vue;
 
         createApp({
             setup() {
@@ -306,6 +317,38 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                 const dateFull = ref('');
                 const jadwal = ref([]);
                 const upcoming = ref([]);
+                const SCHEDULE_ITEMS_PER_PAGE = 4;
+                const currentSchedulePage = ref(1);
+                let schedulePageTimer = null;
+
+                const totalSchedulePages = computed(() => {
+                    if (!jadwal.value || jadwal.value.length === 0) return 1;
+                    return Math.ceil(jadwal.value.length / SCHEDULE_ITEMS_PER_PAGE);
+                });
+
+                const paginatedJadwal = computed(() => {
+                    if (!jadwal.value || jadwal.value.length <= SCHEDULE_ITEMS_PER_PAGE) {
+                        return jadwal.value;
+                    }
+                    const start = (currentSchedulePage.value - 1) * SCHEDULE_ITEMS_PER_PAGE;
+                    return jadwal.value.slice(start, start + SCHEDULE_ITEMS_PER_PAGE);
+                });
+
+                function syncSchedulePaging() {
+                    if (schedulePageTimer) {
+                        clearInterval(schedulePageTimer);
+                        schedulePageTimer = null;
+                    }
+
+                    if (totalSchedulePages.value > 1) {
+                        schedulePageTimer = setInterval(() => {
+                            currentSchedulePage.value = (currentSchedulePage.value % totalSchedulePages.value) + 1;
+                        }, 12000);
+                    } else {
+                        currentSchedulePage.value = 1;
+                    }
+                }
+
                 const runningText = ref('<?= esc($runningText ?? 'Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah') ?>');
                 const runningTextAktif = ref(<?= ($runningTextAktif ?? false) ? 'true' : 'false' ?>);
                 const configuredMediaMode = '<?= esc($mediaMode ?? 'video') ?>';
@@ -1107,6 +1150,10 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
                     jadwal.value = data.jadwal;
                     upcoming.value = data.upcoming;
+                    if (currentSchedulePage.value > totalSchedulePages.value) {
+                        currentSchedulePage.value = 1;
+                    }
+                    syncSchedulePaging();
                     const aktif = jadwal.value.find(item => item.status === 'berlangsung');
                     activeJadwalId.value = aktif?.id ?? null;
                     qrBerkas.value = !!aktif?.materi_url;
@@ -1752,6 +1799,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     clearInterval(mediaWatchTimer);
                     clearInterval(diagnosticsTimer);
                     clearInterval(qrSlideTimer);
+                    if (schedulePageTimer) clearInterval(schedulePageTimer);
                     clearMediaRecoveryTimer();
                     clearMediaStatusFallbackTimer();
                     clearMediaCommitTimer();
@@ -1771,7 +1819,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
                     connectionStatus, lastSyncAt,
                     mediaOfflineStatus, mediaOfflineSize, storagePersistent, mediaStatusPending,
                     cuaca, qrBerkas, qrLive, activeQR, qrFading,
-                    jadwal, upcoming, runningText, runningTextAktif, media,
+                    jadwal, paginatedJadwal, currentSchedulePage, totalSchedulePages,
+                    upcoming, runningText, runningTextAktif, media,
                     mediaVideo, mediaBackdrop, mediaError,
                     ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
                     handleMediaWaiting, handleMediaEnded, handleMediaImageLoaded, handleMediaError,
