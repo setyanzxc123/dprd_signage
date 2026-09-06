@@ -68,6 +68,20 @@ final class AdminWhatsAppStatusTest extends CIUnitTestCase
         $this->assertArrayHasKey('qr_url', $gateway);
     }
 
+    public function testWhatsAppStatusSupportsRefreshParam(): void
+    {
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->get('/admin/pengaturan/whatsapp/status?refresh=1');
+
+        $response->assertStatus(200);
+        $body = (string) $response->getJSON();
+        $payload = json_decode($body, true);
+
+        $this->assertIsArray($payload);
+        $this->assertSame('success', $payload['status'] ?? null);
+    }
+
     public function testSettingsPageRendersWhatsAppIntegrationCard(): void
     {
         $response = $this

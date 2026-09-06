@@ -379,10 +379,11 @@ class SettingController extends BaseController
     {
         $otpConfig = new OtpConfig();
         $provider = new BaileysProvider(config: $otpConfig);
-        $status = $provider->getStatus();
+        $forceRefresh = (bool) $this->request->getGet('refresh');
+        $status = $provider->getStatus($forceRefresh);
 
         $qrData = null;
-        if (! $status['connected']) {
+        if (! $status['connected'] && ($status['status'] ?? '') !== 'offline' && empty($status['error'])) {
             $qrData = $provider->getRawQr();
         }
 

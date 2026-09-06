@@ -229,6 +229,42 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertStringContainsString('belum dikonfigurasi', (string) $result['error']);
     }
 
+    protected function tearDown(): void
+    {
+        try {
+            cache()->delete(BaileysProvider::OFFLINE_CACHE_KEY);
+        } catch (\Throwable) {
+        }
+        parent::tearDown();
+    }
+
+    public function testGetStatusCachesOfflineState(): void
+    {
+        try {
+            cache()->delete(BaileysProvider::OFFLINE_CACHE_KEY);
+        } catch (\Throwable) {
+        }
+
+        $transport = new BaileysRecordingTransport(new HttpResponse(0, null, 'Connection refused'));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $first = $provider->getStatus();
+        $this->assertSame('offline', $first['status']);
+        $this->assertSame(1, $transport->callCount);
+
+        $second = $provider->getStatus();
+        $this->assertSame('offline', $second['status']);
+        $this->assertSame(1, $transport->callCount);
+
+        $qr = $provider->getRawQr();
+        $this->assertFalse($qr['success']);
+        $this->assertSame(1, $transport->callCount);
+
+        $forced = $provider->getStatus(forceRefresh: true);
+        $this->assertSame('offline', $forced['status']);
+        $this->assertSame(2, $transport->callCount);
+    }
+
     private function config(): Otp
     {
         $config = new Otp();
@@ -248,6 +284,7 @@ final class BaileysRecordingTransport implements HttpTransportInterface
     /** @var array<string, mixed> */
     public array $payload = [];
     public int $timeoutSeconds = 0;
+    public int $callCount = 0;
 
     public function __construct(private readonly HttpResponse $response)
     {
@@ -255,11 +292,13 @@ final class BaileysRecordingTransport implements HttpTransportInterface
 
     public function post(string $url, array $headers, array $fields, int $timeoutSeconds): HttpResponse
     {
+        $this->callCount++;
         return $this->response;
     }
 
     public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse
     {
+        $this->callCount++;
         $this->url = $url;
         $this->headers = $headers;
         $this->payload = $payload;
@@ -270,6 +309,7 @@ final class BaileysRecordingTransport implements HttpTransportInterface
 
     public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
     {
+        $this->callCount++;
         $this->url = $url;
         $this->headers = $headers;
         $this->timeoutSeconds = $timeoutSeconds;

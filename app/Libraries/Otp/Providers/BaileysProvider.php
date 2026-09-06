@@ -49,8 +49,11 @@ final class BaileysProvider
         return new BaileysSendResult(true, $messageId);
     }
 
+    public const OFFLINE_CACHE_KEY = 'baileys_gateway_offline_status';
+    public const OFFLINE_CACHE_TTL = 15;
+
     /** @return array<string, mixed> */
-    public function getStatus(): array
+    public function getStatus(bool $forceRefresh = false): array
     {
         if (! $this->isConfigured()) {
             return [
@@ -64,6 +67,16 @@ final class BaileysProvider
             ];
         }
 
+        if (! $forceRefresh) {
+            try {
+                $cached = cache(self::OFFLINE_CACHE_KEY);
+                if (is_array($cached)) {
+                    return $cached;
+                }
+            } catch (\Throwable) {
+            }
+        }
+
         $response = $this->transport->get(
             $this->endpoint('/status'),
             $this->headers(),
@@ -72,7 +85,7 @@ final class BaileysProvider
 
         $payload = $this->payload($response->body);
         if ($response->error !== null || $payload === null || $response->statusCode >= 400) {
-            return [
+            $offlineStatus = [
                 'configured' => true,
                 'connected'  => false,
                 'status'     => 'offline',
@@ -81,6 +94,18 @@ final class BaileysProvider
                 'qr_url'     => $this->endpoint('/qr/raw'),
                 'error'      => $response->error ?? $this->error($payload),
             ];
+
+            try {
+                cache()->save(self::OFFLINE_CACHE_KEY, $offlineStatus, self::OFFLINE_CACHE_TTL);
+            } catch (\Throwable) {
+            }
+
+            return $offlineStatus;
+        }
+
+        try {
+            cache()->delete(self::OFFLINE_CACHE_KEY);
+        } catch (\Throwable) {
         }
 
         $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
@@ -109,6 +134,20 @@ final class BaileysProvider
                 'qr_data_url'  => null,
                 'error'        => 'Baileys gateway belum dikonfigurasi.',
             ];
+        }
+
+        try {
+            $cachedOffline = cache(self::OFFLINE_CACHE_KEY);
+            if (is_array($cachedOffline)) {
+                return [
+                    'success'      => false,
+                    'connected'    => false,
+                    'qr_available' => false,
+                    'qr_data_url'  => null,
+                    'error'        => $cachedOffline['error'] ?? 'WhatsApp Gateway sedang offline.',
+                ];
+            }
+        } catch (\Throwable) {
         }
 
         $response = $this->transport->get(
