@@ -2,10 +2,11 @@
 (function () {
 
     /* Icon renderer */
-    function renderAdminIcons() {
+    function renderAdminIcons(root) {
+        var target = (root instanceof Element || root instanceof Document) ? root : document;
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
             try {
-                window.lucide.createIcons();
+                window.lucide.createIcons({ root: target });
             } catch (error) {
                 console.error('Gagal merender ikon Lucide:', error);
             }
@@ -16,7 +17,7 @@
                 if (window.lucide && typeof window.lucide.createIcons === 'function') {
                     clearInterval(checkInterval);
                     try {
-                        window.lucide.createIcons();
+                        window.lucide.createIcons({ root: target });
                     } catch (_) {}
                 } else if (retries >= 20) {
                     clearInterval(checkInterval);
@@ -370,7 +371,7 @@
                 updateDataTableRowNumbers(existingApi);
                 var wrapper = existingApi.table().container();
                 styleDataTableControls(wrapper);
-                renderAdminIcons();
+                renderAdminIcons(wrapper);
                 return;
             }
 
@@ -386,6 +387,7 @@
                     pageLength: pageLength,
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
                     order: parseDataTableOrder(table),
+                    searchDelay: 250,
                     search: {
                         search: initialSearch,
                     },
@@ -418,7 +420,7 @@
                         updateDataTableRowNumbers(api);
                         var wrapper = api.table().container();
                         styleDataTableControls(wrapper);
-                        renderAdminIcons();
+                        renderAdminIcons(wrapper);
                     },
                     initComplete: function () {
                         var api = this.api();
@@ -426,13 +428,13 @@
                         var wrapper = api.table().container();
                         styleDataTableControls(wrapper);
                         buildDtColumnFilters(table, api);
-                        renderAdminIcons();
+                        renderAdminIcons(wrapper);
                     },
                 });
 
             } catch (error) {
                 console.error('Gagal menginisialisasi DataTables admin:', error);
-                renderAdminIcons();
+                renderAdminIcons(table);
             }
         });
     }
@@ -462,7 +464,6 @@
     }
 
     function refreshAdminPage() {
-        renderAdminIcons();
         try { initThemeControls(); } catch (e) { console.error(e); }
         try { initSidebar(); } catch (e) { console.error(e); }
         try { initPreline(); } catch (e) { console.error(e); }
@@ -487,8 +488,14 @@
         renderAdminIcons();
     });
 
-    document.addEventListener('open.hs.overlay', renderAdminIcons);
-    document.addEventListener('open.hs.accordion', renderAdminIcons);
-    document.addEventListener('change.hs.tab', renderAdminIcons);
+    document.addEventListener('open.hs.overlay', function (e) {
+        renderAdminIcons(e.target);
+    });
+    document.addEventListener('open.hs.accordion', function (e) {
+        renderAdminIcons(e.target);
+    });
+    document.addEventListener('change.hs.tab', function (e) {
+        renderAdminIcons(e.target);
+    });
 
 })();

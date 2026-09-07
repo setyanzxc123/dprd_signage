@@ -280,19 +280,23 @@
             syncTargetVisual(input);
         });
 
+        let targetSearchTimer = null;
         targetSearch?.addEventListener('input', function() {
-            const q = (this.value || '').trim().toLowerCase();
-            let shown = 0;
+            clearTimeout(targetSearchTimer);
+            targetSearchTimer = setTimeout(() => {
+                const q = (this.value || '').trim().toLowerCase();
+                let shown = 0;
 
-            targetOptions.forEach(function(option) {
-                const match = (option.getAttribute('data-name') || '').includes(q);
-                option.style.display = match ? '' : 'none';
-                if (match) shown++;
-            });
+                targetOptions.forEach(function(option) {
+                    const match = (option.getAttribute('data-name') || '').includes(q);
+                    option.style.display = match ? '' : 'none';
+                    if (match) shown++;
+                });
 
-            if (targetEmpty) {
-                targetEmpty.classList.toggle('hidden', shown > 0);
-            }
+                if (targetEmpty) {
+                    targetEmpty.classList.toggle('hidden', shown > 0);
+                }
+            }, 150);
         });
 
         form?.addEventListener('submit', function(event) {
@@ -1204,18 +1208,22 @@
             }
         };
 
+        let sourceSearchTimer = null;
         sourceSearch?.addEventListener('input', function() {
-            const q = (this.value || '').trim().toLowerCase();
-            let n = 0;
-            allSourceItems.forEach(function(item) {
-                const name = item.getAttribute('data-name') || '';
-                const komisi = item.getAttribute('data-komisi') || '';
-                const jabatan = item.getAttribute('data-jabatan') || '';
-                const match = name.includes(q) || komisi.includes(q) || jabatan.includes(q);
-                item.style.display = match ? '' : 'none';
-                if (match) n++;
-            });
-            if (sourceCount) sourceCount.textContent = n;
+            clearTimeout(sourceSearchTimer);
+            sourceSearchTimer = setTimeout(() => {
+                const q = (this.value || '').trim().toLowerCase();
+                let n = 0;
+                allSourceItems.forEach(function(item) {
+                    const name = item.getAttribute('data-name') || '';
+                    const komisi = item.getAttribute('data-komisi') || '';
+                    const jabatan = item.getAttribute('data-jabatan') || '';
+                    const match = name.includes(q) || komisi.includes(q) || jabatan.includes(q);
+                    item.style.display = match ? '' : 'none';
+                    if (match) n++;
+                });
+                if (sourceCount) sourceCount.textContent = n;
+            }, 150);
         });
 
         syncMemberValidity(false);
@@ -1931,9 +1939,13 @@
             });
         }
 
+        let agendaSearchTimer = null;
         if (agendaSearchInput) {
             agendaSearchInput.addEventListener('input', () => {
-                renderAgendaOptions(agendaSearchInput.value);
+                clearTimeout(agendaSearchTimer);
+                agendaSearchTimer = setTimeout(() => {
+                    renderAgendaOptions(agendaSearchInput.value);
+                }, 150);
             });
             agendaSearchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {

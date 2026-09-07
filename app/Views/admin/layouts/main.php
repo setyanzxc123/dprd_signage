@@ -29,13 +29,17 @@ $flashError = session()->getFlashdata('error');
     <meta name="robots" content="noindex, nofollow" />
 
     <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
+    <link rel="preload" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" as="image" type="image/png" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font"
+        type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-600-normal.woff2') ?>" as="font"
         type="font/woff2" crossorigin />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font"
         type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/vendor/datatables/dataTables.dataTables.min.css?v=' . $dataTablesCssVersion) ?>"
-        rel="stylesheet" />
+        rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="<?= base_url('assets/vendor/datatables/dataTables.dataTables.min.css?v=' . $dataTablesCssVersion) ?>" rel="stylesheet" /></noscript>
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
     <script src="<?= base_url('assets/vendor/preline/preline.js?v=' . $prelineVersion) ?>" defer></script>
     <script src="<?= base_url('assets/vendor/lucide/lucide.min.js?v=' . $lucideVersion) ?>" defer></script>

@@ -16,7 +16,7 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
     <div class="relative flex flex-col h-full max-h-full">
         <div class="h-16 px-4 sm:px-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shrink-0">
             <a href="<?= base_url('admin/dashboard') ?>" class="flex items-center gap-3 min-w-0" aria-label="Dashboard Admin">
-                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" alt="Logo DPRD" class="size-11 shrink-0 object-contain" />
+                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" alt="Logo DPRD" width="44" height="44" loading="eager" fetchpriority="high" decoding="async" class="size-11 shrink-0 object-contain" />
                 <div class="min-w-0 leading-tight">
                     <strong class="block text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">E-Agenda</strong>
                     <span class="block truncate text-[11px] font-semibold text-slate-500 dark:text-slate-400">DPRD Sulawesi Tengah</span>

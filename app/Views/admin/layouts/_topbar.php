@@ -39,7 +39,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
             </button>
 
             <div class="flex min-w-0 items-center gap-2.5 lg:hidden">
-                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" alt="Logo DPRD" class="size-9 shrink-0 object-contain" />
+                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" alt="Logo DPRD" width="36" height="36" loading="eager" fetchpriority="high" decoding="async" class="size-9 shrink-0 object-contain" />
                 <div class="min-w-0 leading-tight">
                     <strong class="block truncate text-xs font-bold text-slate-900 dark:text-white">E-Agenda</strong>
                     <span class="block truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">DPRD Sulteng</span>

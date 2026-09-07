@@ -2233,6 +2233,14 @@
         transform-origin: bottom;
     }
 
+div.dt-container {
+    contain: layout style;
+}
+
+.hs-overlay {
+    contain: layout style;
+}
+
 /* DataTables toolbar: compact controls to fit horizontally */
 div.dt-container div.dt-layout-row:first-child {
     display: flex !important;
@@ -2439,6 +2447,7 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
     pointer-events: none;
     z-index: 0;
     overflow: hidden;
+    contain: strict;
     mask-image: linear-gradient(to top, black 4rem, transparent);
     -webkit-mask-image: linear-gradient(to top, black 4rem, transparent);
 }
