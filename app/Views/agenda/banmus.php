@@ -13,6 +13,9 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
     <title>Proyeksi Banmus - DPRD Provinsi Sulawesi Tengah</title>
     <meta name="description" content="Proyeksi kegiatan dan PDF SK Badan Musyawarah DPRD Provinsi Sulawesi Tengah." />
     <link rel="icon" type="image/png" href="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" />
+    <link rel="preload" as="image" href="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-600-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -28,7 +31,7 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
     <header class="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
         <div class="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
             <a class="flex items-center gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Kembali ke agenda DPRD">
-                <img class="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+                <img class="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12" width="48" height="48" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                 <span class="min-w-0 leading-tight">
                     <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                         DPRD Provinsi

@@ -185,13 +185,15 @@
     }
 
     details.agenda-collapse::details-content {
-      height: 0;
+      block-size: 0;
       overflow: clip;
-      transition: height 0.25s ease, content-visibility 0.25s allow-discrete;
+      opacity: 0;
+      transition: block-size 0.25s ease, opacity 0.2s ease, content-visibility 0.25s allow-discrete;
     }
 
     details.agenda-collapse[open]::details-content {
-      height: auto;
+      block-size: auto;
+      opacity: 1;
     }
   }
 }

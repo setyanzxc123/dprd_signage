@@ -15,6 +15,9 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     <title><?= esc($pageTitle) ?> - DPRD Provinsi Sulawesi Tengah</title>
     <meta name="description" content="Agenda dan jadwal rapat DPRD Provinsi Sulawesi Tengah." />
     <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
+    <link rel="preload" as="image" href="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-600-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -27,7 +30,6 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
         })();
     </script>
     <link href="<?= base_url('assets/css/agenda.css?v=' . $cssVersion) ?>" rel="stylesheet" />
-    <script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
 </head>
 <body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
 <div id="agenda-app" v-cloak>
@@ -35,7 +37,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
         <div class="agenda-header-motif" aria-hidden="true"></div>
         <div class="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
             <a class="flex items-center gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
-                <img class="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+                <img class="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" width="64" height="64" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                 <span class="min-w-0 leading-tight">
                     <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                         DPRD Provinsi
@@ -822,6 +824,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     </footer>
 </div>
 
+<script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
 <script {csp-script-nonce}>
     const { createApp, ref, computed, nextTick, onMounted, onUnmounted, watch } = Vue;
 
@@ -1402,6 +1405,56 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 }
             }
 
+            let resizeRaf = null;
+            function handleResize() {
+                if (resizeRaf) {
+                    cancelAnimationFrame(resizeRaf);
+                }
+                resizeRaf = requestAnimationFrame(() => {
+                    updateUnitScrollState();
+                    resizeRaf = null;
+                });
+            }
+
+            function startTimers() {
+                if (!clockTimer) {
+                    now.value = new Date();
+                    clockTimer = setInterval(() => {
+                        now.value = new Date();
+                    }, 1000);
+                }
+                if (!agendaTimer) {
+                    agendaTimer = setInterval(loadAgenda, 60000);
+                }
+                if (!weatherTimer) {
+                    weatherTimer = setInterval(loadWeather, 1800000);
+                }
+            }
+
+            function stopTimers() {
+                if (clockTimer) {
+                    clearInterval(clockTimer);
+                    clockTimer = null;
+                }
+                if (agendaTimer) {
+                    clearInterval(agendaTimer);
+                    agendaTimer = null;
+                }
+                if (weatherTimer) {
+                    clearInterval(weatherTimer);
+                    weatherTimer = null;
+                }
+            }
+
+            function handleVisibilityChange() {
+                if (document.visibilityState === 'visible') {
+                    startTimers();
+                    loadAgenda();
+                } else {
+                    stopTimers();
+                }
+            }
+
             function setNavigation(value) {
                 activeNavigation.value = value;
                 isKomisiOpen.value = false;
@@ -1707,22 +1760,22 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     activeMobileTab.value = 'umum';
                 }
                 loadWeather();
-                agendaTimer = setInterval(loadAgenda, 60000);
-                clockTimer = setInterval(() => {
-                    now.value = new Date();
-                }, 1000);
-                weatherTimer = setInterval(loadWeather, 1800000);
-                window.addEventListener('resize', updateUnitScrollState);
+                startTimers();
+                window.addEventListener('resize', handleResize);
+                document.addEventListener('visibilitychange', handleVisibilityChange);
                 document.addEventListener('click', handleDocumentClick);
                 document.addEventListener('keydown', handleKeyDown);
                 window.addEventListener('scroll', handleWindowScroll, { passive: true });
             });
 
             onUnmounted(() => {
-                clearInterval(agendaTimer);
-                clearInterval(clockTimer);
-                clearInterval(weatherTimer);
-                window.removeEventListener('resize', updateUnitScrollState);
+                stopTimers();
+                if (resizeRaf) {
+                    cancelAnimationFrame(resizeRaf);
+                    resizeRaf = null;
+                }
+                window.removeEventListener('resize', handleResize);
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
                 document.removeEventListener('click', handleDocumentClick);
                 document.removeEventListener('keydown', handleKeyDown);
                 window.removeEventListener('scroll', handleWindowScroll);
