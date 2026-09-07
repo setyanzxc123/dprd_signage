@@ -133,7 +133,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         :class="unitScrollMaskClass"
                         class="agenda-unit-scroll flex w-full min-w-0 items-center gap-2 overflow-x-auto py-1 px-3 sm:px-4 no-scrollbar"
                         @scroll.passive="updateUnitScrollState">
-                        <button :class="navButtonClass('all')" type="button" @click="setNavigation('all')">Semua</button>
+                        <button :class="navButtonClass('all')" :aria-pressed="activeNavigation === 'all'" type="button" @click="setNavigation('all')">Semua</button>
                         <button
                             v-if="komisiUnits.length > 0"
                             ref="komisiButtonRef"
@@ -142,13 +142,14 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             @click.stop="toggleKomisiDropdown"
                             aria-haspopup="true"
                             :aria-expanded="isKomisiOpen"
+                            :aria-pressed="isKomisiActive"
                         >
                             <span>{{ komisiButtonLabel }}</span>
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="transition-transform duration-200" :class="{ 'rotate-180': isKomisiOpen }">
                                 <path d="m6 9 6 6 6-6"/>
                             </svg>
                         </button>
-                        <button v-for="unit in nonKomisiUnits" :key="unit.id" :class="navButtonClass('unit:' + unit.id)" :title="unit.nama" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
+                        <button v-for="unit in nonKomisiUnits" :key="unit.id" :class="navButtonClass('unit:' + unit.id)" :aria-pressed="activeNavigation === 'unit:' + unit.id" :title="unit.nama" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
                     </div>
 
                     <teleport to="body">
@@ -210,6 +211,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                     type="button"
                                     class="flex-1 py-1.5 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition"
                                     :class="presetChipClass(preset.key)"
+                                    :aria-pressed="calendarScope === preset.key"
                                     @click="setCalendarScope(preset.key)"
                                 >
                                     {{ preset.label }}
@@ -348,8 +350,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
         <div class="xl:hidden mt-3 flex p-1 rounded-xl bg-slate-200/80 dark:bg-slate-800 border border-slate-300/60 dark:border-slate-700/60 gap-1" role="tablist" aria-label="Pilih tampilan sisi agenda">
             <button
+                id="tab-btn-rapat"
                 type="button"
                 role="tab"
+                aria-controls="tab-panel-rapat"
                 :aria-selected="activeMobileTab === 'rapat'"
                 @click="setMobileTab('rapat')"
                 :class="mobileTabClass('rapat')"
@@ -359,8 +363,10 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <span class="py-0.5 px-1.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">{{ filteredAgendas.length }}</span>
             </button>
             <button
+                id="tab-btn-umum"
                 type="button"
                 role="tab"
+                aria-controls="tab-panel-umum"
                 :aria-selected="activeMobileTab === 'umum'"
                 @click="setMobileTab('umum')"
                 :class="mobileTabClass('umum')"
@@ -374,6 +380,9 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
     <main class="mx-auto w-full min-w-0 px-3 py-4 sm:px-6 sm:py-6 xl:w-[min(1480px,calc(100%-32px))] xl:px-0 xl:grid xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:gap-6 xl:items-start">
         <section
+            id="tab-panel-rapat"
+            role="region"
+            aria-labelledby="tab-btn-rapat"
             class="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-xs overflow-hidden"
             :class="{ 'hidden xl:block': activeMobileTab !== 'rapat' }"
         >
@@ -577,6 +586,9 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
         </section>
 
         <section
+            id="tab-panel-umum"
+            role="region"
+            aria-labelledby="tab-btn-umum"
             class="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-xs overflow-hidden mt-4 xl:mt-0"
             :class="{ 'hidden xl:block': activeMobileTab !== 'umum' }"
         >
@@ -1379,6 +1391,17 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 }
             }
 
+            function handleKeyDown(event) {
+                if (event.key === 'Escape') {
+                    if (isKomisiOpen.value) {
+                        isKomisiOpen.value = false;
+                    }
+                    if (isCalendarOpen.value) {
+                        isCalendarOpen.value = false;
+                    }
+                }
+            }
+
             function setNavigation(value) {
                 activeNavigation.value = value;
                 isKomisiOpen.value = false;
@@ -1691,6 +1714,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 weatherTimer = setInterval(loadWeather, 1800000);
                 window.addEventListener('resize', updateUnitScrollState);
                 document.addEventListener('click', handleDocumentClick);
+                document.addEventListener('keydown', handleKeyDown);
                 window.addEventListener('scroll', handleWindowScroll, { passive: true });
             });
 
@@ -1700,6 +1724,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 clearInterval(weatherTimer);
                 window.removeEventListener('resize', updateUnitScrollState);
                 document.removeEventListener('click', handleDocumentClick);
+                document.removeEventListener('keydown', handleKeyDown);
                 window.removeEventListener('scroll', handleWindowScroll);
             });
 
@@ -1716,6 +1741,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 komisiDropdownStyle,
                 komisiButtonLabel,
                 komisiButtonClass,
+                isKomisiActive,
                 toggleKomisiDropdown,
                 selectKomisiFilter,
                 isCalendarOpen,
