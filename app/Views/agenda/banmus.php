@@ -65,7 +65,7 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
 
                     <div class="px-3.5 py-1 text-center">
                         <span data-header-time class="block font-mono text-2xl font-black tabular-nums leading-none text-slate-900 dark:text-white">--:--:--</span>
-                        <span class="block text-[9px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mt-0.5">WITA</span>
+                        <span class="block text-[9px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 mt-0.5">WITA</span>
                     </div>
                 </div>
 

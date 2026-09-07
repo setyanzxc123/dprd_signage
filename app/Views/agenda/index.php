@@ -71,7 +71,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                     <div class="px-3.5 py-1 text-center">
                         <span class="block font-mono text-2xl font-black tabular-nums leading-none text-slate-900 dark:text-white">{{ headerTime }}</span>
-                        <span class="block text-[9px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mt-0.5">WITA</span>
+                        <span class="block text-[9px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 mt-0.5">WITA</span>
                     </div>
                 </div>
 
@@ -272,7 +272,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                         <button type="button" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all" :class="scopeButtonClass('semua')" :aria-pressed="memberScope === 'semua'" @click="setMemberScope('semua')">Semua Jadwal</button>
                     </div>
                     <p class="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                        <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">Akses Anggota</span>
+                        <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">Akses Anggota</span>
                         Anda dapat melihat agenda dan sumber daya internal sesuai kewenangan.
                     </p>
                 </div>
