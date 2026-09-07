@@ -59,7 +59,7 @@
 
             <div class="col-span-12 lg:col-span-4">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tersedia">Status Ketersediaan</label>
-                <select class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="tersedia" name="tersedia">
+                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="tersedia" name="tersedia">
                     <option value="1" <?= ($room['tersedia'] ?? 1) ? 'selected' : '' ?>>
                         Tersedia
                     </option>

@@ -57,7 +57,7 @@ $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
                     <label for="semester" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                         Semester <span class="text-rose-500">*</span>
                     </label>
-                    <select class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="semester" name="semester" required>
+                    <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="semester" name="semester" required>
                         <option value="1" <?= $selectedSemester === 1 ? 'selected' : '' ?>>Semester 1</option>
                         <option value="2" <?= $selectedSemester === 2 ? 'selected' : '' ?>>Semester 2</option>
                     </select>

@@ -126,7 +126,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
             </div>
 
             <div id="ruangan-panel">
-                <select class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="ruangan_id" name="ruangan_id">
+                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="ruangan_id" name="ruangan_id">
                     <option value="">Pilih ruangan rapat</option>
                     <?php foreach ($rooms as $room): ?>
                         <option value="<?= (int) $room['id'] ?>"
@@ -207,7 +207,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                         value="<?= esc($schedule['materi_url'] ?? '') ?>" placeholder="https://..." />
                     <div class="mt-2">
                         <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="materi_akses">Akses Bahan</label>
-                        <select class="py-2 px-3 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="materi_akses" name="materi_akses">
+                        <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="materi_akses" name="materi_akses">
                             <?php foreach (['peserta' => 'Peserta rapat saja', 'anggota' => 'Seluruh anggota DPRD', 'publik' => 'Publik'] as $value => $label): ?>
                                 <option value="<?= $value ?>" <?= ($schedule['materi_akses'] ?? 'peserta') === $value ? 'selected' : '' ?>><?= $label ?></option>
                             <?php endforeach; ?>
@@ -223,7 +223,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                         value="<?= esc($schedule['stream_url'] ?? '') ?>" placeholder="https://..." />
                     <div class="mt-2">
                         <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="stream_akses">Akses Streaming</label>
-                        <select class="py-2 px-3 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="stream_akses" name="stream_akses">
+                        <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="stream_akses" name="stream_akses">
                             <?php foreach (['anggota' => 'Seluruh anggota DPRD', 'peserta' => 'Peserta rapat saja', 'publik' => 'Publik'] as $value => $label): ?>
                                 <option value="<?= $value ?>" <?= ($schedule['stream_akses'] ?? 'anggota') === $value ? 'selected' : '' ?>><?= $label ?></option>
                             <?php endforeach; ?>

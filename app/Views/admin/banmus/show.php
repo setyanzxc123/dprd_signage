@@ -519,7 +519,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_ruangan_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Ruangan Rapat
                                 </label>
-                                <select class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_ruangan_id" name="ruangan_id">
+                                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_ruangan_id" name="ruangan_id">
                                     <option value="">Pilih ruangan</option>
                                     <?php foreach ($rooms as $room): ?>
                                         <option value="<?= $room['id'] ?>"><?= esc($room['name']) ?></option>
@@ -563,7 +563,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_publikasi" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Akses Publikasi Agenda
                                 </label>
-                                <select class="py-2.5 px-3.5 block w-full sm:max-w-xs border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_publikasi" name="publikasi">
+                                <select class="py-2.5 px-3.5 pe-9 block w-full sm:max-w-xs border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_publikasi" name="publikasi">
                                     <option value="internal">Internal DPRD Saja</option>
                                     <option value="publik" selected>Publik</option>
                                 </select>
@@ -576,7 +576,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_materi_url" name="materi_url" type="url" placeholder="https://..." />
                                 <div class="mt-2">
                                     <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="field_materi_akses">Akses Materi</label>
-                                    <select class="py-2 px-3 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_materi_akses" name="materi_akses">
+                                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_materi_akses" name="materi_akses">
                                         <option value="peserta">Peserta rapat saja</option>
                                         <option value="anggota">Seluruh anggota DPRD</option>
                                         <option value="publik" selected>Publik</option>
@@ -591,7 +591,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_stream_url" name="stream_url" type="url" placeholder="https://..." />
                                 <div class="mt-2">
                                     <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="field_stream_akses">Akses Streaming</label>
-                                    <select class="py-2 px-3 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_stream_akses" name="stream_akses">
+                                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_stream_akses" name="stream_akses">
                                         <option value="anggota">Seluruh anggota DPRD</option>
                                         <option value="peserta">Peserta rapat saja</option>
                                         <option value="publik" selected>Publik</option>
