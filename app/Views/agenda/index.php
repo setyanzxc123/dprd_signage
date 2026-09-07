@@ -848,8 +848,6 @@ if ($isMember) {
                         </div>
                     </div>
 
-                    <div class="h-0.5 w-full max-w-md bg-red-700"></div>
-
                     <div class="flex flex-wrap items-center gap-2.5 pt-0.5">
                         <span class="text-xs font-semibold uppercase tracking-wider text-neutral-300">Media Sosial:</span>
                         <div class="flex items-center gap-1.5">
