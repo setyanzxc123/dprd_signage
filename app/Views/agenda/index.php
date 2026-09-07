@@ -362,7 +362,7 @@ if ($isMember) {
                     ref="calendarAnchor"
                     aria-haspopup="dialog"
                     :aria-expanded="isCalendarOpen"
-                    aria-label="Pilih periode agenda lewat kalender"
+                    aria-label="Pilih periode agenda lewat kalender (Filter periode agenda rapat dan Filter periode jadwal umum)"
                     @click="toggleCalendar"
                 >
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -494,7 +494,7 @@ if ($isMember) {
                                 <span>Belum ada jadwal rapat bertanggal untuk periode ini.</span>
                             </p>
                             <div v-else-if="row.kind === 'plan-header'" class="px-1 pt-1">
-                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400" title="Rencana resmi hasil SK Badan Musyawarah; tanggal dan ruangan menyusul ditetapkan">Rencana SK Banmus</h3>
+                                <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400" title="Proyeksi Banmus: Rencana resmi hasil SK Badan Musyawarah; tanggal dan ruangan menyusul ditetapkan">Rencana SK Banmus</h3>
                             </div>
                             <a v-else-if="row.kind === 'plan-more'" class="justify-self-start inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 shadow-xs transition" href="<?= base_url('agenda/jadwal-banmus') ?>">
                                 <span>Lihat semua rencana ({{ row.count }})</span>
@@ -599,13 +599,22 @@ if ($isMember) {
                                             </a>
 
                                             <?php if ($isMember): ?>
-                                                <a v-if="item.has_risalah" class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/90 dark:bg-emerald-950/40 text-xs font-bold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-xs transition" :href="risalahUrl(item)" target="_blank" rel="noopener noreferrer">
+                                                <button
+                                                    v-if="item.has_risalah"
+                                                    type="button"
+                                                    class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/90 dark:bg-emerald-950/40 text-xs font-bold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-xs transition cursor-pointer"
+                                                    @click="openRisalahModal(item)"
+                                                    aria-haspopup="dialog"
+                                                    aria-expanded="false"
+                                                    aria-controls="hs-risalah-modal"
+                                                    data-hs-overlay="#hs-risalah-modal"
+                                                >
                                                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-emerald-600 dark:text-emerald-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                                                     <span>Risalah (Notulen AI)</span>
-                                                </a>
-                                                <span v-else-if="item.risalah_status" class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30">
-                                                    <span class="inline-block size-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                    <span>Notulen AI dalam proses</span>
+                                                </button>
+                                                <span v-else-if="item.risalah_status" class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30 select-none">
+                                                    <span class="inline-block size-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true"></span>
+                                                    <span>Sedang Ditinjau Notulis</span>
                                                 </span>
                                             <?php endif; ?>
                                         </template>
@@ -660,7 +669,7 @@ if ($isMember) {
                 <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
                     <div class="min-w-0">
                         <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Kegiatan &amp; Audiensi Publik</h2>
-                        <p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-1 truncate">Audiensi publik &amp; kunjungan kerja</p>
+                        <p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-1 truncate" title="Jadwal Umum">Jadwal Umum · Audiensi publik &amp; kunjungan kerja</p>
                     </div>
                     <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredGeneralAgendas.length }} agenda
@@ -767,13 +776,22 @@ if ($isMember) {
                                         </a>
 
                                         <?php if ($isMember): ?>
-                                            <a v-if="item.has_risalah" class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/90 dark:bg-emerald-950/40 text-xs font-bold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-xs transition" :href="risalahUrl(item)" target="_blank" rel="noopener noreferrer">
+                                            <button
+                                                v-if="item.has_risalah"
+                                                type="button"
+                                                class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/90 dark:bg-emerald-950/40 text-xs font-bold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-xs transition cursor-pointer"
+                                                @click="openRisalahModal(item)"
+                                                aria-haspopup="dialog"
+                                                aria-expanded="false"
+                                                aria-controls="hs-risalah-modal"
+                                                data-hs-overlay="#hs-risalah-modal"
+                                            >
                                                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-emerald-600 dark:text-emerald-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                                                 <span>Risalah (Notulen AI)</span>
-                                            </a>
-                                            <span v-else-if="item.risalah_status" class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30">
-                                                <span class="inline-block size-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                <span>Notulen AI dalam proses</span>
+                                            </button>
+                                            <span v-else-if="item.risalah_status" class="min-h-[42px] sm:min-h-[38px] inline-flex items-center gap-2 py-2 px-3 sm:py-1.5 sm:px-3.5 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30 select-none">
+                                                <span class="inline-block size-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true"></span>
+                                                <span>Sedang Ditinjau Notulis</span>
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -795,8 +813,8 @@ if ($isMember) {
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Menampilkan {{ generalPageStart }}–{{ generalPageEnd }} dari {{ orderedGeneralAgendas.length }}</span>
                             <label class="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                                <span class="sr-only">Jumlah kegiatan per halaman</span>
-                                <select class="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs" v-model.number="generalPageSize" @change="changeGeneralPageSize" aria-label="Jumlah kegiatan per halaman">
+                                <span class="sr-only">Jumlah jadwal umum per halaman</span>
+                                <select class="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs" v-model.number="generalPageSize" @change="changeGeneralPageSize" aria-label="Jumlah jadwal umum per halaman">
                                     <option :value="10">10</option>
                                     <option :value="25">25</option>
                                     <option :value="50">50</option>
@@ -884,6 +902,112 @@ if ($isMember) {
             </div>
         </div>
     </footer>
+
+    <?php if ($isMember): ?>
+        <div id="hs-risalah-modal" class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="hs-risalah-modal-label">
+            <div class="hs-overlay-open:opacity-100 hs-overlay-open:duration-300 opacity-0 transition-all sm:max-w-2xl lg:max-w-3xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+                <div id="hs-risalah-printable" class="w-full max-h-[88vh] flex flex-col bg-white border border-slate-200/90 shadow-2xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
+                    <div class="flex justify-between items-start py-4 px-4 sm:px-6 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 rounded-t-2xl">
+                        <div class="min-w-0 flex-1 pr-3 text-left">
+                            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span>Risalah Sah &amp; Terverifikasi</span>
+                                </span>
+                                <span v-if="risalahData && risalahData.verified_at" class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                    Disahkan: {{ risalahData.verified_at }}
+                                </span>
+                            </div>
+                            <h2 id="hs-risalah-modal-label" class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">
+                                {{ activeRisalahItem ? activeRisalahItem.judul : 'Risalah Rapat' }}
+                            </h2>
+                            <p v-if="activeRisalahItem" class="mt-1 text-xs text-slate-500 dark:text-slate-400 font-medium flex flex-wrap items-center gap-x-2">
+                                <span v-if="activeRisalahItem.tanggal">{{ fullDate(activeRisalahItem.tanggal) }}</span>
+                                <span v-if="activeRisalahItem.tanggal">·</span>
+                                <span>{{ executionTime(activeRisalahItem) }}</span>
+                                <span>·</span>
+                                <span>{{ activeRisalahItem.ruangan || 'Gedung DPRD Provinsi Sulawesi Tengah' }}</span>
+                            </p>
+                        </div>
+                        <button type="button" class="size-8 inline-flex justify-center items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition cursor-pointer shrink-0 ml-2 print:hidden" aria-label="Tutup risalah" @click="closeRisalahModal" data-hs-overlay="#hs-risalah-modal">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="p-4 sm:p-6 overflow-y-auto space-y-5 text-left">
+                        <div v-if="risalahLoading" class="space-y-4 py-3 animate-pulse">
+                            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-lg w-1/3"></div>
+                            <div class="h-20 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+                            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-lg w-1/4 pt-2"></div>
+                            <div class="space-y-2">
+                                <div class="h-3 bg-slate-100 dark:bg-slate-800/60 rounded-lg w-full"></div>
+                                <div class="h-3 bg-slate-100 dark:bg-slate-800/60 rounded-lg w-5/6"></div>
+                                <div class="h-3 bg-slate-100 dark:bg-slate-800/60 rounded-lg w-4/5"></div>
+                            </div>
+                        </div>
+
+                        <div v-else-if="risalahError" class="py-8 px-4 text-center">
+                            <div class="inline-flex items-center justify-center size-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 mb-3 border border-amber-500/20">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </div>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ risalahError }}</p>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Silakan hubungi tim notulen sekretariat jika membutuhkan salinan naskah fisik.</p>
+                        </div>
+
+                        <div v-else-if="risalahData" class="space-y-5">
+                            <div class="rounded-2xl border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 sm:p-5">
+                                <div class="flex items-center gap-2 mb-2 text-emerald-800 dark:text-emerald-300">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                    <h3 class="text-xs font-black uppercase tracking-wider">Ringkasan Utama Rapat</h3>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed [text-wrap:pretty] whitespace-pre-line">
+                                    {{ getPillarText('ringkasan_utama') || risalahData.ringkasan_eksekutif }}
+                                </p>
+                            </div>
+
+                            <div v-if="getPillarList('poin_pembahasan').length > 0" class="space-y-2.5">
+                                <div class="flex items-center gap-2 text-slate-900 dark:text-white">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-slate-500 dark:text-slate-400"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                    <h3 class="text-xs font-black uppercase tracking-wider">Poin-Poin Kunci Pembahasan</h3>
+                                </div>
+                                <ul class="space-y-2">
+                                    <li v-for="(point, idx) in getPillarList('poin_pembahasan')" :key="'pt-' + idx" class="flex items-start gap-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                        <span class="inline-flex items-center justify-center size-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-black shrink-0 mt-0.5">{{ idx + 1 }}</span>
+                                        <span class="leading-relaxed [text-wrap:pretty] flex-1">{{ point }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div v-if="getPillarText('kesimpulan_akhir')" class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-900 text-white dark:bg-slate-800/90 dark:border-slate-700 p-4 sm:p-5 shadow-xs">
+                                <div class="flex items-center gap-2 mb-2 text-emerald-400">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                                    <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400">Kesimpulan &amp; Keputusan Akhir</h3>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-100 dark:text-slate-200 leading-relaxed [text-wrap:pretty] whitespace-pre-line">
+                                    {{ getPillarText('kesimpulan_akhir') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2.5 py-3.5 px-4 sm:px-6 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 rounded-b-2xl print:hidden">
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                            Dokumen resmi sekretariat · Integritas rekaman audio asli diawasi notulis
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button v-if="risalahData" type="button" @click="printRisalah" class="min-h-[38px] inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 shadow-xs transition cursor-pointer">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                <span>Cetak Risalah</span>
+                            </button>
+                            <button type="button" class="min-h-[38px] inline-flex items-center justify-center py-1.5 px-4 rounded-xl bg-slate-900 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 text-xs font-bold shadow-xs hover:bg-slate-800 transition cursor-pointer" @click="closeRisalahModal" data-hs-overlay="#hs-risalah-modal">
+                                <span>Tutup</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <script src="<?= base_url('assets/vendor/preline/preline.js?v=' . $prelineVersion) ?>" defer></script>
@@ -907,6 +1031,10 @@ if ($isMember) {
                 ...item,
                 key: `banmus_projection:${item.id}`,
             })));
+            const activeRisalahItem = ref(null);
+            const risalahLoading = ref(false);
+            const risalahError = ref('');
+            const risalahData = ref(null);
             const activeMobileTab = ref('rapat');
             const units = ref([]);
             const unitScroller = ref(null);
@@ -1636,6 +1764,107 @@ if ($isMember) {
                 return `${SCHEDULE_RISALAH_BASE}/${source}/${id}/risalah`;
             }
 
+            function getPillarText(key) {
+                if (!risalahData.value || !risalahData.value.tiga_pilar) {
+                    return '';
+                }
+                const val = risalahData.value.tiga_pilar[key];
+                if (typeof val === 'string') {
+                    return val.trim();
+                }
+                if (Array.isArray(val)) {
+                    return val.map((item) => {
+                        if (typeof item === 'string') return item.trim();
+                        if (item && typeof item === 'object') return (item.uraian || item.topik || JSON.stringify(item)).trim();
+                        return String(item || '').trim();
+                    }).filter(Boolean).join('\n\n');
+                }
+                return '';
+            }
+
+            function getPillarList(key) {
+                if (!risalahData.value || !risalahData.value.tiga_pilar) {
+                    return [];
+                }
+                const val = risalahData.value.tiga_pilar[key];
+                if (Array.isArray(val)) {
+                    return val.map((item) => {
+                        if (typeof item === 'string') {
+                            return item.trim();
+                        }
+                        if (item && typeof item === 'object') {
+                            if (item.full_text) {
+                                return item.full_text.trim();
+                            }
+                            const parts = [];
+                            if (item.waktu) parts.push(`[${item.waktu}]`);
+                            if (item.topik) parts.push(item.topik);
+                            if (item.pembicara) parts.push(`· Pembicara: ${item.pembicara}`);
+                            if (item.uraian) parts.push(`\n${item.uraian}`);
+                            return parts.join(' ').trim();
+                        }
+                        return String(item || '').trim();
+                    }).filter(Boolean);
+                }
+                if (typeof val === 'string') {
+                    return val.split('\n')
+                        .map((line) => line.replace(/^[-*•\d.]+\s*/, '').trim())
+                        .filter(Boolean);
+                }
+                return [];
+            }
+
+            async function openRisalahModal(item) {
+                if (!item) {
+                    return;
+                }
+                activeRisalahItem.value = item;
+                risalahLoading.value = true;
+                risalahError.value = '';
+                risalahData.value = null;
+
+                const modalEl = document.getElementById('hs-risalah-modal');
+                if (window.HSOverlay && typeof window.HSOverlay.open === 'function' && modalEl && !modalEl.classList.contains('opened')) {
+                    window.HSOverlay.open(modalEl);
+                }
+
+                try {
+                    const url = risalahUrl(item);
+                    const response = await fetch(url, { credentials: 'same-origin' });
+                    if (response.status === 401 && IS_MEMBER) {
+                        window.location.assign(LOGIN_URL);
+                        return;
+                    }
+                    if (!response.ok) {
+                        throw new Error(`Gagal memuat risalah (HTTP ${response.status})`);
+                    }
+                    const payload = await response.json();
+                    if (payload.status !== 'success') {
+                        throw new Error(payload.message || 'Respons risalah tidak valid.');
+                    }
+                    if (!payload.risalah_tersedia) {
+                        risalahError.value = payload.message || 'Risalah resmi belum tersedia atau masih ditinjau oleh notulis.';
+                        return;
+                    }
+                    risalahData.value = payload;
+                } catch (err) {
+                    risalahError.value = err.message || 'Terjadi kesalahan saat memuat risalah rapat.';
+                } finally {
+                    risalahLoading.value = false;
+                }
+            }
+
+            function closeRisalahModal() {
+                const modalEl = document.getElementById('hs-risalah-modal');
+                if (window.HSOverlay && typeof window.HSOverlay.close === 'function' && modalEl) {
+                    window.HSOverlay.close(modalEl);
+                }
+            }
+
+            function printRisalah() {
+                window.print();
+            }
+
             function streamUrl(item) {
                 return item ? (item.stream_url || '#') : '#';
             }
@@ -1768,12 +1997,15 @@ if ($isMember) {
             }
 
             function parseDate(value) {
+                if (!value) return new Date();
                 const [year, month, day] = String(value).split('-').map(Number);
                 return new Date(year, month - 1, day);
             }
 
             function fullDate(value) {
+                if (!value) return '';
                 const date = parseDate(value);
+                if (isNaN(date.getTime())) return String(value);
                 return `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
             }
 
@@ -1944,6 +2176,15 @@ if ($isMember) {
                 setMobileTab,
                 risalahUrl,
                 streamUrl,
+                activeRisalahItem,
+                risalahLoading,
+                risalahError,
+                risalahData,
+                getPillarText,
+                getPillarList,
+                openRisalahModal,
+                closeRisalahModal,
+                printRisalah,
                 compactUnitName,
                 statusLabel,
                 statusBadgeClass,

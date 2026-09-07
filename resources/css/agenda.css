@@ -215,3 +215,48 @@
   }
 }
 
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  body > :not(#agenda-app) {
+    display: none !important;
+  }
+
+  #agenda-app > header,
+  #agenda-app > nav,
+  #agenda-app > main,
+  #agenda-app > footer {
+    display: none !important;
+  }
+
+  .hs-overlay-backdrop {
+    display: none !important;
+  }
+
+  #hs-risalah-modal {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  #hs-risalah-modal > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    min-height: auto !important;
+  }
+
+  #hs-risalah-printable {
+    box-shadow: none !important;
+    border: none !important;
+    max-height: none !important;
+    width: 100% !important;
+  }
+}
