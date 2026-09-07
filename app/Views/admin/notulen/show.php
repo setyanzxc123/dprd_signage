@@ -83,21 +83,21 @@ if ($job['jadwal_type'] === 'banmus') {
                                 <i data-lucide="check-check" class="h-3.5 w-3.5"></i> Risalah Final &amp; Sah
                             </span>
                         <?php else: ?>
-                            <span class="badge badge-sm bg-warning/15 border border-warning/40 text-base-content font-semibold text-[11px] gap-1.5 py-1 px-2.5">
-                                <i data-lucide="file-edit" class="h-3.5 w-3.5 text-warning"></i> Draf Siap Ditinjau
+                            <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
+                                <i data-lucide="file-edit" class="size-3.5 text-amber-500"></i> Draf Siap Ditinjau
                             </span>
                         <?php endif; ?>
                     <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
                         <?php if (! empty($job['cancel_requested'])): ?>
-                            <button type="button" disabled class="btn btn-xs btn-warning text-base-content gap-1.5 font-bold cursor-not-allowed shadow-xs opacity-90">
-                                <span class="loading loading-spinner loading-xs"></span>
+                            <button type="button" disabled class="py-1 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 cursor-not-allowed shadow-xs opacity-90">
+                                <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent rounded-full"></span>
                                 Menghentikan...
                             </button>
                         <?php else: ?>
-                            <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>" onsubmit="return confirm('Hentikan proses AI sekarang? Bagian transkrip yang telah selesai akan tetap tersimpan aman.');">
+                            <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>" data-confirm-message="Hentikan proses AI sekarang? Bagian transkrip yang telah selesai akan tetap tersimpan aman." class="m-0 inline-flex">
                                 <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-xs btn-error gap-1.5 text-white font-bold shadow-xs" title="Hentikan sementara proses AI">
-                                    <i data-lucide="square" class="h-3 w-3 fill-current"></i>
+                                <button type="submit" class="py-1 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 shadow-xs transition cursor-pointer" title="Hentikan sementara proses AI">
+                                    <i data-lucide="square" class="size-3 fill-current"></i>
                                     Hentikan Proses
                                 </button>
                             </form>
@@ -720,11 +720,11 @@ if ($job['jadwal_type'] === 'banmus') {
                     <?php endif; ?>
 
                     <!-- 4. Riwayat Proses & Versi -->
-                    <button type="button" onclick="document.getElementById('modal_riwayat_proses').showModal()"
-                            class="notulen-action-card border border-base-300 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-base-100 hover:bg-base-200/50">
-                        <i data-lucide="history" class="h-5 w-5 text-warning"></i>
-                        <span class="text-xs font-bold text-base-content">Riwayat Proses</span>
-                        <span class="text-[10px] text-base-content/50 font-mono">Audit Log & Info</span>
+                    <button type="button" data-hs-overlay="#modal_riwayat_proses"
+                            class="notulen-action-card border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+                        <i data-lucide="history" class="size-5 text-amber-500"></i>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Riwayat Proses</span>
+                        <span class="text-[10px] text-slate-400 font-mono">Audit Log & Info</span>
                     </button>
 
                 </div>
@@ -734,67 +734,74 @@ if ($job['jadwal_type'] === 'banmus') {
     </div>
 
     <!-- 5. Banner footer resmi -->
-    <div class="alert alert-warning/10 border border-warning/20 py-3 px-4 text-xs flex items-center gap-3 text-base-content/90 rounded-xl">
-        <i data-lucide="shield-alert" class="h-5 w-5 shrink-0 text-warning"></i>
+    <div class="py-3 px-4 text-xs flex items-center gap-3 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 text-slate-700 dark:text-slate-300">
+        <i data-lucide="shield-alert" class="size-5 shrink-0 text-amber-500"></i>
         <span><strong>Dokumen ini bersifat resmi.</strong> Rekaman transkripsi dan intisari risalah AI bersumber langsung dari rekaman audio rapat asli untuk memitigasi manipulasi dan menjamin akuntabilitas data kedewanan.</span>
     </div>
 
 </div>
 
 <!-- 6. Modal riwayat proses dan audit log -->
-<dialog id="modal_riwayat_proses" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box max-w-lg">
-        <div class="flex items-start gap-3 border-b border-base-200 pb-3">
-            <div class="w-9 h-9 rounded-full bg-base-200 flex items-center justify-center text-base-content shrink-0">
-                <i data-lucide="history" class="h-4 w-4"></i>
+<div id="modal_riwayat_proses" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="modal_riwayat_proses_label">
+    <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+        <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
+            <div class="flex justify-between items-center py-3.5 px-4 sm:px-6 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="size-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 shrink-0">
+                        <i data-lucide="history" class="size-4"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal_riwayat_proses_label" class="font-bold text-sm text-slate-800 dark:text-slate-200">Riwayat Proses & Audit Log AI</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Jejak eksekusi pipeline kecerdasan buatan</p>
+                    </div>
+                </div>
+                <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400" data-hs-overlay="#modal_riwayat_proses">
+                    <span class="sr-only">Tutup</span>
+                    <i data-lucide="x" class="size-4"></i>
+                </button>
             </div>
-            <div>
-                <h3 class="font-bold text-sm text-base-content">Riwayat Proses & Audit Log AI</h3>
-                <p class="text-xs text-base-content/70">Jejak eksekusi pipeline kecerdasan buatan</p>
-            </div>
-        </div>
 
-        <div class="py-4 space-y-3 text-xs">
-            <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/70">Job ID:</span>
-                <span class="font-mono font-semibold text-base-content">#<?= (int) $job['id'] ?></span>
+            <div class="p-4 sm:p-6 space-y-3 text-xs">
+                <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">Job ID:</span>
+                    <span class="font-mono font-semibold text-slate-800 dark:text-slate-200">#<?= (int) $job['id'] ?></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">Waktu Mulai Unggah:</span>
+                    <span class="font-mono text-slate-800 dark:text-slate-200"><?= esc($job['created_at']) ?></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">Durasi Rekaman Audio:</span>
+                    <span class="font-mono text-slate-800 dark:text-slate-200"><?= esc($durationFormatted) ?> (<?= $durationMin ? "{$durationMin} Menit" : '-' ?>)</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">Jumlah Segmen Audio:</span>
+                    <span class="font-mono text-slate-800 dark:text-slate-200"><?= (int) $job['total_chunks'] ?> segmen chunk</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">Model Transkripsi &amp; Risalah:</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-200" id="ai_model_meta_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <span class="text-slate-500 dark:text-slate-400">Status Integritas:</span>
+                    <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                        <i data-lucide="check" class="size-2.5"></i> Terverifikasi Sah
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500 dark:text-slate-400">Terakhir Diperbarui:</span>
+                    <span class="font-mono text-slate-800 dark:text-slate-200"><?= esc($job['updated_at'] ?? $job['created_at']) ?></span>
+                </div>
             </div>
-            <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/70">Waktu Mulai Unggah:</span>
-                <span class="font-mono text-base-content"><?= esc($job['created_at']) ?></span>
-            </div>
-            <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/70">Durasi Rekaman Audio:</span>
-                <span class="font-mono text-base-content"><?= esc($durationFormatted) ?> (<?= $durationMin ? "{$durationMin} Menit" : '-' ?>)</span>
-            </div>
-            <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/70">Jumlah Segmen Audio:</span>
-                <span class="font-mono text-base-content"><?= (int) $job['total_chunks'] ?> segmen chunk</span>
-            </div>
-            <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/70">Model Transkripsi &amp; Risalah:</span>
-                <span class="font-semibold text-base-content" id="ai_model_meta_text"><?= esc($aiModelLabel ?? \App\Libraries\Notulen\NotulenService::formatAiModelLabel($job['ai_model'] ?? null)) ?></span>
-            </div>
-            <div class="flex justify-between border-b border-base-200 pb-1.5">
-                <span class="text-base-content/70">Status Integritas:</span>
-                <span class="badge badge-success badge-xs gap-1"><i data-lucide="check" class="h-2.5 w-2.5"></i> Terverifikasi Sah</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-base-content/70">Terakhir Diperbarui:</span>
-                <span class="font-mono text-base-content"><?= esc($job['updated_at'] ?? $job['created_at']) ?></span>
-            </div>
-        </div>
 
-        <div class="modal-action mt-0">
-            <form method="dialog">
-                <button class="btn btn-sm btn-ghost text-xs">Tutup</button>
-            </form>
+            <div class="flex justify-end items-center gap-x-2 py-3 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-800">
+                <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" data-hs-overlay="#modal_riwayat_proses">
+                    Tutup
+                </button>
+            </div>
         </div>
     </div>
-    <form method="dialog" class="modal-backdrop">
-        <button>tutup</button>
-    </form>
-</dialog>
+</div>
 
 <?= $this->endSection() ?>
 

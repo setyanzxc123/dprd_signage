@@ -1546,7 +1546,7 @@
 (() => {
     const initializeNotulenUploadWorkspace = () => {
         const modal = document.getElementById('modal_upload_notulen');
-        if (!(modal instanceof HTMLDialogElement)) return;
+        if (!modal) return;
         if (modal.dataset.initialized === 'true') return;
         modal.dataset.initialized = 'true';
 
@@ -1568,9 +1568,6 @@
         const agendaSearchInput   = document.getElementById('um_agenda_search_input');
         const agendaOptionsList   = document.getElementById('um_agenda_options_list');
 
-
-
-
         // Dropzone refs
         const dropzone    = document.getElementById('um_dropzone');
         const dzIdle      = document.getElementById('um_dz_idle');
@@ -1585,6 +1582,24 @@
         const confirmKeepBtn   = document.getElementById('um_confirm_keep_btn');
         const confirmCancelBtn = document.getElementById('um_confirm_cancel_btn');
         let pendingCloseAction = null;
+
+        function openOverlay(el) {
+            if (!el) return;
+            if (window.HSOverlay && typeof window.HSOverlay.open === 'function') {
+                window.HSOverlay.open(el);
+            } else if (typeof el.showModal === 'function') {
+                el.showModal();
+            }
+        }
+
+        function closeOverlay(el) {
+            if (!el) return;
+            if (window.HSOverlay && typeof window.HSOverlay.close === 'function') {
+                window.HSOverlay.close(el);
+            } else if (typeof el.close === 'function') {
+                el.close();
+            }
+        }
 
         // Server config dari data attributes
         const UPLOAD_TOKEN = modal.dataset.uploadToken || '';
@@ -1618,8 +1633,8 @@
 
         function openConfirmDialog(onConfirm) {
             pendingCloseAction = onConfirm;
-            if (confirmDialog instanceof HTMLDialogElement) {
-                confirmDialog.showModal();
+            if (confirmDialog) {
+                openOverlay(confirmDialog);
                 rerenderIcons();
             }
         }
@@ -1627,13 +1642,13 @@
         if (confirmKeepBtn) {
             confirmKeepBtn.addEventListener('click', () => {
                 pendingCloseAction = null;
-                if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+                closeOverlay(confirmDialog);
             });
         }
 
         if (confirmCancelBtn) {
             confirmCancelBtn.addEventListener('click', () => {
-                if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+                closeOverlay(confirmDialog);
                 if (typeof pendingCloseAction === 'function') {
                     pendingCloseAction();
                     pendingCloseAction = null;
@@ -1921,8 +1936,8 @@
         } else {
             // Auto open modal on page load if preset was requested
             setTimeout(() => {
-                if (modal && !modal.open) {
-                    modal.showModal();
+                if (modal) {
+                    openOverlay(modal);
                     rerenderIcons();
                 }
             }, 100);
@@ -1934,11 +1949,10 @@
                 if (!applyPresetIfAvailable()) {
                     updateJadwalOptions();
                 }
-                modal.showModal();
+                openOverlay(modal);
                 rerenderIcons();
             });
         }
-
 
         function confirmCancelUpload(onConfirmed) {
             if (isUploading) {
@@ -1952,30 +1966,29 @@
             }
         }
 
-        // Penjagaan tombol Escape native HTML5 <dialog>
         modal.addEventListener('cancel', (e) => {
             if (isUploading) {
                 e.preventDefault();
-                confirmCancelUpload(() => modal.close());
+                confirmCancelUpload(() => closeOverlay(modal));
             }
         });
 
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                confirmCancelUpload(() => modal.close());
+                confirmCancelUpload(() => closeOverlay(modal));
             });
         }
 
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
-                confirmCancelUpload(() => modal.close());
+                confirmCancelUpload(() => closeOverlay(modal));
             });
         }
 
         if (backdropBtn) {
             backdropBtn.addEventListener('click', () => {
                 if (isUploading) return;
-                modal.close();
+                closeOverlay(modal);
             });
         }
 
@@ -1986,12 +1999,15 @@
             });
         }
 
-        modal.addEventListener('close', () => {
+        const handleModalClose = () => {
             if (activeUploadId && !isCancelling) {
                 doCancel(activeUploadId);
             }
             resetForm();
-        });
+        };
+
+        modal.addEventListener('close', handleModalClose);
+        modal.addEventListener('close.hs.overlay', handleModalClose);
 
         if (fileInput) {
             fileInput.addEventListener('change', () => {
@@ -2078,7 +2094,10 @@
             const bar = document.getElementById('upload_progress_bar');
             const percent = document.getElementById('upload_progress_percent');
             const text = document.getElementById('upload_status_text');
-            if (bar) bar.value = pct;
+            if (bar) {
+                if ('value' in bar) bar.value = pct;
+                bar.style.width = Math.round(pct) + '%';
+            }
             if (percent) percent.textContent = Math.round(pct) + '%';
             if (text && msg !== undefined) text.textContent = msg;
         }
