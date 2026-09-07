@@ -55,8 +55,9 @@ if ($isMember) {
 <body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
 <div id="agenda-app" v-cloak>
     <header class="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
-        <div class="agenda-header-motif" aria-hidden="true"></div>
-        <div class="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
+        <div class="relative">
+            <div class="agenda-header-motif" aria-hidden="true"></div>
+            <div class="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
             <a class="flex items-center gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
                 <img class="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" width="64" height="64" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                 <span class="min-w-0 leading-tight">
@@ -323,9 +324,10 @@ if ($isMember) {
                 </div>
             </div>
         </nav>
+    </div>
 
-        <?php if ($isMember): ?>
-            <div class="border-t border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/90" aria-label="Cakupan agenda anggota">
+    <?php if ($isMember): ?>
+        <div class="border-t border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/90" aria-label="Cakupan agenda anggota">
                 <div class="mx-auto flex w-full flex-col gap-2 px-3.5 py-2.5 sm:w-[min(1480px,calc(100%-32px))] sm:flex-row sm:items-center sm:justify-between sm:px-0">
                     <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 gap-1" role="group" aria-label="Pilih cakupan agenda">
                         <button type="button" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all" :class="scopeButtonClass('saya')" :aria-pressed="memberScope === 'saya'" @click="setMemberScope('saya')">Jadwal Saya</button>
