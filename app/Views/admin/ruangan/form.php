@@ -69,7 +69,7 @@
         <a href="<?= base_url('admin/ruangan') ?>" class="py-2.5 px-4 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
             Batal
         </a>
-        <button type="submit" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+        <button type="submit" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
             <i data-lucide="check" class="size-4"></i>
             <?= $room ? 'Simpan Perubahan' : 'Tambah Ruangan' ?>
         </button>

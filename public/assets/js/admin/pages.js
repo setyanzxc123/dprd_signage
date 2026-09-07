@@ -1142,12 +1142,13 @@
 
                 const removeButton = document.createElement('button');
                 removeButton.type = 'button';
-                removeButton.className = 'size-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer';
+                removeButton.className = 'size-8 inline-flex items-center justify-center rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer';
                 removeButton.title = 'Hapus dari kelompok';
+                removeButton.setAttribute('aria-label', `Hapus ${name} dari kelompok`);
 
                 const removeIcon = document.createElement('i');
                 removeIcon.setAttribute('data-lucide', 'x');
-                removeIcon.className = 'size-3.5';
+                removeIcon.className = 'size-4';
 
                 memberContent.append(memberName, memberDetail);
                 removeButton.appendChild(removeIcon);

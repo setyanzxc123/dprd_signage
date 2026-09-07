@@ -153,9 +153,9 @@
                                             &middot; <?= esc($komisiLabel) ?>
                                         </div>
                                     </div>
-                                    <button type="button" class="size-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                    <button type="button" class="size-8 inline-flex items-center justify-center rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
                                         title="Hapus dari kelompok" aria-label="Hapus <?= esc($member['name']) ?> dari kelompok" data-remove-member="<?= $memberId ?>">
-                                        <i data-lucide="x" class="size-3.5"></i>
+                                        <i data-lucide="x" class="size-4"></i>
                                     </button>
                                 </div>
                             <?php endforeach; ?>
