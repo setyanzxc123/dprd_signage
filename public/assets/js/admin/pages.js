@@ -687,6 +687,7 @@
         const startWaPolling = (intervalMs = 3000) => {
             stopWaPolling();
             waPollInterval = setInterval(async () => {
+                if (document.visibilityState !== 'visible') return;
                 await checkWaStatus(isWaModalOpen());
             }, intervalMs);
         };
@@ -815,8 +816,10 @@
             }
         };
 
+        let isWaChecking = false;
         const checkWaStatus = async (updateQrIfModalOpen = false) => {
-            if (!waPrimaryStatus) return;
+            if (!waPrimaryStatus || isWaChecking) return;
+            isWaChecking = true;
 
             try {
                 const response = await fetch('/admin/pengaturan/whatsapp/status', {
@@ -840,7 +843,7 @@
                     return;
                 }
 
-                if (updateQrIfModalOpen && modalWaPairing && modalWaPairing.open && qr.qr_data_url && waQrImage) {
+                if (updateQrIfModalOpen && isWaModalOpen() && qr.qr_data_url && waQrImage) {
                     if (waQrImage.src !== qr.qr_data_url) {
                         waQrImage.src = qr.qr_data_url;
                     }
@@ -850,6 +853,8 @@
                 }
             } catch (e) {
                 stopWaPolling();
+            } finally {
+                isWaChecking = false;
             }
         };
 
@@ -897,7 +902,16 @@
             modalWaPairing.addEventListener('close', () => {
                 stopWaPolling();
             });
+            modalWaPairing.addEventListener('close.hs.overlay', () => {
+                stopWaPolling();
+            });
         }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && waPollInterval) {
+                checkWaStatus(isWaModalOpen());
+            }
+        });
 
         if (btnRequestPairCode && inputPairPhone) {
             btnRequestPairCode.addEventListener('click', async () => {
@@ -2426,6 +2440,7 @@
 (() => {
     let notulenPollTimer = null;
     let notulenPollAbort = null;
+    let notulenVisibilityHandler = null;
     let isNotulenDirty = false;
 
     const initializeNotulenShowWorkspace = () => {
@@ -2437,6 +2452,10 @@
         if (notulenPollAbort) {
             notulenPollAbort.abort();
             notulenPollAbort = null;
+        }
+        if (notulenVisibilityHandler) {
+            document.removeEventListener('visibilitychange', notulenVisibilityHandler);
+            notulenVisibilityHandler = null;
         }
         isNotulenDirty = false;
 
@@ -2642,7 +2661,12 @@
 
         if (!activeStatuses.includes(initialStatus) || !statusUrl) return;
 
+        let isNotulenPolling = false;
         const poll = () => {
+            if (document.visibilityState !== 'visible') return;
+            if (isNotulenPolling) return;
+            isNotulenPolling = true;
+
             if (notulenPollAbort) notulenPollAbort.abort();
             notulenPollAbort = new AbortController();
 
@@ -2671,7 +2695,7 @@
                         if (modelMetaEl) modelMetaEl.textContent = d.ai_model_label;
                     }
 
-                    // Update Stepper 5 Langkah
+                    // Stepper progress indicator
                     const chunkCircle = document.getElementById('step_chunking_circle');
                     const chunkStatus = document.getElementById('step_chunking_status');
                     const transCircle = document.getElementById('step_transcribing_circle');
@@ -2683,18 +2707,18 @@
 
                     if (['transcribing', 'summarizing', 'completed'].includes(d.status)) {
                         if (chunkCircle) chunkCircle.className = 'notulen-step-circle done';
-                        if (chunkStatus) chunkStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                        if (chunkStatus) chunkStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (chunkCircle) chunkCircle.className = 'notulen-step-circle active';
-                        if (chunkStatus) chunkStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Menyiapkan audio...';
+                        if (chunkStatus) chunkStatus.innerHTML = '<span class="animate-spin inline-block size-3 border border-current border-t-transparent text-primary rounded-full"></span> Menyiapkan audio...';
                     }
 
                     if (['summarizing', 'completed'].includes(d.status)) {
                         if (transCircle) transCircle.className = 'notulen-step-circle done';
-                        if (transStatus) transStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                        if (transStatus) transStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                     } else if (d.status === 'transcribing') {
                         if (transCircle) transCircle.className = 'notulen-step-circle active';
-                        if (transStatus) transStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Mentranskripsi (' + d.progress_percent + '%)';
+                        if (transStatus) transStatus.innerHTML = '<span class="animate-spin inline-block size-3 border border-current border-t-transparent text-primary rounded-full"></span> Mentranskripsi (' + d.progress_percent + '%)';
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (transCircle) transCircle.className = 'notulen-step-circle';
                         if (transStatus) transStatus.textContent = 'Menunggu';
@@ -2702,12 +2726,12 @@
 
                     if (d.status === 'completed') {
                         if (summCircle) summCircle.className = 'notulen-step-circle done';
-                        if (summStatus) summStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                        if (summStatus) summStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                         if (compCircle) compCircle.className = 'notulen-step-circle done';
-                        if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Siap Ditinjau';
+                        if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Siap Ditinjau';
                     } else if (d.status === 'summarizing') {
                         if (summCircle) summCircle.className = 'notulen-step-circle active';
-                        if (summStatus) summStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Menyusun risalah...';
+                        if (summStatus) summStatus.innerHTML = '<span class="animate-spin inline-block size-3 border border-current border-t-transparent text-primary rounded-full"></span> Menyusun risalah...';
                     } else {
                         if (summCircle) summCircle.className = 'notulen-step-circle';
                         if (summStatus) summStatus.textContent = 'Menunggu';
@@ -2724,7 +2748,6 @@
                             clearInterval(notulenPollTimer);
                             notulenPollTimer = null;
                         }
-                        // Jika notulis sedang mengetik draf, jangan reload paksa yang merusak editan
                         if (isNotulenDirty) return;
 
                         setTimeout(() => {
@@ -2736,8 +2759,18 @@
                     if (e.name !== 'AbortError') {
                         console.warn('Poll error:', e);
                     }
+                })
+                .finally(() => {
+                    isNotulenPolling = false;
                 });
         };
+
+        notulenVisibilityHandler = () => {
+            if (document.visibilityState === 'visible' && notulenPollTimer) {
+                poll();
+            }
+        };
+        document.addEventListener('visibilitychange', notulenVisibilityHandler);
 
         notulenPollTimer = setInterval(poll, 3500);
     };
@@ -2764,6 +2797,10 @@
         if (notulenPollAbort) {
             notulenPollAbort.abort();
             notulenPollAbort = null;
+        }
+        if (notulenVisibilityHandler) {
+            document.removeEventListener('visibilitychange', notulenVisibilityHandler);
+            notulenVisibilityHandler = null;
         }
         if (window.__notulenKeyHandler) {
             document.removeEventListener('keydown', window.__notulenKeyHandler);
