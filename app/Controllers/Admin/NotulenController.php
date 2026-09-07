@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Crud\JadwalUmumService;
 use App\Libraries\Media\MediaUploadException;
 use App\Libraries\Notulen\AudioStreamResponder;
 use App\Libraries\Notulen\NotulenService;
@@ -11,6 +12,7 @@ use App\Models\JadwalBanmusModel;
 use App\Models\JadwalUmumModel;
 use App\Models\MeetingMinutesModel;
 use App\Models\MeetingTranscriptionJobModel;
+use App\Models\UnitRapatModel;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\ResponseInterface;
 use Dompdf\Dompdf;
@@ -59,6 +61,7 @@ class NotulenController extends BaseController
                 'judul'       => $scheduleInfo['judul'],
                 'tanggal'     => $scheduleInfo['tanggal'],
                 'waktu_mulai' => $scheduleInfo['waktu_mulai'],
+                'lokasi'      => $scheduleInfo['ruangan'] ?? ($scheduleInfo['lokasi'] ?? ''),
                 'label'       => date('d/m/Y', strtotime($scheduleInfo['tanggal'])) . ' — ' . $scheduleInfo['judul'],
             ];
         }
@@ -78,18 +81,83 @@ class NotulenController extends BaseController
         // Ambil peta rujukan jadwal SSOT untuk seluruh job
         $schedulesMap = $this->service->resolveSchedulesForJobs($jobs);
 
-        // Ambil opsi jadwal aktif untuk form upload cepat
-        $generalSchedules = (new JadwalUmumModel())
-            ->select('id, judul, tanggal, waktu_mulai')
-            ->orderBy('tanggal', 'DESC')
-            ->limit(30)
-            ->findAll();
+        $db = db_connect();
 
-        $banmusItems = (new JadwalBanmusModel())
-            ->select('id, agenda, tanggal, jam_mulai AS waktu_mulai')
-            ->orderBy('tanggal', 'DESC')
-            ->limit(30)
-            ->findAll();
+        $banmusDocuments = [];
+        if ($db->tableExists('dokumen_banmus')) {
+            $banmusDocuments = $db->table('dokumen_banmus')
+                ->select('id, nomor_sk, judul, masa_persidangan, tahun')
+                ->orderBy('tahun', 'DESC')
+                ->orderBy('id', 'DESC')
+                ->limit(30)
+                ->get()->getResultArray();
+        }
+
+        $unitRapatList = [];
+        if ($db->tableExists('unit_rapat')) {
+            $unitRapatList = $db->table('unit_rapat')
+                ->select('id, nama')
+                ->where('aktif', 1)
+                ->orderBy('urutan', 'ASC')
+                ->orderBy('nama', 'ASC')
+                ->get()->getResultArray();
+        }
+
+        $generalBuilder = $db->table('jadwal_umum ju')
+            ->select('ju.id, ju.judul, ju.tanggal, ju.waktu_mulai');
+
+        if ($db->tableExists('ruangan') && $db->fieldExists('ruangan_id', 'jadwal_umum')) {
+            $generalBuilder->select('r.name AS nama_ruangan')
+                ->join('ruangan r', 'r.id = ju.ruangan_id', 'left');
+        }
+        if ($db->fieldExists('lokasi_lainnya', 'jadwal_umum')) {
+            $generalBuilder->select('ju.lokasi_lainnya');
+        }
+        if ($db->fieldExists('pihak_eksternal', 'jadwal_umum')) {
+            $generalBuilder->select('ju.pihak_eksternal');
+        }
+
+        $generalSchedules = $generalBuilder
+            ->orderBy('ju.tanggal', 'DESC')
+            ->orderBy('ju.waktu_mulai', 'DESC')
+            ->limit(100)
+            ->get()->getResultArray();
+
+        $generalUnitMap = [];
+        if ($db->tableExists('jadwal_umum_unit_rapat') && $db->tableExists('unit_rapat')) {
+            try {
+                $generalUnitMap = (new JadwalUmumService($db))->unitNamesByScheduleIds(array_column($generalSchedules, 'id'));
+            } catch (\Throwable) {
+                $generalUnitMap = [];
+            }
+        }
+
+        $banmusBuilder = $db->table('jadwal_banmus jb')
+            ->select('jb.id, jb.agenda, jb.tanggal, jb.jam_mulai AS waktu_mulai');
+
+        if ($db->fieldExists('deleted_at', 'jadwal_banmus')) {
+            $banmusBuilder->where('jb.deleted_at IS NULL', null, false);
+        }
+        if ($db->fieldExists('jenis_agenda', 'jadwal_banmus')) {
+            $banmusBuilder->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING);
+        }
+        if ($db->tableExists('dokumen_banmus') && $db->fieldExists('dokumen_banmus_id', 'jadwal_banmus')) {
+            $banmusBuilder->select('jb.dokumen_banmus_id, db.nomor_sk, db.judul AS dokumen_judul, db.masa_persidangan, db.tahun AS dokumen_tahun')
+                ->join('dokumen_banmus db', 'db.id = jb.dokumen_banmus_id', 'left');
+        }
+        if ($db->tableExists('ruangan') && $db->fieldExists('ruangan_id', 'jadwal_banmus')) {
+            $banmusBuilder->select('r.name AS nama_ruangan')
+                ->join('ruangan r', 'r.id = jb.ruangan_id', 'left');
+        }
+        if ($db->fieldExists('lokasi_lainnya', 'jadwal_banmus')) {
+            $banmusBuilder->select('jb.lokasi_lainnya');
+        }
+
+        $banmusItems = $banmusBuilder
+            ->orderBy('jb.tanggal', 'DESC')
+            ->orderBy('jb.jam_mulai', 'DESC')
+            ->limit(100)
+            ->get()->getResultArray();
 
         return view('admin/notulen/index', [
             'pageTitle'        => 'Notulensi & Risalah AI',
@@ -97,7 +165,10 @@ class NotulenController extends BaseController
             'minutesMap'       => $minutesMap,
             'schedulesMap'     => $schedulesMap,
             'generalSchedules' => $generalSchedules,
+            'generalUnitMap'   => $generalUnitMap,
             'banmusItems'      => $banmusItems,
+            'banmusDocuments'  => $banmusDocuments,
+            'unitRapatList'    => $unitRapatList,
             'presetSchedule'   => $presetSchedule,
             'audioUploadToken' => $this->audioUploadToken(),
             'audioChunkSize'   => PostChunkAudioUpload::CHUNK_BYTES,

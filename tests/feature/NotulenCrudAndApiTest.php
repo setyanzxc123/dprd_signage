@@ -430,7 +430,8 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $response->assertSee('data-preset-id="44"');
         $response->assertSee('data-preset-type="umum"');
         $response->assertSee('Rapat Paripurna Istimewa HUT Sulteng');
-        $response->assertSee('Terkunci');
+        $response->assertSee('um_preset_card');
+        $response->assertSee('Ganti Agenda');
     }
 
     public function testWebAdminShowAndStatusRendersDynamicAiModel(): void

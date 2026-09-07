@@ -162,8 +162,8 @@
                     <i data-lucide="upload" class="size-5 text-emerald-600 dark:text-emerald-400"></i>
                     Unggah Rekaman Rapat
                 </h3>
-                <button id="um_close_btn" type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400" aria-label="Tutup dialog" data-hs-overlay="#modal_upload_notulen">
-                    <span class="sr-only">Tutup</span>
+                <button id="um_close_btn" type="button" class="size-9 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition outline-none focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 cursor-pointer" aria-label="Tutup dialog" data-hs-overlay="#modal_upload_notulen">
+                    <span class="sr-only">Tutup dialog</span>
                     <i data-lucide="x" class="size-4"></i>
                 </button>
             </div>
@@ -182,86 +182,128 @@
                     </div>
                 </div>
 
-                <!-- Kelompok 1: Data Rapat -->
+                <!-- Kelompok 1: Data Agenda & Topik Rapat -->
                 <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-3.5 space-y-3">
-                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Data Agenda &amp; Topik <span class="normal-case font-normal text-slate-400">(SSOT)</span></p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Data Agenda &amp; Topik Rapat</p>
 
-                    <?php if (! empty($presetSchedule)): ?>
-                        <div class="py-2 px-3 text-xs flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <i data-lucide="link" class="size-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
-                                <div class="min-w-0">
-                                    <p class="font-bold text-slate-900 dark:text-white truncate"><?= esc($presetSchedule['judul']) ?></p>
-                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-mono"><?= esc(strtoupper($presetSchedule['type'])) ?> &bull; <?= esc($presetSchedule['tanggal']) ?></p>
+                    <?php
+                    $generalJson = array_map(static function ($g) use ($generalUnitMap): array {
+                        $dateFormatted = ! empty($g['tanggal']) ? date('d/m/Y', strtotime($g['tanggal'])) : '-';
+                        $timeFormatted = ! empty($g['waktu_mulai']) ? substr((string) $g['waktu_mulai'], 0, 5) : '';
+                        $units = $generalUnitMap[(int) $g['id']] ?? [];
+                        $unitLabel = ! empty($units) ? implode(', ', $units) : '';
+                        $lokasi = ! empty($g['nama_ruangan']) ? $g['nama_ruangan'] : (! empty($g['lokasi_lainnya']) ? $g['lokasi_lainnya'] : '');
+                        $mitra = ! empty($g['pihak_eksternal']) ? $g['pihak_eksternal'] : '';
+
+                        return [
+                            'id'         => (string) $g['id'],
+                            'title'      => (string) $g['judul'],
+                            'date'       => $dateFormatted,
+                            'time'       => $timeFormatted,
+                            'label'      => $dateFormatted . ($timeFormatted ? ' ' . $timeFormatted : '') . ' — ' . $g['judul'],
+                            'unit'       => $unitLabel,
+                            'units_list' => $units,
+                            'location'   => $lokasi,
+                            'external'   => $mitra,
+                        ];
+                    }, $generalSchedules ?? []);
+
+                    $banmusJson = array_map(static function ($b): array {
+                        $dateFormatted = ! empty($b['tanggal']) ? date('d/m/Y', strtotime($b['tanggal'])) : '-';
+                        $timeFormatted = ! empty($b['waktu_mulai']) ? substr((string) $b['waktu_mulai'], 0, 5) : '';
+                        $skNomor = ! empty($b['nomor_sk']) ? (string) $b['nomor_sk'] : '';
+                        $skJudul = ! empty($b['dokumen_judul']) ? (string) $b['dokumen_judul'] : '';
+                        $docId = ! empty($b['dokumen_banmus_id']) ? (string) $b['dokumen_banmus_id'] : '';
+                        $masaPersidangan = ! empty($b['masa_persidangan']) ? (string) $b['masa_persidangan'] : '';
+                        $lokasi = ! empty($b['nama_ruangan']) ? $b['nama_ruangan'] : (! empty($b['lokasi_lainnya']) ? $b['lokasi_lainnya'] : '');
+
+                        return [
+                            'id'           => (string) $b['id'],
+                            'title'        => (string) $b['agenda'],
+                            'date'         => $dateFormatted,
+                            'time'         => $timeFormatted,
+                            'label'        => $dateFormatted . ($timeFormatted ? ' ' . $timeFormatted : '') . ' — ' . $b['agenda'],
+                            'doc_id'       => $docId,
+                            'sk_nomor'     => $skNomor,
+                            'sk_judul'     => $skJudul,
+                            'session_term' => $masaPersidangan,
+                            'location'     => $lokasi,
+                        ];
+                    }, $banmusItems ?? []);
+                    ?>
+                    <input type="hidden" id="modal_jadwal_id" name="jadwal_id" value="<?= esc($presetSchedule['id'] ?? '') ?>"
+                        data-general-options="<?= esc(json_encode($generalJson), 'attr') ?>"
+                        data-banmus-options="<?= esc(json_encode($banmusJson), 'attr') ?>"
+                        data-banmus-docs="<?= esc(json_encode($banmusDocuments ?? []), 'attr') ?>"
+                        data-unit-list="<?= esc(json_encode($unitRapatList ?? []), 'attr') ?>" />
+
+                    <!-- Kartu Agenda Preset -->
+                    <div id="um_preset_card" class="<?= empty($presetSchedule) ? 'hidden ' : '' ?>p-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 space-y-2" aria-disabled="true">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <p id="um_preset_title" class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug break-words"><?= esc($presetSchedule['judul'] ?? '') ?></p>
+                                <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                    <span id="um_preset_type_badge" class="font-medium text-slate-600 dark:text-slate-300"><?= esc(($presetSchedule['type'] ?? '') === 'banmus' ? 'Jadwal Banmus' : 'Jadwal Umum') ?></span>
+                                    <span>&bull;</span>
+                                    <span id="um_preset_meta" class="font-mono text-[11px]"><?= ! empty($presetSchedule['tanggal']) ? esc(date('d/m/Y', strtotime($presetSchedule['tanggal']))) : '' ?><?= ! empty($presetSchedule['waktu_mulai']) && $presetSchedule['waktu_mulai'] !== '-' ? ' &bull; ' . esc(substr($presetSchedule['waktu_mulai'], 0, 5)) : '' ?></span>
+                                    <?php if (! empty($presetSchedule['lokasi']) && $presetSchedule['lokasi'] !== '-'): ?>
+                                        <span>&bull;</span>
+                                        <span id="um_preset_lokasi" class="truncate max-w-[200px]"><?= esc($presetSchedule['lokasi']) ?></span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                            <span class="py-0.5 px-2 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 shrink-0">Terkunci</span>
+                            <button type="button" id="um_unlock_preset_btn" class="text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:underline shrink-0 cursor-pointer">
+                                Ganti Agenda
+                            </button>
                         </div>
-                    <?php endif; ?>
+                    </div>
 
-                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                        <div>
-                            <label for="modal_jadwal_type" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jenis Jadwal</label>
-                            <select id="modal_jadwal_type" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
-                                title="Umum: rapat komisi, paripurna, dan fraksi. Banmus: rapat Badan Musyawarah.">
-                                <option value="umum">Jadwal Umum</option>
-                                <option value="banmus">Jadwal Banmus</option>
-                            </select>
+                    <!-- Grup Kontrol Pemilih Manual (Sembunyi otomatis saat mode preset aktif) -->
+                    <div id="um_manual_picker_group" class="<?= ! empty($presetSchedule) ? 'hidden ' : '' ?>space-y-3">
+                        <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                            <div class="min-w-0">
+                                <label for="modal_jadwal_type" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jenis Jadwal</label>
+                                <select id="modal_jadwal_type" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700"
+                                    title="Umum: rapat komisi, paripurna, dan fraksi. Banmus: rapat Badan Musyawarah.">
+                                    <option value="umum">Jadwal Umum</option>
+                                    <option value="banmus">Jadwal Banmus</option>
+                                </select>
+                            </div>
+                            <div class="min-w-0">
+                                <label id="modal_sub_filter_label" for="modal_sub_filter" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Filter Komisi / Unit</label>
+                                <select id="modal_sub_filter" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700">
+                                    <option value="">Semua Komisi / Unit</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="relative">
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pilih Agenda</label>
-                            <?php
-                            $generalJson = array_map(static fn ($g): array => [
-                                'id'    => (string) $g['id'],
-                                'title' => $g['judul'],
-                                'date'  => date('d/m/Y', strtotime($g['tanggal'])),
-                                'label' => date('d/m/Y', strtotime($g['tanggal'])) . ' — ' . $g['judul'],
-                            ], $generalSchedules);
 
-                            $banmusJson = array_map(static fn ($b): array => [
-                                'id'    => (string) $b['id'],
-                                'title' => $b['agenda'],
-                                'date'  => date('d/m/Y', strtotime($b['tanggal'])),
-                                'label' => date('d/m/Y', strtotime($b['tanggal'])) . ' — ' . $b['agenda'],
-                            ], $banmusItems);
-                            ?>
-                            <input type="hidden" id="modal_jadwal_id" name="jadwal_id" value=""
-                                data-general-options="<?= esc(json_encode($generalJson), 'attr') ?>"
-                                data-banmus-options="<?= esc(json_encode($banmusJson), 'attr') ?>" />
+                        <div class="relative min-w-0">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Pilih Agenda</label>
+                                <span id="um_agenda_count" class="text-[11px] text-slate-400 font-mono"></span>
+                            </div>
 
-                            <div class="hs-dropdown relative w-full" id="um_agenda_dropdown">
+                            <div class="hs-dropdown [--strategy:absolute] [--auto-close:inside] relative w-full min-w-0" id="um_agenda_dropdown">
                                 <button type="button" id="um_agenda_trigger" tabindex="0"
-                                    class="hs-dropdown-toggle py-2 px-3 block w-full border border-slate-200 rounded-lg text-xs flex items-center justify-between text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 cursor-pointer focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700">
-                                    <span id="um_agenda_selected_label" class="truncate text-left flex-1">— Tanpa Relasi Agenda —</span>
-                                    <i data-lucide="chevron-down" class="size-4 shrink-0 text-slate-400 ms-1"></i>
+                                    class="hs-dropdown-toggle py-2 px-3 w-full border border-slate-200 rounded-lg text-xs flex items-center justify-between text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 cursor-pointer outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 min-w-0 max-w-full overflow-hidden disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700"
+                                    aria-haspopup="listbox" aria-expanded="false" aria-controls="um_agenda_options_list">
+                                    <span id="um_agenda_selected_label" class="truncate text-left flex-1 min-w-0" title="— Tanpa Relasi Agenda —">— Tanpa Relasi Agenda —</span>
+                                    <i data-lucide="chevron-down" class="size-4 shrink-0 text-slate-400 ms-1 transition duration-200 hs-dropdown-open:rotate-180"></i>
                                 </button>
-                                <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 hs-dropdown-open:block opacity-0 hidden transition-[opacity,margin] duration-200 z-50 mt-1 w-full rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-800">
-                                    <div class="relative mb-1.5">
+                                <div class="hs-dropdown-menu hs-dropdown-open:opacity-100 hs-dropdown-open:block opacity-0 hidden transition-[opacity,margin] duration-200 z-50 mt-1 w-full max-w-full rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl dark:border-slate-700 dark:bg-slate-800 min-w-0" role="dialog" aria-label="Pencarian dan pemilihan agenda">
+                                    <div class="relative mb-2 min-w-0">
                                         <input type="text" id="um_agenda_search_input"
-                                            placeholder="Cari nama agenda atau tanggal..."
-                                            class="py-1 px-2.5 ps-7 block w-full border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
-                                            autocomplete="off" aria-label="Cari agenda" />
-                                        <i data-lucide="search" class="size-3.5 text-slate-400 absolute start-2 top-2"></i>
+                                            placeholder="Ketik judul, komisi, tanggal, mitra, ruangan..."
+                                            class="py-1.5 px-2.5 ps-7 block w-full border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
+                                            autocomplete="off" aria-label="Cari agenda" role="searchbox" />
+                                        <i data-lucide="search" class="size-3.5 text-slate-400 absolute start-2 top-2.5"></i>
                                     </div>
-                                    <ul id="um_agenda_options_list" class="max-h-44 overflow-y-auto space-y-0.5">
+                                    <ul id="um_agenda_options_list" class="max-h-72 overflow-y-auto space-y-2 min-w-0 pe-1" role="listbox" aria-label="Daftar opsi agenda rapat">
                                         <!-- Opsi agenda dinamis via JavaScript -->
                                     </ul>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label for="modal_judul_rapat" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Judul / Topik Rapat</label>
-                            <span class="text-slate-400 text-[11px]">Otomatis dari Agenda</span>
-                        </div>
-                        <input type="text" id="modal_judul_rapat"
-                            placeholder="Otomatis terisi saat agenda dipilih"
-                            class="py-2 px-3 block w-full border border-slate-200 rounded-lg text-xs bg-slate-100 text-slate-500 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
-                            disabled
-                            readonly
-                            autocomplete="off" />
                     </div>
                 </div>
 
@@ -274,7 +316,7 @@
 
                     <!-- Dropzone -->
                     <div id="um_dropzone"
-                        class="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-5 text-center cursor-pointer transition-all duration-200 hover:border-emerald-500 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20"
+                        class="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-5 text-center cursor-pointer transition-all duration-200 hover:border-emerald-500 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 outline-none focus:outline-none focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
                         role="button"
                         tabindex="0"
                         aria-label="Pilih atau seret berkas rekaman audio">
@@ -328,7 +370,8 @@
                         </div>
                         <span id="upload_progress_percent" class="font-mono text-emerald-600 dark:text-emerald-400">0%</span>
                     </div>
-                    <div class="flex w-full h-2 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700">
+                    <div class="flex w-full h-2 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700"
+                        role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Kemajuan unggahan berkas rekaman">
                         <div id="upload_progress_bar" class="flex flex-col justify-center overflow-hidden bg-emerald-600 text-xs text-white text-center whitespace-nowrap transition duration-500" style="width: 0%"></div>
                     </div>
                     <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">

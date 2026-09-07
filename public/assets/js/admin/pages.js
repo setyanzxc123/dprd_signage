@@ -1579,11 +1579,13 @@
         const backdropBtn = document.getElementById('um_backdrop_btn');
         const retryBtn    = document.getElementById('um_retry_btn');
         const fileInput   = document.getElementById('modal_audio_file');
+        let selectedAgendaTitle = '';
 
-        const judulInput  = document.getElementById('modal_judul_rapat');
-
-        const jadwalType  = document.getElementById('modal_jadwal_type');
-        const jadwalId    = document.getElementById('modal_jadwal_id');
+        const jadwalType          = document.getElementById('modal_jadwal_type');
+        const subFilter           = document.getElementById('modal_sub_filter');
+        const subFilterLabel      = document.getElementById('modal_sub_filter_label');
+        const jadwalId            = document.getElementById('modal_jadwal_id');
+        const agendaCount         = document.getElementById('um_agenda_count');
         const agendaDropdown      = document.getElementById('um_agenda_dropdown');
         const agendaTrigger       = document.getElementById('um_agenda_trigger');
         const agendaSelectedLabel = document.getElementById('um_agenda_selected_label');
@@ -1754,25 +1756,65 @@
             });
         }
 
+        const presetCard        = document.getElementById('um_preset_card');
+        const manualPickerGroup = document.getElementById('um_manual_picker_group');
+        const unlockPresetBtn   = document.getElementById('um_unlock_preset_btn');
+
         const presetType  = modal.dataset.presetType || '';
         const presetId    = parseInt(modal.dataset.presetId || '0', 10);
         const presetTitle = modal.dataset.presetTitle || '';
         const presetLabel = modal.dataset.presetLabel || '';
+        let isPresetLocked = Boolean(presetId > 0 && presetType);
 
         function applyPresetIfAvailable() {
-            if (presetId > 0 && presetType) {
+            if (presetId > 0 && presetType && isPresetLocked) {
+                if (presetCard) presetCard.classList.remove('hidden');
+                if (manualPickerGroup) manualPickerGroup.classList.add('hidden');
                 if (jadwalType) {
                     jadwalType.value = presetType;
                     jadwalType.disabled = true;
+                    jadwalType.setAttribute('aria-disabled', 'true');
+                }
+                if (subFilter) {
+                    subFilter.disabled = true;
+                    subFilter.setAttribute('aria-disabled', 'true');
                 }
                 if (agendaTrigger) {
                     agendaTrigger.disabled = true;
-                    agendaTrigger.classList.add('cursor-not-allowed', 'opacity-70', 'bg-base-200');
+                    agendaTrigger.setAttribute('aria-disabled', 'true');
+                    agendaTrigger.classList.add('cursor-not-allowed', 'opacity-70', 'bg-slate-100', 'dark:bg-slate-800');
                 }
                 selectAgendaItem(String(presetId), presetTitle, presetLabel);
                 return true;
             }
             return false;
+        }
+
+        if (unlockPresetBtn) {
+            unlockPresetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                isPresetLocked = false;
+                if (presetCard) presetCard.classList.add('hidden');
+                if (manualPickerGroup) manualPickerGroup.classList.remove('hidden');
+                if (jadwalType) {
+                    jadwalType.disabled = false;
+                    jadwalType.removeAttribute('aria-disabled');
+                }
+                if (subFilter) {
+                    subFilter.disabled = false;
+                    subFilter.removeAttribute('aria-disabled');
+                }
+                if (agendaTrigger) {
+                    agendaTrigger.disabled = false;
+                    agendaTrigger.removeAttribute('aria-disabled');
+                    agendaTrigger.classList.remove('cursor-not-allowed', 'opacity-70', 'bg-slate-100', 'dark:bg-slate-800');
+                }
+                updateJadwalOptions();
+                rerenderIcons();
+                if (agendaTrigger) {
+                    setTimeout(() => agendaTrigger.focus(), 50);
+                }
+            });
         }
 
         function resetForm() {
@@ -1800,13 +1842,38 @@
             if (fileInput) fileInput.value = '';
 
             if (presetId > 0 && presetType) {
+                isPresetLocked = true;
                 applyPresetIfAvailable();
             } else {
-                if (judulInput) judulInput.value = '';
+                isPresetLocked = false;
+                if (presetCard) presetCard.classList.add('hidden');
+                if (manualPickerGroup) manualPickerGroup.classList.remove('hidden');
+                if (jadwalType) {
+                    jadwalType.disabled = false;
+                    jadwalType.removeAttribute('aria-disabled');
+                }
+                if (subFilter) {
+                    subFilter.disabled = false;
+                    subFilter.removeAttribute('aria-disabled');
+                    subFilter.value = '';
+                }
+                if (agendaTrigger) {
+                    agendaTrigger.disabled = false;
+                    agendaTrigger.removeAttribute('aria-disabled');
+                    agendaTrigger.classList.remove('cursor-not-allowed', 'opacity-70', 'bg-slate-100', 'dark:bg-slate-800');
+                }
+                selectedAgendaTitle = '';
                 if (jadwalId) jadwalId.value = '';
                 if (agendaSearchInput) agendaSearchInput.value = '';
-                if (agendaSelectedLabel) agendaSelectedLabel.textContent = '— Tanpa Relasi Agenda —';
+                if (agendaSelectedLabel) {
+                    agendaSelectedLabel.textContent = '— Tanpa Relasi Agenda —';
+                    agendaSelectedLabel.title = '— Tanpa Relasi Agenda —';
+                }
                 if (typeof renderAgendaOptions === 'function') renderAgendaOptions('');
+            }
+
+            if (agendaDropdown && window.HSDropdown) {
+                window.HSDropdown.close(agendaDropdown);
             }
 
             showDropzoneIdle();
@@ -1838,12 +1905,12 @@
 
         function selectAgendaItem(id, title, label) {
             if (jadwalId) jadwalId.value = id || '';
+            const selectedLabel = label || '— Tanpa Relasi Agenda —';
             if (agendaSelectedLabel) {
-                agendaSelectedLabel.textContent = label || '— Tanpa Relasi Agenda —';
+                agendaSelectedLabel.textContent = selectedLabel;
+                agendaSelectedLabel.title = selectedLabel;
             }
-            if (judulInput) {
-                judulInput.value = title || '';
-            }
+            selectedAgendaTitle = title || '';
 
             if (agendaDropdown && window.HSDropdown) {
                 window.HSDropdown.close(agendaDropdown);
@@ -1854,26 +1921,107 @@
             }
         }
 
+        function updateSubFilterOptions() {
+            if (!subFilter || !jadwalId || !jadwalType) return;
+            subFilter.innerHTML = '';
+
+            const isBanmus = jadwalType.value === 'banmus';
+            if (subFilterLabel) {
+                subFilterLabel.textContent = isBanmus ? 'Filter Dokumen SK' : 'Filter Komisi / Unit';
+            }
+
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = isBanmus ? 'Semua Dokumen SK' : 'Semua Komisi / Unit';
+            subFilter.appendChild(defaultOpt);
+
+            try {
+                if (isBanmus) {
+                    const docs = JSON.parse(jadwalId.dataset.banmusDocs || '[]');
+                    docs.forEach((doc) => {
+                        const opt = document.createElement('option');
+                        opt.value = String(doc.id);
+                        const parts = [];
+                        if (doc.nomor_sk) parts.push(`SK ${doc.nomor_sk}`);
+                        if (doc.masa_persidangan) parts.push(doc.masa_persidangan);
+                        opt.textContent = parts.length > 0 ? parts.join(' — ') : (doc.judul || `Dokumen #${doc.id}`);
+                        subFilter.appendChild(opt);
+                    });
+                } else {
+                    const units = JSON.parse(jadwalId.dataset.unitList || '[]');
+                    units.forEach((unit) => {
+                        const opt = document.createElement('option');
+                        opt.value = unit.nama;
+                        opt.textContent = unit.nama;
+                        subFilter.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                /* fallback empty */
+            }
+        }
+
         function renderAgendaOptions(searchTerm = '') {
             if (!agendaOptionsList) return;
             agendaOptionsList.innerHTML = '';
 
             const term = (searchTerm || '').trim().toLowerCase();
+            const tokens = term.split(/\s+/).filter(Boolean);
+            const selectedSub = subFilter ? subFilter.value : '';
+            const currentType = jadwalType ? jadwalType.value : 'umum';
+
             const filtered = currentAgendaItems.filter((item) => {
-                if (!term) return true;
-                const titleMatch = (item.title || '').toLowerCase().includes(term);
-                const labelMatch = (item.label || '').toLowerCase().includes(term);
-                const dateMatch  = (item.date || '').toLowerCase().includes(term);
-                return titleMatch || labelMatch || dateMatch;
+                if (selectedSub) {
+                    if (currentType === 'banmus') {
+                        if (String(item.doc_id || '') !== String(selectedSub)) {
+                            return false;
+                        }
+                    } else {
+                        const inList = Array.isArray(item.units_list) && item.units_list.some((u) => String(u).toLowerCase() === selectedSub.toLowerCase());
+                        const inStr = (item.unit || '').toLowerCase().includes(selectedSub.toLowerCase());
+                        if (!inList && !inStr) {
+                            return false;
+                        }
+                    }
+                }
+
+                if (tokens.length > 0) {
+                    const haystack = [
+                        item.title,
+                        item.date,
+                        item.time,
+                        item.location,
+                        item.sk_nomor,
+                        item.sk_judul,
+                        item.session_term,
+                        item.unit,
+                        item.external
+                    ].filter(Boolean).join(' ').toLowerCase();
+
+                    return tokens.every((tok) => haystack.includes(tok));
+                }
+
+                return true;
             });
+
+            if (agendaCount) {
+                agendaCount.textContent = `${filtered.length} agenda`;
+            }
 
             if (!term || 'tanpa relasi agenda'.includes(term)) {
                 const liNone = document.createElement('li');
+                liNone.className = 'w-full min-w-0';
                 const btnNone = document.createElement('button');
                 btnNone.type = 'button';
+                btnNone.setAttribute('role', 'option');
                 const isSelected = !jadwalId || !jadwalId.value;
-                btnNone.className = 'flex items-center justify-between py-1.5 px-2 rounded hover:bg-base-200 text-xs ' + (isSelected ? 'active font-bold bg-base-200 text-base-content' : 'text-base-content/70');
-                btnNone.innerHTML = '<span>— Tanpa Relasi Agenda —</span>';
+                btnNone.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                btnNone.className = 'w-full flex items-center justify-between p-2.5 rounded-lg text-xs transition cursor-pointer text-left min-w-0 border outline-none focus:outline-none focus-visible:outline-none ' +
+                    (isSelected
+                        ? 'bg-emerald-50/80 border-emerald-500 text-emerald-900 dark:bg-emerald-950/50 dark:border-emerald-500 dark:text-emerald-200 font-semibold'
+                        : 'bg-slate-50/80 border-dashed border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 dark:bg-slate-900/60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900');
+                btnNone.innerHTML = '<span class="truncate min-w-0 flex-1 font-medium">— Tanpa Relasi Agenda —</span>' +
+                    (isSelected ? '<span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 shrink-0 bg-emerald-100/80 dark:bg-emerald-900/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">Terpilih</span>' : '');
                 btnNone.addEventListener('click', (e) => {
                     e.preventDefault();
                     selectAgendaItem('', '', '— Tanpa Relasi Agenda —');
@@ -1882,31 +2030,115 @@
                 agendaOptionsList.appendChild(liNone);
             }
 
-            if (filtered.length === 0 && term) {
+            if (filtered.length === 0 && (term || selectedSub)) {
                 const liEmpty = document.createElement('li');
-                liEmpty.className = 'py-3 text-center text-xs text-base-content/40 italic';
-                liEmpty.textContent = 'Tidak ada agenda yang cocok';
+                liEmpty.className = 'p-4 text-center text-xs text-slate-500 dark:text-slate-400 italic border border-dashed border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/50 dark:bg-slate-900/40';
+                liEmpty.textContent = 'Tidak ada agenda yang cocok dengan filter / pencarian';
                 agendaOptionsList.appendChild(liEmpty);
                 return;
             }
 
             filtered.forEach((item) => {
-                const isSelected = jadwalId && jadwalId.value === item.id;
+                const isSelected = jadwalId && String(jadwalId.value) === String(item.id);
                 const li = document.createElement('li');
+                li.className = 'w-full min-w-0';
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'flex flex-col items-start gap-0.5 py-1.5 px-2 rounded hover:bg-base-200 text-left ' + (isSelected ? 'active bg-primary/10 text-primary font-semibold' : 'text-base-content');
+                btn.setAttribute('role', 'option');
+                btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                btn.className = 'w-full flex flex-col items-start p-2.5 rounded-lg text-left transition cursor-pointer min-w-0 border outline-none focus:outline-none focus-visible:outline-none ' +
+                    (isSelected
+                        ? 'bg-emerald-50/80 border-emerald-500 dark:bg-emerald-950/40 dark:border-emerald-500'
+                        : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100/80 hover:border-emerald-400 dark:bg-slate-900/60 dark:border-slate-700/80 dark:hover:bg-slate-900 dark:hover:border-slate-600');
 
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'text-xs font-semibold leading-snug line-clamp-2';
-                titleSpan.textContent = item.title;
+                const headerRow = document.createElement('div');
+                headerRow.className = 'flex items-start justify-between gap-2 w-full min-w-0 mb-1';
 
-                const dateSpan = document.createElement('span');
-                dateSpan.className = 'text-[10px] font-mono text-base-content/50';
-                dateSpan.textContent = item.date || item.label;
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'text-xs font-semibold leading-snug break-words flex-1 min-w-0 ' +
+                    (isSelected ? 'text-emerald-900 dark:text-emerald-200 font-bold' : 'text-slate-900 dark:text-slate-100');
+                titleDiv.textContent = item.title;
+                headerRow.appendChild(titleDiv);
 
-                btn.appendChild(titleSpan);
-                btn.appendChild(dateSpan);
+                if (isSelected) {
+                    const selBadge = document.createElement('span');
+                    selBadge.className = 'text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 shrink-0 bg-emerald-100/80 dark:bg-emerald-900/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700';
+                    selBadge.textContent = 'Terpilih';
+                    headerRow.appendChild(selBadge);
+                }
+
+                btn.appendChild(headerRow);
+
+                if (item.date) {
+                    const rowDate = document.createElement('div');
+                    rowDate.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                    const labelCal = document.createElement('span');
+                    labelCal.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                    labelCal.textContent = 'Tanggal & Waktu:';
+                    const valCal = document.createElement('span');
+                    valCal.className = 'font-semibold text-slate-800 dark:text-slate-200 font-mono text-[11px]';
+                    valCal.textContent = item.date + (item.time ? ' • ' + item.time : '');
+                    rowDate.appendChild(labelCal);
+                    rowDate.appendChild(valCal);
+                    btn.appendChild(rowDate);
+                }
+
+                if (currentType === 'banmus') {
+                    if (item.sk_nomor) {
+                        const rowSk = document.createElement('div');
+                        rowSk.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                        const labelSk = document.createElement('span');
+                        labelSk.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                        labelSk.textContent = 'Dokumen SK:';
+                        const valSk = document.createElement('span');
+                        valSk.className = 'font-semibold text-amber-800 dark:text-amber-300 font-mono text-[11px]';
+                        valSk.textContent = `SK ${item.sk_nomor}${item.session_term ? ' (' + item.session_term + ')' : ''}`;
+                        rowSk.appendChild(labelSk);
+                        rowSk.appendChild(valSk);
+                        btn.appendChild(rowSk);
+                    }
+                } else {
+                    if (item.unit) {
+                        const rowUnit = document.createElement('div');
+                        rowUnit.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                        const labelUnit = document.createElement('span');
+                        labelUnit.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                        labelUnit.textContent = 'Komisi / Unit:';
+                        const valUnit = document.createElement('span');
+                        valUnit.className = 'font-semibold text-blue-800 dark:text-blue-300 text-[11px]';
+                        valUnit.textContent = item.unit;
+                        rowUnit.appendChild(labelUnit);
+                        rowUnit.appendChild(valUnit);
+                        btn.appendChild(rowUnit);
+                    }
+                    if (item.external) {
+                        const rowExt = document.createElement('div');
+                        rowExt.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                        const labelExt = document.createElement('span');
+                        labelExt.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                        labelExt.textContent = 'Mitra Kerja:';
+                        const valExt = document.createElement('span');
+                        valExt.className = 'font-semibold text-purple-800 dark:text-purple-300 text-[11px]';
+                        valExt.textContent = item.external;
+                        rowExt.appendChild(labelExt);
+                        rowExt.appendChild(valExt);
+                        btn.appendChild(rowExt);
+                    }
+                }
+
+                if (item.location) {
+                    const rowLoc = document.createElement('div');
+                    rowLoc.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 w-full min-w-0';
+                    const labelLoc = document.createElement('span');
+                    labelLoc.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                    labelLoc.textContent = 'Ruangan:';
+                    const valLoc = document.createElement('span');
+                    valLoc.className = 'font-semibold text-slate-800 dark:text-slate-200 text-[11px] truncate';
+                    valLoc.textContent = item.location;
+                    rowLoc.appendChild(labelLoc);
+                    rowLoc.appendChild(valLoc);
+                    btn.appendChild(rowLoc);
+                }
 
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -1916,6 +2148,8 @@
                 li.appendChild(btn);
                 agendaOptionsList.appendChild(li);
             });
+
+            rerenderIcons();
         }
 
         function updateJadwalOptions() {
@@ -1925,8 +2159,11 @@
             try {
                 generalOpts = JSON.parse(jadwalId.dataset.generalOptions || '[]');
                 banmusOpts = JSON.parse(jadwalId.dataset.banmusOptions || '[]');
-            } catch (e) { /* fallback empty */ }
+            } catch (e) {
+                /* fallback empty */
+            }
 
+            updateSubFilterOptions();
             currentAgendaItems = (jadwalType.value === 'banmus') ? banmusOpts : generalOpts;
             if (agendaSearchInput) agendaSearchInput.value = '';
             selectAgendaItem('', '', '— Tanpa Relasi Agenda —');
@@ -1939,8 +2176,26 @@
             });
         }
 
+        if (subFilter) {
+            subFilter.addEventListener('change', () => {
+                const term = agendaSearchInput ? agendaSearchInput.value : '';
+                renderAgendaOptions(term);
+            });
+        }
+
+        if (agendaDropdown) {
+            agendaDropdown.addEventListener('open.hs.dropdown', () => {
+                if (agendaSearchInput) {
+                    setTimeout(() => agendaSearchInput.focus(), 50);
+                }
+            });
+        }
+
         let agendaSearchTimer = null;
         if (agendaSearchInput) {
+            agendaSearchInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
             agendaSearchInput.addEventListener('input', () => {
                 clearTimeout(agendaSearchTimer);
                 agendaSearchTimer = setTimeout(() => {
@@ -1948,10 +2203,54 @@
                 }, 150);
             });
             agendaSearchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const firstOption = agendaOptionsList ? agendaOptionsList.querySelector('button[role="option"]') : null;
+                    if (firstOption) firstOption.click();
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const firstOption = agendaOptionsList ? agendaOptionsList.querySelector('button[role="option"]') : null;
+                    if (firstOption) firstOption.focus();
+                } else if (e.key === 'Escape') {
                     e.stopPropagation();
                     if (document.activeElement && typeof document.activeElement.blur === 'function') {
                         document.activeElement.blur();
+                    }
+                    if (agendaDropdown && window.HSDropdown) {
+                        window.HSDropdown.close(agendaDropdown);
+                    }
+                }
+            });
+        }
+
+        if (agendaOptionsList) {
+            agendaOptionsList.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            agendaOptionsList.addEventListener('keydown', (e) => {
+                const currentBtn = e.target.closest('button[role="option"]');
+                if (!currentBtn) return;
+                const allButtons = Array.from(agendaOptionsList.querySelectorAll('button[role="option"]'));
+                const currentIndex = allButtons.indexOf(currentBtn);
+                if (currentIndex === -1) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = allButtons[currentIndex + 1] || allButtons[0];
+                    if (next) next.focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (currentIndex === 0) {
+                        if (agendaSearchInput) agendaSearchInput.focus();
+                    } else {
+                        const prev = allButtons[currentIndex - 1];
+                        if (prev) prev.focus();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    if (agendaTrigger) agendaTrigger.focus();
+                    if (agendaDropdown && window.HSDropdown) {
+                        window.HSDropdown.close(agendaDropdown);
                     }
                 }
             });
@@ -1965,6 +2264,9 @@
                 if (modal) {
                     openOverlay(modal);
                     rerenderIcons();
+                    if (isPresetLocked && dropzone) {
+                        setTimeout(() => dropzone.focus(), 50);
+                    }
                 }
             }, 100);
         }
@@ -2120,11 +2422,16 @@
             const bar = document.getElementById('upload_progress_bar');
             const percent = document.getElementById('upload_progress_percent');
             const text = document.getElementById('upload_status_text');
+            const rounded = Math.round(pct);
             if (bar) {
                 if ('value' in bar) bar.value = pct;
-                bar.style.width = Math.round(pct) + '%';
+                bar.style.width = rounded + '%';
+                const parent = bar.parentElement;
+                if (parent && parent.getAttribute('role') === 'progressbar') {
+                    parent.setAttribute('aria-valuenow', String(rounded));
+                }
             }
-            if (percent) percent.textContent = Math.round(pct) + '%';
+            if (percent) percent.textContent = rounded + '%';
             if (text && msg !== undefined) text.textContent = msg;
         }
 
@@ -2358,12 +2665,12 @@
             const fd = new FormData();
             fd.append('upload_id', uploadId);
 
-            const actualJadwalType = (presetId > 0 && presetType) ? presetType : (jadwalType ? jadwalType.value : 'umum');
-            const actualJadwalId   = (presetId > 0) ? String(presetId) : (jadwalId ? jadwalId.value : '');
+            const actualJadwalType = (presetId > 0 && presetType && isPresetLocked) ? presetType : (jadwalType ? jadwalType.value : 'umum');
+            const actualJadwalId   = (presetId > 0 && isPresetLocked) ? String(presetId) : (jadwalId ? jadwalId.value : '');
             fd.append('jadwal_type', actualJadwalType);
             fd.append('jadwal_id', actualJadwalId);
 
-            let finalTitle = judulInput && judulInput.value ? judulInput.value.trim() : (presetTitle || '');
+            let finalTitle = (isPresetLocked ? presetTitle : selectedAgendaTitle) || '';
             if (!finalTitle) {
                 const todayFormatted = new Intl.DateTimeFormat('id-ID', {
                     day: 'numeric', month: 'long', year: 'numeric'
