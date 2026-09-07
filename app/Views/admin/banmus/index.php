@@ -93,8 +93,8 @@
                                 <div class="mt-0.5 font-mono text-xs text-slate-400 dark:text-slate-500"><?= (int) $doc['tahun'] ?></div>
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Jumlah Agenda">
-                                <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                    <i data-lucide="list-checks" class="size-3.5 text-emerald-500"></i>
+                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                    <i data-lucide="list-checks" class="size-3.5 text-emerald-600 dark:text-emerald-400"></i>
                                     <?= (int) ($doc['jumlah_item'] ?? 0) ?> agenda
                                 </span>
                             </td>

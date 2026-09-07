@@ -59,13 +59,13 @@
                             default       => ucfirst($job['status']),
                         };
 
-                        $statusClass = match ($job['status']) {
-                            'completed'   => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60',
-                            'chunking', 'transcribing', 'summarizing' => 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60 font-bold',
-                            'queued'      => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60',
-                            'failed'      => 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/60 font-bold',
-                            'cancelled'   => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
-                            default       => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+                        $statusTextClass = match ($job['status']) {
+                            'completed'   => 'text-emerald-600 dark:text-emerald-400',
+                            'chunking', 'transcribing', 'summarizing' => 'text-amber-600 dark:text-amber-400 font-semibold',
+                            'queued'      => 'text-blue-600 dark:text-blue-400',
+                            'failed'      => 'text-rose-600 dark:text-rose-400 font-semibold',
+                            'cancelled'   => 'text-slate-500 dark:text-slate-400',
+                            default       => 'text-slate-500 dark:text-slate-400',
                         };
 
                         $risalahFilter = 'Belum Ada';
@@ -90,30 +90,30 @@
                                         <span><?= round($job['audio_size'] / (1024 * 1024), 1) ?> MB</span>
                                     <?php endif; ?>
                                     <?php if ($job['jadwal_type'] === 'banmus'): ?>
-                                        <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-semibold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/60">Banmus</span>
+                                        <span class="font-semibold text-purple-600 dark:text-purple-400">Banmus</span>
                                     <?php else: ?>
-                                        <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">Umum</span>
+                                        <span class="font-semibold text-emerald-600 dark:text-emerald-400">Umum</span>
                                     <?php endif; ?>
                                 </div>
                             </td>
                             <td data-label="Status AI" data-filter="<?= esc($statusLabel) ?>">
-                                <span class="inline-flex items-center py-0.5 px-2.5 rounded-md text-xs font-semibold <?= $statusClass ?>">
+                                <span class="text-xs font-semibold whitespace-nowrap <?= $statusTextClass ?>">
                                     <?= esc($statusLabel) ?>
                                 </span>
                             </td>
                             <td data-label="Risalah" data-filter="<?= esc($risalahFilter) ?>">
                                 <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                                     <?php if ($minutes['status_verifikasi'] === 'final'): ?>
-                                        <span class="inline-flex items-center gap-1 py-0.5 px-2.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
-                                            <i data-lucide="check-check" class="size-3"></i> Final
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                            <i data-lucide="check-check" class="size-3.5"></i> Final
                                         </span>
                                     <?php else: ?>
-                                        <span class="inline-flex items-center gap-1 py-0.5 px-2.5 rounded-md text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
-                                            <i data-lucide="file-edit" class="size-3"></i> Draft
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                            <i data-lucide="file-edit" class="size-3.5"></i> Draft
                                         </span>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center py-0.5 px-2.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Belum Ada</span>
+                                    <span class="text-xs text-slate-400 dark:text-slate-500">Belum Ada</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">

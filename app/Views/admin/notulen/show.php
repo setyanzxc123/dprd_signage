@@ -259,7 +259,7 @@ if ($job['jadwal_type'] === 'banmus') {
             <!-- Metadata Rapat -->
             <div class="space-y-1.5 min-w-0 flex-1">
                 <div>
-                    <span class="badge badge-sm badge-secondary font-bold text-[10px] tracking-wider px-2.5 py-0.5 rounded-md">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                         <?= esc($badgeKategori) ?>
                     </span>
                 </div>

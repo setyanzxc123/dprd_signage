@@ -50,22 +50,16 @@
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Kapasitas">
-                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
                                     <i data-lucide="users" class="size-3.5 text-slate-400"></i>
                                     <?= esc($r['kapasitas']) ?> orang
                                 </span>
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Status">
                                 <?php if ($r['tersedia']): ?>
-                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
-                                        <span class="size-1.5 rounded-full bg-emerald-500"></span>
-                                        Tersedia
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Tersedia</span>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                        <span class="size-1.5 rounded-full bg-slate-400"></span>
-                                        Tidak Tersedia
-                                    </span>
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Tidak Tersedia</span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">

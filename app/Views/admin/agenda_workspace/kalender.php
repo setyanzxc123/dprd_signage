@@ -3,15 +3,15 @@
 <?= $this->section('content') ?>
 
 <?php
-$sourceBadgeClasses = [
-    'banmus'      => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60',
-    'jadwal_umum' => 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60',
+$sourceTextClasses = [
+    'banmus'      => 'text-emerald-600 dark:text-emerald-400',
+    'jadwal_umum' => 'text-indigo-600 dark:text-indigo-400',
 ];
-$statusBadgeClasses = [
-    'menunggu'    => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium',
-    'persiapan'   => 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60',
-    'berlangsung' => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60',
-    'selesai'     => 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60',
+$statusTextClasses = [
+    'menunggu'    => 'text-slate-600 dark:text-slate-400',
+    'persiapan'   => 'text-amber-600 dark:text-amber-400',
+    'berlangsung' => 'text-emerald-600 dark:text-emerald-400',
+    'selesai'     => 'text-sky-600 dark:text-sky-400',
 ];
 $weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
@@ -301,16 +301,14 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Sumber">
-                                <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-semibold whitespace-nowrap <?= esc($sourceBadgeClasses[$agenda['source']] ?? '') ?>">
+                                <span class="text-xs font-semibold whitespace-nowrap <?= esc($sourceTextClasses[$agenda['source']] ?? 'text-slate-600 dark:text-slate-400') ?>">
                                     <?= esc($agenda['source_label']) ?>
                                 </span>
                             </td>
                             <td class="px-4 py-3.5" data-label="Unit / Peserta">
                                 <?php if ($agenda['units'] !== []): ?>
-                                    <div class="flex max-w-xs flex-wrap gap-1">
-                                        <?php foreach ($agenda['units'] as $unit): ?>
-                                            <span class="py-0.5 px-2 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"><?= esc($unit) ?></span>
-                                        <?php endforeach; ?>
+                                    <div class="max-w-xs text-xs text-slate-700 dark:text-slate-300">
+                                        <?= esc(implode(', ', $agenda['units'])) ?>
                                     </div>
                                 <?php else: ?>
                                     <span class="text-xs text-slate-400 dark:text-slate-500">&mdash;</span>
@@ -318,15 +316,15 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                             </td>
                             <td class="px-4 py-3.5" data-label="Lokasi"><span class="max-w-xs text-xs font-semibold text-slate-800 dark:text-slate-200"><?= esc($agenda['lokasi']) ?></span></td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Status">
-                                <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-semibold whitespace-nowrap <?= esc($statusBadgeClasses[$agenda['status']] ?? '') ?>">
+                                <span class="text-xs font-semibold whitespace-nowrap <?= esc($statusTextClasses[$agenda['status']] ?? 'text-slate-600 dark:text-slate-400') ?>">
                                     <?= esc(ucfirst($agenda['status'])) ?>
                                 </span>
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Publikasi">
                                 <?php if ($agenda['is_publik']): ?>
-                                    <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 whitespace-nowrap">Publik</span>
+                                    <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">Publik</span>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap">Internal</span>
+                                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">Internal</span>
                                 <?php endif; ?>
                             </td>
                         </tr>

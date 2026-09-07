@@ -57,23 +57,13 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3.5 text-slate-600 dark:text-slate-400" data-label="Fraksi"><?= esc($m['fraksi']) ?></td>
-                            <td class="px-4 py-3.5" data-label="Komisi">
-                                <span class="py-0.5 px-2 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                    <?= esc($m['komisi']) ?>
-                                </span>
-                            </td>
+                            <td class="px-4 py-3.5 text-xs text-slate-700 dark:text-slate-300" data-label="Komisi"><?= esc($m['komisi']) ?></td>
                             <td class="px-4 py-3.5 font-mono text-xs text-slate-600 dark:text-slate-400" data-label="No WhatsApp"><?= esc($m['no_wa']) ?></td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Status">
                                 <?php if ($m['aktif']): ?>
-                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
-                                        <span class="size-1.5 rounded-full bg-emerald-500"></span>
-                                        Aktif
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Aktif</span>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                        <span class="size-1.5 rounded-full bg-slate-400"></span>
-                                        Nonaktif
-                                    </span>
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Nonaktif</span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">

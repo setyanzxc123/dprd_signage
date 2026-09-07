@@ -62,7 +62,7 @@
                     <i data-lucide="contact-round" class="size-4 text-emerald-500"></i>
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Anggota Kelompok</h2>
                 </div>
-                <span class="py-0.5 px-2.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60" id="member-count-badge">
+                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400" id="member-count-badge">
                     <?= count($selectedAnggotaIds) ?> dipilih
                 </span>
             </div>
@@ -127,7 +127,7 @@
                     <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 flex flex-col h-full">
                         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/40 px-3.5 py-2.5">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Terpilih</span>
-                            <span class="py-0.5 px-2 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" id="target-count"><?= count($selectedAnggotaIds) ?></span>
+                            <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400" id="target-count"><?= count($selectedAnggotaIds) ?></span>
                         </div>
                         <div class="overflow-y-auto max-h-84 md:h-[326px] divide-y divide-slate-100 dark:divide-slate-800" id="target-list">
                             <?php

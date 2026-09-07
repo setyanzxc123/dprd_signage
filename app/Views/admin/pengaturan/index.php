@@ -119,7 +119,7 @@
                     Integrasi WhatsApp OTP Gateway
                 </h2>
                 <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:border dark:border-emerald-800/60 dark:text-emerald-300" id="wa-provider-badge">
+                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400" id="wa-provider-badge">
                         Provider: <?= esc(strtoupper($otpConfig->provider ?? 'HYBRID')) ?>
                     </span>
                     <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-2.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xs hover:bg-slate-50 focus:outline-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 transition" id="btn-refresh-wa-status" title="Periksa status koneksi WhatsApp">

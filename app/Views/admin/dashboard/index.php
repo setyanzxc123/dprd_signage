@@ -187,8 +187,15 @@
                                                 <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
-                                        <span class="badge <?= $badge['class'] ?>">
-                                            <span class="size-1.5 rounded-full bg-current <?= $m['status'] === 'berlangsung' ? 'animate-pulse' : '' ?>"></span>
+                                        <?php
+                                        $dashStatusClass = match ($m['status']) {
+                                            'berlangsung' => 'text-emerald-600 dark:text-emerald-400',
+                                            'persiapan'   => 'text-amber-600 dark:text-amber-400',
+                                            'selesai'     => 'text-sky-600 dark:text-sky-400',
+                                            default       => 'text-slate-500 dark:text-slate-400',
+                                        };
+                                        ?>
+                                        <span class="text-xs font-semibold whitespace-nowrap <?= $dashStatusClass ?>">
                                             <?= $badge['label'] ?>
                                         </span>
                                     </div>
