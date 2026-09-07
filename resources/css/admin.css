@@ -1474,6 +1474,18 @@
         font-size: var(--od-text-xs);
         font-weight: 800;
         text-align: left;
+        outline: none !important;
+    }
+
+    table.dataTable.admin-data-table thead th,
+    table.dataTable.admin-data-table thead td,
+    table.dataTable.admin-data-table thead th:hover,
+    table.dataTable.admin-data-table thead td:hover,
+    table.dataTable.admin-data-table thead th.dt-orderable-asc:hover,
+    table.dataTable.admin-data-table thead th.dt-orderable-desc:hover,
+    table.dataTable.admin-data-table thead td.dt-orderable-asc:hover,
+    table.dataTable.admin-data-table thead td.dt-orderable-desc:hover {
+        outline: none !important;
     }
 
     /* DataTables 2.x menandai sel tanggal/angka dengan text-align right; paksa rata kiri kecuali class eksplisit */
@@ -1584,9 +1596,7 @@
 
     table.dataTable.admin-data-table > tbody > tr > th,
     table.dataTable.admin-data-table > tbody > tr > td {
-        border-bottom: 1px solid var(--od-border-soft);
-        /* Suppress box-shadow dari DaisyUI table-zebra agar tidak clash
-         * dengan highlight kolom sort DataTables */
+        border-bottom: 1px solid var(--od-border);
         box-shadow: none !important;
     }
 
@@ -1595,14 +1605,16 @@
         border-bottom: 0;
     }
 
-    /* DT default CSS memakai :root.dark; theme ini memakai data-theme=dark */
+    /* DataTables dark theme variables */
     [data-theme="dark"] {
         --dt-row-hover: 255, 255, 255;
         --dt-row-stripe: 255, 255, 255;
         --dt-column-ordering: 255, 255, 255;
     }
     [data-theme="dark"] table.dataTable.admin-data-table > thead > tr > th,
-    [data-theme="dark"] table.dataTable.admin-data-table > thead > tr > td {
+    [data-theme="dark"] table.dataTable.admin-data-table > thead > tr > td,
+    [data-theme="dark"] table.dataTable.admin-data-table > tbody > tr > th,
+    [data-theme="dark"] table.dataTable.admin-data-table > tbody > tr > td {
         border-bottom-color: var(--od-border);
     }
     [data-theme="dark"] .dt-container .dt-length select,
