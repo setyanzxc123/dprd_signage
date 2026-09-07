@@ -918,7 +918,7 @@ if ($isMember) {
                         </button>
                     </div>
 
-                    <div class="p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6 text-left">
+                    <div class="p-4 sm:p-6 lg:p-8 overflow-y-auto overscroll-contain space-y-6 text-left">
                         <div v-if="risalahLoading" class="space-y-4 py-8 animate-pulse">
                             <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mx-auto"></div>
                             <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/2 mx-auto"></div>
@@ -969,7 +969,10 @@ if ($isMember) {
                                                 {{ line.text }}
                                             </h3>
                                         </div>
-                                        <p v-else class="text-justify [text-wrap:pretty] leading-relaxed">
+                                        <p v-else-if="line.isListItem" class="pl-4 -indent-4 text-left sm:text-justify leading-relaxed">
+                                            {{ line.text }}
+                                        </p>
+                                        <p v-else class="text-left sm:text-justify leading-relaxed">
                                             {{ line.text }}
                                         </p>
                                     </template>
@@ -1781,12 +1784,14 @@ if ($isMember) {
                 if (!text || typeof text !== 'string') {
                     return [];
                 }
-                return text.split('\n').map((line) => {
+                return text.split(/\r\n|\r|\n/).map((line) => {
                     const trimmed = line.trim();
                     const isSectionHeader = /^(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+\S/i.test(trimmed);
+                    const isListItem = /^(?:\d+\.|\-|\*|•)\s+/i.test(trimmed);
                     return {
                         text: trimmed,
                         isHeader: isSectionHeader,
+                        isListItem: isListItem,
                         isEmpty: trimmed === '',
                     };
                 });
