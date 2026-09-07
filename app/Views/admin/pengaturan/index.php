@@ -213,16 +213,16 @@
             </div>
 
             <div class="p-4 sm:p-6 space-y-4">
-                <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl dark:bg-slate-800/80">
-                    <button type="button" class="py-2 px-3 inline-flex justify-center items-center gap-x-2 text-xs font-semibold rounded-lg bg-white text-slate-800 shadow-xs dark:bg-slate-900 dark:text-slate-200 transition" id="tab-btn-qr" onclick="switchWaTab('qr')">
+                <nav class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl dark:bg-slate-800/80" aria-label="Tabs" role="tablist">
+                    <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-2 px-3 inline-flex justify-center items-center gap-x-2 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition active" id="tab-btn-qr" aria-selected="true" data-hs-tab="#panel-wa-qr" aria-controls="panel-wa-qr" role="tab">
                         <i data-lucide="qr-code" class="size-3.5"></i> Scan QR Code
                     </button>
-                    <button type="button" class="py-2 px-3 inline-flex justify-center items-center gap-x-2 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition" id="tab-btn-pair" onclick="switchWaTab('pair')">
+                    <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-2 px-3 inline-flex justify-center items-center gap-x-2 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition" id="tab-btn-pair" aria-selected="false" data-hs-tab="#panel-wa-pair" aria-controls="panel-wa-pair" role="tab">
                         <i data-lucide="key-round" class="size-3.5"></i> Pairing Code (8 Digit)
                     </button>
-                </div>
+                </nav>
 
-                <div id="panel-wa-qr" class="space-y-3">
+                <div id="panel-wa-qr" class="space-y-3" role="tabpanel" aria-labelledby="tab-btn-qr">
                     <p class="text-xs text-slate-600 dark:text-slate-400">
                         Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan Perangkat</strong>, lalu scan kode berikut:
                     </p>
@@ -246,7 +246,7 @@
                     </div>
                 </div>
 
-                <div id="panel-wa-pair" class="space-y-3" hidden>
+                <div id="panel-wa-pair" class="space-y-3 hidden" role="tabpanel" aria-labelledby="tab-btn-pair">
                     <p class="text-xs text-slate-600 dark:text-slate-400">
                         Masukkan nomor WhatsApp resmi DPRD (contoh: <code>08123456789</code> atau <code>628123456789</code>) untuk menerima 8 digit kode pairing:
                     </p>

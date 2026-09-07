@@ -691,34 +691,26 @@
             }, intervalMs);
         };
 
-        const activeTabClasses = ['bg-white', 'text-slate-800', 'shadow-xs', 'dark:bg-slate-900', 'dark:text-slate-200'];
-        const inactiveTabClasses = ['text-slate-500', 'hover:text-slate-800', 'dark:text-slate-400', 'dark:hover:text-slate-200'];
+        const tabQr = document.getElementById('tab-btn-qr');
+        const tabPair = document.getElementById('tab-btn-pair');
 
         window.switchWaTab = (tab) => {
-            const tabQr = document.getElementById('tab-btn-qr');
-            const tabPair = document.getElementById('tab-btn-pair');
-            const panelQr = document.getElementById('panel-wa-qr');
-            const panelPair = document.getElementById('panel-wa-pair');
-
-            if (tab === 'qr') {
-                tabQr?.classList.remove(...inactiveTabClasses);
-                tabQr?.classList.add(...activeTabClasses);
-                tabPair?.classList.remove(...activeTabClasses);
-                tabPair?.classList.add(...inactiveTabClasses);
-                if (panelQr) panelQr.hidden = false;
-                if (panelPair) panelPair.hidden = true;
-                loadWaQrCode();
-                startWaPolling(3000);
-            } else {
-                tabPair?.classList.remove(...inactiveTabClasses);
-                tabPair?.classList.add(...activeTabClasses);
-                tabQr?.classList.remove(...activeTabClasses);
-                tabQr?.classList.add(...inactiveTabClasses);
-                if (panelPair) panelPair.hidden = false;
-                if (panelQr) panelQr.hidden = true;
-                stopWaPolling();
+            const targetBtn = tab === 'qr' ? tabQr : tabPair;
+            if (window.HSTabs && typeof window.HSTabs.open === 'function' && targetBtn) {
+                window.HSTabs.open(targetBtn);
+            } else if (targetBtn) {
+                targetBtn.click();
             }
         };
+
+        tabQr?.addEventListener('click', () => {
+            loadWaQrCode();
+            startWaPolling(3000);
+        });
+
+        tabPair?.addEventListener('click', () => {
+            stopWaPolling();
+        });
 
         const loadWaQrCode = async () => {
             if (!waQrImage || !waQrLoading) return;
