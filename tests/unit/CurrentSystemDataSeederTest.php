@@ -217,13 +217,24 @@ final class CurrentSystemDataSeederTest extends CIUnitTestCase
         $this->assertSame('DUMMY/UJI-AGENDA/' . $now->format('Y-m'), $document['nomor_sk']);
         $this->assertSame((int) $now->format('Y'), $document['tahun']);
         $this->assertSame(1, $document['is_publik']);
-        $this->assertCount(6, $items);
+        $this->assertCount(7, $items);
 
-        foreach ($items as $item) {
+        $scheduledItems = array_filter($items, static fn (array $item): bool => $item['status'] !== 'proyeksi');
+        $projectionItems = array_filter($items, static fn (array $item): bool => $item['status'] === 'proyeksi');
+
+        $this->assertCount(6, $scheduledItems);
+        $this->assertCount(1, $projectionItems);
+
+        foreach ($scheduledItems as $item) {
             $this->assertSame('rapat', $item['jenis_agenda']);
-            $this->assertNotSame('proyeksi', $item['status']);
             $this->assertNotEmpty($item['tanggal']);
             $this->assertNotEmpty($item['units']);
+            $this->assertStringStartsWith('(Dummy) ', $item['agenda']);
+        }
+
+        foreach ($projectionItems as $item) {
+            $this->assertSame('rapat', $item['jenis_agenda']);
+            $this->assertSame('proyeksi', $item['status']);
             $this->assertStringStartsWith('(Dummy) ', $item['agenda']);
         }
 
