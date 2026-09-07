@@ -29,7 +29,7 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
             </button>
         </div>
 
-        <nav class="h-full overflow-y-auto p-3 flex flex-col gap-y-1" data-admin-menu>
+        <nav class="h-full overflow-y-auto p-3 flex flex-col gap-y-1 hs-accordion-group" data-hs-accordion-always-open data-admin-menu>
             <div>
                 <a href="<?= base_url('admin/dashboard') ?>" data-path="/admin/dashboard" data-admin-nav class="sidebar-item-link flex items-center gap-x-3 py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition group">
                     <i data-lucide="layout-dashboard" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
@@ -37,39 +37,41 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
                 </a>
             </div>
 
-            <div>
-                <details data-admin-nav-group class="group<?= $masterActive ? ' open' : '' ?>">
-                    <summary class="sidebar-item-link flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer list-none">
-                        <span class="flex items-center gap-x-3 min-w-0">
-                            <i data-lucide="database" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
-                            <span class="truncate">Master Data</span>
-                        </span>
-                        <svg class="size-3.5 text-slate-400 transition group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
+            <!-- Master Data Accordion -->
+            <div class="hs-accordion<?= $masterActive ? ' active' : '' ?>" id="hs-accordion-master" data-admin-nav-group>
+                <button type="button" class="hs-accordion-toggle sidebar-item-link w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer text-start" aria-expanded="<?= $masterActive ? 'true' : 'false' ?>" aria-controls="hs-accordion-master-collapse">
+                    <span class="flex items-center gap-x-3 min-w-0">
+                        <i data-lucide="database" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
+                        <span class="truncate">Master Data</span>
+                    </span>
+                    <svg class="size-3.5 text-slate-400 transition hs-accordion-active:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="hs-accordion-master-collapse" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300<?= $masterActive ? '' : ' hidden' ?>" role="region" aria-labelledby="hs-accordion-master">
                     <div class="mt-1 ps-7 pe-1 space-y-1 border-s border-slate-100 dark:border-slate-800 ms-5">
                         <a href="<?= base_url('admin/anggota') ?>" data-path="/admin/anggota" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Anggota DPRD</a>
                         <a href="<?= base_url('admin/unit-rapat') ?>" data-path="/admin/unit-rapat" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Kelompok Peserta</a>
                         <a href="<?= base_url('admin/ruangan') ?>" data-path="/admin/ruangan" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Ruangan Rapat</a>
                     </div>
-                </details>
+                </div>
             </div>
 
-            <div>
-                <details data-admin-nav-group class="group<?= $agendaActive ? ' open' : '' ?>">
-                    <summary class="sidebar-item-link flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer list-none">
-                        <span class="flex items-center gap-x-3 min-w-0">
-                            <i data-lucide="calendar-days" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
-                            <span class="truncate">Agenda</span>
-                        </span>
-                        <svg class="size-3.5 text-slate-400 transition group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
+            <!-- Agenda Accordion -->
+            <div class="hs-accordion<?= $agendaActive ? ' active' : '' ?>" id="hs-accordion-agenda" data-admin-nav-group>
+                <button type="button" class="hs-accordion-toggle sidebar-item-link w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer text-start" aria-expanded="<?= $agendaActive ? 'true' : 'false' ?>" aria-controls="hs-accordion-agenda-collapse">
+                    <span class="flex items-center gap-x-3 min-w-0">
+                        <i data-lucide="calendar-days" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
+                        <span class="truncate">Agenda</span>
+                    </span>
+                    <svg class="size-3.5 text-slate-400 transition hs-accordion-active:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="hs-accordion-agenda-collapse" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300<?= $agendaActive ? '' : ' hidden' ?>" role="region" aria-labelledby="hs-accordion-agenda">
                     <div class="mt-1 ps-7 pe-1 space-y-1 border-s border-slate-100 dark:border-slate-800 ms-5">
                         <a href="<?= base_url('admin/jadwal-banmus') ?>" data-path="/admin/jadwal-banmus" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Agenda Banmus</a>
                         <a href="<?= base_url('admin/jadwal-umum') ?>" data-path="/admin/jadwal-umum" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Jadwal Umum</a>
                         <a href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Kalender Agenda</a>
                         <a href="<?= base_url('admin/notulen') ?>" data-path="/admin/notulen" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Notulensi &amp; Risalah AI</a>
                     </div>
-                </details>
+                </div>
             </div>
 
             <div>
@@ -79,15 +81,16 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
                 </a>
             </div>
 
-            <div>
-                <details data-admin-nav-group class="group">
-                    <summary class="sidebar-item-link flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer list-none">
-                        <span class="flex items-center gap-x-3 min-w-0">
-                            <i data-lucide="monitor" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
-                            <span class="truncate">Tampilan Publik</span>
-                        </span>
-                        <svg class="size-3.5 text-slate-400 transition group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
+            <!-- Tampilan Publik Accordion -->
+            <div class="hs-accordion" id="hs-accordion-public" data-admin-nav-group>
+                <button type="button" class="hs-accordion-toggle sidebar-item-link w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition cursor-pointer text-start" aria-expanded="false" aria-controls="hs-accordion-public-collapse">
+                    <span class="flex items-center gap-x-3 min-w-0">
+                        <i data-lucide="monitor" class="size-4.5 text-slate-500 dark:text-slate-400 shrink-0"></i>
+                        <span class="truncate">Tampilan Publik</span>
+                    </span>
+                    <svg class="size-3.5 text-slate-400 transition hs-accordion-active:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="hs-accordion-public-collapse" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300 hidden" role="region" aria-labelledby="hs-accordion-public">
                     <div class="mt-1 ps-7 pe-1 space-y-1 border-s border-slate-100 dark:border-slate-800 ms-5">
                         <a href="<?= base_url('signage') ?>" target="_blank" rel="noopener" class="flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             <span>Layar TV</span>
@@ -98,7 +101,7 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
                             <i data-lucide="external-link" class="size-3.5 text-slate-400"></i>
                         </a>
                     </div>
-                </details>
+                </div>
             </div>
 
             <div class="mt-auto border-t border-slate-100 dark:border-slate-800 pt-3 lg:hidden">

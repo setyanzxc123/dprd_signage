@@ -202,7 +202,16 @@
             if (active) {
                 link.setAttribute('aria-current', 'page');
                 const group = link.closest('[data-admin-nav-group]');
-                if (group) group.open = true;
+                if (group) {
+                    group.classList.add('active');
+                    const content = group.querySelector('.hs-accordion-content');
+                    if (content) content.classList.remove('hidden');
+                    const toggle = group.querySelector('.hs-accordion-toggle');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+                    if (window.HSAccordion && typeof window.HSAccordion.show === 'function') {
+                        window.HSAccordion.show(group);
+                    }
+                }
             } else {
                 link.removeAttribute('aria-current');
             }
