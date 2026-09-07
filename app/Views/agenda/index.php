@@ -75,7 +75,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     </div>
                 </div>
 
-                <button class="inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700/80 transition" type="button" @click="toggleTheme" :aria-label="isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap'">
+                <button class="inline-flex justify-center items-center size-10 sm:size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700/80 transition" type="button" @click="toggleTheme" :aria-label="isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap'">
                     <svg v-if="!isDark" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a7 7 0 1 0 11.5 11.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v2m0 14v2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M3 12h2m14 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" stroke-linecap="round"/></svg>
                 </button>
@@ -118,7 +118,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 <div class="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
                     <button
                         :class="{ 'invisible pointer-events-none': !canScrollUnitsLeft }"
-                        class="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+                        class="inline-flex size-10 sm:size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition"
                         type="button"
                         :aria-hidden="!canScrollUnitsLeft"
                         :tabindex="canScrollUnitsLeft ? 0 : -1"
@@ -197,11 +197,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                             @click.stop
                         >
                             <div class="flex items-center justify-between gap-2">
-                                <button type="button" class="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition" aria-label="Bulan sebelumnya" @click="shiftCalendar(-1)">
+                                <button type="button" class="inline-flex size-9 sm:size-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition" aria-label="Bulan sebelumnya" @click="shiftCalendar(-1)">
                                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 </button>
                                 <span class="text-sm font-extrabold text-slate-900 dark:text-white">{{ calendarLabel }}</span>
-                                <button type="button" class="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition" aria-label="Bulan berikutnya" @click="shiftCalendar(1)">
+                                <button type="button" class="inline-flex size-9 sm:size-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition" aria-label="Bulan berikutnya" @click="shiftCalendar(1)">
                                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                 </button>
                             </div>
@@ -230,7 +230,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                                         :key="(cell ? cell.key : 'cal-blank-' + wi + '-' + ci)"
                                         type="button"
                                         :disabled="!cell || cell.count === 0"
-                                        class="relative flex h-9 flex-col items-center justify-center rounded-lg text-xs font-semibold transition disabled:cursor-default"
+                                        class="relative flex h-10 sm:h-9 flex-col items-center justify-center rounded-lg text-xs font-semibold transition disabled:cursor-default"
                                         :class="cell && cell.count > 0 ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-bold hover:bg-emerald-500/20' : 'text-slate-500 dark:text-slate-400'"
                                         @click="pickCalendarDay(cell)"
                                     >
@@ -249,7 +249,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
                     <button
                         :class="{ 'invisible pointer-events-none': !canScrollUnitsRight }"
-                        class="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+                        class="inline-flex size-10 sm:size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition"
                         type="button"
                         :aria-hidden="!canScrollUnitsRight"
                         :tabindex="canScrollUnitsRight ? 0 : -1"
@@ -334,11 +334,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <span v-if="item.status === 'berlangsung'" class="hidden sm:inline-flex items-center py-0.5 px-2 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30">Berlangsung</span>
-                        <a v-if="item.has_stream" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition">
+                        <a v-if="item.has_stream" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 min-h-9 sm:min-h-8 py-1.5 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition">
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                             <span>Tonton Live</span>
                         </a>
-                        <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 py-1 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition">
+                        <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 min-h-9 sm:min-h-8 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition">
                             <span>Buka</span>
                             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
