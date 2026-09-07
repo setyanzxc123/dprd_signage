@@ -52,7 +52,7 @@ if ($isMember) {
     </script>
     <link href="<?= base_url('assets/css/agenda.css?v=' . $cssVersion) ?>" rel="stylesheet" />
 </head>
-<body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
+<body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased">
 <div id="agenda-app" v-cloak>
     <header class="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
         <div class="relative">
@@ -136,7 +136,7 @@ if ($isMember) {
                             </div>
 
                             <div class="py-1">
-                                <button type="button" @click="setMemberScope('saya')" class="flex w-full items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 transition cursor-pointer">
+                                <button type="button" @click="setMemberScope('saya')" class="flex w-full items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white transition cursor-pointer">
                                     <span class="flex items-center gap-x-2">
                                         <svg class="size-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                                         <span>Filter Jadwal Saya</span>
@@ -225,8 +225,8 @@ if ($isMember) {
                         >
                             <button
                                 type="button"
-                                class="flex w-full items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition"
-                                :class="activeNavigation === 'komisi' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                                class="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition cursor-pointer"
+                                :class="komisiItemClass('komisi')"
                                 @click="selectKomisiFilter('komisi')"
                             >
                                 <span>Semua Komisi (I–IV)</span>
@@ -237,8 +237,8 @@ if ($isMember) {
                                 v-for="k in komisiUnits"
                                 :key="k.id"
                                 type="button"
-                                class="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition"
-                                :class="activeNavigation === 'unit:' + k.id ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                                class="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition cursor-pointer"
+                                :class="komisiItemClass('unit:' + k.id)"
                                 @click="selectKomisiFilter('unit:' + k.id)"
                             >
                                 <span>{{ k.nama }}</span>
@@ -272,16 +272,16 @@ if ($isMember) {
                                     v-for="preset in calendarPresets"
                                     :key="preset.key"
                                     type="button"
-                                    class="flex-1 py-1.5 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition"
+                                    class="flex-1 py-1.5 px-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition cursor-pointer"
                                     :class="presetChipClass(preset.key)"
-                                    :aria-pressed="calendarScope === preset.key"
+                                    :aria-pressed="periodMode === preset.key"
                                     @click="setCalendarScope(preset.key)"
                                 >
                                     {{ preset.label }}
                                 </button>
                             </div>
 
-                            <div class="mt-2.5 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <div class="mt-2.5 grid grid-cols-7 gap-1 text-center text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
                             </div>
                             <div class="mt-1 grid grid-cols-7 gap-1">
@@ -291,20 +291,20 @@ if ($isMember) {
                                         :key="(cell ? cell.key : 'cal-blank-' + wi + '-' + ci)"
                                         type="button"
                                         :disabled="!cell || cell.count === 0"
-                                        class="relative flex h-10 sm:h-9 flex-col items-center justify-center rounded-lg text-xs font-semibold transition disabled:cursor-default"
-                                        :class="cell && cell.count > 0 ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-bold hover:bg-emerald-500/20' : 'text-slate-500 dark:text-slate-400'"
+                                        class="relative flex h-11 w-full flex-col items-center justify-center rounded-xl text-xs font-bold transition disabled:cursor-default"
+                                        :class="calendarCellClass(cell)"
                                         @click="pickCalendarDay(cell)"
                                     >
                                         <span>{{ cell ? cell.day : '' }}</span>
                                         <span v-if="cell && cell.count > 0" class="absolute bottom-1 flex items-center gap-0.5">
-                                            <span v-for="n in Math.min(cell.count, 3)" :key="n" class="size-1 rounded-full bg-emerald-500"></span>
+                                            <span v-for="n in Math.min(cell.count, 3)" :key="n" class="size-1.5 rounded-full bg-emerald-500"></span>
                                         </span>
-                                        <span v-if="cell && cell.isToday" class="absolute inset-0 rounded-lg ring-1 ring-emerald-500/60 pointer-events-none"></span>
+                                        <span v-if="cell && cell.isToday" class="absolute inset-0 rounded-xl ring-2 ring-emerald-500 pointer-events-none"></span>
                                     </button>
                                 </template>
                             </div>
 
-                            <p class="mt-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">Klik tanggal bertanda untuk membuka kartunya.</p>
+                            <p class="mt-3 text-xs font-medium text-slate-500 dark:text-slate-400">Klik tanggal bertanda untuk membuka kartunya.</p>
                         </div>
                     </teleport>
 
@@ -328,18 +328,14 @@ if ($isMember) {
 
     <?php if ($isMember): ?>
         <div class="border-t border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/90" aria-label="Cakupan agenda anggota">
-                <div class="mx-auto flex w-full flex-col gap-2 px-3.5 py-2.5 sm:w-[min(1480px,calc(100%-32px))] sm:flex-row sm:items-center sm:justify-between sm:px-0">
-                    <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 gap-1" role="group" aria-label="Pilih cakupan agenda">
-                        <button type="button" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all" :class="scopeButtonClass('saya')" :aria-pressed="memberScope === 'saya'" @click="setMemberScope('saya')">Jadwal Saya</button>
-                        <button type="button" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all" :class="scopeButtonClass('semua')" :aria-pressed="memberScope === 'semua'" @click="setMemberScope('semua')">Semua Jadwal</button>
-                    </div>
-                    <p class="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                        <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">Akses Anggota</span>
-                        Anda dapat melihat agenda dan sumber daya internal sesuai kewenangan.
-                    </p>
+            <div class="mx-auto flex w-full items-center px-3.5 py-2 sm:w-[min(1480px,calc(100%-32px))] sm:px-0">
+                <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 gap-1" role="group" aria-label="Pilih cakupan agenda">
+                    <button type="button" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all" :class="scopeButtonClass('saya')" :aria-pressed="memberScope === 'saya'" @click="setMemberScope('saya')">Jadwal Saya</button>
+                    <button type="button" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all" :class="scopeButtonClass('semua')" :aria-pressed="memberScope === 'semua'" @click="setMemberScope('semua')">Semua Jadwal</button>
                 </div>
             </div>
-        <?php endif; ?>
+        </div>
+    <?php endif; ?>
     </header>
 
     <div class="mx-auto w-full px-3 pt-2.5 sm:px-6 sm:pt-3.5 xl:w-[min(1480px,calc(100%-32px))] xl:px-0">
@@ -357,7 +353,7 @@ if ($isMember) {
             <span v-if="upcomingTodayAgendas.length > 0 && activeLiveAgendas.length === 0" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ upcomingTodayAgendas.length }} Terjadwal</span>
             <div class="flex items-center gap-2 ml-auto shrink-0">
                 <button
-                    class="inline-flex items-center justify-center gap-x-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-700/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 text-xs font-bold shadow-xs transition shrink-0"
+                    class="inline-flex items-center justify-center gap-x-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-xs transition shrink-0 cursor-pointer"
                     type="button"
                     ref="calendarAnchor"
                     aria-haspopup="dialog"
@@ -365,19 +361,20 @@ if ($isMember) {
                     aria-label="Pilih periode agenda lewat kalender (Filter periode agenda rapat dan Filter periode jadwal umum)"
                     @click="toggleCalendar"
                 >
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-emerald-600 dark:border-emerald-400"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <span class="hidden sm:inline">{{ calendarButtonLabel }}</span>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
 
                 <button
-                    class="inline-flex items-center justify-center gap-x-1.5 py-2 px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-700/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 text-xs font-bold shadow-xs transition shrink-0 active:scale-[0.98]"
+                    class="inline-flex items-center justify-center gap-x-1.5 py-2 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-xs transition shrink-0 active:scale-[0.98] cursor-pointer"
                     type="button"
                     @click="loadAgenda"
                     :disabled="refreshing"
                     title="Perbarui data agenda"
                 >
                     <span v-if="refreshing" class="inline-block size-3.5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent dark:border-emerald-400"></span>
-                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-emerald-600 dark:text-emerald-400"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="text-slate-500 dark:text-slate-400"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <span class="hidden sm:inline">Perbarui</span>
                 </button>
             </div>
@@ -400,7 +397,7 @@ if ($isMember) {
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                             <span>Tonton Live</span>
                         </a>
-                        <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 min-h-9 sm:min-h-8 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition">
+                        <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 min-h-9 sm:min-h-8 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition cursor-pointer">
                             <span>Buka</span>
                             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
@@ -456,7 +453,7 @@ if ($isMember) {
                         <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Agenda Rapat &amp; Sidang</h2>
                         <p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-1 truncate">Paripurna, Komisi, dan Banmus</p>
                     </div>
-                    <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                    <span class="inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredAgendas.length }} agenda
                     </span>
                 </div>
@@ -493,13 +490,13 @@ if ($isMember) {
                                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                 <span>Belum ada jadwal rapat bertanggal untuk periode ini.</span>
                             </p>
-                            <div v-else-if="row.kind === 'plan-header'" class="px-1 pt-1">
+                            <div v-else-if="row.kind === 'plan-header'" class="flex items-center justify-between px-1 pt-2 pb-0.5">
                                 <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400" title="Proyeksi Banmus: Rencana resmi hasil SK Badan Musyawarah; tanggal dan ruangan menyusul ditetapkan">Rencana SK Banmus</h3>
+                                <a class="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300" href="<?= base_url('agenda/jadwal-banmus') ?>">
+                                    <span>Dokumen SK Banmus</span>
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                                </a>
                             </div>
-                            <a v-else-if="row.kind === 'plan-more'" class="justify-self-start inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 shadow-xs transition" href="<?= base_url('agenda/jadwal-banmus') ?>">
-                                <span>Lihat semua rencana ({{ row.count }})</span>
-                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-                            </a>
                             <template v-else>
                             <details
                                 v-for="item in [row.item]"
@@ -517,11 +514,11 @@ if ($isMember) {
                             <summary class="grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-3 overflow-hidden py-3.5 px-3.5 pr-10 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:gap-3.5 sm:px-4 sm:pr-12 cursor-pointer select-none">
                                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-center sm:h-12 sm:w-12">
                                     <span v-if="item.tanggal">
-                                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight">{{ shortMonth(item.tanggal) }}</span>
-                                        <strong class="block text-lg font-black text-slate-900 dark:text-white leading-none mt-0.5">{{ dayNumber(item.tanggal) }}</strong>
+                                        <span class="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 leading-tight">{{ shortMonth(item.tanggal) }}</span>
+                                        <strong class="block text-xl font-black text-slate-900 dark:text-white leading-none mt-0.5">{{ dayNumber(item.tanggal) }}</strong>
                                     </span>
                                     <span v-else>
-                                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight">SK</span>
+                                        <span class="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 leading-tight">SK</span>
                                         <strong class="block text-sm font-black text-slate-900 dark:text-white leading-none mt-0.5">{{ item.document_year }}</strong>
                                     </span>
                                 </span>
@@ -633,26 +630,6 @@ if ($isMember) {
                         </template>
                     </template>
                     </div>
-
-                    <div v-if="totalPages > 1" class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Menampilkan {{ pageStart }}–{{ pageEnd }} dari {{ orderedAgendas.length }}</span>
-                            <label class="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                                <span class="sr-only">Jumlah agenda per halaman</span>
-                                <select class="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs" v-model.number="pageSize" @change="changePageSize" aria-label="Jumlah agenda per halaman">
-                                    <option :value="10">10</option>
-                                    <option :value="25">25</option>
-                                    <option :value="50">50</option>
-                                </select>
-                                <span>/ hal</span>
-                            </label>
-                        </div>
-                        <div class="inline-flex items-center gap-x-1">
-                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1">Sebelumnya</button>
-                            <span class="inline-flex items-center justify-center size-8 rounded-lg bg-emerald-600 text-xs font-black text-white shadow-xs">{{ currentPage }}</span>
-                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages">Berikutnya</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -670,7 +647,7 @@ if ($isMember) {
                         <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Kegiatan &amp; Audiensi Publik</h2>
                         <p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-1 truncate" title="Jadwal Umum">Jadwal Umum · Audiensi publik &amp; kunjungan kerja</p>
                     </div>
-                    <span class="hidden xl:inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                    <span class="inline-flex items-center py-0.5 px-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                         {{ filteredGeneralAgendas.length }} agenda
                     </span>
                 </div>
@@ -714,8 +691,8 @@ if ($isMember) {
                             <summary class="grid min-h-0 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-3 overflow-hidden py-3.5 px-3.5 pr-10 sm:grid-cols-[3.25rem_minmax(0,1fr)_auto] sm:gap-3.5 sm:px-4 sm:pr-12 cursor-pointer select-none">
                                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-center sm:h-12 sm:w-12">
                                     <span>
-                                        <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 leading-tight">{{ shortMonth(item.tanggal) }}</span>
-                                        <strong class="block text-lg font-black text-slate-900 dark:text-white leading-none mt-0.5">{{ dayNumber(item.tanggal) }}</strong>
+                                        <span class="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 leading-tight">{{ shortMonth(item.tanggal) }}</span>
+                                        <strong class="block text-xl font-black text-slate-900 dark:text-white leading-none mt-0.5">{{ dayNumber(item.tanggal) }}</strong>
                                     </span>
                                 </span>
 
@@ -805,26 +782,6 @@ if ($isMember) {
                                 </div>
                             </div>
                         </details>
-                    </div>
-
-                    <div v-if="generalTotalPages > 1" class="mt-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Menampilkan {{ generalPageStart }}–{{ generalPageEnd }} dari {{ orderedGeneralAgendas.length }}</span>
-                            <label class="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                                <span class="sr-only">Jumlah jadwal umum per halaman</span>
-                                <select class="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 shadow-xs" v-model.number="generalPageSize" @change="changeGeneralPageSize" aria-label="Jumlah jadwal umum per halaman">
-                                    <option :value="10">10</option>
-                                    <option :value="25">25</option>
-                                    <option :value="50">50</option>
-                                </select>
-                                <span>/ hal</span>
-                            </label>
-                        </div>
-                        <div class="inline-flex items-center gap-x-1">
-                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToGeneralPage(currentGeneralPage - 1)" :disabled="currentGeneralPage <= 1">Sebelumnya</button>
-                            <span class="inline-flex items-center justify-center size-8 rounded-lg bg-emerald-600 text-xs font-black text-white shadow-xs">{{ currentGeneralPage }}</span>
-                            <button class="inline-flex items-center gap-x-1 min-h-[38px] sm:min-h-0 py-2 sm:py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 disabled:opacity-40 disabled:pointer-events-none shadow-xs transition" type="button" @click="goToGeneralPage(currentGeneralPage + 1)" :disabled="currentGeneralPage >= generalTotalPages">Berikutnya</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1095,7 +1052,7 @@ if ($isMember) {
                 const base = 'inline-flex items-center gap-x-1.5 py-1.5 px-3.5 whitespace-nowrap rounded-full text-xs font-bold transition-all duration-150 shrink-0 cursor-pointer';
                 return isKomisiActive.value
                     ? `${base} bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-500/30`
-                    : `${base} border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300`;
+                    : `${base} border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-700 dark:hover:text-white`;
             });
             const weather = ref({
                 suhu: '--°C',
@@ -1161,29 +1118,36 @@ if ($isMember) {
                     .filter((value) => value && value !== '-');
                 return location.length ? location.join(', ') : 'Sulawesi Tengah';
             });
-            const filteredAgendas = computed(() => {
+            const scheduledAgendas = computed(() => {
+                const selectedMonths = new Set(periodMonths());
+                let rows = agendas.value.filter((item) =>
+                    item.source === 'banmus'
+                    && item.status !== 'proyeksi'
+                    && selectedMonths.has(String(item.tanggal || '').slice(0, 7)));
+                if (activeNavigation.value === 'komisi') {
+                    rows = rows.filter((item) => (item.unit_ids || []).some((id) => komisiUnitIds.value.includes(Number(id))));
+                } else if (activeNavigation.value.startsWith('unit:')) {
+                    const unitId = Number(activeNavigation.value.slice(5));
+                    rows = rows.filter((item) => (item.unit_ids || []).map(Number).includes(unitId));
+                }
+                return rows;
+            });
+            const projectionsAgendas = computed(() => {
                 let visibleProjections = IS_MEMBER && memberScope.value === 'saya'
                     ? banmusProjections.value.filter((item) => item.is_participant)
                     : banmusProjections.value;
                 const selectedMonths = new Set(periodMonths());
                 visibleProjections = visibleProjections.filter((item) =>
                     projectionOverlapsMonths(item, selectedMonths));
-                const rows = [
-                    ...agendas.value.filter((item) =>
-                        item.source === 'banmus'
-                        && selectedMonths.has(String(item.tanggal || '').slice(0, 7))),
-                    ...visibleProjections,
-                ];
                 if (activeNavigation.value === 'komisi') {
-                    return rows.filter((item) => (item.unit_ids || []).some((id) => komisiUnitIds.value.includes(Number(id))));
-                }
-                if (activeNavigation.value.startsWith('unit:')) {
+                    visibleProjections = visibleProjections.filter((item) => (item.unit_ids || []).some((id) => komisiUnitIds.value.includes(Number(id))));
+                } else if (activeNavigation.value.startsWith('unit:')) {
                     const unitId = Number(activeNavigation.value.slice(5));
-                    return rows.filter((item) => (item.unit_ids || []).map(Number).includes(unitId));
+                    visibleProjections = visibleProjections.filter((item) => (item.unit_ids || []).map(Number).includes(unitId));
                 }
-
-                return rows;
+                return visibleProjections;
             });
+            const filteredAgendas = computed(() => [...scheduledAgendas.value, ...projectionsAgendas.value]);
             const filteredGeneralAgendas = computed(() => {
                 const selectedMonths = new Set(periodMonths(periodMode.value));
                 let rows = agendas.value.filter((item) =>
@@ -1198,24 +1162,37 @@ if ($isMember) {
 
                 return rows;
             });
-            function orderAgendaRows(rows) {
-                const today = dateKey(new Date());
-                const active = rows.filter((item) => item.status === 'berlangsung');
-                const activeKeys = new Set(active.map((item) => item.key));
-                const upcoming = rows.filter((item) =>
-                    item.status !== 'proyeksi'
-                    && !activeKeys.has(item.key)
-                    && item.tanggal >= today
-                    && item.status !== 'selesai');
-                const projections = rows.filter((item) => item.status === 'proyeksi');
-                const prioritizedKeys = new Set([...active, ...upcoming, ...projections].map((item) => item.key));
-                const remaining = rows.filter((item) =>
-                    !prioritizedKeys.has(item.key)).reverse();
+            function orderScheduledRows(rows) {
+                const active = rows.filter((item) => item.status === 'berlangsung')
+                    .sort((a, b) => (a.waktu_mulai || '').localeCompare(b.waktu_mulai || ''));
+                const others = rows.filter((item) => item.status !== 'berlangsung')
+                    .sort((a, b) => {
+                        const dateCmp = (b.tanggal || '').localeCompare(a.tanggal || '');
+                        if (dateCmp !== 0) {
+                            return dateCmp;
+                        }
+                        return (a.waktu_mulai || '').localeCompare(b.waktu_mulai || '');
+                    });
 
-                return [...active, ...upcoming, ...projections, ...remaining];
+                return [...active, ...others];
             }
-            const orderedAgendas = computed(() => orderAgendaRows(filteredAgendas.value));
-            const orderedGeneralAgendas = computed(() => orderAgendaRows(filteredGeneralAgendas.value));
+            function orderGeneralRows(rows) {
+                const active = rows.filter((item) => item.status === 'berlangsung')
+                    .sort((a, b) => (a.waktu_mulai || '').localeCompare(b.waktu_mulai || ''));
+                const others = rows.filter((item) => item.status !== 'berlangsung')
+                    .sort((a, b) => {
+                        const dateCmp = (b.tanggal || '').localeCompare(a.tanggal || '');
+                        if (dateCmp !== 0) {
+                            return dateCmp;
+                        }
+                        return (a.waktu_mulai || '').localeCompare(b.waktu_mulai || '');
+                    });
+
+                return [...active, ...others];
+            }
+            const orderedScheduledAgendas = computed(() => orderScheduledRows(scheduledAgendas.value));
+            const orderedAgendas = orderedScheduledAgendas;
+            const orderedGeneralAgendas = computed(() => orderGeneralRows(filteredGeneralAgendas.value));
             const myAgendasCount = computed(() => {
                 if (!IS_MEMBER) {
                     return 0;
@@ -1224,10 +1201,21 @@ if ($isMember) {
                 const participantProjections = banmusProjections.value.filter((item) => item.is_participant);
                 return participantAgendas.length + participantProjections.length;
             });
-            const todayDateKey = computed(() => dateKey(now.value));
+            const todayDateKey = computed(() => {
+                try {
+                    return new Intl.DateTimeFormat('en-CA', {
+                        timeZone: 'Asia/Makassar',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                    }).format(now.value);
+                } catch {
+                    return dateKey(now.value);
+                }
+            });
             const todayAgendas = computed(() => {
                 const today = todayDateKey.value;
-                const pool = [...filteredAgendas.value, ...filteredGeneralAgendas.value];
+                const pool = [...scheduledAgendas.value, ...filteredGeneralAgendas.value];
                 return pool.filter((item) =>
                     item.status === 'berlangsung'
                     || (item.tanggal === today && item.status !== 'selesai'));
@@ -1238,7 +1226,7 @@ if ($isMember) {
                 todayAgendas.value.filter((item) => item.status !== 'berlangsung'));
             const nearestUpcomingAgenda = computed(() => {
                 const today = todayDateKey.value;
-                const pool = [...filteredAgendas.value, ...filteredGeneralAgendas.value];
+                const pool = [...scheduledAgendas.value, ...filteredGeneralAgendas.value];
                 const upcoming = pool.filter((item) =>
                     item.tanggal && item.tanggal > today && item.status !== 'selesai');
                 return upcoming.length ? upcoming.sort((a, b) => a.tanggal.localeCompare(b.tanggal))[0] : null;
@@ -1255,6 +1243,7 @@ if ($isMember) {
                     activeMobileTab.value = 'rapat';
                     expandedAgendaKey.value = item.key;
                 }
+                updateUrl();
                 nextTick(() => {
                     const card = document.getElementById('agenda-card-' + item.key);
                     if (!card) {
@@ -1267,49 +1256,28 @@ if ($isMember) {
                     window.setTimeout(() => card.classList.remove('agenda-flash'), 1300);
                 });
             }
-            const totalPages = computed(() =>
-                Math.max(1, Math.ceil(orderedAgendas.value.length / pageSize.value)));
-            const pageStart = computed(() =>
-                orderedAgendas.value.length ? ((currentPage.value - 1) * pageSize.value) + 1 : 0);
-            const pageEnd = computed(() =>
-                Math.min(currentPage.value * pageSize.value, orderedAgendas.value.length));
-            const paginatedAgendas = computed(() => {
-                const offset = (currentPage.value - 1) * pageSize.value;
-                return orderedAgendas.value.slice(offset, offset + pageSize.value);
-            });
+            const totalPages = computed(() => 1);
+            const pageStart = computed(() => orderedScheduledAgendas.value.length ? 1 : 0);
+            const pageEnd = computed(() => orderedScheduledAgendas.value.length);
+            const paginatedAgendas = orderedScheduledAgendas;
             const agendaShelf = computed(() => {
-                const scheduled = paginatedAgendas.value.filter((item) => item.status !== 'proyeksi');
-                const projections = paginatedAgendas.value.filter((item) => item.status === 'proyeksi');
-                const projectionTotal = orderedAgendas.value.filter((item) => item.status === 'proyeksi').length;
                 const rows = [];
                 rows.push({ kind: 'scheduled-header', key: 'shelf:scheduled' });
-                if (scheduled.length > 0) {
-                    scheduled.forEach((item) => rows.push({ kind: 'item', key: item.key, item }));
+                if (orderedScheduledAgendas.value.length > 0) {
+                    orderedScheduledAgendas.value.forEach((item) => rows.push({ kind: 'item', key: item.key, item }));
                 } else {
                     rows.push({ kind: 'scheduled-empty', key: 'shelf:scheduled-empty' });
                 }
-                if (projections.length > 0) {
+                if (projectionsAgendas.value.length > 0) {
                     rows.push({ kind: 'plan-header', key: 'shelf:plan' });
-                    const visibleProjections = projections.slice(0, 3);
-                    visibleProjections.forEach((item) => rows.push({ kind: 'item', key: item.key, item }));
-                    if (projectionTotal > visibleProjections.length) {
-                        rows.push({ kind: 'plan-more', key: 'shelf:plan-more', count: projectionTotal });
-                    }
+                    projectionsAgendas.value.forEach((item) => rows.push({ kind: 'item', key: item.key, item }));
                 }
                 return rows;
             });
-            const generalTotalPages = computed(() =>
-                Math.max(1, Math.ceil(orderedGeneralAgendas.value.length / generalPageSize.value)));
-            const generalPageStart = computed(() =>
-                orderedGeneralAgendas.value.length
-                    ? ((currentGeneralPage.value - 1) * generalPageSize.value) + 1
-                    : 0);
-            const generalPageEnd = computed(() =>
-                Math.min(currentGeneralPage.value * generalPageSize.value, orderedGeneralAgendas.value.length));
-            const paginatedGeneralAgendas = computed(() => {
-                const offset = (currentGeneralPage.value - 1) * generalPageSize.value;
-                return orderedGeneralAgendas.value.slice(offset, offset + generalPageSize.value);
-            });
+            const generalTotalPages = computed(() => 1);
+            const generalPageStart = computed(() => orderedGeneralAgendas.value.length ? 1 : 0);
+            const generalPageEnd = computed(() => orderedGeneralAgendas.value.length);
+            const paginatedGeneralAgendas = orderedGeneralAgendas;
             function scopeButtonClass(scope) {
                 return memberScope.value === scope
                     ? 'bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 font-bold shadow-xs border border-sky-500/30'
@@ -1325,19 +1293,18 @@ if ($isMember) {
             }
 
             function periodMonths(mode = periodMode.value) {
+                const cursor = calendarCursor.value;
                 if (mode === 'month') {
-                    const cursor = calendarCursor.value;
                     return [monthKey(cursor)];
                 }
 
-                const current = now.value;
                 const firstMonth = mode === 'quarter'
-                    ? Math.floor(current.getMonth() / 3) * 3
-                    : (current.getMonth() < 6 ? 0 : 6);
+                    ? Math.floor(cursor.getMonth() / 3) * 3
+                    : (cursor.getMonth() < 6 ? 0 : 6);
                 const count = mode === 'quarter' ? 3 : 6;
 
                 return Array.from({ length: count }, (_, offset) =>
-                    monthKey(new Date(current.getFullYear(), firstMonth + offset, 1)));
+                    monthKey(new Date(cursor.getFullYear(), firstMonth + offset, 1)));
             }
 
             function projectionRange(item) {
@@ -1492,6 +1459,15 @@ if ($isMember) {
                 setNavigation(value);
             }
 
+            function komisiItemClass(value) {
+                const active = typeof value === 'number'
+                    ? activeNavigation.value === `unit:${value}`
+                    : activeNavigation.value === value;
+                return active
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800';
+            }
+
             const isCalendarOpen = ref(false);
             const calendarAnchor = ref(null);
             const calendarRef = ref(null);
@@ -1504,7 +1480,7 @@ if ($isMember) {
                 const year = cursor.getFullYear();
                 const month = cursor.getMonth();
                 const counts = {};
-                [...filteredAgendas.value, ...filteredGeneralAgendas.value].forEach((item) => {
+                [...scheduledAgendas.value, ...filteredGeneralAgendas.value].forEach((item) => {
                     if (!item.tanggal || item.status === 'proyeksi') {
                         return;
                     }
@@ -1550,6 +1526,7 @@ if ($isMember) {
 
             function shiftCalendar(delta) {
                 const cursor = calendarCursor.value;
+                periodMode.value = 'month';
                 calendarCursor.value = new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1);
             }
 
@@ -1557,13 +1534,20 @@ if ($isMember) {
                 if (!cell || cell.count === 0) {
                     return;
                 }
-                const pool = [...filteredAgendas.value, ...filteredGeneralAgendas.value];
+                const pool = [...scheduledAgendas.value, ...filteredGeneralAgendas.value];
                 const target = pool.find((item) =>
                     item.tanggal === cell.key && item.status !== 'proyeksi');
                 isCalendarOpen.value = false;
                 if (target) {
                     focusAgenda(target);
                 }
+            }
+
+            function calendarCellClass(cell) {
+                if (!cell || cell.count === 0) {
+                    return 'text-slate-300 dark:text-slate-700 cursor-default';
+                }
+                return 'text-slate-900 dark:text-white font-bold hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer';
             }
 
             function handleDocumentClick(event) {
@@ -1705,7 +1689,11 @@ if ($isMember) {
                 loadAgenda();
             }
 
+            let isInitialMount = true;
             watch([calendarCursor, periodMode], () => {
+                if (isInitialMount) {
+                    return;
+                }
                 resetAgendaSelection();
                 resetGeneralSelection();
                 updateUrl();
@@ -1729,7 +1717,7 @@ if ($isMember) {
             });
 
             function presetChipClass(key) {
-                const base = 'transition';
+                const base = 'transition cursor-pointer';
                 return periodMode.value === key
                     ? `${base} bg-emerald-600 text-white shadow-xs`
                     : `${base} border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800`;
@@ -1930,10 +1918,10 @@ if ($isMember) {
                 } else {
                     url.searchParams.set('periode', periodMode.value);
                 }
-                setOptionalParam(url, 'tampil', String(pageSize.value), '10');
-                setOptionalParam(url, 'tampil_umum', String(generalPageSize.value), '10');
-                setOptionalParam(url, 'halaman', String(currentPage.value), '1');
-                setOptionalParam(url, 'halaman_umum', String(currentGeneralPage.value), '1');
+                url.searchParams.delete('tampil');
+                url.searchParams.delete('tampil_umum');
+                url.searchParams.delete('halaman');
+                url.searchParams.delete('halaman_umum');
                 setOptionalParam(url, 'tab', activeMobileTab.value, 'rapat');
                 url.searchParams.delete('periode_umum');
                 window.history.replaceState({}, '', url.toString());
@@ -1951,7 +1939,7 @@ if ($isMember) {
                 const base = 'inline-flex items-center gap-x-1.5 min-h-[40px] sm:min-h-0 py-2 sm:py-1.5 px-3.5 whitespace-nowrap rounded-full text-xs font-bold transition-all duration-150 shrink-0';
                 return activeNavigation.value === value
                     ? `${base} bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-500/30`
-                    : `${base} border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/40 hover:bg-emerald-50/50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300`;
+                    : `${base} border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-700 dark:hover:text-white`;
             }
 
             function compactUnitName(name) {
@@ -2033,8 +2021,13 @@ if ($isMember) {
                     memberScope.value = params.get('scope');
                 }
                 const requestedPeriode = params.get('periode') || '';
+                const requestedDate = params.get('tanggal') || params.get('date');
                 let cursorDate = null;
-                if (/^\d{4}-\d{2}$/.test(requestedPeriode)) {
+                if (requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+                    const [year, month] = requestedDate.split('-').map(Number);
+                    periodMode.value = 'month';
+                    cursorDate = new Date(year, month - 1, 1);
+                } else if (/^\d{4}-\d{2}$/.test(requestedPeriode)) {
                     const [year, month] = requestedPeriode.split('-').map(Number);
                     periodMode.value = 'month';
                     cursorDate = new Date(year, month - 1, 1);
@@ -2045,23 +2038,21 @@ if ($isMember) {
                     cursorDate = new Date(now.value.getFullYear(), now.value.getMonth(), 1);
                 }
                 calendarCursor.value = cursorDate;
-                if ([10, 25, 50, 100].includes(Number(params.get('tampil')))) {
-                    pageSize.value = Number(params.get('tampil'));
-                }
-                if ([10, 25, 50, 100].includes(Number(params.get('tampil_umum')))) {
-                    generalPageSize.value = Number(params.get('tampil_umum'));
-                }
-                if (/^[1-9]\d*$/.test(params.get('halaman') || '')) {
-                    currentPage.value = Number(params.get('halaman'));
-                }
-                if (/^[1-9]\d*$/.test(params.get('halaman_umum') || '')) {
-                    currentGeneralPage.value = Number(params.get('halaman_umum'));
-                }
                 if (params.get('tab') === 'umum') {
                     activeMobileTab.value = 'umum';
                 }
+                isInitialMount = false;
                 loadWeather();
                 startTimers();
+                loadAgenda().then(() => {
+                    if (requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+                        const pool = [...scheduledAgendas.value, ...filteredGeneralAgendas.value];
+                        const target = pool.find((item) => item.tanggal === requestedDate);
+                        if (target) {
+                            focusAgenda(target);
+                        }
+                    }
+                });
                 window.addEventListener('resize', handleResize);
                 document.addEventListener('visibilitychange', handleVisibilityChange);
                 document.addEventListener('click', handleDocumentClick);
@@ -2100,6 +2091,7 @@ if ($isMember) {
                 komisiDropdownStyle,
                 komisiButtonLabel,
                 komisiButtonClass,
+                komisiItemClass,
                 isKomisiActive,
                 toggleKomisiDropdown,
                 selectKomisiFilter,
@@ -2109,6 +2101,7 @@ if ($isMember) {
                 calendarStyle,
                 calendarLabel,
                 calendarWeeks,
+                calendarCellClass,
                 toggleCalendar,
                 shiftCalendar,
                 pickCalendarDay,
@@ -2134,8 +2127,11 @@ if ($isMember) {
                 generalPageSize,
                 currentPage,
                 currentGeneralPage,
+                scheduledAgendas,
+                projectionsAgendas,
                 filteredAgendas,
                 filteredGeneralAgendas,
+                orderedScheduledAgendas,
                 orderedAgendas,
                 orderedGeneralAgendas,
                 todayAgendas,

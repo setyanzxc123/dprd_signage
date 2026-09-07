@@ -22,6 +22,9 @@ class AgendaController extends BaseController
         $member = $this->activeMember();
         $isMember = $member !== null;
         $isAdmin = ! $isMember && session()->has('auth_user');
+        if ($this->databaseDriverAvailable()) {
+            (new JadwalBanmusModel())->autoUpdateStatuses();
+        }
         $banmusProjections = $this->databaseDriverAvailable()
             ? $this->portalBanmusProjections($member)
             : [];
