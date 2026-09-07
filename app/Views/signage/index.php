@@ -25,7 +25,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
 
     <div id="app" v-cloak>
 
-        <header id="panel-header" class="relative z-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
+        <header id="panel-header" class="relative z-20 border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs">
+            <h1 class="sr-only">Layar Informasi Agenda Rapat DPRD Provinsi Sulawesi Tengah</h1>
             <div class="signage-header-motif" aria-hidden="true"></div>
 
             <div class="flex w-full items-center justify-between gap-[1.2vw] relative z-10">
@@ -37,14 +38,14 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         <span class="block truncate text-[clamp(17px,1.2vw,24px)] font-black uppercase tracking-[0.08em] text-slate-900 dark:text-white">
                             DPRD Provinsi
                         </span>
-                        <span class="block truncate text-[clamp(12px,0.85vw,17px)] uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 font-semibold">
+                        <span class="block truncate text-[clamp(12px,0.85vw,17px)] uppercase tracking-[0.08em] text-slate-600 dark:text-slate-400 font-semibold">
                             Sulawesi Tengah
                         </span>
                     </span>
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
-                    <div class="inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-[0.8vw] py-[0.45vh] shadow-xs">
+                    <div class="inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/90 px-[0.8vw] py-[0.45vh] shadow-xs">
                         <div class="flex items-center gap-[0.6vw] px-[1vw] py-[0.35vh]">
                             <img v-if="cuaca.icon_url" :src="cuaca.icon_url"
                                 class="h-[clamp(28px,2vw,40px)] w-[clamp(28px,2vw,40px)] object-contain"
@@ -52,7 +53,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                             <span v-else class="h-3 w-3 rounded-full bg-sky-500"></span>
                             <div class="text-left">
                                 <span class="block text-[clamp(18px,1.3vw,26px)] font-black leading-tight text-slate-900 dark:text-white">{{ cuaca.suhu }}</span>
-                                <span class="block max-w-[9.5vw] truncate text-[clamp(11px,0.75vw,15px)] font-medium text-slate-500 dark:text-slate-400">{{ cuaca.kondisi }}</span>
+                                <span class="block max-w-[9.5vw] truncate text-[clamp(11px,0.75vw,15px)] font-medium text-slate-600 dark:text-slate-400">{{ cuaca.kondisi }}</span>
                             </div>
                         </div>
 
@@ -60,16 +61,16 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                             <span class="block max-w-[15vw] truncate text-[clamp(12px,0.8vw,16px)] font-bold text-slate-800 dark:text-slate-200" v-if="cuaca.desa || cuaca.kecamatan">
                                 {{ cuaca.desa ? (cuaca.desa + ', ' + cuaca.kecamatan) : cuaca.kecamatan }}
                             </span>
-                            <span class="block text-[clamp(10px,0.68vw,13.5px)] font-medium text-slate-500 dark:text-slate-400">
+                            <span class="block text-[clamp(10px,0.68vw,13.5px)] font-medium text-slate-600 dark:text-slate-400">
                                 Kelembapan {{ cuaca.kelembapan }} · Angin {{ cuaca.kec_angin }}
                             </span>
-                            <span class="block text-[clamp(9px,0.6vw,12px)] font-medium italic text-slate-400 dark:text-slate-500">
+                            <span class="block text-[clamp(9px,0.6vw,12px)] font-medium italic text-slate-500 dark:text-slate-400">
                                 Sumber: BMKG
                             </span>
                         </div>
 
                         <div class="flex flex-col items-center justify-center px-[1.1vw] py-[0.35vh] text-center">
-                            <span class="block text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <span class="block text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                                 {{ dateDay }}
                             </span>
                             <span class="block text-[clamp(13.5px,0.95vw,19px)] font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
@@ -121,8 +122,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
         </header>
 
         <section id="panel-media" class="rounded-none">
-            <canvas ref="mediaBackdrop" class="media-bg" v-if="media.mode === 'video' && media.url"
-                aria-hidden="true"></canvas>
+            <video ref="mediaBackdropVideo" class="media-bg" v-if="media.mode === 'video' && media.url"
+                :src="media.url" crossorigin="anonymous" autoplay loop muted playsinline preload="auto" aria-hidden="true"
+                tabindex="-1" disablePictureInPicture></video>
             <img class="media-bg" v-if="media.mode === 'image' && media.url"
                 :src="media.url" alt="" aria-hidden="true" />
             <video ref="mediaVideo" class="media-main" v-if="media.mode === 'video' && media.url"
@@ -138,23 +140,23 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
 
             <div v-if="(!media.url && !mediaStatusPending) || mediaError" class="media-state">
                 <div class="flex flex-col items-center gap-3 text-center px-4 max-w-[28vw]">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-slate-400">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-200/80 dark:bg-white/10 text-slate-600 dark:text-slate-300">
                         <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                     </div>
                     <div class="space-y-1">
-                        <div class="text-[clamp(14px,1.05vw,19px)] font-bold tracking-wide text-slate-200">
+                        <div class="text-[clamp(14px,1.05vw,19px)] font-bold tracking-wide text-slate-800 dark:text-slate-100">
                             {{ mediaError ? 'Media Gagal Dimuat' : 'Media Tidak Tersedia' }}
                         </div>
-                        <p class="text-[clamp(11px,0.72vw,14px)] text-slate-400">
+                        <p class="text-[clamp(11px,0.72vw,14px)] text-slate-600 dark:text-slate-400">
                             {{ mediaError ? 'Terjadi kendala saat memuat berkas media' : 'Belum ada tayangan media yang diatur' }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <aside class="qr-panel flex flex-col border border-base-300/80 bg-base-100/90 shadow-2xl backdrop-blur-md rounded-2xl"
+            <aside class="qr-panel flex flex-col border border-base-300/80 bg-base-100 shadow-2xl rounded-2xl"
                 v-if="qrBerkas || qrLive">
                 <div class="flex flex-col items-center gap-[0.6vh] p-[clamp(10px,1vw,18px)]">
                     <div class="flex items-center text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-[0.1em] text-base-content/60"
@@ -235,7 +237,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                             <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
                                 {{ item.judul }}
                             </div>
-                            <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/75 truncate">{{ item.komisi }}</div>
+                            <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/85 font-medium truncate">{{ item.komisi }}</div>
                         </div>
                         <div class="self-center">
                             <span :class="statusClasses(item.status)">
@@ -261,7 +263,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         <li v-for="item in displayedUpcoming" :key="'upcoming-' + item.id"
                             class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1.1vw] py-[0.8vh]">
                             <div>
-                                <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/70">
+                                <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/85">
                                     {{ upcomingDateLabel(item.tanggal) }}
                                 </div>
                                 <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
@@ -279,7 +281,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                                 <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
                                     {{ item.judul }}
                                 </div>
-                                <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/75 truncate">{{ item.komisi }}</div>
+                                <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/85 font-medium truncate">{{ item.komisi }}</div>
                             </div>
                             <div class="self-center">
                                 <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30">
@@ -294,12 +296,12 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
         </section>
 
         <div id="panel-ticker" class="flex items-center rounded-none p-0"
-            role="status" v-if="runningTextAktif">
+            role="status" aria-live="polite" v-if="runningTextAktif">
             <span class="flex h-full items-center justify-center bg-sky-600 px-[1.4vw] text-[clamp(12px,0.85vw,16px)] font-bold uppercase tracking-[0.14em] text-white shadow-sm shrink-0">
                 Pengumuman
             </span>
             <div class="ticker-track min-w-0 flex-1 overflow-hidden py-1">
-                <span class="ticker-text">{{ runningText }}</span>
+                <span class="ticker-text" aria-label="Teks berjalan pengumuman">{{ runningText }}</span>
             </div>
         </div>
 
@@ -349,15 +351,13 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 }
 
                 function fitUpcomingToContainer() {
-                    nextTick(() => {
-                        const container = scheduleContainer.value || document.querySelector('.signage-schedule');
-                        if (!container) return;
+                    const container = scheduleContainer.value || document.querySelector('.signage-schedule');
+                    if (!container) return;
 
-                        if (container.scrollHeight > container.clientHeight && maxUpcomingSlots.value > 1) {
-                            maxUpcomingSlots.value--;
-                            nextTick(fitUpcomingToContainer);
-                        }
-                    });
+                    if (container.scrollHeight > container.clientHeight && maxUpcomingSlots.value > 1) {
+                        maxUpcomingSlots.value--;
+                        nextTick(fitUpcomingToContainer);
+                    }
                 }
 
                 watch([currentSchedulePage, paginatedJadwal, upcoming], () => {
@@ -390,7 +390,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     url: waitForCachedMediaStatus ? '' : configuredMediaUrl,
                 });
                 const mediaVideo = ref(null);
-                const mediaBackdrop = ref(null);
+                const mediaBackdropVideo = ref(null);
                 const mediaError = ref(false);
                 const mediaStatusPending = ref(Boolean(waitForCachedMediaStatus));
                 const mediaOfflineStatus = ref(configuredMediaUrl ? 'checking' : 'unavailable');
@@ -413,7 +413,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
 
                 const qrBerkas  = ref(false);
                 const qrLive    = ref(false);
-                const activeQR  = ref('berkas'); // 'berkas' | 'live'
+                const activeQR  = ref('berkas');
                 const qrFading  = ref(false);
                 const activeJadwalId = ref(null);
                 const BASE_URL  = '<?= rtrim(base_url(), '/') ?>';
@@ -426,13 +426,10 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 const DIAGNOSTICS_KEY = 'dprd-signage:diagnostics:v1';
                 let qrSlideTimer = null;
 
-
                 let clockTimer = null;
                 let dataTimer = null;
                 let weatherTimer = null;
                 let mediaWatchTimer = null;
-                let mediaBackdropFrame = null;
-                let lastBackdropPaint = 0;
                 let lastMediaCurrentTime = 0;
                 let lastMediaProgressAt = Date.now();
                 let mediaRecoveryAttempts = 0;
@@ -476,87 +473,6 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 const MEDIA_COMMIT_STABLE_MS = 10000;
                 const RECONNECT_RETRY_DELAYS_MS = [5000, 15000, 30000, 60000, 120000];
 
-                let cachedCanvasWidth = 0;
-                let cachedCanvasHeight = 0;
-
-                function updateCanvasBounds() {
-                    const canvas = mediaBackdrop.value;
-                    if (!canvas) {
-                        cachedCanvasWidth = 0;
-                        cachedCanvasHeight = 0;
-                        return;
-                    }
-                    const bounds = canvas.getBoundingClientRect();
-                    if (bounds.width <= 0 || bounds.height <= 0) return;
-                    cachedCanvasWidth = Math.max(1, Math.min(720, Math.round(bounds.width)));
-                    cachedCanvasHeight = Math.max(1, Math.round(cachedCanvasWidth * bounds.height / bounds.width));
-                    if (canvas.width !== cachedCanvasWidth || canvas.height !== cachedCanvasHeight) {
-                        canvas.width = cachedCanvasWidth;
-                        canvas.height = cachedCanvasHeight;
-                    }
-                }
-
-                function paintMediaBackdrop(timestamp = 0) {
-                    const video = mediaVideo.value;
-                    const canvas = mediaBackdrop.value;
-
-                    if (!video || !canvas || media.value.mode !== 'video') {
-                        mediaBackdropFrame = null;
-                        return;
-                    }
-
-                    if (timestamp - lastBackdropPaint >= 66 && video.readyState >= 2 && video.videoWidth > 0) {
-                        if (cachedCanvasWidth <= 0 || cachedCanvasHeight <= 0) {
-                            updateCanvasBounds();
-                        }
-                        if (cachedCanvasWidth <= 0 || cachedCanvasHeight <= 0) {
-                            mediaBackdropFrame = requestAnimationFrame(paintMediaBackdrop);
-                            return;
-                        }
-
-                        const context = canvas.getContext('2d', { alpha: false });
-                        if (context) {
-                            const scale = Math.max(
-                                cachedCanvasWidth / video.videoWidth,
-                                cachedCanvasHeight / video.videoHeight
-                            );
-                            const sourceWidth = cachedCanvasWidth / scale;
-                            const sourceHeight = cachedCanvasHeight / scale;
-                            const sourceX = (video.videoWidth - sourceWidth) / 2;
-                            const sourceY = (video.videoHeight - sourceHeight) / 2;
-
-                            context.drawImage(
-                                video,
-                                sourceX,
-                                sourceY,
-                                sourceWidth,
-                                sourceHeight,
-                                0,
-                                0,
-                                cachedCanvasWidth,
-                                cachedCanvasHeight
-                            );
-                        }
-
-                        lastBackdropPaint = timestamp;
-                    }
-
-                    mediaBackdropFrame = requestAnimationFrame(paintMediaBackdrop);
-                }
-
-                function startMediaBackdrop() {
-                    if (mediaBackdropFrame !== null) return;
-                    lastBackdropPaint = 0;
-                    mediaBackdropFrame = requestAnimationFrame(paintMediaBackdrop);
-                }
-
-                function stopMediaBackdrop() {
-                    if (mediaBackdropFrame !== null) {
-                        cancelAnimationFrame(mediaBackdropFrame);
-                        mediaBackdropFrame = null;
-                    }
-                }
-
                 function ensureMediaPlayback(event = null) {
                     const video = event?.currentTarget instanceof HTMLVideoElement
                         ? event.currentTarget
@@ -570,6 +486,15 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         playback.catch((error) => {
                             console.warn('[Signage] Autoplay media tertunda, akan dicoba ulang:', error);
                         });
+                    }
+
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && bgVideo !== video) {
+                        bgVideo.muted = true;
+                        const bgPlayback = bgVideo.play();
+                        if (bgPlayback && typeof bgPlayback.catch === 'function') {
+                            bgPlayback.catch(() => {});
+                        }
                     }
                 }
 
@@ -637,7 +562,6 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         return;
                     }
 
-                    stopMediaBackdrop();
                     media.value = { mode: mode || configuredMediaMode, url };
                     mediaRecoveryAttempts = 0;
                     mediaStableSince = 0;
@@ -677,6 +601,11 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     mediaWaitingForConnection = false;
                     mediaError.value = false;
                     clearMediaRecoveryTimer();
+
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && Math.abs(bgVideo.currentTime - currentTime) > 0.3) {
+                        bgVideo.currentTime = currentTime;
+                    }
                 }
 
                 function resumeRecoveredMedia(video, savedTime) {
@@ -732,7 +661,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     console.warn(
                         `[Signage] Memulihkan media (${reason}), percobaan ${attempt}/${MEDIA_MAX_RECOVERY_ATTEMPTS}.`
                     );
-                    stopMediaBackdrop();
+                    const bgVideoRecovery = mediaBackdropVideo.value;
+                    if (bgVideoRecovery && !bgVideoRecovery.paused) bgVideoRecovery.pause();
                     mediaError.value = false;
 
                     const resume = () => {
@@ -769,7 +699,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 }
 
                 function handleMediaWaiting() {
-                    stopMediaBackdrop();
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && !bgVideo.paused) bgVideo.pause();
                     mediaStableSince = 0;
                     if (pendingMediaCommitUrl) {
                         pendingMediaCommitSince = 0;
@@ -780,7 +711,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 }
 
                 function handleMediaError(event) {
-                    stopMediaBackdrop();
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && !bgVideo.paused) bgVideo.pause();
                     mediaError.value = true;
                     mediaStableSince = 0;
                     recordMediaPlaybackStatus('error', event?.currentTarget?.error?.message || 'Media gagal dimuat.');
@@ -804,7 +736,10 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     lastMediaCurrentTime = Number(event?.currentTarget?.currentTime) || lastMediaCurrentTime;
                     lastMediaProgressAt = Date.now();
                     recordMediaPlaybackStatus('playing');
-                    startMediaBackdrop();
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && bgVideo.paused) {
+                        bgVideo.play().catch(() => {});
+                    }
                 }
 
                 function handleMediaImageLoaded() {
@@ -919,21 +854,21 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     }, retryDelay);
                 }
 
+                const clockFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Makassar', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+                const dateDayFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Makassar', weekday: 'long'
+                });
+                const dateFullFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Makassar', day: 'numeric', month: 'long', year: 'numeric'
+                });
+
                 function updateClock() {
                     const now = new Date();
-                    const opts = { timeZone: 'Asia/Makassar', hour12: false };
-
-                    clock.value = new Intl.DateTimeFormat('id-ID', {
-                        ...opts, hour: '2-digit', minute: '2-digit', second: '2-digit'
-                    }).format(now).replaceAll('.', ':');
-
-                    dateDay.value = new Intl.DateTimeFormat('id-ID', {
-                        ...opts, weekday: 'long'
-                    }).format(now).toUpperCase();
-
-                    dateFull.value = new Intl.DateTimeFormat('id-ID', {
-                        ...opts, day: 'numeric', month: 'long', year: 'numeric'
-                    }).format(now);
+                    clock.value = clockFormatter.format(now).replaceAll('.', ':');
+                    dateDay.value = dateDayFormatter.format(now).toUpperCase();
+                    dateFull.value = dateFullFormatter.format(now);
                 }
 
 
@@ -1816,7 +1751,6 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         }
                     }, 5000);
                     document.addEventListener('visibilitychange', handleMediaVisibilityChange);
-                    window.addEventListener('resize', updateCanvasBounds);
                     window.addEventListener('resize', recalculateUpcomingSlots);
                     window.addEventListener('offline', handleNetworkOffline);
                     window.addEventListener('online', handleNetworkOnline);
@@ -1837,13 +1771,11 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     clearReconnectRetryTimer();
                     clearWorkerUpdateTimer();
                     document.removeEventListener('visibilitychange', handleMediaVisibilityChange);
-                    window.removeEventListener('resize', updateCanvasBounds);
                     window.removeEventListener('resize', recalculateUpcomingSlots);
                     window.removeEventListener('offline', handleNetworkOffline);
                     window.removeEventListener('online', handleNetworkOnline);
                     navigator.serviceWorker?.removeEventListener('message', handleMediaWorkerMessage);
                     navigator.serviceWorker?.removeEventListener('controllerchange', handleServiceWorkerControllerChange);
-                    stopMediaBackdrop();
                 });
 
                 return {
@@ -1854,7 +1786,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     jadwal, paginatedJadwal, currentSchedulePage, totalSchedulePages,
                     upcoming, displayedUpcoming, scheduleContainer, maxUpcomingSlots,
                     runningText, runningTextAktif, media,
-                    mediaVideo, mediaBackdrop, mediaError,
+                    mediaVideo, mediaBackdropVideo, mediaError,
                     ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
                     handleMediaWaiting, handleMediaEnded, handleMediaImageLoaded, handleMediaError,
                     statusLabel, statusClasses, statusDotClasses, scheduleItemClasses, upcomingDateLabel
