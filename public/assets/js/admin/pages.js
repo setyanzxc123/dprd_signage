@@ -3002,7 +3002,10 @@
                     const title = document.getElementById('live_status_title');
 
                     if (pct) pct.textContent = d.progress_percent + '%';
-                    if (bar) bar.value = d.progress_percent;
+                    if (bar) {
+                        bar.style.width = d.progress_percent + '%';
+                        bar.setAttribute('aria-valuenow', d.progress_percent);
+                    }
                     if (step) step.textContent = d.current_step || '-';
                     if (chunks) chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
                     if (title && d.current_step) title.textContent = d.current_step;
@@ -3013,6 +3016,19 @@
                         const modelMetaEl = document.getElementById('ai_model_meta_text');
                         if (modelMetaEl) modelMetaEl.textContent = d.ai_model_label;
                     }
+
+                    const updateActivePill = (targetItemId) => {
+                        document.querySelectorAll('.notulen-active-pill').forEach(el => el.remove());
+                        if (!targetItemId) return;
+                        const item = document.getElementById(targetItemId);
+                        if (item && !item.querySelector('.notulen-active-pill')) {
+                            const pill = document.createElement('div');
+                            pill.className = 'notulen-active-pill';
+                            item.appendChild(pill);
+                        }
+                    };
+
+                    const prelineSpinnerHtml = '<span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-emerald-600 dark:text-emerald-400 rounded-full" role="status" aria-label="loading"></span>';
 
                     // Stepper progress indicator
                     const chunkCircle = document.getElementById('step_chunking_circle');
@@ -3029,7 +3045,8 @@
                         if (chunkStatus) chunkStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (chunkCircle) chunkCircle.className = 'notulen-step-circle active';
-                        if (chunkStatus) chunkStatus.innerHTML = '<span class="animate-spin inline-block size-3 border border-current border-t-transparent text-primary rounded-full"></span> Menyiapkan audio...';
+                        if (chunkStatus) chunkStatus.innerHTML = prelineSpinnerHtml + ' Menyiapkan audio...';
+                        updateActivePill('step_chunking_item');
                     }
 
                     if (['summarizing', 'completed'].includes(d.status)) {
@@ -3037,7 +3054,8 @@
                         if (transStatus) transStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                     } else if (d.status === 'transcribing') {
                         if (transCircle) transCircle.className = 'notulen-step-circle active';
-                        if (transStatus) transStatus.innerHTML = '<span class="animate-spin inline-block size-3 border border-current border-t-transparent text-primary rounded-full"></span> Mentranskripsi (' + d.progress_percent + '%)';
+                        if (transStatus) transStatus.innerHTML = prelineSpinnerHtml + ' Mentranskripsi (' + d.progress_percent + '%)';
+                        updateActivePill('step_transcribing_item');
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (transCircle) transCircle.className = 'notulen-step-circle';
                         if (transStatus) transStatus.textContent = 'Menunggu';
@@ -3048,9 +3066,18 @@
                         if (summStatus) summStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                         if (compCircle) compCircle.className = 'notulen-step-circle done';
                         if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Siap Ditinjau';
+                        updateActivePill(null);
+
+                        if (bar) {
+                            bar.style.width = '100%';
+                            bar.setAttribute('aria-valuenow', 100);
+                        }
+                        if (pct) pct.textContent = '100%';
+                        if (title) title.textContent = 'Pemrosesan selesai! Memuat naskah risalah...';
                     } else if (d.status === 'summarizing') {
                         if (summCircle) summCircle.className = 'notulen-step-circle active';
-                        if (summStatus) summStatus.innerHTML = '<span class="animate-spin inline-block size-3 border border-current border-t-transparent text-primary rounded-full"></span> Menyusun risalah...';
+                        if (summStatus) summStatus.innerHTML = prelineSpinnerHtml + ' Menyusun risalah...';
+                        updateActivePill('step_summarizing_item');
                     } else {
                         if (summCircle) summCircle.className = 'notulen-step-circle';
                         if (summStatus) summStatus.textContent = 'Menunggu';
@@ -3063,6 +3090,7 @@
                     }
 
                     if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
+                        updateActivePill(null);
                         if (notulenPollTimer) {
                             clearInterval(notulenPollTimer);
                             notulenPollTimer = null;

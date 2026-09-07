@@ -2191,30 +2191,52 @@
     }
 
     .notulen-step-circle.active {
-        border-color: var(--color-primary);
-        background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-base-100));
-        color: var(--color-primary);
-        box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+        border-color: #059669;
+        background-color: rgb(16 185 129 / 0.14);
+        color: #059669;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.22);
+    }
+    :where(.dark, [data-theme="dark"]) .notulen-step-circle.active {
+        border-color: #10b981;
+        background-color: rgb(16 185 129 / 0.22);
+        color: #34d399;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
     }
 
     .notulen-step-circle.done {
-        border-color: var(--color-success);
-        background-color: color-mix(in srgb, var(--color-success) 12%, var(--color-base-100));
-        color: var(--color-success);
+        border-color: #10b981;
+        background-color: rgb(16 185 129 / 0.12);
+        color: #059669;
+    }
+    :where(.dark, [data-theme="dark"]) .notulen-step-circle.done {
+        border-color: #10b981;
+        background-color: rgb(16 185 129 / 0.2);
+        color: #34d399;
     }
 
     .notulen-step-circle.failed {
-        border-color: var(--color-error);
-        background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-base-100));
-        color: var(--color-error);
+        border-color: #ef4444;
+        background-color: rgb(239 68 68 / 0.12);
+        color: #dc2626;
+    }
+    :where(.dark, [data-theme="dark"]) .notulen-step-circle.failed {
+        border-color: #ef4444;
+        background-color: rgb(239 68 68 / 0.2);
+        color: #f87171;
     }
 
     .notulen-active-pill {
         width: 48px;
         height: 3px;
         border-radius: 9999px;
-        background-color: var(--color-primary);
+        background: linear-gradient(90deg, #10b981, #059669);
         margin-top: 6px;
+        animation: notulen-pill-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes notulen-pill-pulse {
+        0%, 100% { opacity: 0.6; transform: scaleX(0.9); }
+        50% { opacity: 1; transform: scaleX(1.05); }
     }
 
     .notulen-action-card {
@@ -2437,15 +2459,10 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
     *,
     ::before,
     ::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
 
-    .animate-spin,
-    .animate-ping,
-    .animate-pulse {
+    .animate-ping {
         animation: none !important;
     }
 }
