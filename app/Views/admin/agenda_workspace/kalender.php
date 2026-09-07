@@ -45,7 +45,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
 <!-- Stats Strip -->
 <section class="mb-4 grid grid-cols-3 gap-2.5 sm:gap-4">
     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Ditampilkan</span>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ditampilkan</span>
         <div class="mt-1 text-xl sm:text-2xl font-black text-slate-900 dark:text-white"><?= number_format($counts['total'], 0, ',', '.') ?></div>
     </div>
     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-3.5 sm:p-4">
@@ -85,12 +85,12 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
             <input type="hidden" name="view" value="<?= esc($view_mode) ?>" />
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Bulan</label>
-                    <input class="py-2 px-3 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" type="month" name="month" value="<?= esc($month) ?>" />
+                    <label for="filter-month" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Bulan</label>
+                    <input id="filter-month" class="py-2 px-3 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" type="month" name="month" value="<?= esc($month) ?>" />
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Sumber Agenda</label>
-                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="source">
+                    <label for="filter-source" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Sumber Agenda</label>
+                    <select id="filter-source" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="source">
                         <option value="">Semua sumber</option>
                         <?php foreach ($filter_options['sources'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['source'] === $value ? 'selected' : '' ?>>
@@ -100,8 +100,8 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Unit / Peserta</label>
-                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="unit">
+                    <label for="filter-unit" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Unit / Peserta</label>
+                    <select id="filter-unit" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="unit">
                         <option value="">Semua unit</option>
                         <?php foreach ($filter_options['units'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['unit'] === $value ? 'selected' : '' ?>>
@@ -111,8 +111,8 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Lokasi</label>
-                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="lokasi">
+                    <label for="filter-lokasi" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Lokasi</label>
+                    <select id="filter-lokasi" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="lokasi">
                         <option value="">Semua lokasi</option>
                         <?php foreach ($filter_options['locations'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['lokasi'] === $value ? 'selected' : '' ?>>
@@ -122,8 +122,8 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Status Waktu</label>
-                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="status">
+                    <label for="filter-status" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Status Waktu</label>
+                    <select id="filter-status" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="status">
                         <option value="">Semua status</option>
                         <?php foreach ($filter_options['statuses'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['status'] === $value ? 'selected' : '' ?>>
@@ -133,8 +133,8 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Publikasi</label>
-                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="publikasi">
+                    <label for="filter-publikasi" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Publikasi</label>
+                    <select id="filter-publikasi" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="publikasi">
                         <option value="">Semua publikasi</option>
                         <?php foreach ($filter_options['publications'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['publikasi'] === $value ? 'selected' : '' ?>>

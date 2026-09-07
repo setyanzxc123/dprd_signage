@@ -83,20 +83,20 @@
                                             class="m-0 inline-flex"
                                             data-confirm-message="Buat OTP darurat untuk <?= esc($m['name']) ?>? Pastikan identitas anggota sudah diverifikasi.">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 shadow-xs transition cursor-pointer" title="Buat OTP darurat">
+                                            <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 shadow-xs transition cursor-pointer" title="Buat OTP darurat" aria-label="Buat OTP darurat untuk <?= esc($m['name']) ?>">
                                                 <i data-lucide="key-round" class="size-3.5"></i>
                                                 OTP
                                             </button>
                                         </form>
                                     <?php endif; ?>
-                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Anggota">
+                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Anggota" aria-label="Edit <?= esc($m['name']) ?>">
                                         <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
                                         data-confirm-message="Hapus anggota <?= esc($m['name']) ?>?" class="m-0 inline-flex">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus Anggota">
+                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus Anggota" aria-label="Hapus anggota <?= esc($m['name']) ?>">
                                             <i data-lucide="trash-2" class="size-4"></i>
                                         </button>
                                     </form>

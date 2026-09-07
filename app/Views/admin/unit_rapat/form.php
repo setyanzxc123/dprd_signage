@@ -86,7 +86,7 @@
                         <div class="p-2 border-b border-slate-100 dark:border-slate-800">
                             <div class="relative">
                                 <input type="text" class="py-1.5 px-2.5 ps-8 block w-full border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="source-search"
-                                    placeholder="Cari nama, komisi, jabatan..." autocomplete="off" />
+                                    placeholder="Cari nama, komisi, jabatan..." autocomplete="off" aria-label="Cari anggota" />
                                 <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-2.5">
                                     <i data-lucide="search" class="size-3.5 text-slate-400"></i>
                                 </div>
@@ -154,7 +154,7 @@
                                         </div>
                                     </div>
                                     <button type="button" class="size-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
-                                        title="Hapus dari kelompok" data-remove-member="<?= $memberId ?>">
+                                        title="Hapus dari kelompok" aria-label="Hapus <?= esc($member['name']) ?> dari kelompok" data-remove-member="<?= $memberId ?>">
                                         <i data-lucide="x" class="size-3.5"></i>
                                     </button>
                                 </div>

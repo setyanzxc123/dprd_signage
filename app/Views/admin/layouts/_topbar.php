@@ -88,7 +88,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                 <span class="grid size-7 place-items-center rounded-lg bg-emerald-500/15 text-xs font-black text-emerald-600 dark:text-emerald-400"><?= esc($userInit) ?></span>
                 <span class="hidden text-left lg:block leading-tight">
                     <strong class="block max-w-32 truncate text-xs font-bold text-slate-800 dark:text-slate-200"><?= esc($userName) ?></strong>
-                    <span class="block text-[10px] font-medium text-slate-400 dark:text-slate-500"><?= esc($roleLabel) ?></span>
+                    <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400"><?= esc($roleLabel) ?></span>
                 </span>
             </a>
 

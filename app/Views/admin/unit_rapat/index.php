@@ -58,7 +58,7 @@
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">
                                 <div class="flex items-center justify-end gap-1.5">
-                                    <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Kelompok">
+                                    <a href="<?= base_url("admin/unit-rapat/{$unit['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Kelompok" aria-label="Edit kelompok <?= esc($unit['nama']) ?>">
                                         <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
@@ -67,7 +67,7 @@
                                             data-confirm-message="Nonaktifkan kelompok peserta <?= esc($unit['nama']) ?>? Kelompok tidak muncul di pilihan jadwal baru, tetapi riwayat jadwal lama tetap aman."
                                             class="m-0 inline-flex">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 shadow-xs transition cursor-pointer" title="Nonaktifkan">
+                                            <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 shadow-xs transition cursor-pointer" title="Nonaktifkan" aria-label="Nonaktifkan kelompok <?= esc($unit['nama']) ?>">
                                                 <i data-lucide="circle-off" class="size-3.5"></i>
                                                 Nonaktifkan
                                             </button>

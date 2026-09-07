@@ -80,7 +80,7 @@
                                                 <i data-lucide="external-link" class="size-3"></i>
                                             </a>
                                         <?php else: ?>
-                                            <span class="inline-flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+                                            <span class="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                                                 <i data-lucide="file-x" class="size-3.5"></i>
                                                 Tanpa PDF
                                             </span>
@@ -102,19 +102,21 @@
                                 <div class="flex items-center justify-end gap-1.5">
                                     <a href="<?= base_url('admin/jadwal-banmus/' . $doc['id']) ?>"
                                        class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition"
-                                       title="Kelola Item Agenda">
+                                       title="Kelola Item Agenda"
+                                       aria-label="Kelola agenda SK No. <?= esc($doc['nomor_sk']) ?>">
                                         <i data-lucide="list-todo" class="size-3.5"></i>
                                         Kelola
                                     </a>
                                     <a href="<?= base_url('admin/jadwal-banmus/' . $doc['id'] . '/edit') ?>"
                                        class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition"
-                                       title="Edit Metadata SK">
+                                       title="Edit Metadata SK"
+                                       aria-label="Edit metadata SK No. <?= esc($doc['nomor_sk']) ?>">
                                         <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
                                     <form action="<?= base_url('admin/jadwal-banmus/' . $doc['id'] . '/delete') ?>" method="post" class="m-0 inline-flex" data-confirm-message="Yakin ingin menghapus SK Banmus No. <?= esc($doc['nomor_sk']) ?> beserta <?= (int) ($doc['jumlah_item'] ?? 0) ?> item agenda terkait?">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus SK">
+                                        <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus SK" aria-label="Hapus SK No. <?= esc($doc['nomor_sk']) ?>">
                                             <i data-lucide="trash-2" class="size-3.5"></i>
                                             Hapus
                                         </button>

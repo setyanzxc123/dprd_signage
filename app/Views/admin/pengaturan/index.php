@@ -253,7 +253,7 @@
 
                     <div class="space-y-2">
                         <input type="tel" id="input-pair-phone" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm font-mono placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
-                            placeholder="Contoh: 081234567890" />
+                            placeholder="Contoh: 081234567890" aria-label="Nomor WhatsApp untuk pairing code" />
                         <button type="button" class="py-2.5 px-4 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none shadow-xs" id="btn-request-pair-code">
                             <span class="animate-spin inline-block size-4 border-2 border-current border-t-transparent text-white rounded-full" id="spinner-pair-code" hidden></span>
                             <i data-lucide="send" class="size-4" id="icon-pair-send"></i>

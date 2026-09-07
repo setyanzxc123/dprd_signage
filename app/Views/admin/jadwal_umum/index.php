@@ -101,17 +101,17 @@
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">
                                 <div class="general-schedule-actions flex items-center justify-end gap-1.5">
-                                    <a href="<?= base_url("admin/jadwal-umum/{$schedule['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Jadwal Umum">
+                                    <a href="<?= base_url("admin/jadwal-umum/{$schedule['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Jadwal Umum" aria-label="Edit <?= esc($schedule['judul']) ?>">
                                         <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
-                                    <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Buka / Buat Notulensi AI">
+                                    <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Buka / Buat Notulensi AI" aria-label="Notulensi AI <?= esc($schedule['judul']) ?>">
                                         <i data-lucide="mic" class="size-4"></i>
                                     </a>
                                     <form method="post" action="<?= base_url("admin/jadwal-umum/{$schedule['id']}/delete") ?>"
                                         class="m-0 inline-flex" data-confirm-message="Hapus Jadwal Umum ini?">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus Jadwal">
+                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus Jadwal" aria-label="Hapus <?= esc($schedule['judul']) ?>">
                                             <i data-lucide="trash-2" class="size-4"></i>
                                         </button>
                                     </form>

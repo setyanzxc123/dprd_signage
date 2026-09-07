@@ -70,14 +70,14 @@
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">
                                 <div class="room-row-actions flex items-center justify-end gap-1.5">
-                                    <a href="<?= base_url("admin/ruangan/{$r['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Ruangan">
+                                    <a href="<?= base_url("admin/ruangan/{$r['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Ruangan" aria-label="Edit ruangan <?= esc($r['name']) ?>">
                                         <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/ruangan/{$r['id']}/delete") ?>"
                                         data-confirm-message="Hapus ruangan <?= esc($r['name']) ?>?" class="m-0 inline-flex">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus Ruangan">
+                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus Ruangan" aria-label="Hapus ruangan <?= esc($r['name']) ?>">
                                             <i data-lucide="trash-2" class="size-4"></i>
                                         </button>
                                     </form>

@@ -148,7 +148,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
             <div class="flex items-center gap-2">
                 <div class="relative flex-1">
                     <input class="py-2 px-3 ps-9 block w-full border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="target-search" type="search"
-                        placeholder="Cari kelompok peserta..." autocomplete="off" />
+                        placeholder="Cari kelompok peserta..." autocomplete="off" aria-label="Cari kelompok peserta" />
                     <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
                         <i data-lucide="search" class="size-3.5 text-slate-400"></i>
                     </div>
