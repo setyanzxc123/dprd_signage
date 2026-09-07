@@ -26,7 +26,7 @@ $scheduledCount = count($items) - $projectionCount;
             <p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500 dark:text-slate-400"><?= esc($document['judul']) ?></p>
         </div>
     </div>
-    <button type="button" data-banmus-item-open class="py-2 px-3.5 inline-flex items-center justify-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition w-full sm:w-auto cursor-pointer">
+    <button type="button" data-banmus-item-open aria-haspopup="dialog" aria-expanded="false" aria-controls="item_modal" class="py-2 px-3.5 inline-flex items-center justify-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition w-full sm:w-auto cursor-pointer">
         <i data-lucide="plus" class="size-4"></i>
         Tambah Item Agenda
     </button>
@@ -84,7 +84,7 @@ $scheduledCount = count($items) - $projectionCount;
                 <i data-lucide="calendar-plus" class="size-7"></i>
             </span>
             <p class="mt-3 font-semibold text-slate-800 dark:text-slate-200">Belum ada item agenda dalam SK ini.</p>
-            <button type="button" data-banmus-item-open class="mt-4 py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+            <button type="button" data-banmus-item-open aria-haspopup="dialog" aria-expanded="false" aria-controls="item_modal" class="mt-4 py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
                 <i data-lucide="plus" class="size-4"></i>
                 Tambah Item Agenda
             </button>

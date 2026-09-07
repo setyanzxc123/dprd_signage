@@ -146,7 +146,7 @@
                             <?php endif; ?>
                         </p>
                         <div class="flex flex-wrap gap-2 pt-2">
-                            <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
+                            <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout" aria-haspopup="dialog" aria-expanded="false" aria-controls="modal_wa_logout">
                                 <i data-lucide="log-out" class="size-4"></i>
                                 <span>Putuskan Perangkat</span>
                             </button>
@@ -161,7 +161,7 @@
                         </p>
                         <div class="pt-2">
                             <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-amber-500 text-white hover:bg-amber-600 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
-                                data-hs-overlay="#modal_wa_pairing" onclick="window.switchWaTab('qr');">
+                                data-hs-overlay="#modal_wa_pairing" aria-haspopup="dialog" aria-expanded="false" aria-controls="modal_wa_pairing" onclick="window.switchWaTab('qr');">
                                 <i data-lucide="qr-code" class="size-4"></i>
                                 <span>Buka Scan QR / Pairing Code</span>
                             </button>

@@ -34,7 +34,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
 <header id="admin-topbar" class="h-16 sticky top-0 inset-x-0 z-40 flex items-center w-full bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 text-sm lg:ps-64 backdrop-blur-md">
     <div class="w-full mx-auto px-4 sm:px-6 flex items-center justify-between h-full">
         <div class="flex items-center gap-x-3">
-            <button type="button" class="py-2 px-2.5 inline-flex justify-center items-center gap-x-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs lg:hidden transition cursor-pointer" data-hs-overlay="#application-sidebar" aria-controls="application-sidebar" aria-label="Buka navigasi">
+            <button type="button" class="py-2 px-2.5 inline-flex justify-center items-center gap-x-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs lg:hidden transition cursor-pointer" data-hs-overlay="#application-sidebar" aria-controls="application-sidebar" aria-haspopup="dialog" aria-expanded="false" aria-label="Buka navigasi">
                 <i data-lucide="menu" class="size-4.5"></i>
             </button>
 
