@@ -7,15 +7,9 @@ $isEdit = is_array($document) && ! empty($document['id']);
 $selectedSemester = (int) ($document['semester'] ?? (date('n') <= 6 ? 1 : 2));
 ?>
 
-<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <p class="mb-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Agenda Internal DPRD</p>
-        <h1 class="page-title"><?= esc($pageTitle) ?></h1>
-    </div>
-    <a href="<?= base_url('admin/jadwal-banmus') ?>" class="py-2 px-3 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition sm:w-auto">
-        <i data-lucide="arrow-left" class="size-4"></i>
-        Kembali ke Daftar SK
-    </a>
+<div class="mb-5">
+    <p class="mb-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Agenda Internal DPRD</p>
+    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white"><?= esc($pageTitle) ?></h1>
 </div>
 
 <form class="min-w-0 max-w-full" action="<?= esc($action_url) ?>" method="post" enctype="multipart/form-data">

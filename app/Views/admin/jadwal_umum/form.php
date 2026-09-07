@@ -9,14 +9,8 @@ $locationMode = $otherLocation !== '' ? 'lainnya' : 'ruangan';
 $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
 ?>
 
-<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white"><?= esc($pageTitle) ?></h1>
-    </div>
-    <a href="<?= base_url('admin/jadwal-umum') ?>" class="py-2 px-3 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition sm:w-auto">
-        <i data-lucide="arrow-left" class="size-4"></i>
-        Kembali ke Jadwal Umum
-    </a>
+<div class="mb-5">
+    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white"><?= esc($pageTitle) ?></h1>
 </div>
 
 <form action="<?= esc($action_url) ?>" method="post" enctype="multipart/form-data" class="schedule-form min-w-0 max-w-full" data-require-targets="false">
@@ -280,8 +274,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
     </div>
 
     <div class="mt-6 flex items-center justify-end gap-3 max-w-5xl">
-        <a href="<?= base_url('admin/jadwal-umum') ?>" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
-            <i data-lucide="arrow-left" class="size-4"></i>
+        <a href="<?= base_url('admin/jadwal-umum') ?>" class="py-2.5 px-4 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
             Batal
         </a>
         <button type="submit" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
