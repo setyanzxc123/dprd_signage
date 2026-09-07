@@ -172,22 +172,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 }
                             }
 
-                            $missingFields = [];
-                            if (! $hasDate) {
-                                $missingFields[] = 'tanggal';
-                            }
-                            if (empty($item['jam_mulai']) || empty($item['jam_selesai'])) {
-                                $missingFields[] = 'waktu';
-                            }
-                            if ($roomName === '') {
-                                $missingFields[] = 'lokasi';
-                            }
-                            if ($unitNames === []) {
-                                $missingFields[] = 'peserta';
-                            }
-                            $projectionWarning = 'Belum siap ditetapkan sebagai jadwal: '
-                                . implode(', ', $missingFields)
-                                . ' belum diisi.';
+
                             $scheduleOrder = $hasFixedSchedule
                                 ? $item['tanggal'] . ' ' . ($item['jam_mulai'] ?? '00:00:00')
                                 : '9999-12-31 ' . str_pad((string) ($item['urutan'] ?? 0), 6, '0', STR_PAD_LEFT);
@@ -263,22 +248,9 @@ $scheduledCount = count($items) - $projectionCount;
                                     <?php endif; ?>
                                 </td>
                                 <td class="px-4 py-3.5 whitespace-nowrap" data-label="Status">
-                                    <div class="flex flex-wrap items-center gap-1.5">
-                                        <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-semibold whitespace-nowrap <?= $statusBadgeClass ?>">
-                                            <?= $statusLabel ?>
-                                        </span>
-                                        <?php if ($item['status'] === 'proyeksi' && $missingFields !== []): ?>
-                                            <span
-                                                class="inline-flex"
-                                                title="<?= esc($projectionWarning, 'attr') ?>"
-                                                aria-label="<?= esc($projectionWarning, 'attr') ?>">
-                                                <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded-md text-[10px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60 whitespace-nowrap">
-                                                    <i data-lucide="triangle-alert" class="size-3 text-amber-500"></i>
-                                                    Belum lengkap
-                                                </span>
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
+                                    <span class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-semibold whitespace-nowrap <?= $statusBadgeClass ?>">
+                                        <?= $statusLabel ?>
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">
                                     <div class="flex items-center justify-end gap-1.5">
