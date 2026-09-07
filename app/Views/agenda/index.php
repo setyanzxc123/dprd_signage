@@ -3,9 +3,30 @@ $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCP
 $vueVersion = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
 $cssVersion = is_file(FCPATH . 'assets/css/agenda.css') ? filemtime(FCPATH . 'assets/css/agenda.css') : time();
 $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
+$prelineVersion = is_file(FCPATH . 'assets/vendor/preline/preline.js') ? filemtime(FCPATH . 'assets/vendor/preline/preline.js') : time();
 $isMember = is_array($member ?? null);
 $isAdmin = ! $isMember && ! empty($isAdmin);
 $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
+
+$memberInitials = 'AD';
+$memberSubTitle = 'Anggota DPRD';
+if ($isMember) {
+    $fullName = trim((string) ($member['name'] ?? 'Anggota DPRD'));
+    $parts = preg_split('/\s+/', $fullName) ?: [];
+    $initials = '';
+    foreach (array_slice($parts, 0, 2) as $p) {
+        $clean = preg_replace('/[^A-Za-z]/', '', $p);
+        if ($clean !== '') {
+            $initials .= mb_substr($clean, 0, 1);
+        }
+    }
+    $memberInitials = strtoupper($initials ?: 'AD');
+    $memberSubTitle = ! empty($member['komisi'])
+        ? (string) $member['komisi']
+        : (! empty($member['fraksi'])
+            ? (string) $member['fraksi']
+            : (string) ($member['jabatan'] ?? 'Anggota DPRD'));
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -81,20 +102,59 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 </button>
 
                 <?php if ($isMember): ?>
-                    <details class="relative">
-                        <summary class="inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer list-none">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke-linecap="round"/></svg>
-                            <span class="hidden truncate sm:block max-w-40"><?= esc((string) ($member['name'] ?? 'Anggota')) ?></span>
-                        </summary>
-                        <div class="absolute right-0 z-50 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-xl">
-                            <p class="truncate text-sm font-extrabold text-slate-900 dark:text-white"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></p>
-                            <p class="mt-0.5 truncate text-xs font-semibold text-slate-500 dark:text-slate-400"><?= esc((string) ($member['jabatan'] ?? 'Anggota DPRD')) ?></p>
-                            <form class="mt-3" action="<?= base_url('anggota/logout') ?>" method="post">
-                                <?= csrf_field() ?>
-                                <button class="w-full py-2 px-3 rounded-xl border border-rose-200 dark:border-rose-800 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-center" type="submit">Keluar</button>
-                            </form>
+                    <div class="hs-dropdown relative inline-flex [--placement:bottom-right]">
+                        <button id="hs-dropdown-member-profile" type="button" class="hs-dropdown-toggle inline-flex items-center gap-x-2 py-1.5 px-2 sm:py-1.5 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700/80 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 transition cursor-pointer min-h-[44px]" aria-haspopup="menu" aria-expanded="false" aria-label="Menu akun anggota dewan">
+                            <div class="relative flex items-center justify-center size-8 rounded-lg bg-emerald-600 text-white text-xs font-black tracking-wider shrink-0 shadow-xs ring-1 ring-black/5 dark:ring-white/10">
+                                <span><?= esc($memberInitials) ?></span>
+                                <span class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-slate-800" aria-hidden="true" title="Sesi aktif terverifikasi"></span>
+                            </div>
+                            <div class="hidden sm:block text-left min-w-0 max-w-[130px] xl:max-w-[170px] leading-tight">
+                                <span class="block truncate text-xs font-bold text-slate-900 dark:text-white"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></span>
+                                <span class="block truncate text-[10px] font-semibold text-emerald-600 dark:text-emerald-400"><?= esc($memberSubTitle) ?></span>
+                            </div>
+                            <svg class="hs-dropdown-open:rotate-180 size-3.5 text-slate-400 dark:text-slate-500 transition duration-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+
+                        <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-64 sm:min-w-72 bg-white dark:bg-slate-900 shadow-xl rounded-2xl p-2 border border-slate-200/80 dark:border-slate-800 z-50 mt-2 divide-y divide-slate-100 dark:divide-slate-800" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-member-profile">
+                            <div class="py-2.5 px-3 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl mb-1.5">
+                                <span class="inline-block text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Anggota DPRD Sulteng</span>
+                                <p class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug mt-0.5"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></p>
+                                <div class="mt-2 flex flex-wrap gap-1.5">
+                                    <?php if (! empty($member['fraksi'])): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (! empty($member['komisi'])): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"><?= esc((string) $member['komisi']) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (empty($member['fraksi']) && empty($member['komisi'])): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) ($member['jabatan'] ?? 'Dewan')) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="py-1">
+                                <button type="button" @click="setMemberScope('saya')" class="flex w-full items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 transition cursor-pointer">
+                                    <span class="flex items-center gap-x-2">
+                                        <svg class="size-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                        <span>Filter Jadwal Saya</span>
+                                    </span>
+                                    <span v-if="myAgendasCount > 0" class="py-0.5 px-2 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">{{ myAgendasCount }}</span>
+                                </button>
+                            </div>
+
+                            <div class="pt-1">
+                                <form action="<?= base_url('anggota/logout') ?>" method="post">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="flex w-full items-center gap-x-2 py-2 px-3 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer">
+                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/></svg>
+                                        <span>Keluar Sesi</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </details>
+                    </div>
                 <?php elseif ($isAdmin): ?>
                     <a class="inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition" href="<?= base_url('admin/dashboard') ?>">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -824,6 +884,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     </footer>
 </div>
 
+<script src="<?= base_url('assets/vendor/preline/preline.js?v=' . $prelineVersion) ?>" defer></script>
 <script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
 <script {csp-script-nonce}>
     const { createApp, ref, computed, nextTick, onMounted, onUnmounted, watch } = Vue;
@@ -1026,6 +1087,14 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
             }
             const orderedAgendas = computed(() => orderAgendaRows(filteredAgendas.value));
             const orderedGeneralAgendas = computed(() => orderAgendaRows(filteredGeneralAgendas.value));
+            const myAgendasCount = computed(() => {
+                if (!IS_MEMBER) {
+                    return 0;
+                }
+                const participantAgendas = agendas.value.filter((item) => item.is_participant);
+                const participantProjections = banmusProjections.value.filter((item) => item.is_participant);
+                return participantAgendas.length + participantProjections.length;
+            });
             const todayDateKey = computed(() => dateKey(now.value));
             const todayAgendas = computed(() => {
                 const today = todayDateKey.value;
@@ -1766,6 +1835,11 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 document.addEventListener('click', handleDocumentClick);
                 document.addEventListener('keydown', handleKeyDown);
                 window.addEventListener('scroll', handleWindowScroll, { passive: true });
+                nextTick(() => {
+                    if (window.HSStaticMethods && typeof window.HSStaticMethods.autoInit === 'function') {
+                        window.HSStaticMethods.autoInit();
+                    }
+                });
             });
 
             onUnmounted(() => {
@@ -1822,6 +1896,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
                 headerTime,
                 activeNavigation,
                 memberScope,
+                myAgendasCount,
                 periodMode,
                 pageSize,
                 generalPageSize,
