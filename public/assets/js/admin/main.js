@@ -3,7 +3,26 @@
 
     /* Icon renderer */
     function renderAdminIcons() {
-        if (window.lucide) window.lucide.createIcons();
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            try {
+                window.lucide.createIcons();
+            } catch (error) {
+                console.error('Gagal merender ikon Lucide:', error);
+            }
+        } else if (!window.lucide) {
+            var retries = 0;
+            var checkInterval = setInterval(function () {
+                retries++;
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    clearInterval(checkInterval);
+                    try {
+                        window.lucide.createIcons();
+                    } catch (_) {}
+                } else if (retries >= 20) {
+                    clearInterval(checkInterval);
+                }
+            }, 50);
+        }
     }
     window.renderAdminIcons = renderAdminIcons;
 
@@ -205,12 +224,17 @@
                 if (group) {
                     group.classList.add('active');
                     const content = group.querySelector('.hs-accordion-content');
-                    if (content) content.classList.remove('hidden');
+                    if (content) {
+                        content.classList.remove('hidden');
+                        content.style.display = 'block';
+                    }
                     const toggle = group.querySelector('.hs-accordion-toggle');
                     if (toggle) toggle.setAttribute('aria-expanded', 'true');
-                    if (window.HSAccordion && typeof window.HSAccordion.show === 'function') {
-                        window.HSAccordion.show(group);
-                    }
+                    try {
+                        if (window.HSAccordion && Array.isArray(window.$hsAccordionCollection) && typeof window.HSAccordion.show === 'function') {
+                            window.HSAccordion.show(group);
+                        }
+                    } catch (_) {}
                 }
             } else {
                 link.removeAttribute('aria-current');
@@ -428,19 +452,23 @@
     }
 
     function initPreline() {
-        if (window.HSStaticMethods && typeof window.HSStaticMethods.autoInit === 'function') {
-            window.HSStaticMethods.autoInit();
+        try {
+            if (window.HSStaticMethods && typeof window.HSStaticMethods.autoInit === 'function') {
+                window.HSStaticMethods.autoInit();
+            }
+        } catch (err) {
+            console.warn('Preline autoInit error:', err);
         }
     }
 
     function refreshAdminPage() {
-        initThemeControls();
-        initSidebar();
-        applyActiveNavigation();
         renderAdminIcons();
-        initAutoDismissAlerts();
-        initAdminDataTables();
-        initPreline();
+        try { initThemeControls(); } catch (e) { console.error(e); }
+        try { initSidebar(); } catch (e) { console.error(e); }
+        try { initPreline(); } catch (e) { console.error(e); }
+        try { applyActiveNavigation(); } catch (e) { console.error(e); }
+        try { initAutoDismissAlerts(); } catch (e) { console.error(e); }
+        try { initAdminDataTables(); } catch (e) { console.error(e); }
         renderAdminIcons();
     }
 
@@ -453,6 +481,14 @@
     } else {
         refreshAdminPage();
     }
-    window.addEventListener('load', initPreline);
+
+    window.addEventListener('load', function () {
+        initPreline();
+        renderAdminIcons();
+    });
+
+    document.addEventListener('open.hs.overlay', renderAdminIcons);
+    document.addEventListener('open.hs.accordion', renderAdminIcons);
+    document.addEventListener('change.hs.tab', renderAdminIcons);
 
 })();

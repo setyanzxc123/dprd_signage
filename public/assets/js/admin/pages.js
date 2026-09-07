@@ -696,10 +696,14 @@
 
         window.switchWaTab = (tab) => {
             const targetBtn = tab === 'qr' ? tabQr : tabPair;
-            if (window.HSTabs && typeof window.HSTabs.open === 'function' && targetBtn) {
-                window.HSTabs.open(targetBtn);
-            } else if (targetBtn) {
-                targetBtn.click();
+            try {
+                if (window.HSTabs && Array.isArray(window.$hsTabsCollection) && typeof window.HSTabs.open === 'function' && targetBtn) {
+                    window.HSTabs.open(targetBtn);
+                } else if (targetBtn) {
+                    targetBtn.click();
+                }
+            } catch (_) {
+                if (targetBtn) targetBtn.click();
             }
         };
 
