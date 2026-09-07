@@ -29,15 +29,17 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
 </head>
 <body class="min-h-screen overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
     <header class="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
-        <div class="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
+        <div class="relative overflow-hidden">
+            <div class="agenda-header-motif" aria-hidden="true"></div>
+            <div class="relative z-10 mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
             <a class="flex items-center gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Kembali ke agenda DPRD">
                 <img class="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12" width="48" height="48" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                 <span class="min-w-0 leading-tight">
                     <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
-                        DPRD Provinsi
+                        AGENDA DPRD
                     </span>
                     <span class="block truncate text-[10px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
-                        Sulawesi Tengah
+                        Provinsi Sulawesi Tengah
                     </span>
                 </span>
             </a>
@@ -76,17 +78,35 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
 
                 <?php if ($isMember): ?>
                     <details class="relative">
-                        <summary class="inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer list-none">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke-linecap="round"/></svg>
-                            <span class="hidden truncate sm:block max-w-40"><?= esc((string) ($member['name'] ?? 'Anggota')) ?></span>
+                        <summary class="inline-flex items-center justify-center size-10 sm:size-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 transition cursor-pointer list-none" aria-label="Menu akun anggota dewan">
+                            <svg class="size-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
                         </summary>
-                        <div class="absolute right-0 z-50 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-xl">
-                            <p class="truncate text-sm font-extrabold text-slate-900 dark:text-white"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></p>
-                            <p class="mt-0.5 truncate text-xs font-semibold text-slate-500 dark:text-slate-400"><?= esc((string) ($member['jabatan'] ?? 'Anggota DPRD')) ?></p>
-                            <form class="mt-3" action="<?= base_url('anggota/logout') ?>" method="post">
-                                <?= csrf_field() ?>
-                                <button class="w-full py-2 px-3 rounded-xl border border-rose-200 dark:border-rose-800 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-center" type="submit">Keluar</button>
-                            </form>
+                        <div class="absolute right-0 z-50 mt-2 min-w-60 sm:min-w-64 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xl">
+                            <div class="py-2 px-2.5 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl">
+                                <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-snug"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></p>
+                                <div class="mt-1.5 flex flex-wrap gap-1">
+                                    <?php if (! empty($member['komisi'])): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"><?= esc((string) $member['komisi']) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (! empty($member['fraksi'])): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="pt-1.5">
+                                <form action="<?= base_url('anggota/logout') ?>" method="post">
+                                    <?= csrf_field() ?>
+                                    <button class="flex w-full items-center gap-x-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" type="submit">
+                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/>
+                                        </svg>
+                                        <span>Keluar</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </details>
                 <?php elseif ($isAdmin): ?>
@@ -102,6 +122,7 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
                 <?php endif; ?>
             </div>
         </div>
+    </div>
 
         <div class="grid grid-cols-3 border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 xl:hidden divide-x divide-slate-200/80 dark:divide-slate-800/80 py-2">
             <div class="min-w-0 px-2 text-center">
@@ -220,25 +241,36 @@ $isAdmin = ! $isMember && ! empty($isAdmin);
                                                 <div class="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
                                                     <?= (int) $item['urutan'] ?>
                                                 </div>
-                                                <div class="min-w-0 flex-1">
-                                                    <?php if (! empty($item['tanggal'])): ?>
-                                                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400">
-                                                            <?= date('d/m/Y', strtotime($item['tanggal'])) ?>
-                                                            <?php if (! empty($item['jam_mulai']) && ! empty($item['jam_selesai'])): ?>
-                                                                · <?= substr($item['jam_mulai'], 0, 5) ?>–<?= substr($item['jam_selesai'], 0, 5) ?> WITA
+                                                <div class="min-w-0 flex-1 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="w-20 shrink-0 text-slate-500 dark:text-slate-400">Waktu</span>
+                                                        <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
+                                                        <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">
+                                                            <?php if (! empty($item['tanggal'])): ?>
+                                                                <?= date('d/m/Y', strtotime($item['tanggal'])) ?>
+                                                                <?php if (! empty($item['jam_mulai']) && ! empty($item['jam_selesai'])): ?>
+                                                                    (<?= substr($item['jam_mulai'], 0, 5) ?>–<?= substr($item['jam_selesai'], 0, 5) ?> WITA)
+                                                                <?php endif; ?>
+                                                            <?php else: ?>
+                                                                <?= esc($item['periode_label'] ?: 'Periode belum ditentukan') ?>
                                                             <?php endif; ?>
-                                                        </p>
-                                                    <?php else: ?>
-                                                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400"><?= esc($item['periode_label'] ?: 'Periode belum ditentukan') ?></p>
-                                                    <?php endif; ?>
-                                                    <h3 class="mt-1 text-sm font-bold leading-relaxed text-slate-900 dark:text-white">
-                                                        <?= nl2br(esc($item['agenda'])) ?>
-                                                    </h3>
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="w-20 shrink-0 text-slate-500 dark:text-slate-400">Agenda</span>
+                                                        <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
+                                                        <span class="min-w-0 flex-1 leading-relaxed text-slate-700 dark:text-slate-200">
+                                                            <?= nl2br(esc($item['agenda'])) ?>
+                                                        </span>
+                                                    </div>
                                                     <?php if (! empty($item['catatan'])): ?>
-                                                        <p class="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                                                            <span class="font-bold">Keterangan:</span>
-                                                            <?= nl2br(esc($item['catatan'])) ?>
-                                                        </p>
+                                                        <div class="flex items-start gap-2">
+                                                            <span class="w-20 shrink-0 text-slate-500 dark:text-slate-400">Keterangan</span>
+                                                            <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
+                                                            <span class="min-w-0 flex-1 leading-relaxed text-slate-700 dark:text-slate-300">
+                                                                <?= nl2br(esc($item['catatan'])) ?>
+                                                            </span>
+                                                        </div>
                                                     <?php endif; ?>
                                                 </div>
                                             </li>
