@@ -60,7 +60,10 @@ class ScheduleMinutesController extends BaseController
             'waktuMulai'   => $waktuMulai,
         ]);
 
-        $dompdf = new Dompdf(['isRemoteEnabled' => false]);
+        $dompdf = new Dompdf([
+            'isRemoteEnabled' => false,
+            'defaultFont'     => 'Times-Roman',
+        ]);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
