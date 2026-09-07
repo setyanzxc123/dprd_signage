@@ -53,13 +53,13 @@ $scheduledCount = count($items) - $projectionCount;
                 href="<?= base_url('uploads/sk-banmus/' . $document['dokumen_file']) ?>"
                 target="_blank"
                 rel="noopener"
-                class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition"
+                class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-rose-200/80 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 shadow-2xs transition"
                 title="Buka PDF SK">
                 <i data-lucide="file-text" class="size-3.5 text-rose-500"></i>
                 PDF SK
             </a>
         <?php endif; ?>
-        <a href="<?= base_url('admin/jadwal-banmus/' . $document['id'] . '/edit') ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Edit Metadata SK">
+        <a href="<?= base_url('admin/jadwal-banmus/' . $document['id'] . '/edit') ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-blue-200/80 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 shadow-2xs transition" title="Edit Metadata SK">
             <i data-lucide="pencil" class="size-3.5"></i>
             Edit SK
         </a>
@@ -259,7 +259,7 @@ $scheduledCount = count($items) - $projectionCount;
                                                 type="button"
                                                 data-banmus-item-schedule
                                                 data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
-                                                class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-bold rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-xs transition cursor-pointer"
+                                                class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-emerald-300/80 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white dark:hover:border-emerald-600 shadow-2xs transition cursor-pointer"
                                                 title="Tetapkan tanggal dan ruangan rapat">
                                                 <i data-lucide="calendar-plus" class="size-3.5"></i>
                                                 Jadwalkan
@@ -270,7 +270,7 @@ $scheduledCount = count($items) - $projectionCount;
                                             type="button"
                                             data-banmus-item-edit
                                             data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
-                                            class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition cursor-pointer"
+                                            class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-blue-200/80 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 shadow-2xs transition cursor-pointer"
                                             title="Edit item agenda">
                                             <i data-lucide="pencil" class="size-3.5"></i>
                                             Edit
@@ -278,7 +278,7 @@ $scheduledCount = count($items) - $projectionCount;
 
                                         <a
                                             href="<?= base_url('admin/notulen?jadwal_type=banmus&jadwal_id=' . (int) $item['id']) ?>"
-                                            class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                                            class="p-1.5 inline-flex items-center justify-center rounded-lg border border-emerald-200/80 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white dark:hover:border-emerald-600 shadow-2xs transition"
                                             title="Buka / Buat Notulensi AI">
                                             <i data-lucide="mic" class="size-4"></i>
                                         </a>
@@ -289,7 +289,7 @@ $scheduledCount = count($items) - $projectionCount;
                                             class="m-0 inline-flex"
                                             data-confirm-message="Hapus item agenda ini?">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus item agenda">
+                                            <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-rose-200/80 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 shadow-2xs transition cursor-pointer" title="Hapus item agenda">
                                                 <i data-lucide="trash-2" class="size-4"></i>
                                             </button>
                                         </form>

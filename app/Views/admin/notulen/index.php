@@ -118,14 +118,14 @@
                             </td>
                             <td data-label="Aksi">
                                 <div class="notulen-actions flex flex-wrap items-center justify-end gap-1.5">
-                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Buka Detail" aria-label="Buka notulen <?= esc($judulRapat) ?>">
+                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 hover:border-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 shadow-2xs transition" title="Buka Detail" aria-label="Buka notulen <?= esc($judulRapat) ?>">
                                         <i data-lucide="eye" class="size-3.5"></i>
                                         Buka
                                     </a>
                                     <form method="post" action="<?= base_url('admin/notulen/destroy/' . $job['id']) ?>"
-                                        class="m-0 inline-flex" data-confirm-message="Hapus notulen ini beserta seluruh transkrip dan risalahnya?">
+                                         class="m-0 inline-flex" data-confirm-message="Hapus notulen ini beserta seluruh transkrip dan risalahnya?">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus" aria-label="Hapus notulen <?= esc($judulRapat) ?>">
+                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-rose-200/80 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 shadow-2xs transition cursor-pointer" title="Hapus" aria-label="Hapus notulen <?= esc($judulRapat) ?>">
                                             <i data-lucide="trash-2" class="size-4"></i>
                                         </button>
                                     </form>

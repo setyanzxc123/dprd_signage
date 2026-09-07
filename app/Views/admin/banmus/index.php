@@ -101,14 +101,14 @@
                             <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <a href="<?= base_url('admin/jadwal-banmus/' . $doc['id']) ?>"
-                                       class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition"
+                                       class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 hover:border-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 shadow-2xs transition"
                                        title="Kelola Item Agenda"
                                        aria-label="Kelola agenda SK No. <?= esc($doc['nomor_sk']) ?>">
                                         <i data-lucide="list-todo" class="size-3.5"></i>
                                         Kelola
                                     </a>
                                     <a href="<?= base_url('admin/jadwal-banmus/' . $doc['id'] . '/edit') ?>"
-                                       class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition"
+                                       class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-blue-200/80 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 shadow-2xs transition"
                                        title="Edit Metadata SK"
                                        aria-label="Edit metadata SK No. <?= esc($doc['nomor_sk']) ?>">
                                         <i data-lucide="pencil" class="size-3.5"></i>
@@ -116,7 +116,7 @@
                                     </a>
                                     <form action="<?= base_url('admin/jadwal-banmus/' . $doc['id'] . '/delete') ?>" method="post" class="m-0 inline-flex" data-confirm-message="Yakin ingin menghapus SK Banmus No. <?= esc($doc['nomor_sk']) ?> beserta <?= (int) ($doc['jumlah_item'] ?? 0) ?> item agenda terkait?">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer" title="Hapus SK" aria-label="Hapus SK No. <?= esc($doc['nomor_sk']) ?>">
+                                        <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-rose-200/80 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 shadow-2xs transition cursor-pointer" title="Hapus SK" aria-label="Hapus SK No. <?= esc($doc['nomor_sk']) ?>">
                                             <i data-lucide="trash-2" class="size-3.5"></i>
                                             Hapus
                                         </button>
