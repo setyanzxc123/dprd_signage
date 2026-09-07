@@ -52,8 +52,8 @@ $flashError = session()->getFlashdata('error');
 
     <?= $this->include('admin/layouts/_topbar') ?>
 
-    <div class="w-full lg:ps-64 min-h-screen bg-slate-100 dark:bg-slate-950">
-        <main id="content" class="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div class="w-full lg:ps-64 min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-between">
+        <main id="content" class="p-4 sm:p-6 lg:p-8 space-y-6 flex-1">
 
             <?php if ($flashSuccess): ?>
                 <div class="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 shadow-xs" role="alert" data-admin-alert data-auto-dismiss-ms="3500">
@@ -78,6 +78,13 @@ $flashError = session()->getFlashdata('error');
             <?= $this->renderSection('content') ?>
 
         </main>
+
+        <footer class="mt-auto border-t border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 py-4 px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <span>&copy; <?= date('Y') ?> Sekretariat DPRD Provinsi Sulawesi Tengah. All rights reserved.</span>
+                <span class="font-medium text-slate-400 dark:text-slate-500">Panel Administrasi</span>
+            </div>
+        </footer>
     </div>
 
     <!-- Preline Confirmation Modal Global -->

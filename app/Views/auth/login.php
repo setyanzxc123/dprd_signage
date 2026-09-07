@@ -200,7 +200,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
             </section>
 
             <p class="mt-4 text-center text-xs text-base-content/50">
-                &copy; <?= date('Y') ?> DPRD Provinsi Sulawesi Tengah
+                &copy; <?= date('Y') ?> Sekretariat DPRD Provinsi Sulawesi Tengah. All rights reserved.
             </p>
         </div>
     </main>
