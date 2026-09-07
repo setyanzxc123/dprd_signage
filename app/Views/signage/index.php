@@ -3,7 +3,7 @@ $signageCssVersion = is_file(FCPATH . 'assets/css/signage.css') ? filemtime(FCPA
 $fontVersion       = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $vueVersion        = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
 $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? filemtime(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') : time();
-$logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPATH . 'assets/images/logo_dprd.jpg') : time();
+$logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 ?>
 <!DOCTYPE html>
 <html lang="id" data-theme="<?= esc($signageTema ?? 'dark') ?>">
@@ -14,7 +14,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
     <title>Layar Informasi - DPRD Sulawesi Tengah</title>
     <meta name="robots" content="noindex, nofollow" />
 
-    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/signage.css?v=' . $signageCssVersion) ?>" rel="stylesheet" />
     <script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
@@ -30,11 +30,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime
 
             <div class="flex w-full items-center justify-between gap-[1.2vw] relative z-10">
                 <div class="flex items-center gap-[1vw] min-w-0 flex-1">
-                    <div class="flex h-[clamp(56px,7.2vh,84px)] w-[clamp(56px,7.2vh,84px)] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1 shadow-sm">
-                        <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>"
-                            alt="Logo DPRD Provinsi Sulawesi Tengah"
-                            class="h-full w-full rounded-full object-contain" />
-                    </div>
+                    <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>"
+                        alt="Logo DPRD Provinsi Sulawesi Tengah"
+                        class="h-[clamp(56px,7.2vh,84px)] w-[clamp(56px,7.2vh,84px)] shrink-0 object-contain" />
                     <span class="min-w-0 leading-tight">
                         <span class="block truncate text-[clamp(17px,1.2vw,24px)] font-black uppercase tracking-[0.08em] text-slate-900 dark:text-white">
                             DPRD Provinsi

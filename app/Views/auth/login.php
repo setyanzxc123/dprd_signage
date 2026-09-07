@@ -2,7 +2,7 @@
 $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
-$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPATH . 'assets/images/logo_dprd.jpg') : time();
+$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 $adminThemeJsVersion = is_file(FCPATH . 'assets/js/admin/theme-init.js') ? filemtime(FCPATH . 'assets/js/admin/theme-init.js') : time();
 $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
 ?>
@@ -15,7 +15,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
     <script src="<?= base_url('assets/js/admin/theme-init.js?v=' . $adminThemeJsVersion) ?>"></script>
     <title><?= esc($pageTitle ?? 'Sistem Informasi Agenda dan Jadwal Rapat DPRD') ?></title>
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
 </head>
@@ -31,11 +31,9 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
     <main class="flex min-h-screen items-center justify-center px-3 py-5 min-[380px]:px-4 min-[380px]:py-8">
         <div class="w-full max-w-md">
             <header class="mb-6 text-center">
-                <div class="mx-auto mb-4 flex h-16 w-16 min-[380px]:h-20 min-[380px]:w-20 items-center justify-center overflow-hidden rounded-full bg-white p-1 ring-2 ring-emerald-500/40 shadow-md">
-                    <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>"
-                        alt="Logo DPRD Provinsi Sulawesi Tengah"
-                        class="h-full w-full rounded-full object-contain" />
-                </div>
+                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>"
+                    alt="Logo DPRD Provinsi Sulawesi Tengah"
+                    class="mx-auto mb-4 h-16 w-16 min-[380px]:h-20 min-[380px]:w-20 shrink-0 object-contain" />
                 <h1 class="text-xl font-black leading-normal text-base-content min-[380px]:text-2xl">
                     Sistem Informasi Agenda dan Jadwal Rapat DPRD
                 </h1>

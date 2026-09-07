@@ -2,7 +2,7 @@
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $vueVersion = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
 $cssVersion = is_file(FCPATH . 'assets/css/agenda.css') ? filemtime(FCPATH . 'assets/css/agenda.css') : time();
-$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPATH . 'assets/images/logo_dprd.jpg') : time();
+$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 $isMember = is_array($member ?? null);
 $isAdmin = ! $isMember && ! empty($isAdmin);
 $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
@@ -14,7 +14,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= esc($pageTitle) ?> - DPRD Provinsi Sulawesi Tengah</title>
     <meta name="description" content="Agenda dan jadwal rapat DPRD Provinsi Sulawesi Tengah." />
-    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -35,9 +35,7 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
         <div class="agenda-header-motif" aria-hidden="true"></div>
         <div class="mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
             <a class="flex items-center gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
-                <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-0.5 sm:h-16 sm:w-16 sm:p-1">
-                    <img class="h-full w-full rounded-full object-contain" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
-                </div>
+                <img class="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                 <span class="min-w-0 leading-tight">
                     <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                         DPRD Provinsi
@@ -742,10 +740,79 @@ $pageTitle = $isMember ? 'Agenda Anggota DPRD' : 'Agenda DPRD';
 
     </main>
 
-    <footer class="border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 py-6 text-slate-500 dark:text-slate-400">
-        <div class="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 text-xs font-medium sm:px-6 lg:px-8 sm:flex-row sm:items-center sm:justify-between">
-            <span>DPRD Provinsi Sulawesi Tengah &copy; <?= date('Y') ?></span>
-            <span><?= $isMember ? 'Akses anggota' : 'Akses publik' ?></span>
+    <footer class="border-t border-neutral-800 bg-black text-neutral-300 pt-12 pb-8">
+        <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+                <div class="space-y-5 lg:col-span-7">
+                    <div class="flex items-center gap-3.5 sm:gap-4">
+                        <img class="h-14 w-14 shrink-0 object-contain sm:h-16 sm:w-16" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+                        <div class="min-w-0">
+                            <span class="block text-base font-extrabold uppercase tracking-wider text-white sm:text-lg">
+                                Dewan Perwakilan Rakyat Daerah
+                            </span>
+                            <span class="block text-sm font-semibold tracking-wide text-neutral-300 sm:text-base">
+                                Provinsi Sulawesi Tengah
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="h-0.5 w-full max-w-md bg-red-700"></div>
+
+                    <div class="flex flex-wrap items-center gap-3 pt-1">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-neutral-300 sm:text-sm">Media Sosial:</span>
+                        <div class="flex items-center gap-2">
+                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="flex size-9 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 text-neutral-300 transition hover:border-neutral-400 hover:bg-neutral-800 hover:text-white" aria-label="Facebook DPRD Sulawesi Tengah">
+                                <svg class="size-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                            </a>
+                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="flex size-9 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 text-neutral-300 transition hover:border-neutral-400 hover:bg-neutral-800 hover:text-white" aria-label="Instagram DPRD Sulawesi Tengah">
+                                <svg class="size-4 fill-none stroke-current" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                            </a>
+                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="flex size-9 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 text-neutral-300 transition hover:border-neutral-400 hover:bg-neutral-800 hover:text-white" aria-label="X Twitter DPRD Sulawesi Tengah">
+                                <svg class="size-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            </a>
+                            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="flex size-9 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 text-neutral-300 transition hover:border-neutral-400 hover:bg-neutral-800 hover:text-white" aria-label="YouTube DPRD Sulawesi Tengah">
+                                <svg class="size-4 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3.5 lg:col-span-5">
+                    <h2 class="text-base font-bold uppercase tracking-wider text-white">Kontak</h2>
+                    <ul class="space-y-2.5 text-xs sm:text-sm">
+                        <li class="flex items-center gap-3">
+                            <svg class="size-4 shrink-0 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            <span>0451 - 421115</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <svg class="size-4 shrink-0 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                            <span>0451 - 421116</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <svg class="size-4 shrink-0 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            <a href="mailto:bag_persuratan@dprd.sultengprov.go.id" class="transition hover:text-white">bag_persuratan@dprd.sultengprov.go.id</a>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <svg class="size-4 shrink-0 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            <a href="mailto:bag_humas@dprd.sultengprov.go.id" class="transition hover:text-white">bag_humas@dprd.sultengprov.go.id</a>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="mt-0.5 size-4 shrink-0 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" x2="22" y1="22" y2="22"/><line x1="4" x2="20" y1="2" y2="2"/><path d="M4 2v20"/><path d="M20 2v20"/><path d="M9 22v-4a2 2 0 0 1 4 0v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+                            <address class="not-italic leading-relaxed text-neutral-300">
+                                <span class="block">Jl. Sam Ratulangi No. 78,</span>
+                                <span class="block">Kota Palu, Sulawesi Tengah 94118 - Indonesia</span>
+                            </address>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-10 border-t border-neutral-800/80 pt-6">
+                <div class="flex flex-col items-center justify-between gap-2 text-center text-xs text-neutral-400 sm:flex-row sm:text-left">
+                    <span>&copy; <?= date('Y') ?> Sekretariat DPRD Provinsi Sulawesi Tengah. All rights reserved.</span>
+                    <span class="text-neutral-400 font-medium"><?= $isMember ? 'Akses anggota' : 'Akses publik' ?></span>
+                </div>
+            </div>
         </div>
     </footer>
 </div>

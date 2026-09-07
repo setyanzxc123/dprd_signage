@@ -38,7 +38,7 @@ class SignageController extends BaseController
             FCPATH . 'assets/vendor/fonts/fonts.css',
             FCPATH . 'assets/vendor/vue/vue.global.prod.js',
             FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js',
-            FCPATH . 'assets/images/logo_dprd.jpg',
+            FCPATH . 'assets/images/logo_dprd.png',
         ];
         $fontFiles = glob(FCPATH . 'assets/vendor/fonts/files/*.woff2');
         if (is_array($fontFiles)) {

@@ -1,7 +1,7 @@
 <?php
 $pageTitle   = $pageTitle ?? 'Dashboard';
 $breadcrumbs = $breadcrumbs ?? [];
-$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.jpg') ? filemtime(FCPATH . 'assets/images/logo_dprd.jpg') : time();
+$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 
 $authUser  = session()->get('auth_user') ?? [];
 $userName  = $authUser['name'] ?? 'Admin Operator';
@@ -39,9 +39,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
             </button>
 
             <div class="flex min-w-0 items-center gap-2.5 lg:hidden">
-                <div class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-xs p-0.5">
-                    <img src="<?= base_url('assets/images/logo_dprd.jpg?v=' . $logoVersion) ?>" alt="Logo DPRD" class="h-full w-full rounded-full object-contain" />
-                </div>
+                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" alt="Logo DPRD" class="size-9 shrink-0 object-contain" />
                 <div class="min-w-0 leading-tight">
                     <strong class="block truncate text-xs font-bold text-slate-900 dark:text-white">E-Agenda</strong>
                     <span class="block truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">DPRD Sulteng</span>
