@@ -389,6 +389,107 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertArrayHasKey('ringkasan_utama', $json['tiga_pilar']);
         $this->assertArrayHasKey('poin_pembahasan', $json['tiga_pilar']);
         $this->assertArrayHasKey('kesimpulan_akhir', $json['tiga_pilar']);
+        $this->assertNotEmpty($json['pdf_url']);
+        $this->assertNotEmpty($json['api_pdf_url']);
+    }
+
+    public function testMobileApiExportPdfStreamsPdf(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'         => 21,
+            'judul'      => 'Sidang Paripurna Pembahasan APBD',
+            'tanggal'    => '2026-08-27',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 6,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 21,
+            'audio_filename' => 'sidang_21.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 6,
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nNaskah sidang...",
+            'status_verifikasi'   => 'final',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
+            ->get('/api/v1/jadwal/umum/21/risalah-pdf');
+
+        $response->assertOK();
+        $this->assertSame('application/pdf; charset=UTF-8', $response->response()->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('inline', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->response()->getBody());
+    }
+
+    public function testMemberWebExportPdfRejectsDraftMinutes(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'         => 20,
+            'judul'      => 'Rapat Dengar Pendapat',
+            'tanggal'    => '2026-08-27',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 5,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 20,
+            'audio_filename' => 'rdp_20.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 5,
+            'ringkasan_eksekutif' => 'Ringkasan draft',
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->expectException(\CodeIgniter\Exceptions\PageNotFoundException::class);
+        $this->withSession(['member_auth' => ['anggota_id' => 1, 'name' => 'Anggota Uji']])
+            ->get('/anggota/jadwal-umum/20/risalah-pdf');
+    }
+
+    public function testMemberWebExportPdfStreamsPdfWhenFinal(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'         => 21,
+            'judul'      => 'Sidang Paripurna Pembahasan APBD',
+            'tanggal'    => '2026-08-27',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 6,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 21,
+            'audio_filename' => 'sidang_21.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 6,
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nNaskah sidang...",
+            'status_verifikasi'   => 'final',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->withSession(['member_auth' => ['anggota_id' => 1, 'name' => 'Anggota Uji']])
+            ->get('/anggota/jadwal-umum/21/risalah-pdf');
+
+        $response->assertOK();
+        $this->assertSame('application/pdf; charset=UTF-8', $response->response()->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('inline', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringContainsString('Risalah_Sidang_Paripurna_Pembahasan_APBD_20260827.pdf', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->response()->getBody());
     }
 
     public function testIndexRedirectsToExistingJobWhenScheduleReferenced(): void

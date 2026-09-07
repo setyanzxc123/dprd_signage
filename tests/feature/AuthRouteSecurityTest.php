@@ -202,6 +202,15 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response->assertRedirectTo(base_url('login?akses=admin'));
     }
 
+    public function testMemberRisalahPdfRequiresAuthentication(): void
+    {
+        $responseBanmus = $this->get('/anggota/jadwal-banmus/1/risalah-pdf');
+        $responseBanmus->assertRedirectTo(base_url('login?akses=anggota'));
+
+        $responseGeneral = $this->get('/anggota/jadwal-umum/1/risalah-pdf');
+        $responseGeneral->assertRedirectTo(base_url('login?akses=anggota'));
+    }
+
     public function testEmergencyOtpActionDoesNotExposeReasonInput(): void
     {
         $body = view('admin/anggota/index', [

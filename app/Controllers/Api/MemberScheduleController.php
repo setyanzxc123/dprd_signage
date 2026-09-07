@@ -67,10 +67,12 @@ class MemberScheduleController extends BaseController
             $id = (int) ($schedule['source_id'] ?? $schedule['id']);
             $source = (string) ($schedule['source'] ?? '');
             $apiSource = $source === 'banmus' ? 'banmus' : 'umum';
+            $routeSource = $source === 'banmus' ? 'jadwal-banmus' : 'jadwal-umum';
             $hasFinal = $finalMap[$apiSource][$id] ?? false;
             $schedule['risalah_tersedia'] = $hasFinal;
             if ($hasFinal) {
                 $schedule['risalah_url'] = base_url("api/v1/jadwal/{$apiSource}/{$id}/risalah");
+                $schedule['risalah_pdf_url'] = base_url("anggota/{$routeSource}/{$id}/risalah-pdf");
             }
 
             return $schedule;
