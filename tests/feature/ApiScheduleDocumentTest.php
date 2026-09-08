@@ -20,6 +20,7 @@ final class ApiScheduleDocumentTest extends CIUnitTestCase
     use FeatureTestTrait;
 
     private const MEMBER_TOKEN = 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd';
+    private const ADMIN_TOKEN  = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
     private const INVITATION_FILE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.pdf';
     private const SK_FILE = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.pdf';
 
@@ -97,6 +98,28 @@ final class ApiScheduleDocumentTest extends CIUnitTestCase
             $response->response()->getHeaderLine('Content-Disposition'),
         );
         $this->assertSame($contents, (string) $response->response()->getBody());
+    }
+
+    public function testUndanganSupportsShortAliasAndAdmin(): void
+    {
+        $contents = "%PDF-1.4\nundangan-alias-fixture\n%%EOF\n";
+        $this->writeInvitationFixture(self::INVITATION_FILE, $contents);
+        $this->apiDb->table('jadwal_umum')->insert([
+            'judul'              => 'Rapat Koordinasi Alias',
+            'undangan_file'      => self::INVITATION_FILE,
+            'undangan_nama_asli' => 'Undangan Rapat Koordinasi Alias.pdf',
+        ]);
+        $id = (int) $this->apiDb->insertID();
+
+        $response = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
+            ->get("/api/v1/jadwal/umum/{$id}/undangan");
+        $response->assertOK();
+
+        $adminResponse = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get("/api/v1/jadwal/umum/{$id}/undangan");
+        $adminResponse->assertOK();
     }
 
     public function testBanmusInvitationRequiresScheduledMeeting(): void
@@ -260,6 +283,17 @@ final class ApiScheduleDocumentTest extends CIUnitTestCase
             'aktif'   => 1,
             'user_id' => $userId,
         ]);
+
+        $this->apiDb->table('users')->insert([
+            'username' => 'admin-api',
+            'name'     => 'Admin API',
+            'active'   => 1,
+        ]);
+        $adminId = (int) $this->apiDb->insertID();
+        $this->apiDb->table('auth_groups_users')->insert([
+            'user_id' => $adminId, 'group' => 'operator', 'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->issueToken($adminId, self::ADMIN_TOKEN);
     }
 
     private function createTables(): void

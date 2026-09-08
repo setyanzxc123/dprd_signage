@@ -18,6 +18,7 @@ final class ApiScheduleResourceTest extends CIUnitTestCase
     use FeatureTestTrait;
 
     private const MEMBER_TOKEN = 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc';
+    private const ADMIN_TOKEN  = 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd';
 
     private BaseConnection $apiDb;
     private Forge $apiForge;
@@ -83,6 +84,46 @@ final class ApiScheduleResourceTest extends CIUnitTestCase
             'https://example.com/live-umum',
             json_decode((string) $stream->response()->getBody(), true)['url'],
         );
+    }
+
+    public function testResolvesResourceWithShortAlias(): void
+    {
+        $this->apiDb->table('jadwal_umum')->insert([
+            'judul'        => 'Sosialisasi Anggaran Alias',
+            'materi_url'   => 'https://example.com/materi-alias.pdf',
+            'materi_akses' => 'anggota',
+            'stream_url'   => 'https://example.com/live-alias',
+            'stream_akses' => 'anggota',
+            'is_publik'    => 0,
+        ]);
+        $id = (int) $this->apiDb->insertID();
+
+        $materi = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
+            ->get("/api/v1/jadwal/umum/{$id}/materi");
+        $materi->assertOK();
+        $body = json_decode((string) $materi->response()->getBody(), true);
+        $this->assertSame('https://example.com/materi-alias.pdf', $body['url']);
+    }
+
+    public function testAdminCanAccessResourceWithoutMemberAccount(): void
+    {
+        $this->apiDb->table('jadwal_umum')->insert([
+            'judul'        => 'Rapat Khusus Admin',
+            'materi_url'   => 'https://example.com/materi-admin.pdf',
+            'materi_akses' => 'peserta',
+            'stream_url'   => 'https://example.com/live-admin',
+            'stream_akses' => 'peserta',
+            'is_publik'    => 0,
+        ]);
+        $id = (int) $this->apiDb->insertID();
+
+        $materi = $this
+            ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
+            ->get("/api/v1/jadwal/umum/{$id}/materi");
+        $materi->assertOK();
+        $body = json_decode((string) $materi->response()->getBody(), true);
+        $this->assertSame('https://example.com/materi-admin.pdf', $body['url']);
     }
 
     public function testParticipantResourceFollowsUnitRelation(): void
@@ -186,6 +227,17 @@ final class ApiScheduleResourceTest extends CIUnitTestCase
             'aktif'    => 1,
             'user_id'  => $userId,
         ]);
+
+        $this->apiDb->table('users')->insert([
+            'username' => 'admin-api',
+            'name'     => 'Admin API',
+            'active'   => 1,
+        ]);
+        $adminId = (int) $this->apiDb->insertID();
+        $this->apiDb->table('auth_groups_users')->insert([
+            'user_id' => $adminId, 'group' => 'operator', 'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->issueToken($adminId, self::ADMIN_TOKEN);
     }
 
     private function createTables(): void
