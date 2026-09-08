@@ -281,6 +281,7 @@ export async function transcribeChunkWithFallback({
 
   const promptText = `Transkripsikan seluruh isi percakapan rekaman audio rapat DPRD Provinsi Sulawesi Tengah ini dalam Bahasa Indonesia secara verbatim, rapi, dan terstruktur.
 Gunakan label speaker diarization per pembicara (misalnya: [Pimpinan Sidang], [Anggota Fraksi/Komisi], [Narasumber], dll.), pisahkan setiap pergantian pembicara dengan baris baru, serta gunakan tanda baca yang tepat dan ejaan resmi istilah pemerintahan.
+Perhatikan dengan cermat perkenalan diri pembicara, penyebutan nama tokoh/pejabat, nama dinas/OPD, dan nama tempat/daerah di Sulawesi Tengah agar tertranskripsi secara jelas dan tepat.
 Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup tambahan.`;
 
   let transcriptText = '';
@@ -451,7 +452,11 @@ export const MINUTES_RESPONSE_SCHEMA = {
         properties: {
           waktu: { type: Type.STRING, nullable: true, description: 'Cap waktu opsional dengan format [mm:ss] atau [hh:mm:ss].' },
           topik: { type: Type.STRING, description: 'Judul pokok bahasan.' },
-          pembicara: { type: Type.STRING, nullable: true, description: 'Pimpinan Sidang, Fraksi, Komisi, atau pejabat terkait.' },
+          pembicara: {
+            type: Type.STRING,
+            nullable: true,
+            description: 'Nama lengkap pembicara dan jabatan/fraksi/instansi resminya (sesuai perkenalan diri dalam rapat dan konteks DPRD/Pemprov Sulawesi Tengah).',
+          },
           uraian: { type: Type.STRING, description: 'Penjelasan materi, pertanyaan, tanggapan, atau catatan kritis.' },
         },
         required: ['topik', 'uraian'],
@@ -537,6 +542,23 @@ KONTEN TRANSKRIP RAPAT LENGKAP:
 ${fullTranscript}
 ---
 
+Pedoman Identifikasi Pembicara & Verifikasi Entitas Sulawesi Tengah (SANGAT PENTING):
+1. Akurasi Pembicara Berdasarkan Perkenalan Diri:
+   - Teliti setiap giliran pembicara berbicara. Peserta rapat sering kali telah memperkenalkan dirinya (menyebutkan nama lengkap, gelar, fraksi, komisi, jabatan pimpinan, atau instansi/dinas terkait).
+   - Apabila pembicara sudah memperkenalkan diri, WAJIB cantumkan nama lengkap dan jabatan/instansinya secara tepat pada kolom "pembicara" di 'poin_pembahasan' dan sebutkan secara konsisten di 'ringkasan_utama'.
+   - Dilarang keras salah mengaitkan (misatribusi) pernyataan atau menukar nama antar pembicara.
+
+2. Ruang Lingkup Wilayah & Kelembagaan (DPRD & Pemprov Sulawesi Tengah):
+   - Seluruh pembahasan, tokoh, dan tempat berada dalam lingkup Provinsi Sulawesi Tengah.
+   - Wilayah kabupaten/kota terkait: Kota Palu, Kabupaten Donggala, Sigi, Parigi Moutong, Poso, Tolitoli, Buol, Morowali, Morowali Utara, Banggai, Banggai Kepulauan, Banggai Laut, dan Tojo Una-Una.
+   - Unsur legislatif: Pimpinan DPRD Sulteng, Komisi I (Pemerintahan/Hukum/Keamanan), Komisi II (Ekonomi/Keuangan), Komisi III (Pembangunan/Infrastruktur), Komisi IV (Kesejahteraan Rakyat), Bapemperda, Badan Kehormatan (BK), Badan Musyawarah (Banmus), Badan Anggaran (Banggar), Fraksi-Fraksi DPRD Sulteng, Sekretariat DPRD (Sekwan).
+   - Unsur eksekutif/mitra: Gubernur/Wagub Sulteng, Sekretariat Daerah, Organisasi Perangkat Daerah (OPD)/Dinas Pemprov Sulteng (Bappeda, BPKAD, Dinas Bina Marga & Penataan Ruang, Dinas Cipta Karya & SDA, Dinas Perhubungan, Dinas Kesehatan, Dinas Pendidikan, Dinas Kehutanan, Dinas ESDM, Dinas Kelautan & Perikanan, Inspektorat, RSUD Undata, dll.).
+
+3. Verifikasi Faktual Ejaan Nama Tokoh & Tempat (Koreksi Fonetik):
+   - Transkrip otomatis rawan salah eja fonetik pada nama orang, gelar, jabatan, dinas, dan nama daerah.
+   - Jika nama pembicara, pejabat, tempat, atau institusi sudah ada atau disebutkan dalam transkrip, rujuk basis data faktual resmi seputar DPRD Sulawesi Tengah dan Pemprov Sulteng untuk memverifikasi dan memastikan ejaan nama pejabat, gelar, jabatan dinas, serta toponimi daerah/kecamatan/desa yang tepat dan pasti.
+   - Pastikan ejaan yang tertulis di risalah merupakan nama resmi yang valid dan pasti, bukan hasil salah dengar audio.
+
 Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
 - ringkasan_utama:
   * WAJIB disusun dalam 3 sampai 4 paragraf naratif terpisah yang mengalir dan mudah dibaca.
@@ -545,7 +567,7 @@ Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
   * Paragraf 2 (Substansi Pokok Pembahasan): Materi pokok rapat, angka/indikator utama dokumen yang dibahas, atau pokok permasalahan substantif.
   * Paragraf 3 (Dinamika Fraksi & Tanggapan): Pokok-pokok pandangan umum, pertanyaan kritis, usulan prioritas dari fraksi/anggota dewan, serta tanggapan narasumber/eksekutif.
   * Paragraf 4 (Kesepakatan & Arah Sidang): Kesimpulan forum, keputusan persetujuan/kelanjutan agenda, dan mekanisme tindak lanjut.
-- poin_pembahasan: satu butir per pokok bahasan; sertakan waktu (bila ada), topik spesifik, pembicara/fraksi, dan uraian substansi.
+- poin_pembahasan: satu butir per pokok bahasan; sertakan waktu (bila ada), topik spesifik, nama pembicara/fraksi/jabatan resmi yang akurat, dan uraian substansi.
 - kesimpulan_akhir: seluruh butir kesepakatan, keputusan resmi, rekomendasi, dan tindak lanjut yang disepakati.`;
 
   const models = effectiveModelChain(config.gemini.modelChain);
