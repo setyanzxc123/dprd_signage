@@ -1346,8 +1346,17 @@
         const unitsWrapper = dialog.querySelector('#banmus-units-wrapper');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
         const agendaTypeFields = [...dialog.querySelectorAll('input[name="jenis_agenda"]')];
-        const invitationExisting = dialog.querySelector('#field_undangan_existing');
-        const invitationName = dialog.querySelector('#field_undangan_name');
+        const fileInput = dialog.querySelector('#field_undangan_file');
+        const fileStatus = dialog.querySelector('#field_undangan_status');
+        const errorAlert = dialog.querySelector('#item_modal_error_alert');
+        const errorMessage = dialog.querySelector('#item_modal_error_message');
+        const btnDismissError = dialog.querySelector('#btn_dismiss_item_error');
+        const submitBtn = dialog.querySelector('#btn_submit_banmus_item');
+        const submitText = dialog.querySelector('#btn_submit_banmus_item_text');
+        const submitLoading = dialog.querySelector('#btn_submit_banmus_item_loading');
+        const scrollContainer = form.querySelector('.overflow-y-auto');
+
+        let currentExistingInvitationName = '';
 
         if (!(form instanceof HTMLFormElement)
             || !(dateField instanceof HTMLInputElement)
@@ -1356,6 +1365,49 @@
         }
 
         const field = (id) => dialog.querySelector(`#${id}`);
+
+        const setSubmitting = (isSubmitting) => {
+            if (submitBtn) submitBtn.disabled = isSubmitting;
+            if (submitText) {
+                submitText.classList.toggle('hidden', isSubmitting);
+                submitText.classList.toggle('inline-flex', !isSubmitting);
+            }
+            if (submitLoading) {
+                submitLoading.classList.toggle('hidden', !isSubmitting);
+                submitLoading.classList.toggle('inline-flex', isSubmitting);
+            }
+        };
+
+        const updateInvitationStatusText = () => {
+            if (!fileStatus) return;
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                fileStatus.innerHTML = `File baru dipilih: <span class="font-semibold text-emerald-600 dark:text-emerald-400">${fileName}</span> (akan menggantikan file sebelumnya).`;
+            } else if (currentExistingInvitationName) {
+                fileStatus.innerHTML = `File tersimpan: <span class="font-semibold text-blue-600 dark:text-blue-400">${currentExistingInvitationName}</span> (Pilih file baru jika ingin mengganti, atau biarkan kosong agar tidak berubah).`;
+            } else {
+                fileStatus.textContent = 'Format PDF, maksimal 10 MB (opsional). Dokumen hanya dapat diakses oleh anggota DPRD yang login.';
+            }
+        };
+
+        fileInput?.addEventListener('change', updateInvitationStatusText);
+
+        const showErrorAlert = (msg) => {
+            if (!errorAlert || !errorMessage) return;
+            errorMessage.textContent = msg;
+            errorAlert.classList.remove('hidden');
+            if (scrollContainer) {
+                scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        const hideErrorAlert = () => {
+            if (!errorAlert) return;
+            errorAlert.classList.add('hidden');
+            if (errorMessage) errorMessage.textContent = '';
+        };
+
+        btnDismissError?.addEventListener('click', hideErrorAlert);
 
         const syncLocationDisclosure = () => {
             locationWrapper?.classList.toggle('hidden', roomField.value !== 'other');
@@ -1436,7 +1488,10 @@
 
         const openCreateDialog = () => {
             form.reset();
-            invitationExisting?.classList.add('hidden');
+            hideErrorAlert();
+            setSubmitting(false);
+            currentExistingInvitationName = '';
+            updateInvitationStatusText();
             form.action = dialog.dataset.storeUrl || '';
             if (title) title.textContent = 'Tambah Item Agenda Banmus';
             btnBackToStep1?.classList.remove('hidden');
@@ -1488,6 +1543,10 @@
 
         const populateItemForm = (item) => {
             form.reset();
+            setSubmitting(false);
+            currentExistingInvitationName = item.undangan_file ? (item.undangan_nama_asli || 'undangan-rapat.pdf') : '';
+            updateInvitationStatusText();
+
             field('field_agenda').value = item.agenda || '';
             field('field_periode_label').value = item.periode_label || '';
             const agendaType = ['rapat', 'non_rapat'].includes(item.jenis_agenda)
@@ -1505,8 +1564,6 @@
             field('field_materi_akses').value = item.materi_akses || 'publik';
             field('field_stream_url').value = item.stream_url || '';
             field('field_stream_akses').value = item.stream_akses || 'publik';
-            if (invitationName) invitationName.textContent = item.undangan_nama_asli || 'undangan-rapat.pdf';
-            invitationExisting?.classList.toggle('hidden', !item.undangan_file);
 
             if (item.ruangan_id) {
                 roomField.value = String(item.ruangan_id);
@@ -1525,6 +1582,8 @@
 
         const openEditDialog = (item) => {
             populateItemForm(item);
+            hideErrorAlert();
+            setSubmitting(false);
             form.action = (dialog.dataset.updateUrlTemplate || '')
                 .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
 
@@ -1537,6 +1596,8 @@
 
         const openScheduleDialog = (item) => {
             populateItemForm(item);
+            hideErrorAlert();
+            setSubmitting(false);
             form.action = (dialog.dataset.updateUrlTemplate || '')
                 .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
 
@@ -1581,6 +1642,72 @@
 
         roomField.addEventListener('change', syncLocationDisclosure);
         agendaTypeFields.forEach((radio) => radio.addEventListener('change', syncAgendaTypeFields));
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            hideErrorAlert();
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            setSubmitting(true);
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await response.json();
+                    if (response.ok && data.status === 'success') {
+                        window.location.href = data.redirect_url || window.location.href;
+                        return;
+                    }
+                    showErrorAlert(data.message || 'Terjadi kesalahan saat menyimpan item agenda.');
+                } else if (!response.ok) {
+                    showErrorAlert('Gagal memproses permohonan ke server (Kode: ' + response.status + ').');
+                } else {
+                    window.location.reload();
+                    return;
+                }
+            } catch {
+                showErrorAlert('Terjadi gangguan koneksi internet. Silakan periksa jaringan dan coba kembali.');
+            } finally {
+                setSubmitting(false);
+            }
+        });
+
+        const checkOldFlashdata = () => {
+            const oldItemRaw = dialog.dataset.oldItem;
+            if (!oldItemRaw) return;
+
+            try {
+                const oldItem = JSON.parse(oldItemRaw);
+                populateItemForm(oldItem);
+                const hasSchedule = Boolean(oldItem.tanggal || oldItem.jam_mulai || oldItem.ruangan_id);
+                setWizardStep(2, hasSchedule ? 'pasti' : 'proyeksi');
+                btnBackToStep1?.classList.add('hidden');
+                showDialog();
+
+                const oldError = dialog.dataset.oldError;
+                if (oldError) {
+                    showErrorAlert(oldError);
+                }
+            } catch {
+                // Ignore parse errors
+            }
+        };
+
+        checkOldFlashdata();
     };
 
     document.addEventListener('DOMContentLoaded', initializeBanmusItemWorkspace);

@@ -444,6 +444,44 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertSame(0, $this->banmusDb->table('jadwal_banmus')->countAllResults());
     }
 
+    public function testStoreItemAjaxReturnsJsonSuccess(): void
+    {
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+            ->post("/admin/jadwal-banmus/{$this->documentId}/item/store", [
+                csrf_token()    => csrf_hash(),
+                'agenda'        => 'Item Banmus via AJAX',
+                'jenis_agenda'  => 'rapat',
+                'periode_label' => 'Agustus 2026',
+            ]);
+
+        $response->assertOK();
+        $response->assertJSONFragment([
+            'status' => 'success',
+        ]);
+        $this->assertSame(1, $this->banmusDb->table('jadwal_banmus')->countAllResults());
+    }
+
+    public function testStoreItemAjaxValidationFailureReturns422Json(): void
+    {
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+            ->post("/admin/jadwal-banmus/{$this->documentId}/item/store", [
+                csrf_token()   => csrf_hash(),
+                'agenda'       => '',
+                'jenis_agenda' => 'rapat',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJSONFragment([
+            'status'  => 'error',
+            'message' => 'Uraian agenda SK wajib diisi.',
+        ]);
+        $this->assertSame(0, $this->banmusDb->table('jadwal_banmus')->countAllResults());
+    }
+
     private function postItem(array $payload)
     {
         return $this

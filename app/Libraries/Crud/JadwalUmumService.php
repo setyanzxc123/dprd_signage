@@ -118,7 +118,7 @@ class JadwalUmumService
                 'stream_akses'    => ScheduleResourceAccess::normalize($input['stream_akses'] ?? null, ScheduleResourceAccess::MEMBER),
             ],
             'unit_ids' => $unitIds,
-            'invitation_upload' => $invitation,
+            'invitation_upload' => $invitationCheck['file'] ?? null,
             'remove_invitation' => ($input['hapus_undangan'] ?? null) === '1',
         ];
     }
@@ -131,15 +131,19 @@ class JadwalUmumService
      */
     public function storeInvitationUpload(array $input): array
     {
-        if (($input['remove_invitation'] ?? false) === true && ($input['invitation_upload'] ?? null) === null) {
+        $upload = $input['invitation_upload'] ?? null;
+        $shouldRemove = ($input['remove_invitation'] ?? false) === true;
+
+        if ($shouldRemove && ($upload === null || ! ($upload instanceof UploadedFile) || ! $upload->isValid())) {
             return ['payload' => ['undangan_file' => null, 'undangan_nama_asli' => null], 'new_file' => null];
         }
-        if (($input['invitation_upload'] ?? null) === null) {
+
+        if ($upload === null || ! ($upload instanceof UploadedFile) || ! $upload->isValid() || $upload->getError() !== UPLOAD_ERR_OK) {
             return ['payload' => [], 'new_file' => null];
         }
 
         try {
-            $stored = (new ScheduleInvitationStorage())->store($input['invitation_upload']);
+            $stored = (new ScheduleInvitationStorage())->store($upload);
 
             return [
                 'payload' => [

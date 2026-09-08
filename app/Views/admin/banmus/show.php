@@ -313,7 +313,11 @@ $scheduledCount = count($items) - $projectionCount;
     aria-labelledby="modal_title"
     data-banmus-item-dialog
     data-store-url="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/store") ?>"
-    data-update-url-template="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/__ITEM_ID__/update") ?>">
+    data-update-url-template="<?= base_url("admin/jadwal-banmus/{$document['id']}/item/__ITEM_ID__/update") ?>"
+    <?php if (session()->getFlashdata('old_banmus_item')): ?>
+    data-old-item="<?= esc(json_encode(session()->getFlashdata('old_banmus_item')), 'attr') ?>"
+    data-old-error="<?= esc(session()->getFlashdata('error') ?? '', 'attr') ?>"
+    <?php endif; ?>>
     <div id="item_modal_dialog" class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-4xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
         <div class="w-full flex flex-col bg-white border border-slate-200 shadow-2xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
             <!-- Header Dialog -->
@@ -342,7 +346,7 @@ $scheduledCount = count($items) - $projectionCount;
                         <div class="flex size-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 group-hover:scale-110 transition">
                             <i data-lucide="calendar-clock" class="size-5"></i>
                         </div>
-                        <h5 class="mt-3.5 text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:hover:text-amber-400 transition">
+                        <h5 class="mt-3.5 text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                             Proyeksi
                         </h5>
                         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -392,6 +396,16 @@ $scheduledCount = count($items) - $projectionCount;
                 </div>
 
                 <div class="max-h-[calc(100dvh-15rem)] overflow-y-auto p-5 sm:p-6 space-y-5">
+                    <div id="item_modal_error_alert" role="alert" aria-live="polite" class="hidden p-4 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 shadow-2xs">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="alert-circle" class="size-5 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5"></i>
+                            <div class="flex-1 text-xs font-semibold sm:text-sm leading-relaxed" id="item_modal_error_message"></div>
+                            <button type="button" id="btn_dismiss_item_error" class="shrink-0 p-1 text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-200 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/50 transition cursor-pointer" aria-label="Tutup pesan error">
+                                <i data-lucide="x" class="size-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <div id="banmus-form-grid" class="grid gap-5 lg:grid-cols-2">
                         <!-- Informasi Agenda Dasar -->
                         <div id="banmus-info-agenda-card" class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
@@ -573,19 +587,13 @@ $scheduledCount = count($items) - $projectionCount;
 
                             <div class="sm:col-span-2">
                                 <label for="field_undangan_file" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                                    Surat Undangan Rapat (PDF)
+                                    Surat Undangan Rapat (PDF) <span class="text-xs font-normal text-slate-400 dark:text-slate-500 lowercase">(opsional)</span>
                                 </label>
                                 <input class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400 file:bg-slate-50 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-400" id="field_undangan_file" name="undangan_file" type="file"
                                     accept="application/pdf,.pdf" />
-                                <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">PDF maksimal 10 MB. Hanya dapat diakses oleh anggota DPRD yang sudah login.</p>
-                                <div class="flex items-center gap-2 p-3 mt-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 hidden" id="field_undangan_existing">
-                                    <i data-lucide="file-check-2" class="size-4 shrink-0"></i>
-                                    <span class="text-xs font-semibold truncate flex-1" id="field_undangan_name"></span>
-                                    <label class="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 cursor-pointer" for="field_hapus_undangan">
-                                        <input class="size-3.5 text-rose-600 rounded focus:ring-rose-500" id="field_hapus_undangan" name="hapus_undangan" type="checkbox" value="1" />
-                                        <span>Hapus</span>
-                                    </label>
-                                </div>
+                                <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed" id="field_undangan_status">
+                                    Format PDF, maksimal 10 MB. Dokumen hanya dapat diakses oleh anggota DPRD yang login.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -596,9 +604,15 @@ $scheduledCount = count($items) - $projectionCount;
                     <button type="button" data-banmus-item-close class="py-2 px-3.5 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition cursor-pointer">
                         Batal
                     </button>
-                    <button type="submit" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
-                        <i data-lucide="save" class="size-4"></i>
-                        <span>Simpan Item Agenda</span>
+                    <button type="submit" id="btn_submit_banmus_item" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer disabled:opacity-50 disabled:pointer-events-none">
+                        <span class="inline-flex items-center gap-x-2" id="btn_submit_banmus_item_text">
+                            <i data-lucide="save" class="size-4"></i>
+                            <span>Simpan Item Agenda</span>
+                        </span>
+                        <span class="hidden items-center gap-x-2" id="btn_submit_banmus_item_loading">
+                            <span class="animate-spin inline-block size-4 border-2 border-current border-t-transparent text-white rounded-full" role="status" aria-label="loading"></span>
+                            <span>Menyimpan...</span>
+                        </span>
                     </button>
                 </div>
             </form>
