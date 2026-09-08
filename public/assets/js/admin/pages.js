@@ -147,8 +147,8 @@
         if (toggle && label) {
             toggle.addEventListener('change', function() {
                 label.textContent = this.checked
-                    ? 'Agenda dapat tampil pada kanal publik.'
-                    : 'Default internal, hanya terlihat oleh pengguna berwenang.';
+                    ? 'Tampilkan kepada publik'
+                    : 'Internal DPRD saja';
             });
         }
 
@@ -245,10 +245,10 @@
             const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
             if (isNonRapat) {
                 if (waktuMulaiInput) {
-                    waktuMulaiInput.classList.remove('input-error', 'border-rose-500');
+                    waktuMulaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                 }
                 if (waktuSelesaiInput) {
-                    waktuSelesaiInput.classList.remove('input-error', 'border-rose-500');
+                    waktuSelesaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                     waktuSelesaiInput.setCustomValidity('');
                 }
                 if (waktuError) waktuError.classList.add('hidden');
@@ -269,8 +269,8 @@
             const start = startValue ? new Date(startValue) : null;
             const end = endValue ? new Date(endValue) : null;
             if (!start || !end) {
-                waktuMulaiInput.classList.remove('input-error');
-                waktuSelesaiInput.classList.remove('input-error');
+                waktuMulaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                waktuSelesaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                 waktuSelesaiInput.setCustomValidity('');
                 if (waktuError) waktuError.classList.add('hidden');
                 return true;
@@ -281,7 +281,13 @@
             const valid = !!(start && end && end > start && sameDate);
 
             waktuMulaiInput.classList.toggle('border-rose-500', !valid && !!waktuMulaiInput.value);
+            waktuMulaiInput.classList.toggle('focus:border-rose-500', !valid && !!waktuMulaiInput.value);
+            waktuMulaiInput.classList.toggle('focus:ring-rose-500', !valid && !!waktuMulaiInput.value);
+
             waktuSelesaiInput.classList.toggle('border-rose-500', !valid && !!waktuSelesaiInput.value);
+            waktuSelesaiInput.classList.toggle('focus:border-rose-500', !valid && !!waktuSelesaiInput.value);
+            waktuSelesaiInput.classList.toggle('focus:ring-rose-500', !valid && !!waktuSelesaiInput.value);
+
             if (waktuError) waktuError.classList.toggle('hidden', valid || !waktuMulaiInput.value || !waktuSelesaiInput.value);
 
             waktuSelesaiInput.setCustomValidity(valid ? '' : 'Waktu selesai harus setelah waktu mulai pada tanggal yang sama.');
@@ -329,7 +335,9 @@
             if (isNonRapat) {
                 if (targetError) targetError.classList.add('hidden');
                 targetInputs.forEach(function(input) {
-                    if (!input.disabled) input.classList.remove('checkbox-error');
+                    if (!input.disabled) {
+                        input.classList.remove('border-rose-500', 'focus:ring-rose-500');
+                    }
                 });
                 return true;
             }
@@ -339,7 +347,10 @@
 
             if (targetError) targetError.classList.toggle('hidden', valid);
             targetInputs.forEach(function(input) {
-                if (!input.disabled) input.classList.toggle('checkbox-error', !valid);
+                if (!input.disabled) {
+                    input.classList.toggle('border-rose-500', !valid);
+                    input.classList.toggle('focus:ring-rose-500', !valid);
+                }
             });
 
             return valid;
