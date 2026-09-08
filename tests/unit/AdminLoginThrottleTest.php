@@ -101,6 +101,12 @@ final class AdminLoginThrottleTest extends CIUnitTestCase
         $this->assertTrue($throttle->allows('operator', '203.0.113.11'));
     }
 
+    public function testRetryAfterReturnsPositiveInteger(): void
+    {
+        $throttle = new AdminLoginThrottle($this->config());
+        $this->assertGreaterThanOrEqual(1, $throttle->retryAfter());
+    }
+
     private function config(): AdminLoginSecurity
     {
         $config = new AdminLoginSecurity();

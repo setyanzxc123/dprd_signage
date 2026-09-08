@@ -2509,3 +2509,39 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
     background: linear-gradient(90deg, #fef08a, #fde047, #fef08a);
     opacity: 0.18;
 }
+
+.login-card-motif {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 7.25rem;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    contain: strict;
+    mask-image: linear-gradient(to bottom, black 2.5rem, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black 2.5rem, transparent);
+}
+
+.login-card-motif::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #fde047, #facc15, #fde047);
+    opacity: 0.35;
+    mask-image: url('../images/motif_batik_palu_band.png');
+    mask-repeat: repeat-x;
+    mask-size: auto 125%;
+    mask-position: center top;
+    -webkit-mask-image: url('../images/motif_batik_palu_band.png');
+    -webkit-mask-repeat: repeat-x;
+    -webkit-mask-size: auto 125%;
+    -webkit-mask-position: center top;
+}
+
+.dark .login-card-motif::before,
+[data-theme="dark"] .login-card-motif::before {
+    background: linear-gradient(90deg, #fef08a, #fde047, #fef08a);
+    opacity: 0.16;
+}

@@ -38,6 +38,7 @@ class LoginController extends BaseController
                 'otp_success'      => $appSession->getFlashdata('member_otp_success'),
                 'old_phone'        => $appSession->getFlashdata('auth_old_phone'),
                 'old_username'     => $appSession->getFlashdata('auth_old_username'),
+                'admin_retry_after'=> (int) ($appSession->getFlashdata('auth_retry_after') ?? 0),
                 'flash_success'    => $appSession->getFlashdata('success'),
             ]));
     }
