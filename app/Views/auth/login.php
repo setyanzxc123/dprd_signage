@@ -37,8 +37,8 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                     <header class="mb-6 text-center">
                         <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>"
                             alt="Logo DPRD Provinsi Sulawesi Tengah"
-                            width="64" height="64"
-                            class="mx-auto mb-3 h-14 w-14 shrink-0 object-contain drop-shadow-xs sm:h-16 sm:w-16" />
+                            width="96" height="96"
+                            class="mx-auto mb-3.5 h-20 w-20 shrink-0 object-contain drop-shadow-sm sm:h-24 sm:w-24" />
                         <h1 class="text-lg font-bold leading-snug tracking-tight text-slate-800 sm:text-xl dark:text-slate-100">
                             Sistem Informasi Agenda dan Jadwal Rapat DPRD
                         </h1>
