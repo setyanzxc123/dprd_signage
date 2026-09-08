@@ -313,200 +313,7 @@ if ($job['jadwal_type'] === 'banmus') {
 
     </div>
 
-    <!-- 3. Dua tab utama: Ringkasan & Risalah -->
-    <div class="space-y-3 w-full">
-
-        <div role="tablist" class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/60">
-            <button type="button"
-                    role="tab"
-                    id="tab_btn_ringkasan"
-                    data-tab-target="tab_panel_ringkasan"
-                    class="notulen-main-tab-btn py-2 px-5 inline-flex items-center gap-x-2 text-xs sm:text-sm font-bold rounded-lg border border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition cursor-pointer aria-selected:bg-white aria-selected:text-slate-900 aria-selected:shadow-xs dark:aria-selected:bg-slate-900 dark:aria-selected:text-white"
-                    aria-selected="true">
-                <i data-lucide="sparkles" class="size-4"></i>
-                Ringkasan
-            </button>
-            <button type="button"
-                    role="tab"
-                    id="tab_btn_risalah"
-                    data-tab-target="tab_panel_risalah"
-                    class="notulen-main-tab-btn py-2 px-5 inline-flex items-center gap-x-2 text-xs sm:text-sm font-bold rounded-lg border border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition cursor-pointer aria-selected:bg-white aria-selected:text-slate-900 aria-selected:shadow-xs dark:aria-selected:bg-slate-900 dark:aria-selected:text-white"
-                    aria-selected="false">
-                <i data-lucide="file-text" class="size-4"></i>
-                Risalah
-            </button>
-        </div>
-
-        <!-- Tab 1: Ringkasan -->
-        <div id="tab_panel_ringkasan" role="tabpanel" class="w-full bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs dark:bg-slate-900 dark:border-slate-800 space-y-4">
-            
-            <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-                    <!-- KARTU 1: 1. Ringkasan Utama -->
-                    <div class="bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-800/40 rounded-xl p-4 sm:p-5 flex flex-col space-y-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="size-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-                                <i data-lucide="sparkles" class="size-4"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">1. Ringkasan Utama</h3>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Inti dari seluruh rapat</p>
-                            </div>
-                        </div>
-
-                        <div class="max-h-[460px] overflow-y-auto pr-2 space-y-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed text-justify font-sans">
-                            <?= nl2br(esc(! empty($pillars['ringkasan_utama']) ? $pillars['ringkasan_utama'] : $minutes['ringkasan_eksekutif'])) ?>
-                        </div>
-                    </div>
-
-                    <!-- KARTU 2: 2. Poin-Poin Pembahasan -->
-                    <div class="bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/40 rounded-xl p-4 sm:p-5 flex flex-col space-y-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="size-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                                <i data-lucide="list-ordered" class="size-4"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">2. Poin-Poin Pembahasan</h3>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Rincian dinamika &amp; pandangan rapat</p>
-                            </div>
-                        </div>
-
-                        <div class="max-h-[460px] overflow-y-auto pr-1 space-y-2.5">
-                            <?php if (! empty($pillars['poin_pembahasan'])): ?>
-                                <?php foreach ($pillars['poin_pembahasan'] as $poin): ?>
-                                    <div class="rounded-lg bg-white/90 dark:bg-slate-900/70 border border-amber-200/70 dark:border-amber-800/50 p-2.5 space-y-1 text-xs text-slate-800 dark:text-slate-200 shadow-xs">
-                                        <div class="flex items-start gap-1.5 font-bold leading-snug">
-                                            <?php if (! empty($poin['waktu'])): ?>
-                                                <span class="py-0.5 px-1.5 rounded bg-amber-100 dark:bg-amber-900/50 border border-amber-300 dark:border-amber-700/60 font-mono text-[10px] shrink-0 mt-0.5 text-amber-900 dark:text-amber-200 font-semibold">
-                                                    <?= esc($poin['waktu']) ?>
-                                                </span>
-                                            <?php else: ?>
-                                                <span class="size-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5"></span>
-                                            <?php endif; ?>
-                                            <span><?= esc($poin['topik']) ?></span>
-                                        </div>
-
-                                        <?php if (! empty($poin['pembicara'])): ?>
-                                            <div class="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400 font-semibold pl-3">
-                                                <i data-lucide="user" class="size-3 shrink-0"></i>
-                                                <span><?= esc($poin['pembicara']) ?></span>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if (! empty($poin['uraian'])): ?>
-                                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed pl-3 whitespace-pre-wrap">
-                                                <?= esc($poin['uraian']) ?>
-                                            </p>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 italic">Poin pembahasan terangkum dalam naskah dinas resmi.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- KARTU 3: 3. Kesimpulan & Keputusan Akhir -->
-                    <div class="bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/40 rounded-xl p-4 sm:p-5 flex flex-col space-y-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="size-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                                <i data-lucide="check-square" class="size-4"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">3. Kesimpulan &amp; Keputusan Akhir</h3>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Hasil akhir yang disepakati</p>
-                            </div>
-                        </div>
-
-                        <div class="max-h-[460px] overflow-y-auto pr-1 space-y-2.5">
-                            <?php if (! empty($pillars['kesimpulan_akhir'])): ?>
-                                <?php foreach ($pillars['kesimpulan_akhir'] as $butir): ?>
-                                    <div class="rounded-lg bg-white/90 dark:bg-slate-900/70 border border-emerald-200/70 dark:border-emerald-800/50 p-2.5 flex items-start gap-2 text-xs text-slate-800 dark:text-slate-200 shadow-xs">
-                                        <i data-lucide="check" class="size-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5"></i>
-                                        <span class="leading-relaxed"><?= esc($butir) ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 italic">Kesimpulan terangkum dalam naskah dinas resmi.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                </div>
-            <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
-                <!-- Preline Skeleton Loader saat AI sedang bekerja -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-pulse" id="ringkasan_skeleton">
-                    <div class="rounded-xl border border-indigo-200/80 bg-indigo-50/30 dark:border-indigo-800/40 dark:bg-indigo-950/20 p-4 sm:p-5 space-y-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="size-8 rounded-lg bg-indigo-200/70 dark:bg-indigo-900/60"></div>
-                            <div class="space-y-1.5 flex-1">
-                                <div class="h-3 bg-indigo-200/80 dark:bg-indigo-800/60 rounded w-28"></div>
-                                <div class="h-2 bg-indigo-200/50 dark:bg-indigo-800/40 rounded w-20"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2 pt-2">
-                            <div class="h-2.5 bg-indigo-200/60 dark:bg-indigo-800/50 rounded w-full"></div>
-                            <div class="h-2.5 bg-indigo-200/60 dark:bg-indigo-800/50 rounded w-5/6"></div>
-                            <div class="h-2.5 bg-indigo-200/60 dark:bg-indigo-800/50 rounded w-4/5"></div>
-                            <div class="h-2.5 bg-indigo-200/60 dark:bg-indigo-800/50 rounded w-full"></div>
-                        </div>
-                        <p class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium pt-2 flex items-center gap-1.5">
-                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent rounded-full" role="status" aria-label="loading"></span>
-                            AI sedang mengekstrak ringkasan utama...
-                        </p>
-                    </div>
-
-                    <div class="rounded-xl border border-amber-200/80 bg-amber-50/30 dark:border-amber-800/40 dark:bg-amber-950/20 p-4 sm:p-5 space-y-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="size-8 rounded-lg bg-amber-200/70 dark:bg-amber-900/60"></div>
-                            <div class="space-y-1.5 flex-1">
-                                <div class="h-3 bg-amber-200/80 dark:bg-amber-800/60 rounded w-32"></div>
-                                <div class="h-2 bg-amber-200/50 dark:bg-amber-800/40 rounded w-24"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2 pt-2">
-                            <div class="h-2.5 bg-amber-200/60 dark:bg-amber-800/50 rounded w-full"></div>
-                            <div class="h-2.5 bg-amber-200/60 dark:bg-amber-800/50 rounded w-4/5"></div>
-                            <div class="h-2.5 bg-amber-200/60 dark:bg-amber-800/50 rounded w-3/4"></div>
-                        </div>
-                        <p class="text-[11px] text-amber-600 dark:text-amber-400 font-medium pt-2 flex items-center gap-1.5">
-                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent rounded-full" role="status" aria-label="loading"></span>
-                            AI sedang merinci poin pembahasan...
-                        </p>
-                    </div>
-
-                    <div class="rounded-xl border border-emerald-200/80 bg-emerald-50/30 dark:border-emerald-800/40 dark:bg-emerald-950/20 p-4 sm:p-5 space-y-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="size-8 rounded-lg bg-emerald-200/70 dark:bg-emerald-900/60"></div>
-                            <div class="space-y-1.5 flex-1">
-                                <div class="h-3 bg-emerald-200/80 dark:bg-emerald-800/60 rounded w-36"></div>
-                                <div class="h-2 bg-emerald-200/50 dark:bg-emerald-800/40 rounded w-24"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2 pt-2">
-                            <div class="h-2.5 bg-emerald-200/60 dark:bg-emerald-800/50 rounded w-full"></div>
-                            <div class="h-2.5 bg-emerald-200/60 dark:bg-emerald-800/50 rounded w-5/6"></div>
-                            <div class="h-2.5 bg-emerald-200/60 dark:bg-emerald-800/50 rounded w-2/3"></div>
-                        </div>
-                        <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium pt-2 flex items-center gap-1.5">
-                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent rounded-full" role="status" aria-label="loading"></span>
-                            AI sedang menyusun kesimpulan...
-                        </p>
-                    </div>
-                </div>
-            <?php else: ?>
-                <!-- Placeholder saat belum tersedia -->
-                <div class="py-12 text-center text-slate-500 dark:text-slate-400 space-y-1">
-                    <p class="font-semibold text-xs sm:text-sm text-slate-700 dark:text-slate-300">Ringkasan Rapat Belum Tersedia</p>
-                    <p class="text-[11px] sm:text-xs">Data intisari rapat akan otomatis ditampilkan di sini setelah proses AI selesai.</p>
-                </div>
-            <?php endif; ?>
-
-        </div>
-
-        <!-- Tab 2: Risalah (format naskah dinas) -->
-        <div id="tab_panel_risalah" role="tabpanel" class="w-full bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-xs dark:bg-slate-900 dark:border-slate-800 space-y-6 hidden">
+    <div id="tab_panel_risalah" class="w-full bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-xs dark:bg-slate-900 dark:border-slate-800 space-y-6">
             
             <?php if ($minutes && ! empty($minutes['ringkasan_eksekutif'])): ?>
                 <!-- Action Bar & Verification Status -->
@@ -522,8 +329,6 @@ if ($job['jadwal_type'] === 'banmus') {
                             <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
                                 <i data-lucide="file-edit" class="size-3.5 text-amber-500"></i> Draf Risalah
                             </span>
-                            <span id="dirty_badge" class="hidden inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[10px] font-mono font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800">Ada Perubahan</span>
-                            <span class="text-[11px] text-slate-500 dark:text-slate-400">Perlu peninjauan &amp; verifikasi</span>
                         <?php endif; ?>
                     </div>
 
@@ -715,7 +520,6 @@ if ($job['jadwal_type'] === 'banmus') {
             <?php endif; ?>
 
         </div>
-    </div>
 
     <!-- 4. Bagian bawah: audio asli dan aksi cepat -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">

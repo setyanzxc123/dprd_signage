@@ -105,6 +105,54 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $response->assertSee('Hapus');
     }
 
+    public function testWebAdminShowRendersFullRisalahDirectlyWithoutRingkasanTab(): void
+    {
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'               => 1,
+            'jadwal_type'      => 'umum',
+            'jadwal_id'        => 10,
+            'audio_filename'   => 'rapat_dengar_pendapat.mp3',
+            'audio_path'       => 'recordings/job_1/audio/original.mp3',
+            'audio_size'       => 15000000,
+            'status'           => 'completed',
+            'progress_percent' => 100,
+            'current_step'     => 'Selesai',
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 10,
+            'judul'       => 'RDP Komisi I',
+            'tanggal'     => '2026-08-27',
+            'waktu_mulai' => '09:00:00',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 1,
+            'transcripts_dir'     => 'recordings/job_1/transcripts',
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nRingkasan risalah komprehensif.\n\nII. POIN-POIN PEMBAHASAN\n1. Topik Utama\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Keputusan Sah",
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->adminGet('/admin/notulen/1');
+
+        $response->assertOK();
+        $response->assertSee('RISALAH RAPAT');
+        $response->assertSee('RDP Komisi I');
+        $response->assertSee('risalah_view_mode');
+        $response->assertSee('risalah_preview_text');
+        $response->assertSee('Ringkasan risalah komprehensif.');
+        $response->assertSee('Sunting Naskah');
+        $response->assertDontSee('tab_btn_ringkasan');
+        $response->assertDontSee('tab_panel_ringkasan');
+        $response->assertDontSee('Ada Perubahan');
+        $response->assertDontSee('Perlu peninjauan & verifikasi');
+    }
+
     public function testStatusAjaxEndpointReturnsJobProgress(): void
     {
         $this->testDb->table('meeting_transcription_jobs')->insert([

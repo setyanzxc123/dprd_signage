@@ -2801,24 +2801,7 @@
 
         const textarea = document.getElementById('ringkasan_eksekutif');
         const form = document.getElementById('form_update_minutes');
-        const dirtyBadge = document.getElementById('dirty_indicator');
         const audioPlayer = document.getElementById('audio_player');
-
-        // Main Tabs Switcher (Ringkasan & Risalah) — state visual digerakkan aria-selected via CSS
-        const tabBtns = document.querySelectorAll('.notulen-main-tab-btn');
-        const panelRingkasan = document.getElementById('tab_panel_ringkasan');
-        const panelRisalah = document.getElementById('tab_panel_risalah');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetId = btn.dataset.tabTarget;
-                if (!targetId) return;
-
-                tabBtns.forEach(b => b.setAttribute('aria-selected', String(b === btn)));
-
-                if (panelRingkasan) panelRingkasan.classList.toggle('hidden', targetId !== 'tab_panel_ringkasan');
-                if (panelRisalah) panelRisalah.classList.toggle('hidden', targetId !== 'tab_panel_risalah');
-            });
-        });
 
         // Toggle Mode Sunting vs Preview Naskah Risalah
         const btnToggleEdit = document.getElementById('btn_toggle_edit_risalah');
@@ -2867,9 +2850,6 @@
                     if (t.value !== initialSectionValues.get(t)) anyDirty = true;
                 });
                 isNotulenDirty = anyDirty;
-                if (dirtyBadge) {
-                    dirtyBadge.classList.toggle('hidden', !isNotulenDirty);
-                }
             });
         });
 
@@ -2907,7 +2887,6 @@
                 if (response.ok && data.status === 'success') {
                     isNotulenDirty = false;
                     sectionTextareas.forEach((t) => initialSectionValues.set(t, t.value));
-                    if (dirtyBadge) dirtyBadge.classList.add('hidden');
                     
                     if (previewTextEl) {
                         const s1 = document.getElementById('section_ringkasan')?.value || '';
