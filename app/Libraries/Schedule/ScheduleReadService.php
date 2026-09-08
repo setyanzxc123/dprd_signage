@@ -4,6 +4,7 @@ namespace App\Libraries\Schedule;
 
 use App\Libraries\Schedule\Contracts\ScheduleReadRepositoryInterface;
 use App\Libraries\Schedule\Persistence\DatabaseScheduleReadRepository;
+use App\Models\JadwalBanmusModel;
 use App\Models\JadwalUmumModel;
 
 final class ScheduleReadService
@@ -248,10 +249,11 @@ final class ScheduleReadService
 
     private function currentStatus(array $row): string
     {
+        $storedStatus = (string) ($row['status'] ?? 'menunggu');
+        $manualStatus = in_array($storedStatus, ['ditunda', 'dibatalkan'], true) ? $storedStatus : null;
+
         if (($row['source'] ?? '') === JadwalUmumModel::SOURCE) {
             $jenisAgenda = (string) ($row['jenis'] ?? ($row['jenis_agenda'] ?? JadwalUmumModel::TYPE_MEETING));
-            $storedStatus = (string) ($row['status'] ?? '');
-            $manualStatus = in_array($storedStatus, ['ditunda', 'dibatalkan'], true) ? $storedStatus : null;
 
             return JadwalUmumModel::resolveLifecycleStatus(
                 (string) ($row['tanggal'] ?? ''),
@@ -263,28 +265,17 @@ final class ScheduleReadService
             );
         }
 
-        $storedStatus = (string) ($row['status'] ?? 'menunggu');
-        if (in_array($storedStatus, ['proyeksi', 'ditunda', 'dibatalkan'], true)) {
-            return $storedStatus;
-        }
+        $jenisAgenda = (string) ($row['jenis'] ?? ($row['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING));
 
-        $start = strtotime((string) $row['tanggal'] . ' ' . (string) $row['waktu_mulai']);
-        $end = strtotime((string) $row['tanggal'] . ' ' . (string) $row['waktu_selesai']);
-        $now = ($this->clock)();
-        if ($start === false || $end === false) {
-            return $storedStatus;
-        }
-        if ($end <= $now) {
-            return 'selesai';
-        }
-        if ($start <= $now) {
-            return 'berlangsung';
-        }
-        if ($start - $now <= 1800) {
-            return 'persiapan';
-        }
-
-        return 'menunggu';
+        return JadwalBanmusModel::resolveLifecycleStatus(
+            true,
+            (string) ($row['tanggal'] ?? ''),
+            $row['waktu_mulai'] ?? null,
+            $row['waktu_selesai'] ?? null,
+            ($this->clock)(),
+            $jenisAgenda,
+            $manualStatus,
+        );
     }
 
     private function displayLocation(array $row): string

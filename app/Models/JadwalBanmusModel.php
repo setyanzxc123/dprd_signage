@@ -90,12 +90,48 @@ class JadwalBanmusModel extends Model
         string $agendaType = self::TYPE_MEETING,
         ?string $manualStatus = null,
     ): string {
-        if ($agendaType === self::TYPE_NON_MEETING) {
-            return self::TYPE_NON_MEETING;
-        }
-
         if ($manualStatus !== null && in_array($manualStatus, ['ditunda', 'dibatalkan'], true)) {
             return $manualStatus;
+        }
+
+        if ($agendaType === self::TYPE_NON_MEETING) {
+            if ($date === null || trim($date) === '') {
+                return 'menunggu';
+            }
+
+            $now ??= time();
+            $today = date('Y-m-d', $now);
+
+            if ($startTime === null || trim($startTime) === '') {
+                return match (true) {
+                    $date < $today => 'selesai',
+                    $date > $today => 'menunggu',
+                    default        => 'berlangsung',
+                };
+            }
+
+            $start = strtotime((string) $date . ' ' . (string) $startTime);
+            $end = strtotime((string) $date . ' ' . (string) $endTime);
+            if ($start === false) {
+                return 'menunggu';
+            }
+            if ($end === false || $end <= $start) {
+                if ($date < $today) {
+                    return 'selesai';
+                }
+                if ($start <= $now) {
+                    return 'berlangsung';
+                }
+
+                return $start - $now <= 1800 ? 'persiapan' : 'menunggu';
+            }
+
+            return match (true) {
+                $end <= $now          => 'selesai',
+                $start <= $now        => 'berlangsung',
+                $start - $now <= 1800 => 'persiapan',
+                default              => 'menunggu',
+            };
         }
 
         if (! $isScheduleComplete) {

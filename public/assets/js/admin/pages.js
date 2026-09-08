@@ -1542,18 +1542,22 @@
                 input.checked = input.value === (isNonRapat ? 'non_rapat' : 'rapat');
             });
 
-            if (isNonRapat) {
-                if (labelPeriode) labelPeriode.textContent = 'Waktu / Periode Pelaksanaan';
-                if (periodeField) periodeField.placeholder = 'Contoh: Juli–Agustus 2026 atau Menyesuaikan Masa Sidang';
+            const periodeWrapper = dialog.querySelector('#banmus-periode-wrapper');
+            const labelTanggal = dialog.querySelector('label[for="field_tanggal"]');
 
+            if (isNonRapat) {
+                if (labelTanggal) labelTanggal.textContent = 'Tanggal Pelaksanaan';
+                periodeWrapper?.classList.add('hidden');
                 rapatModeWrapper?.classList.add('hidden');
-                pastiWrapper?.classList.add('hidden');
-                nonRapatDatesWrapper?.classList.remove('hidden');
-                statusOverrideWrapper?.classList.add('hidden');
+                nonRapatDatesWrapper?.classList.add('hidden');
+                pastiWrapper?.classList.remove('hidden');
+                statusOverrideWrapper?.classList.remove('hidden');
             } else {
+                if (labelTanggal) labelTanggal.textContent = 'Tanggal Rapat';
                 if (labelPeriode) labelPeriode.textContent = 'Periode SK';
                 if (periodeField) periodeField.placeholder = 'Contoh: Juni–Juli 2026 atau Minggu ke-2 Juli';
 
+                periodeWrapper?.classList.remove('hidden');
                 rapatModeWrapper?.classList.remove('hidden');
                 nonRapatDatesWrapper?.classList.add('hidden');
                 statusOverrideWrapper?.classList.remove('hidden');
@@ -1602,7 +1606,7 @@
             if (startDateField) startDateField.value = item.tanggal_mulai || '';
             if (endDateField) endDateField.value = item.tanggal_selesai || '';
 
-            dateField.value = item.tanggal || '';
+            dateField.value = item.tanggal || item.tanggal_mulai || '';
             if (startTimeField) startTimeField.value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
             if (endTimeField) endTimeField.value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
             if (field('field_catatan')) field('field_catatan').value = item.catatan || '';
@@ -1638,7 +1642,7 @@
                 : 'rapat';
 
             if (currentAgendaType === 'non_rapat') {
-                currentMeetingMode = 'proyeksi';
+                currentMeetingMode = 'pasti';
             } else {
                 const hasSchedule = Boolean(
                     item.tanggal || item.jam_mulai || item.ruangan_id || (item.status && item.status !== 'proyeksi')

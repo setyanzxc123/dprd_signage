@@ -58,7 +58,7 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
 
         $upcoming = (new DatabaseScheduleReadRepository($this->testDb))
             ->findUpcomingPublic('2099-08-01', 10);
-        $this->assertNotContains('Reses terjadwal', array_column($upcoming, 'judul'));
+        $this->assertContains('Reses terjadwal', array_column($upcoming, 'judul'));
 
         $repository = new DatabaseScheduleReadRepository($this->testDb);
         $this->assertSame([1], $repository->findMemberUnitIds(9));

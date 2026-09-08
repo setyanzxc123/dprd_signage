@@ -355,11 +355,13 @@ if ($isMember) {
                             </span>
                             <span class="tabular-nums whitespace-nowrap">{{ executionTime(item) }}</span>
                             <span v-if="item.status === 'berlangsung'" class="text-rose-600 dark:text-rose-400 font-semibold truncate">· Sedang Berlangsung</span>
+                            <span v-else-if="item.status === 'dibatalkan'" class="text-rose-600 dark:text-rose-400 font-semibold truncate">· Dibatalkan</span>
+                            <span v-else-if="item.status === 'ditunda'" class="text-amber-600 dark:text-amber-400 font-semibold truncate">· Ditunda</span>
                         </div>
-                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 sm:line-clamp-2 leading-snug [text-wrap:pretty]">{{ item.judul }}</p>
+                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 sm:line-clamp-2 leading-snug [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ item.judul }}</p>
                     </div>
                     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        <a v-if="item.has_stream" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 min-h-[30px] sm:min-h-8 py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-bold shadow-xs transition whitespace-nowrap">
+                        <a v-if="item.has_stream && item.status !== 'dibatalkan'" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 min-h-[30px] sm:min-h-8 py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-bold shadow-xs transition whitespace-nowrap">
                             <svg viewBox="0 0 24 24" class="size-3 sm:size-3.5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                             <span>Tonton Live</span>
                         </a>
@@ -398,7 +400,7 @@ if ($isMember) {
                 :class="mobileTabClass('umum')"
                 class="flex-1 -mb-px py-2.5 px-2 border-b-2 text-xs sm:text-sm text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
-                <span>Kegiatan &amp; Audiensi</span>
+                <span>Kegiatan &amp; Acara</span>
             </button>
         </div>
     </div>
@@ -469,8 +471,20 @@ if ($isMember) {
                                 </div>
 
                                 <div class="min-w-0">
-                                    <span class="line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ item.judul }}</span>
-                                    <div v-if="(item.units && item.units.length > 0) || item.komisi" class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                                    <span class="line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ item.judul }}</span>
+                                    <div class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                                        <span v-if="item.status === 'dibatalkan'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                            Dibatalkan
+                                        </span>
+                                        <span v-else-if="item.status === 'ditunda'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                            Ditunda
+                                        </span>
+                                        <span v-if="item.source === 'banmus'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                                            Banmus
+                                        </span>
+                                        <span v-else-if="item.source === 'jadwal_umum'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                            Insidental / Komisi
+                                        </span>
                                         <template v-if="item.units && item.units.length > 0">
                                             <span
                                                 v-for="u in item.units"
@@ -522,7 +536,7 @@ if ($isMember) {
                                     </div>
                                 </div>
 
-                                <div v-if="item.has_undangan || item.has_materi || item.has_stream || item.has_risalah || item.risalah_status || item.materi_restricted || item.stream_restricted" class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                                <div v-if="item.status !== 'dibatalkan' && (item.has_undangan || item.has_materi || item.has_stream || item.has_risalah || item.risalah_status || item.materi_restricted || item.stream_restricted)" class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
                                     <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
                                         <?php if ($isMember): ?>
                                             <a v-if="item.has_undangan" class="flex-1 sm:flex-initial min-h-[34px] sm:min-h-[36px] inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 shadow-xs transition whitespace-nowrap" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
@@ -590,7 +604,7 @@ if ($isMember) {
             <div class="p-0">
                 <div class="flex items-center justify-between gap-3 border-b border-slate-400 dark:border-slate-600 px-4 py-3.5 sm:px-6 sm:py-4">
                     <div class="min-w-0">
-                        <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Kegiatan &amp; Audiensi Publik</h2>
+                        <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate underline decoration-slate-400 decoration-2 underline-offset-[6px] dark:decoration-slate-500">Kegiatan &amp; Acara Lainnya</h2>
                     </div>
                 </div>
 
@@ -601,7 +615,7 @@ if ($isMember) {
                 <div v-else-if="loadError" class="p-4 sm:p-6">
                     <div role="alert" class="flex items-center gap-3 p-4 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 text-sm">
                         <div class="flex-1">
-                            <p class="font-semibold">Kegiatan &amp; audiensi gagal dimuat.</p>
+                            <p class="font-semibold">Kegiatan dewan gagal dimuat.</p>
                             <button class="mt-1 text-xs font-bold underline hover:no-underline" type="button" @click="loadAgenda">Coba lagi</button>
                         </div>
                     </div>
@@ -610,9 +624,9 @@ if ($isMember) {
                 <div v-else-if="filteredGeneralAgendas.length === 0" class="grid min-h-80 place-items-center p-8 text-center">
                     <div>
                         <svg class="mx-auto text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke-linecap="round"/></svg>
-                        <h2 class="mt-4 text-base font-bold text-slate-900 dark:text-white">Belum ada kegiatan &amp; audiensi</h2>
+                        <h2 class="mt-4 text-base font-bold text-slate-900 dark:text-white">Belum ada kegiatan &amp; acara</h2>
                         <p v-if="activeNavigation === 'saya'" class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                            Tidak ada kegiatan atau audiensi untuk Anda pada periode ini. Klik <button type="button" class="text-blue-600 dark:text-blue-400 font-semibold underline hover:text-blue-700 cursor-pointer" @click="setNavigation('all')">Semua</button> untuk melihat kegiatan dewan lainnya.
+                            Tidak ada kegiatan atau acara untuk Anda pada periode ini. Klik <button type="button" class="text-blue-600 dark:text-blue-400 font-semibold underline hover:text-blue-700 cursor-pointer" @click="setNavigation('all')">Semua</button> untuk melihat kegiatan dewan lainnya.
                         </p>
                         <p v-else class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Tidak ada kegiatan untuk kelompok peserta dan periode yang dipilih.</p>
                     </div>
@@ -638,8 +652,20 @@ if ($isMember) {
                                 </div>
 
                                 <div class="min-w-0">
-                                    <span class="line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ item.judul }}</span>
-                                    <div v-if="(item.units && item.units.length > 0) || item.komisi" class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                                    <span class="line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ item.judul }}</span>
+                                    <div class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                                        <span v-if="item.status === 'dibatalkan'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                            Dibatalkan
+                                        </span>
+                                        <span v-else-if="item.status === 'ditunda'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                            Ditunda
+                                        </span>
+                                        <span v-if="item.source === 'banmus'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                                            Banmus
+                                        </span>
+                                        <span v-else-if="item.source === 'jadwal_umum'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                            Jadwal Umum
+                                        </span>
                                         <template v-if="item.units && item.units.length > 0">
                                             <span
                                                 v-for="u in item.units"
@@ -691,7 +717,7 @@ if ($isMember) {
                                     </div>
                                 </div>
 
-                                <div v-if="item.has_undangan || item.has_materi || item.has_stream || item.has_risalah || item.risalah_status || item.materi_restricted || item.stream_restricted" class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                                <div v-if="item.status !== 'dibatalkan' && (item.has_undangan || item.has_materi || item.has_stream || item.materi_restricted || item.stream_restricted)" class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
                                     <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
                                         <?php if ($isMember): ?>
                                             <a v-if="item.has_undangan" class="flex-1 sm:flex-initial min-h-[34px] sm:min-h-[36px] inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 shadow-xs transition whitespace-nowrap" :href="item.undangan_url" target="_blank" rel="noopener noreferrer">
@@ -702,32 +728,13 @@ if ($isMember) {
 
                                         <a v-if="item.has_materi" class="flex-1 sm:flex-initial min-h-[34px] sm:min-h-[36px] inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 shadow-xs transition whitespace-nowrap" :href="item.materi_url" target="_blank" rel="noopener noreferrer">
                                             <svg viewBox="0 0 24 24" class="size-3.5 text-slate-500 dark:text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                                            <span>Bahan Rapat</span>
+                                            <span>Bahan / Dokumen</span>
                                         </a>
 
                                         <a v-if="item.has_stream" class="flex-1 sm:flex-initial min-h-[34px] sm:min-h-[36px] inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-lg border border-rose-200 dark:border-rose-800/80 bg-rose-50/70 dark:bg-rose-950/40 text-[11px] sm:text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 shadow-xs transition whitespace-nowrap" :href="item.stream_url" target="_blank" rel="noopener noreferrer">
                                             <svg viewBox="0 0 24 24" class="size-3.5 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                                             <span>Live / Video</span>
                                         </a>
-
-                                        <?php if ($isMember): ?>
-                                            <button
-                                                v-if="item.has_risalah"
-                                                type="button"
-                                                class="flex-1 sm:flex-initial min-h-[34px] sm:min-h-[36px] inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 sm:px-3.5 rounded-lg border border-blue-300 dark:border-blue-700/80 bg-blue-50/90 dark:bg-blue-950/40 text-[11px] sm:text-xs font-semibold text-blue-800 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/60 shadow-xs transition cursor-pointer whitespace-nowrap"
-                                                @click="openRisalahModal(item)"
-                                                aria-haspopup="dialog"
-                                                aria-expanded="false"
-                                                aria-controls="hs-risalah-modal"
-                                            >
-                                                <svg viewBox="0 0 24 24" class="size-3.5 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                                                <span>Risalah (Notulen AI)</span>
-                                            </button>
-                                            <span v-else-if="item.risalah_status" class="flex-1 sm:flex-initial min-h-[34px] sm:min-h-[36px] inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 sm:px-3.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30 select-none whitespace-nowrap">
-                                                <span class="inline-block size-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true"></span>
-                                                <span>Sedang Ditinjau Notulis</span>
-                                            </span>
-                                        <?php endif; ?>
                                     </div>
 
                                     <?php if ($isMember): ?>
@@ -1070,7 +1077,7 @@ if ($isMember) {
             const scheduledAgendas = computed(() => {
                 const selectedMonths = new Set(periodMonths());
                 let rows = agendas.value.filter((item) =>
-                    item.source === 'banmus'
+                    (item.jenis === 'rapat' || item.jenis_agenda === 'rapat')
                     && item.status !== 'proyeksi'
                     && selectedMonths.has(String(item.tanggal || '').slice(0, 7)));
                 if (activeNavigation.value === 'saya') {
@@ -1087,7 +1094,8 @@ if ($isMember) {
             const filteredGeneralAgendas = computed(() => {
                 const selectedMonths = new Set(periodMonths(periodMode.value));
                 let rows = agendas.value.filter((item) =>
-                    item.source === 'jadwal_umum'
+                    (item.jenis === 'non_rapat' || item.jenis_agenda === 'non_rapat')
+                    && item.status !== 'proyeksi'
                     && selectedMonths.has(String(item.tanggal || '').slice(0, 7)));
                 if (activeNavigation.value === 'saya') {
                     rows = rows.filter((item) => item.is_participant);
@@ -1164,14 +1172,14 @@ if ($isMember) {
                 const today = todayDateKey.value;
                 const pool = [...scheduledAgendas.value, ...filteredGeneralAgendas.value];
                 const upcoming = pool.filter((item) =>
-                    item.tanggal && item.tanggal > today && item.status !== 'selesai');
+                    item.tanggal && item.tanggal > today && item.status !== 'selesai' && item.status !== 'dibatalkan');
                 return upcoming.length ? upcoming.sort((a, b) => a.tanggal.localeCompare(b.tanggal))[0] : null;
             });
             function focusAgenda(item) {
                 if (!item) {
                     return;
                 }
-                const isGeneral = item.source === 'jadwal_umum';
+                const isGeneral = (item.jenis === 'non_rapat' || item.jenis_agenda === 'non_rapat');
                 if (isGeneral) {
                     activeMobileTab.value = 'umum';
                     expandedGeneralKey.value = item.key;
@@ -1858,6 +1866,8 @@ if ($isMember) {
                     persiapan: 'Persiapan',
                     menunggu: 'Akan Datang',
                     selesai: 'Selesai',
+                    ditunda: 'Ditunda',
+                    dibatalkan: 'Dibatalkan',
                 }[status] || status || '-';
             }
 
@@ -1869,6 +1879,8 @@ if ($isMember) {
                     persiapan: `${base} bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30`,
                     menunggu: `${base} bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/30`,
                     selesai: 'items-center gap-1.5 py-0.5 px-2.5 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
+                    ditunda: `${base} bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30`,
+                    dibatalkan: `${base} bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30`,
                 }[status] || `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700`;
             }
 

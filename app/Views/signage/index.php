@@ -208,14 +208,14 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         </svg>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-[clamp(16px,1.2vw,24px)] font-semibold tracking-wide">Tidak Ada Agenda Rapat Hari Ini</p>
+                        <p class="text-[clamp(16px,1.2vw,24px)] font-semibold tracking-wide">Tidak Ada Agenda Sidang atau Kegiatan Dewan Hari Ini</p>
                         <p class="text-[clamp(12px,0.8vw,16px)] text-base-content/60">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
                     </div>
                 </div>
 
                 <div v-else-if="jadwal.length === 0"
                     class="rounded-xl border border-dashed border-base-300 bg-base-100/40 p-[1.4vh] text-center text-[clamp(13px,0.85vw,16px)] text-base-content/75 font-medium">
-                    Tidak ada agenda rapat untuk hari ini. Silakan periksa agenda berikutnya di bawah.
+                    Tidak ada agenda sidang atau kegiatan dewan untuk hari ini. Silakan periksa agenda berikutnya di bawah.
                 </div>
 
                 <ul v-if="jadwal.length > 0" class="mt-[0.8vh] flex flex-col gap-[1vh] p-0">
@@ -234,7 +234,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                             </div>
                         </div>
                         <div class="min-w-0">
-                            <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
+                            <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">
                                 {{ item.judul }}
                             </div>
                             <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/85 font-medium truncate">{{ item.komisi }}</div>
@@ -416,6 +416,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 const activeQR  = ref('berkas');
                 const qrFading  = ref(false);
                 const activeJadwalId = ref(null);
+                const activeMeeting  = ref(null);
                 const BASE_URL  = '<?= rtrim(base_url(), '/') ?>';
                 const SIGNAGE_WORKER_VERSION = '<?= esc((string) ($signageWorkerVersion ?? '1'), 'js') ?>';
                 const SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -878,6 +879,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         persiapan: 'Persiapan',
                         menunggu: 'Akan Datang',
                         selesai: 'Selesai',
+                        ditunda: 'Ditunda',
+                        dibatalkan: 'Dibatalkan',
+                        non_rapat: 'Kegiatan',
                     };
                     return map[status] ?? status;
                 }
@@ -888,6 +892,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         persiapan: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30',
                         menunggu: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30',
                         selesai: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30',
+                        ditunda: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30',
+                        dibatalkan: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30',
+                        non_rapat: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30',
                     };
                     return map[status] ?? 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30';
                 }
@@ -898,6 +905,9 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         persiapan: 'h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400',
                         menunggu: 'h-2 w-2 rounded-full bg-sky-500 dark:bg-sky-400',
                         selesai: 'h-2 w-2 rounded-full bg-slate-500 dark:bg-slate-400',
+                        ditunda: 'h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400',
+                        dibatalkan: 'h-2 w-2 rounded-full bg-rose-500 dark:bg-rose-400',
+                        non_rapat: 'h-2 w-2 rounded-full bg-teal-500 dark:bg-teal-400',
                     };
                     return map[status] ?? 'h-2 w-2 rounded-full bg-slate-500 dark:bg-slate-400';
                 }
@@ -907,6 +917,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         berlangsung: 'is-berlangsung',
                         persiapan: 'border-amber-500/30 bg-amber-500/5',
                         selesai: 'opacity-70',
+                        ditunda: 'border-amber-500/30 bg-amber-500/5',
+                        dibatalkan: 'opacity-60 bg-rose-500/5',
                     };
                     return map[status] ?? '';
                 }
@@ -958,7 +970,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 }
 
                 function renderActiveQR() {
-                    if (!activeJadwalId.value || (!qrBerkas.value && !qrLive.value)) {
+                    if (!activeMeeting.value || (!qrBerkas.value && !qrLive.value)) {
                         lastRenderedBerkasUrl = '';
                         lastRenderedLiveUrl = '';
                         makeQR('qr-display-berkas', '', 110);
@@ -966,8 +978,12 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         return;
                     }
 
+                    const meeting = activeMeeting.value;
+                    const targetId = meeting.source_id || Math.abs(meeting.id);
+                    const routeSegment = meeting.source === 'jadwal_umum' ? 'jadwal-umum' : 'jadwal-banmus';
+
                     if (qrBerkas.value) {
-                        const berkasUrl = `${BASE_URL}/go/jadwal-banmus/${activeJadwalId.value}/berkas`;
+                        const berkasUrl = `${BASE_URL}/go/${routeSegment}/${targetId}/berkas`;
                         if (berkasUrl !== lastRenderedBerkasUrl) {
                             makeQR('qr-display-berkas', berkasUrl, 110);
                             lastRenderedBerkasUrl = berkasUrl;
@@ -978,7 +994,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     }
 
                     if (qrLive.value) {
-                        const liveUrl = `${BASE_URL}/go/jadwal-banmus/${activeJadwalId.value}/live`;
+                        const liveUrl = `${BASE_URL}/go/${routeSegment}/${targetId}/live`;
                         if (liveUrl !== lastRenderedLiveUrl) {
                             makeQR('qr-display-live', liveUrl, 110);
                             lastRenderedLiveUrl = liveUrl;
@@ -1120,9 +1136,10 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     }
                     syncSchedulePaging();
                     const aktif = jadwal.value.find(item => item.status === 'berlangsung');
-                    activeJadwalId.value = aktif?.id ?? null;
-                    qrBerkas.value = !!aktif?.materi_url;
-                    qrLive.value = !!aktif?.stream_url;
+                    activeMeeting.value = aktif ?? null;
+                    activeJadwalId.value = aktif ? (aktif.source_id || Math.abs(aktif.id)) : null;
+                    qrBerkas.value = Boolean(aktif && (aktif.has_materi || aktif.materi_url));
+                    qrLive.value = Boolean(aktif && (aktif.has_stream || aktif.stream_url));
                     syncQrSlide();
                 }
 

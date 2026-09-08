@@ -293,44 +293,30 @@ class JadwalBanmusService
         $publikasi = trim((string) ($input['publikasi'] ?? ''));
         $normalizedPublikasi = in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'publik';
 
+        $tanggal = trim((string) ($input['tanggal'] ?? ''));
         if ($agendaType === JadwalBanmusModel::TYPE_NON_MEETING) {
+            $periodeLabel = '';
+            $projectionRange = [
+                'tanggal_mulai'   => null,
+                'tanggal_selesai' => null,
+                'bulan_mulai'     => null,
+                'bulan_selesai'   => null,
+            ];
             $tanggalMulaiInput = trim((string) ($input['tanggal_mulai'] ?? ''));
             $tanggalSelesaiInput = trim((string) ($input['tanggal_selesai'] ?? ''));
+            if ($tanggal === '' && $tanggalMulaiInput !== '') {
+                $tanggal = $tanggalMulaiInput;
+            }
             if ($tanggalMulaiInput !== '' && $this->validDate($tanggalMulaiInput)) {
                 $projectionRange['tanggal_mulai'] = $tanggalMulaiInput;
             }
             if ($tanggalSelesaiInput !== '' && $this->validDate($tanggalSelesaiInput)) {
                 $projectionRange['tanggal_selesai'] = $tanggalSelesaiInput;
             }
-
-            return [
-                'payload' => [
-                    'agenda'          => $agenda,
-                    'jenis_agenda'    => $agendaType,
-                    'periode_label'   => $periodeLabel !== '' ? $periodeLabel : null,
-                    ...$projectionRange,
-                    'tanggal'         => null,
-                    'jam_mulai'       => null,
-                    'jam_selesai'     => null,
-                    'ruangan_id'      => null,
-                    'lokasi_lainnya'  => null,
-                    'catatan'         => $catatan !== '' ? $catatan : null,
-                    'publikasi'       => $normalizedPublikasi,
-                    'materi_url'      => null,
-                    'materi_akses'    => ScheduleResourceAccess::PUBLIC,
-                    'stream_url'      => null,
-                    'stream_akses'    => ScheduleResourceAccess::PUBLIC,
-                ],
-                'unit_ids'             => [],
-                'is_schedule_complete' => false,
-                'invitation_upload'    => null,
-                'remove_invitation'    => true,
-            ];
         }
 
-        $tanggal = trim((string) ($input['tanggal'] ?? ''));
         if ($tanggal !== '' && ! $this->validDate($tanggal)) {
-            return ['error' => 'Format tanggal pasti tidak valid.'];
+            return ['error' => 'Format tanggal pelaksanaan tidak valid.'];
         }
 
         $jamMulai = trim((string) ($input['jam_mulai'] ?? ''));
@@ -409,13 +395,17 @@ class JadwalBanmusService
             return ['error' => $invitationCheck['error']];
         }
 
-        $isScheduleComplete = $tanggal !== ''
-            && $jamMulai !== ''
-            && $jamSelesai !== ''
-            && ($ruanganId !== null || $lokasiLainnya !== '')
-            && $unitIds !== [];
+        if ($agendaType === JadwalBanmusModel::TYPE_NON_MEETING) {
+            $isScheduleComplete = $tanggal !== '';
+        } else {
+            $isScheduleComplete = $tanggal !== ''
+                && $jamMulai !== ''
+                && $jamSelesai !== ''
+                && ($ruanganId !== null || $lokasiLainnya !== '')
+                && $unitIds !== [];
+        }
 
-        if ($isScheduleComplete && $ruanganId !== null && $this->hasRoomConflict(
+        if ($isScheduleComplete && $ruanganId !== null && $jamMulai !== '' && $jamSelesai !== '' && $this->hasRoomConflict(
             (int) $ruanganId,
             $tanggal,
             $jamMulai,
@@ -434,7 +424,7 @@ class JadwalBanmusService
             'payload' => [
                 'agenda'          => $agenda,
                 'jenis_agenda'    => $agendaType,
-                'periode_label'   => $periodeLabel !== '' ? $periodeLabel : null,
+                'periode_label'   => $agendaType === JadwalBanmusModel::TYPE_NON_MEETING ? null : ($periodeLabel !== '' ? $periodeLabel : null),
                 ...$projectionRange,
                 'tanggal'         => $tanggal !== '' ? $tanggal : null,
                 'jam_mulai'       => $jamMulai !== '' ? $jamMulai : null,

@@ -85,12 +85,19 @@ class JadwalUmumModel extends Model
         string $jenisAgenda = self::TYPE_MEETING,
         ?string $manualStatus = null,
     ): string {
-        if ($jenisAgenda === self::TYPE_NON_MEETING) {
-            return self::STATUS_NON_RAPAT;
-        }
-
         if ($manualStatus !== null && in_array($manualStatus, self::MANUAL_STATUSES, true)) {
             return $manualStatus;
+        }
+
+        if ($jenisAgenda === self::TYPE_NON_MEETING) {
+            $now ??= time();
+            $today = date('Y-m-d', $now);
+
+            return match (true) {
+                $tanggal < $today => self::STATUS_SELESAI,
+                $tanggal > $today => self::STATUS_MENUNGGU,
+                default           => self::STATUS_BERLANGSUNG,
+            };
         }
 
         $now ??= time();
