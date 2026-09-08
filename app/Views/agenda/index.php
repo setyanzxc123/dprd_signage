@@ -358,7 +358,7 @@ if ($isMember) {
                             <span v-else-if="item.status === 'dibatalkan'" class="text-rose-600 dark:text-rose-400 font-semibold truncate">· Dibatalkan</span>
                             <span v-else-if="item.status === 'ditunda'" class="text-amber-600 dark:text-amber-400 font-semibold truncate">· Ditunda</span>
                         </div>
-                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 sm:line-clamp-2 leading-snug [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ cleanJudul(item.judul) }}</p>
+                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 sm:line-clamp-2 leading-snug [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</p>
                     </div>
                     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         <a v-if="item.has_stream && item.status !== 'dibatalkan'" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 min-h-[30px] sm:min-h-8 py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-bold shadow-xs transition whitespace-nowrap">
@@ -472,7 +472,7 @@ if ($isMember) {
 
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
-                                        <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ cleanJudul(item.judul) }}</span>
+                                        <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
                                         <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
@@ -653,7 +653,7 @@ if ($isMember) {
 
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
-                                        <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ cleanJudul(item.judul) }}</span>
+                                        <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
                                         <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
