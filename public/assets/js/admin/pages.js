@@ -1857,6 +1857,36 @@
         const confirmCancelBtn = document.getElementById('um_confirm_cancel_btn');
         let pendingCloseAction = null;
 
+        const submitText    = document.getElementById('um_submit_btn_text');
+        const submitLoading = document.getElementById('um_submit_btn_loading');
+        const btnLabel      = document.getElementById('um_btn_label');
+        const spinnerLabel  = document.getElementById('um_spinner_label');
+        const spinner       = document.getElementById('um_spinner');
+        const btnIcon       = document.getElementById('um_btn_icon');
+
+        const setUploadSubmitting = (isSubmitting, label = 'Unggah Rekaman') => {
+            if (submitBtn) submitBtn.disabled = isSubmitting;
+            if (btnLabel && label) btnLabel.textContent = label;
+            if (spinnerLabel && label) spinnerLabel.textContent = label;
+
+            if (submitText) {
+                submitText.classList.toggle('hidden', isSubmitting);
+                submitText.classList.toggle('inline-flex', !isSubmitting);
+            }
+            if (submitLoading) {
+                submitLoading.classList.toggle('hidden', !isSubmitting);
+                submitLoading.classList.toggle('inline-flex', isSubmitting);
+            }
+            if (spinner) {
+                spinner.classList.toggle('hidden', !isSubmitting);
+            }
+            if (btnIcon) {
+                btnIcon.classList.toggle('hidden', isSubmitting);
+            }
+        };
+
+        setUploadSubmitting(false);
+
         function openOverlay(el) {
             if (!el) return;
             if (window.HSOverlay && typeof window.HSOverlay.open === 'function') {
@@ -2128,13 +2158,7 @@
 
             showDropzoneIdle();
 
-            if (submitBtn) submitBtn.disabled = false;
-            const spinner = document.getElementById('um_spinner');
-            const btnIcon = document.getElementById('um_btn_icon');
-            const btnLabel = document.getElementById('um_btn_label');
-            if (spinner) spinner.classList.add('hidden');
-            if (btnIcon) btnIcon.classList.remove('hidden');
-            if (btnLabel) btnLabel.textContent = 'Unggah Rekaman';
+            setUploadSubmitting(false, 'Unggah Rekaman');
 
             setProgress(0, 'Mengunggah rekaman ke server...');
             const transferInfo = document.getElementById('upload_transfer_info');
@@ -2512,6 +2536,8 @@
             // Auto open modal on page load if preset was requested
             setTimeout(() => {
                 if (modal) {
+                    resetForm();
+                    applyPresetIfAvailable();
                     openOverlay(modal);
                     rerenderIcons();
                     if (isPresetLocked && dropzone) {
@@ -2687,18 +2713,12 @@
 
         function showError(msg, allowRetry) {
             isUploading = false;
-            if (submitBtn) submitBtn.disabled = false;
-            const spinner = document.getElementById('um_spinner');
-            const btnIcon = document.getElementById('um_btn_icon');
-            const btnLabel = document.getElementById('um_btn_label');
+            setUploadSubmitting(false, 'Kirim Rekaman');
             const warningBanner = document.getElementById('upload_warning_banner');
             const retryEl = document.getElementById('um_retry_btn');
             const errorText = document.getElementById('um_error_text');
             const errorBox = document.getElementById('um_error_box');
 
-            if (spinner) spinner.classList.add('hidden');
-            if (btnIcon) btnIcon.classList.remove('hidden');
-            if (btnLabel) btnLabel.textContent = 'Kirim Rekaman';
             if (warningBanner) warningBanner.classList.add('hidden');
 
             if (retryEl) {
@@ -2955,13 +2975,7 @@
             if (warningBanner) warningBanner.classList.remove('hidden');
 
             if (submitBtn) submitBtn.disabled = true;
-            const spinner = document.getElementById('um_spinner');
-            const btnIcon = document.getElementById('um_btn_icon');
-            const btnLabel = document.getElementById('um_btn_label');
-
-            if (spinner) spinner.classList.remove('hidden');
-            if (btnIcon) btnIcon.classList.add('hidden');
-            if (btnLabel) btnLabel.textContent = 'Mengunggah rekaman...';
+            setUploadSubmitting(true, 'Mengunggah rekaman...');
 
             uploadInChunks(file)
                 .then(uploadId => commitUpload(uploadId))

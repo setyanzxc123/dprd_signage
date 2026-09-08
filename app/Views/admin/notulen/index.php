@@ -401,10 +401,15 @@
             <!-- Footer actions -->
             <div class="flex justify-end items-center gap-x-2 py-3 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-800">
                 <button type="button" id="um_cancel_btn" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" data-hs-overlay="#modal_upload_notulen">Batal</button>
-                <button type="button" id="um_submit_btn" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
-                    <span id="um_spinner" class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent rounded-full hidden"></span>
-                    <i data-lucide="upload" id="um_btn_icon" class="size-3.5"></i>
-                    <span id="um_btn_label">Unggah Rekaman</span>
+                <button type="button" id="um_submit_btn" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer disabled:opacity-50 disabled:pointer-events-none">
+                    <span class="inline-flex items-center gap-x-2" id="um_submit_btn_text">
+                        <i data-lucide="upload" id="um_btn_icon" class="size-3.5"></i>
+                        <span id="um_btn_label">Unggah Rekaman</span>
+                    </span>
+                    <span class="hidden items-center gap-x-2" id="um_submit_btn_loading">
+                        <span id="um_spinner" class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent text-white rounded-full" role="status" aria-label="loading"></span>
+                        <span id="um_spinner_label">Mengunggah...</span>
+                    </span>
                 </button>
             </div>
         </div>
