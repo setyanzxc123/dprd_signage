@@ -327,7 +327,7 @@
             lbl.textContent = label + ':';
 
             var sel = document.createElement('select');
-            sel.className = 'py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-emerald-500 focus:ring-emerald-500 shadow-xs cursor-pointer dt-col-filter-select';
+            sel.className = 'py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-blue-500 focus:ring-blue-500 shadow-xs cursor-pointer dt-col-filter-select';
             sel.setAttribute('data-dt-filter-col', colIdx);
             sel.setAttribute('aria-label', 'Filter ' + label);
 

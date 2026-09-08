@@ -8,7 +8,7 @@
     <div>
         <h1 class="page-title">Agenda Banmus</h1>
     </div>
-    <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition w-full sm:w-auto justify-center">
+    <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition w-full sm:w-auto justify-center">
         <i data-lucide="plus" class="size-4"></i>
         Tambah SK Banmus
     </a>
@@ -37,7 +37,7 @@
             </span>
             <p class="mt-3 font-semibold text-slate-800 dark:text-slate-200">Belum ada dokumen SK Banmus.</p>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Silakan unggah dokumen SK Banmus baru untuk mulai mengelola agenda.</p>
-            <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="mt-4 py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition">
+            <a href="<?= base_url('admin/jadwal-banmus/create') ?>" class="mt-4 py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition">
                 <i data-lucide="plus" class="size-4"></i>
                 Tambah SK Banmus Pertama
             </a>
@@ -59,7 +59,7 @@
                             <td class="px-4 py-3.5" data-label="Dokumen SK">
                                 <div class="min-w-0">
                                     <a href="<?= base_url('admin/jadwal-banmus/' . $doc['id']) ?>"
-                                       class="font-bold text-sm text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+                                       class="font-bold text-sm text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition">
                                         SK No. <?= esc($doc['nomor_sk']) ?>
                                     </a>
                                     <p class="mt-0.5 max-w-2xl text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -73,7 +73,7 @@
                                             <a href="<?= base_url('uploads/sk-banmus/' . $doc['dokumen_file']) ?>"
                                                target="_blank"
                                                rel="noopener"
-                                               class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition"
+                                               class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition"
                                                title="Buka PDF SK">
                                                 <i data-lucide="file-text" class="size-3.5"></i>
                                                 Buka PDF
@@ -94,7 +94,7 @@
                             </td>
                             <td class="px-4 py-3.5 whitespace-nowrap" data-label="Jumlah Agenda">
                                 <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                                    <i data-lucide="list-checks" class="size-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                                    <i data-lucide="list-checks" class="size-3.5 text-blue-600 dark:text-blue-400"></i>
                                     <?= (int) ($doc['jumlah_item'] ?? 0) ?> agenda
                                 </span>
                             </td>

@@ -27,7 +27,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <!-- Informasi Agenda Dasar -->
         <div class="space-y-4">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="file-text" class="size-4 text-emerald-500"></i>
+                <i data-lucide="file-text" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Data Agenda</h2>
             </div>
 
@@ -35,7 +35,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="judul">
                     Judul <span class="text-rose-500">*</span>
                 </label>
-                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="judul" name="judul" type="text" maxlength="255" required
+                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="judul" name="judul" type="text" maxlength="255" required
                     value="<?= esc($schedule['judul'] ?? '') ?>"
                     placeholder="Contoh: Audiensi Forum Pemuda bersama Komisi I" />
             </div>
@@ -44,7 +44,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="pihak_eksternal">
                     Pihak Eksternal
                 </label>
-                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="pihak_eksternal" name="pihak_eksternal" type="text" maxlength="255"
+                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="pihak_eksternal" name="pihak_eksternal" type="text" maxlength="255"
                     value="<?= esc($schedule['pihak_eksternal'] ?? '') ?>"
                     placeholder="Opsional: nama masyarakat, organisasi, atau instansi luar" />
                 <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Boleh dikosongkan untuk kegiatan internal yang tidak melibatkan pihak luar.</p>
@@ -54,7 +54,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="keterangan">
                     Keterangan Operasional
                 </label>
-                <textarea class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 resize-none min-h-24" id="keterangan" name="keterangan" rows="4" maxlength="5000"
+                <textarea class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 resize-none min-h-24" id="keterangan" name="keterangan" rows="4" maxlength="5000"
                     placeholder="Tambahkan informasi operasional bila diperlukan."><?= esc($schedule['keterangan'] ?? '') ?></textarea>
             </div>
         </div>
@@ -62,7 +62,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <!-- Pelaksanaan & Waktu -->
         <div class="space-y-4 pt-2">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="calendar" class="size-4 text-emerald-500"></i>
+                <i data-lucide="calendar" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Pelaksanaan &amp; Waktu</h2>
             </div>
 
@@ -71,21 +71,21 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tanggal">
                         Tanggal <span class="text-rose-500">*</span>
                     </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="tanggal" name="tanggal" type="date" required
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="tanggal" name="tanggal" type="date" required
                         value="<?= esc($schedule['tanggal'] ?? date('Y-m-d')) ?>" />
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="waktu_mulai">
                         Jam Mulai
                     </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_mulai" name="waktu_mulai" type="time" step="60"
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_mulai" name="waktu_mulai" type="time" step="60"
                         value="<?= esc(substr((string) ($schedule['waktu_mulai'] ?? ''), 0, 5)) ?>" />
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="waktu_selesai">
                         Jam Selesai
                     </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_selesai" name="waktu_selesai" type="time" step="60"
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_selesai" name="waktu_selesai" type="time" step="60"
                         value="<?= esc(substr((string) ($schedule['waktu_selesai'] ?? ''), 0, 5)) ?>" />
                 </div>
             </div>
@@ -96,13 +96,13 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <!-- Lokasi -->
         <div class="space-y-4 pt-2">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="map-pin" class="size-4 text-emerald-500"></i>
+                <i data-lucide="map-pin" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Lokasi <span class="text-rose-500">*</span></h2>
             </div>
 
             <div class="grid grid-cols-2 gap-3 sm:max-w-md">
                 <label class="flex items-center gap-x-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer" for="lokasi-ruangan">
-                    <input class="size-4 text-emerald-600 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700" id="lokasi-ruangan" name="lokasi_mode" type="radio"
+                    <input class="size-4 text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="lokasi-ruangan" name="lokasi_mode" type="radio"
                         value="ruangan" <?= $locationMode === 'ruangan' ? 'checked' : '' ?> />
                     <div class="leading-tight">
                         <span class="block text-xs font-bold text-slate-900 dark:text-white">Ruangan DPRD</span>
@@ -110,7 +110,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                     </div>
                 </label>
                 <label class="flex items-center gap-x-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer" for="lokasi-lainnya">
-                    <input class="size-4 text-emerald-600 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700" id="lokasi-lainnya" name="lokasi_mode" type="radio"
+                    <input class="size-4 text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="lokasi-lainnya" name="lokasi_mode" type="radio"
                         value="lainnya" <?= $locationMode === 'lainnya' ? 'checked' : '' ?> />
                     <div class="leading-tight">
                         <span class="block text-xs font-bold text-slate-900 dark:text-white">Lokasi Lainnya</span>
@@ -120,7 +120,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
             </div>
 
             <div id="ruangan-panel">
-                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="ruangan_id" name="ruangan_id">
+                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="ruangan_id" name="ruangan_id">
                     <option value="">Pilih ruangan rapat</option>
                     <?php foreach ($rooms as $room): ?>
                         <option value="<?= (int) $room['id'] ?>"
@@ -133,7 +133,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
             </div>
 
             <div id="lokasi-lainnya-panel" hidden>
-                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="lokasi_lainnya" name="lokasi_lainnya" type="text" maxlength="255"
+                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="lokasi_lainnya" name="lokasi_lainnya" type="text" maxlength="255"
                     value="<?= esc($otherLocation) ?>" placeholder="Masukkan nama lokasi (misal: Hotel Santika Palu)" />
             </div>
         </div>
@@ -141,13 +141,13 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <!-- Kelompok Peserta -->
         <div class="space-y-4 pt-2">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="users" class="size-4 text-emerald-500"></i>
+                <i data-lucide="users" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Kelompok Peserta</h2>
             </div>
 
             <div class="flex items-center gap-2">
                 <div class="relative flex-1">
-                    <input class="py-2 px-3 ps-9 block w-full border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="target-search" type="search"
+                    <input class="py-2 px-3 ps-9 block w-full border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="target-search" type="search"
                         placeholder="Cari kelompok peserta..." autocomplete="off" aria-label="Cari kelompok peserta" />
                     <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
                         <i data-lucide="search" class="size-3.5 text-slate-400"></i>
@@ -167,7 +167,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                     <label class="target-option flex cursor-pointer items-center gap-2.5 p-3 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border-b sm:border-r border-slate-100 dark:border-slate-800/60"
                         for="<?= esc($targetId, 'attr') ?>"
                         data-name="<?= esc(strtolower((string) $unit['nama']), 'attr') ?>">
-                        <input class="size-4 text-emerald-600 rounded focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700" id="<?= esc($targetId, 'attr') ?>"
+                        <input class="size-4 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="<?= esc($targetId, 'attr') ?>"
                             name="target_unit_rapat[]" type="checkbox" value="<?= $unitId ?>"
                             <?= in_array($unitId, $targetUnitIds, true) ? 'checked' : '' ?>
                             <?= $unavailable ? 'disabled' : '' ?> />
@@ -188,7 +188,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <!-- Bahan dan Streaming -->
         <div class="space-y-4 pt-2">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="share-2" class="size-4 text-emerald-500"></i>
+                <i data-lucide="share-2" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Bahan &amp; Live Streaming</h2>
             </div>
 
@@ -197,11 +197,11 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="materi_url">
                         Tautan Bahan Rapat
                     </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="materi_url" name="materi_url" type="url"
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="materi_url" name="materi_url" type="url"
                         value="<?= esc($schedule['materi_url'] ?? '') ?>" placeholder="https://..." />
                     <div class="mt-2">
                         <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="materi_akses">Akses Bahan</label>
-                        <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="materi_akses" name="materi_akses">
+                        <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="materi_akses" name="materi_akses">
                             <?php foreach (['peserta' => 'Peserta rapat saja', 'anggota' => 'Seluruh anggota DPRD', 'publik' => 'Publik'] as $value => $label): ?>
                                 <option value="<?= $value ?>" <?= ($schedule['materi_akses'] ?? 'peserta') === $value ? 'selected' : '' ?>><?= $label ?></option>
                             <?php endforeach; ?>
@@ -213,11 +213,11 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="stream_url">
                         Tautan Live / Video
                     </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="stream_url" name="stream_url" type="url"
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="stream_url" name="stream_url" type="url"
                         value="<?= esc($schedule['stream_url'] ?? '') ?>" placeholder="https://..." />
                     <div class="mt-2">
                         <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="stream_akses">Akses Streaming</label>
-                        <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="stream_akses" name="stream_akses">
+                        <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="stream_akses" name="stream_akses">
                             <?php foreach (['anggota' => 'Seluruh anggota DPRD', 'peserta' => 'Peserta rapat saja', 'publik' => 'Publik'] as $value => $label): ?>
                                 <option value="<?= $value ?>" <?= ($schedule['stream_akses'] ?? 'anggota') === $value ? 'selected' : '' ?>><?= $label ?></option>
                             <?php endforeach; ?>
@@ -230,11 +230,11 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <!-- Undangan Rapat -->
         <div class="space-y-4 pt-2">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="file-check-2" class="size-4 text-emerald-500"></i>
+                <i data-lucide="file-check-2" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Undangan Rapat (PDF)</h2>
             </div>
 
-            <input class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400 file:bg-slate-50 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-400" id="undangan_file" name="undangan_file" type="file"
+            <input class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400 file:bg-slate-50 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-400" id="undangan_file" name="undangan_file" type="file"
                 accept="application/pdf,.pdf" />
             <p class="text-[11px] text-slate-500 dark:text-slate-400">PDF maksimal 10 MB. Undangan hanya dapat diakses oleh anggota yang sudah login.</p>
 
@@ -253,13 +253,13 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <!-- Publikasi -->
         <div class="space-y-4 pt-2">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="eye" class="size-4 text-emerald-500"></i>
+                <i data-lucide="eye" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Akses Publikasi</h2>
             </div>
 
             <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4"
                 for="is_publik">
-                <input class="size-4 mt-0.5 text-emerald-600 rounded focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700" id="is_publik" name="is_publik" type="checkbox"
+                <input class="size-4 mt-0.5 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="is_publik" name="is_publik" type="checkbox"
                     value="1" <?= (int) ($schedule['is_publik'] ?? 0) === 1 ? 'checked' : '' ?> />
                 <span class="min-w-0">
                     <span class="block text-sm font-bold text-slate-900 dark:text-white">Tampilkan kepada publik</span>
@@ -277,7 +277,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         <a href="<?= base_url('admin/jadwal-umum') ?>" class="py-2.5 px-4 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
             Batal
         </a>
-        <button type="submit" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+        <button type="submit" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
             <i data-lucide="check" class="size-4"></i>
             <?= $isEdit ? 'Simpan Perubahan' : 'Simpan Jadwal' ?>
         </button>

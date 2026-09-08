@@ -15,15 +15,18 @@
     --color-base-200: #f1f5f9;
     --color-base-300: #e2e8f0;
     --color-base-content: #0f172a;
-    --color-primary: #0f172a;
+    --color-primary: #2563eb;
     --color-primary-content: #ffffff;
-    --color-secondary: #b45309;
+    --color-secondary: #0f172a;
     --color-secondary-content: #ffffff;
-    --color-accent: #b45309;
+    --color-accent: #2563eb;
     --color-success: #10b981;
     --color-warning: #f59e0b;
     --color-error: #ef4444;
     --color-info: #0284c7;
+    --color-parliament-navy: #0f172a;
+    --color-parliament-blue: #2563eb;
+    --color-parliament-gold: #f59e0b;
     --radius-box: 1rem;
     --radius-field: 0.5rem;
     --shadow-tailadmin: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
@@ -37,10 +40,10 @@
         --od-fg: #0f172a;
         --od-fg2: #334155;
         --od-muted: #64748b;
-        --od-accent: #b45309;
+        --od-accent: #2563eb;
         --od-accent-on: #ffffff;
-        --od-accent-hover: #92400e;
-        --od-meta: #b45309;
+        --od-accent-hover: #1d4ed8;
+        --od-meta: #2563eb;
         --od-success: #10b981;
         --od-warn: #f59e0b;
         --od-danger: #ef4444;
@@ -72,7 +75,7 @@
         --od-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.08);
         --od-shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
         --od-ring: 0 0 0 1px var(--od-border);
-        --od-focus: 0 0 0 4px rgba(180, 83, 9, 0.16);
+        --od-focus: 0 0 0 4px rgba(37, 99, 235, 0.18);
         --od-ease: cubic-bezier(0.2, 0, 0, 1);
         --od-motion-fast: 120ms;
         --od-motion-base: 200ms;
@@ -86,11 +89,11 @@
         --color-base-200: #020617;
         --color-base-300: #1e293b;
         --color-base-content: #f8fafc;
-        --color-primary: #e2e8f0;
-        --color-primary-content: #0f172a;
-        --color-secondary: #fbbf24;
-        --color-secondary-content: #0f172a;
-        --color-accent: #fbbf24;
+        --color-primary: #3b82f6;
+        --color-primary-content: #ffffff;
+        --color-secondary: #0f172a;
+        --color-secondary-content: #ffffff;
+        --color-accent: #3b82f6;
         --color-success: #10b981;
         --color-warning: #f59e0b;
         --color-error: #ef4444;
@@ -102,17 +105,17 @@
         --od-fg: #f8fafc;
         --od-fg2: #cbd5e1;
         --od-muted: #94a3b8;
-        --od-accent: #fbbf24;
-        --od-accent-on: #0f172a;
-        --od-accent-hover: #f59e0b;
-        --od-meta: #fbbf24;
+        --od-accent: #3b82f6;
+        --od-accent-on: #ffffff;
+        --od-accent-hover: #60a5fa;
+        --od-meta: #3b82f6;
         --od-success: #10b981;
         --od-warn: #f59e0b;
         --od-danger: #ef4444;
         --od-border: #1e293b;
         --od-border-soft: #0f172a;
         --od-border-strong: #334155;
-        --od-focus: 0 0 0 4px rgba(251, 191, 36, 0.22);
+        --od-focus: 0 0 0 4px rgba(59, 130, 246, 0.25);
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -126,6 +129,10 @@
         line-height: var(--od-leading-body);
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
+    }
+    ::selection {
+        background-color: #2563eb;
+        color: #ffffff;
     }
     button, input, select, textarea { font: inherit; }
     button { cursor: pointer; }
@@ -175,13 +182,13 @@
 
 @layer components {
     [data-admin-nav].menu-active {
-        background-color: #0f172a !important;
+        background-color: #2563eb !important;
         color: #ffffff !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.25);
     }
     :where(.dark, [data-theme="dark"]) [data-admin-nav].menu-active {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
+        background-color: #2563eb !important;
+        color: #ffffff !important;
     }
     [data-admin-nav].menu-active i,
     [data-admin-nav].menu-active svg {
@@ -320,12 +327,12 @@
         border-color: var(--color-primary) !important;
     }
     .btn-primary:hover {
-        background-color: #1e293b !important;
-        border-color: #1e293b !important;
+        background-color: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
     }
     :where(.dark, [data-theme="dark"]) .btn-primary:hover {
-        background-color: #f8fafc !important;
-        border-color: #f8fafc !important;
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
     }
     .btn-neutral {
         background-color: #334155 !important;
@@ -2191,16 +2198,16 @@
     }
 
     .notulen-step-circle.active {
-        border-color: #059669;
-        background-color: rgb(16 185 129 / 0.14);
-        color: #059669;
-        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.22);
+        border-color: #2563eb;
+        background-color: rgb(37 99 235 / 0.14);
+        color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22);
     }
     :where(.dark, [data-theme="dark"]) .notulen-step-circle.active {
-        border-color: #10b981;
-        background-color: rgb(16 185 129 / 0.22);
-        color: #34d399;
-        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
+        border-color: #3b82f6;
+        background-color: rgb(59 130 246 / 0.22);
+        color: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
     }
 
     .notulen-step-circle.done {
@@ -2229,7 +2236,7 @@
         width: 48px;
         height: 3px;
         border-radius: 9999px;
-        background: linear-gradient(90deg, #10b981, #059669);
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
         margin-top: 6px;
         animation: notulen-pill-pulse 2s ease-in-out infinite;
     }
@@ -2336,8 +2343,8 @@ div.dt-container .dt-search input {
 
 div.dt-container .dt-search input:focus {
     outline: none !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
 }
 
 .dark div.dt-container .dt-search input {
@@ -2347,8 +2354,8 @@ div.dt-container .dt-search input:focus {
 }
 
 .dark div.dt-container .dt-search input:focus {
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
 }
 
 div.dt-container .dt-col-filter-bar {
@@ -2380,8 +2387,8 @@ div.dt-container .dt-length select {
 div.dt-container .dt-col-filter-select:focus,
 div.dt-container .dt-length select:focus {
     outline: none !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
 }
 
 div.dt-container div.dt-layout-row:last-child {
@@ -2445,7 +2452,7 @@ div.dt-container .dt-paging .dt-paging-button:hover:not(.disabled):not(.current)
 }
 
 div.dt-container .dt-paging .dt-paging-button.current {
-    background-color: #10b981 !important;
+    background-color: #2563eb !important;
     color: #ffffff !important;
     font-weight: 600 !important;
 }
@@ -2485,7 +2492,8 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
     content: "";
     position: absolute;
     inset: 0;
-    background-color: rgb(16 185 129 / 0.38);
+    background: linear-gradient(90deg, #fde047, #facc15, #fde047);
+    opacity: 0.4;
     mask-image: url('../images/motif_batik_palu_band.png');
     mask-repeat: repeat-x;
     mask-size: auto 130%;
@@ -2498,5 +2506,6 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
 
 .dark .admin-sidebar-motif::before,
 [data-theme="dark"] .admin-sidebar-motif::before {
-    background-color: rgb(52 211 153 / 0.28);
+    background: linear-gradient(90deg, #fef08a, #fde047, #fef08a);
+    opacity: 0.18;
 }

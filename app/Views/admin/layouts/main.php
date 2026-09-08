@@ -50,7 +50,7 @@ $flashError = session()->getFlashdata('error');
     <?= $this->renderSection('styles') ?>
 </head>
 
-<body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white">
+<body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
 
     <?= $this->include('admin/layouts/_sidebar') ?>
 
@@ -143,7 +143,7 @@ $flashError = session()->getFlashdata('error');
                         </p>
                     </div>
                     <div class="flex items-center justify-center gap-2">
-                        <button type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer" data-copy-otp data-code="<?= esc($emergencyOtp['code'] ?? '') ?>">
+                        <button type="button" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer" data-copy-otp data-code="<?= esc($emergencyOtp['code'] ?? '') ?>">
                             <i data-lucide="copy" class="size-4"></i>
                             <span id="copy-otp-label">Salin Kode</span>
                         </button>

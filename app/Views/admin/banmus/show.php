@@ -26,7 +26,7 @@ $scheduledCount = count($items) - $projectionCount;
             <p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500 dark:text-slate-400"><?= esc($document['judul']) ?></p>
         </div>
     </div>
-    <button type="button" data-banmus-item-open aria-haspopup="dialog" aria-expanded="false" aria-controls="item_modal" class="py-2 px-3.5 inline-flex items-center justify-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition w-full sm:w-auto cursor-pointer">
+    <button type="button" data-banmus-item-open aria-haspopup="dialog" aria-expanded="false" aria-controls="item_modal" class="py-2 px-3.5 inline-flex items-center justify-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition w-full sm:w-auto cursor-pointer">
         <i data-lucide="plus" class="size-4"></i>
         Tambah Item Agenda
     </button>
@@ -84,7 +84,7 @@ $scheduledCount = count($items) - $projectionCount;
                 <i data-lucide="calendar-plus" class="size-7"></i>
             </span>
             <p class="mt-3 font-semibold text-slate-800 dark:text-slate-200">Belum ada item agenda dalam SK ini.</p>
-            <button type="button" data-banmus-item-open aria-haspopup="dialog" aria-expanded="false" aria-controls="item_modal" class="mt-4 py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+            <button type="button" data-banmus-item-open aria-haspopup="dialog" aria-expanded="false" aria-controls="item_modal" class="mt-4 py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                 <i data-lucide="plus" class="size-4"></i>
                 Tambah Item Agenda
             </button>
@@ -259,7 +259,7 @@ $scheduledCount = count($items) - $projectionCount;
                                                 type="button"
                                                 data-banmus-item-schedule
                                                 data-item="<?= esc(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>"
-                                                class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-emerald-300/80 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-400 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white dark:hover:border-emerald-600 shadow-2xs transition cursor-pointer"
+                                                class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-blue-200/80 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 shadow-2xs transition cursor-pointer"
                                                 title="Tetapkan tanggal dan ruangan rapat">
                                                 <i data-lucide="calendar-plus" class="size-3.5"></i>
                                                 Jadwalkan
@@ -278,7 +278,7 @@ $scheduledCount = count($items) - $projectionCount;
 
                                         <a
                                             href="<?= base_url('admin/notulen?jadwal_type=banmus&jadwal_id=' . (int) $item['id']) ?>"
-                                            class="p-1.5 inline-flex items-center justify-center rounded-lg border border-emerald-200/80 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white dark:hover:border-emerald-600 shadow-2xs transition"
+                                            class="p-1.5 inline-flex items-center justify-center rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 hover:border-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 shadow-2xs transition"
                                             title="Buka / Buat Notulensi AI">
                                             <i data-lucide="mic" class="size-4"></i>
                                         </a>
@@ -319,7 +319,7 @@ $scheduledCount = count($items) - $projectionCount;
             <!-- Header Dialog -->
             <div class="flex shrink-0 items-center justify-between border-b border-slate-100 dark:border-slate-800 px-5 py-4">
                 <div class="flex items-center gap-2.5">
-                    <div class="flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                    <div class="flex size-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
                         <i data-lucide="calendar-plus" class="size-5"></i>
                     </div>
                     <h3 class="text-base font-bold text-slate-900 dark:text-white" id="modal_title">
@@ -396,7 +396,7 @@ $scheduledCount = count($items) - $projectionCount;
                         <!-- Informasi Agenda Dasar -->
                         <div id="banmus-info-agenda-card" class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
                             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                <i data-lucide="file-text" class="size-4 text-emerald-500"></i>
+                                <i data-lucide="file-text" class="size-4 text-blue-500"></i>
                                 Informasi Agenda SK
                             </h4>
 
@@ -404,7 +404,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_agenda" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Uraian Agenda SK <span class="text-rose-500">*</span>
                                 </label>
-                                <textarea class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 min-h-24 resize-none" id="field_agenda" name="agenda" rows="4" required
+                                <textarea class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 min-h-24 resize-none" id="field_agenda" name="agenda" rows="4" required
                                     placeholder="Tuliskan uraian agenda sesuai SK Banmus"></textarea>
                             </div>
 
@@ -415,7 +415,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="flex items-center gap-x-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer">
                                         <input
-                                            class="size-4 text-emerald-600 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
+                                            class="size-4 text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700"
                                             id="field_jenis_agenda_rapat"
                                             name="jenis_agenda"
                                             type="radio"
@@ -424,12 +424,12 @@ $scheduledCount = count($items) - $projectionCount;
                                             required />
                                         <div class="leading-tight">
                                             <span class="block text-xs font-bold text-slate-900 dark:text-white">Rapat</span>
-                                            <span class="block text-[10px] text-slate-400">Masuk Agenda Rapat</span>
+                                             <span class="block text-[10px] text-slate-400">Masuk Agenda Rapat</span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-x-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer">
                                         <input
-                                            class="size-4 text-emerald-600 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
+                                            class="size-4 text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700"
                                             id="field_jenis_agenda_non_rapat"
                                             name="jenis_agenda"
                                             type="radio"
@@ -447,7 +447,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_periode_label" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Periode SK
                                 </label>
-                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_periode_label" name="periode_label" type="text"
+                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_periode_label" name="periode_label" type="text"
                                     placeholder="Contoh: Juni–Juli 2026 atau Minggu ke-2 Juli" />
                             </div>
 
@@ -455,14 +455,14 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_catatan" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Catatan
                                 </label>
-                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_catatan" name="catatan" type="text" placeholder="Catatan tambahan untuk item ini" />
+                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_catatan" name="catatan" type="text" placeholder="Catatan tambahan untuk item ini" />
                             </div>
                         </div>
 
                         <!-- Pelaksanaan, Ruangan & Peserta (Dinamis) -->
                         <div id="banmus-schedule-fields" class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
                             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                <i data-lucide="calendar-cog" class="size-4 text-emerald-500"></i>
+                                <i data-lucide="calendar-cog" class="size-4 text-blue-500"></i>
                                 Pelaksanaan &amp; Peserta
                             </h4>
 
@@ -471,19 +471,19 @@ $scheduledCount = count($items) - $projectionCount;
                                     <label for="field_tanggal" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                         Tanggal Rapat
                                     </label>
-                                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="field_tanggal" name="tanggal" type="date" />
+                                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="field_tanggal" name="tanggal" type="date" />
                                 </div>
                                 <div>
                                     <label for="field_jam_mulai" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                         Jam Mulai
                                     </label>
-                                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_jam_mulai" name="jam_mulai" type="time" />
+                                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_jam_mulai" name="jam_mulai" type="time" />
                                 </div>
                                 <div>
                                     <label for="field_jam_selesai" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                         Jam Selesai
                                     </label>
-                                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_jam_selesai" name="jam_selesai" type="time" />
+                                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_jam_selesai" name="jam_selesai" type="time" />
                                 </div>
                             </div>
 
@@ -491,7 +491,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_ruangan_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Ruangan Rapat
                                 </label>
-                                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_ruangan_id" name="ruangan_id">
+                                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_ruangan_id" name="ruangan_id">
                                     <option value="">Pilih ruangan</option>
                                     <?php foreach ($rooms as $room): ?>
                                         <option value="<?= $room['id'] ?>"><?= esc($room['name']) ?></option>
@@ -504,7 +504,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_lokasi_lainnya" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Nama Lokasi Lainnya
                                 </label>
-                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_lokasi_lainnya" name="lokasi_lainnya" type="text" placeholder="Contoh: Hotel Santika Palu" />
+                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_lokasi_lainnya" name="lokasi_lainnya" type="text" placeholder="Contoh: Hotel Santika Palu" />
                             </div>
 
                             <div id="banmus-units-wrapper">
@@ -514,7 +514,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <div class="grid max-h-36 grid-cols-2 gap-x-3 gap-y-1.5 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
                                     <?php foreach ($units as $unit): ?>
                                         <label class="flex items-center gap-x-2 py-0.5 cursor-pointer">
-                                            <input type="checkbox" name="unit_ids[]" value="<?= $unit['id'] ?>" class="size-3.5 text-emerald-600 rounded focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 unit-checkbox" />
+                                            <input type="checkbox" name="unit_ids[]" value="<?= $unit['id'] ?>" class="size-3.5 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 unit-checkbox" />
                                             <span class="text-xs text-slate-700 dark:text-slate-300 truncate"><?= esc($unit['nama']) ?></span>
                                         </label>
                                     <?php endforeach; ?>
@@ -526,7 +526,7 @@ $scheduledCount = count($items) - $projectionCount;
                     <!-- Bagian Publikasi & Bahan -->
                     <div id="banmus-publication-fields" class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                            <i data-lucide="eye" class="size-4 text-emerald-500"></i>
+                            <i data-lucide="eye" class="size-4 text-blue-500"></i>
                             Publikasi &amp; Tautan Dokumen
                         </h4>
 
@@ -535,7 +535,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_publikasi" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Akses Publikasi Agenda
                                 </label>
-                                <select class="py-2.5 px-3.5 pe-9 block w-full sm:max-w-xs border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_publikasi" name="publikasi">
+                                <select class="py-2.5 px-3.5 pe-9 block w-full sm:max-w-xs border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_publikasi" name="publikasi">
                                     <option value="internal">Internal DPRD Saja</option>
                                     <option value="publik" selected>Publik</option>
                                 </select>
@@ -545,10 +545,10 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_materi_url" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Tautan Materi / Bahan Rapat
                                 </label>
-                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_materi_url" name="materi_url" type="url" placeholder="https://..." />
+                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_materi_url" name="materi_url" type="url" placeholder="https://..." />
                                 <div class="mt-2">
                                     <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="field_materi_akses">Akses Materi</label>
-                                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_materi_akses" name="materi_akses">
+                                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_materi_akses" name="materi_akses">
                                         <option value="peserta">Peserta rapat saja</option>
                                         <option value="anggota">Seluruh anggota DPRD</option>
                                         <option value="publik" selected>Publik</option>
@@ -560,10 +560,10 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_stream_url" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Tautan Live Streaming
                                 </label>
-                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_stream_url" name="stream_url" type="url" placeholder="https://..." />
+                                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_stream_url" name="stream_url" type="url" placeholder="https://..." />
                                 <div class="mt-2">
                                     <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1" for="field_stream_akses">Akses Streaming</label>
-                                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_stream_akses" name="stream_akses">
+                                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_stream_akses" name="stream_akses">
                                         <option value="anggota">Seluruh anggota DPRD</option>
                                         <option value="peserta">Peserta rapat saja</option>
                                         <option value="publik" selected>Publik</option>
@@ -575,7 +575,7 @@ $scheduledCount = count($items) - $projectionCount;
                                 <label for="field_undangan_file" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                     Surat Undangan Rapat (PDF)
                                 </label>
-                                <input class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400 file:bg-slate-50 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-400" id="field_undangan_file" name="undangan_file" type="file"
+                                <input class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400 file:bg-slate-50 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-400" id="field_undangan_file" name="undangan_file" type="file"
                                     accept="application/pdf,.pdf" />
                                 <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">PDF maksimal 10 MB. Hanya dapat diakses oleh anggota DPRD yang sudah login.</p>
                                 <div class="flex items-center gap-2 p-3 mt-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 hidden" id="field_undangan_existing">
@@ -596,7 +596,7 @@ $scheduledCount = count($items) - $projectionCount;
                     <button type="button" data-banmus-item-close class="py-2 px-3.5 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition cursor-pointer">
                         Batal
                     </button>
-                    <button type="submit" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+                    <button type="submit" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                         <i data-lucide="save" class="size-4"></i>
                         <span>Simpan Item Agenda</span>
                     </button>

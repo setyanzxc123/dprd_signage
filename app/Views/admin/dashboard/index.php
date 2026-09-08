@@ -15,7 +15,7 @@
             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Agenda Hari Ini</p>
             <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white"><?= $stats['rapat_hari_ini'] ?></p>
         </div>
-        <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+        <div class="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
             <i data-lucide="calendar-check" class="size-5"></i>
         </div>
     </div>
@@ -163,7 +163,7 @@
                          data-dashboard-panel="<?= esc($day['date']) ?>"
                          <?= $isActive ? '' : 'hidden' ?>>
                     <div class="selected-date-card flex items-center gap-3 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 mb-3">
-                        <div class="selected-date-number flex size-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-lg"><?= esc((int) $day['date_num']) ?></div>
+                        <div class="selected-date-number flex size-10 items-center justify-center rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 font-black text-lg"><?= esc((int) $day['date_num']) ?></div>
                         <div>
                             <h3 class="text-xs font-bold text-slate-900 dark:text-white"><?= esc($day['day_name']) ?></h3>
                             <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400"><?= esc($day['month']) ?> &bull; <?= (int) $day['count'] ?> agenda</p>
@@ -200,7 +200,7 @@
                                         </span>
                                     </div>
                                     <div class="agenda-content">
-                                        <h3 class="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition leading-snug"><?= esc($m['title']) ?></h3>
+                                        <h3 class="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition leading-snug"><?= esc($m['title']) ?></h3>
                                     </div>
                                 </a>
                             </li>

@@ -60,7 +60,7 @@ if ($job['jadwal_type'] === 'banmus') {
                     </span>
                     <form method="post" action="<?= base_url('admin/notulen/retry/' . $job['id']) ?>">
                         <?= csrf_field() ?>
-                        <button type="submit" class="py-1 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+                        <button type="submit" class="py-1 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                             <i data-lucide="play" class="size-3.5 fill-current"></i>
                             Lanjutkan Proses
                         </button>
@@ -106,17 +106,17 @@ if ($job['jadwal_type'] === 'banmus') {
         </div>
 
         <!-- Live Progress Bar Section -->
-        <div id="live_progress_panel" class="<?= ($isInProgress || $job['status'] === 'queued') ? '' : 'hidden ' ?>rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-emerald-200 dark:border-emerald-800/60 p-3.5 space-y-2">
+        <div id="live_progress_panel" class="<?= ($isInProgress || $job['status'] === 'queued') ? '' : 'hidden ' ?>rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-blue-200 dark:border-blue-800/60 p-3.5 space-y-2">
             <div class="flex items-center justify-between text-xs font-semibold">
-                <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                     <span class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent rounded-full" role="status" aria-label="loading"></span>
                     <span id="live_status_title"><?= esc($job['current_step'] ?? 'Memproses rekaman audio...') ?></span>
                 </div>
-                <span id="live_progress_percent" class="font-mono text-emerald-600 dark:text-emerald-400"><?= (int) ($job['progress_percent'] ?? 0) ?>%</span>
+                <span id="live_progress_percent" class="font-mono text-blue-600 dark:text-blue-400"><?= (int) ($job['progress_percent'] ?? 0) ?>%</span>
             </div>
             <div class="flex w-full h-2 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700"
                 role="progressbar" aria-valuenow="<?= (int) ($job['progress_percent'] ?? 0) ?>" aria-valuemin="0" aria-valuemax="100" aria-label="Kemajuan pemrosesan AI">
-                <div id="live_progress_bar" class="flex flex-col justify-center overflow-hidden bg-emerald-600 text-xs text-white text-center whitespace-nowrap transition-all duration-500" style="width: <?= (int) ($job['progress_percent'] ?? 0) ?>%"></div>
+                <div id="live_progress_bar" class="flex flex-col justify-center overflow-hidden bg-blue-600 text-xs text-white text-center whitespace-nowrap transition-all duration-500" style="width: <?= (int) ($job['progress_percent'] ?? 0) ?>%"></div>
             </div>
             <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
                 <div class="flex items-center gap-2">
@@ -537,7 +537,7 @@ if ($job['jadwal_type'] === 'banmus') {
 
                             <form method="post" action="<?= base_url('admin/notulen/finalize/' . $minutes['id']) ?>" onsubmit="return confirm('Sahkan dan finalisasi naskah risalah rapat ini? Setelah difinalisasi, risalah berstatus resmi dan siap diakses anggota.');">
                                 <?= csrf_field() ?>
-                                <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+                                <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                                     <i data-lucide="check-check" class="size-3.5"></i>
                                     Sahkan / Finalisasi
                                 </button>
@@ -679,7 +679,7 @@ if ($job['jadwal_type'] === 'banmus') {
                                 <button type="button" id="btn_cancel_edit_risalah" class="py-2 px-3 inline-flex items-center text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition cursor-pointer">
                                     Tutup / Batal
                                 </button>
-                                <button type="submit" id="btn_save_draft" class="py-2 px-3 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+                                <button type="submit" id="btn_save_draft" class="py-2 px-3 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                                     <i data-lucide="save" class="size-4"></i>
                                     Simpan Perubahan
                                 </button>

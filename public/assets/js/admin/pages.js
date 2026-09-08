@@ -240,10 +240,10 @@
             if (!option) return;
 
             option.classList.toggle('is-selected', input.checked);
-            option.classList.toggle('bg-emerald-50', input.checked);
-            option.classList.toggle('dark:bg-emerald-950/30', input.checked);
-            option.classList.toggle('text-emerald-700', input.checked);
-            option.classList.toggle('dark:text-emerald-300', input.checked);
+            option.classList.toggle('bg-blue-50', input.checked);
+            option.classList.toggle('dark:bg-blue-950/30', input.checked);
+            option.classList.toggle('text-blue-700', input.checked);
+            option.classList.toggle('dark:text-blue-300', input.checked);
             option.classList.toggle('font-semibold', input.checked);
         };
 
@@ -1099,10 +1099,10 @@
             allCheckboxes.forEach(function(cb) {
                 const src = cb.closest('.anggota-source');
                 if (src) {
-                    src.classList.toggle('bg-emerald-50/70', cb.checked);
-                    src.classList.toggle('dark:bg-emerald-950/30', cb.checked);
-                    src.classList.toggle('text-emerald-700', cb.checked);
-                    src.classList.toggle('dark:text-emerald-300', cb.checked);
+                    src.classList.toggle('bg-blue-50/70', cb.checked);
+                    src.classList.toggle('dark:bg-blue-950/30', cb.checked);
+                    src.classList.toggle('text-blue-700', cb.checked);
+                    src.classList.toggle('dark:text-blue-300', cb.checked);
                     src.classList.toggle('font-semibold', cb.checked);
                 }
             });
@@ -1144,7 +1144,7 @@
                 el.setAttribute('data-id', id);
 
                 const avatar = document.createElement('span');
-                avatar.className = 'inline-flex items-center justify-center rounded-lg shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 size-7 text-xs font-bold';
+                avatar.className = 'inline-flex items-center justify-center rounded-lg shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 size-7 text-xs font-bold';
                 avatar.textContent = initial;
 
                 const memberContent = document.createElement('div');
@@ -2018,10 +2018,10 @@
                 btnNone.setAttribute('aria-selected', isSelected ? 'true' : 'false');
                 btnNone.className = 'w-full flex items-center justify-between p-2.5 rounded-lg text-xs transition cursor-pointer text-left min-w-0 border outline-none focus:outline-none focus-visible:outline-none ' +
                     (isSelected
-                        ? 'bg-emerald-50/80 border-emerald-500 text-emerald-900 dark:bg-emerald-950/50 dark:border-emerald-500 dark:text-emerald-200 font-semibold'
+                        ? 'bg-blue-50/80 border-blue-500 text-blue-900 dark:bg-blue-950/50 dark:border-blue-500 dark:text-blue-200 font-semibold'
                         : 'bg-slate-50/80 border-dashed border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 dark:bg-slate-900/60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900');
                 btnNone.innerHTML = '<span class="truncate min-w-0 flex-1 font-medium">— Tanpa Relasi Agenda —</span>' +
-                    (isSelected ? '<span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 shrink-0 bg-emerald-100/80 dark:bg-emerald-900/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">Terpilih</span>' : '');
+                    (isSelected ? '<span class="text-[11px] font-semibold text-blue-700 dark:text-blue-300 shrink-0 bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded border border-blue-300 dark:border-blue-700">Terpilih</span>' : '');
                 btnNone.addEventListener('click', (e) => {
                     e.preventDefault();
                     selectAgendaItem('', '', '— Tanpa Relasi Agenda —');
@@ -2048,21 +2048,21 @@
                 btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
                 btn.className = 'w-full flex flex-col items-start p-2.5 rounded-lg text-left transition cursor-pointer min-w-0 border outline-none focus:outline-none focus-visible:outline-none ' +
                     (isSelected
-                        ? 'bg-emerald-50/80 border-emerald-500 dark:bg-emerald-950/40 dark:border-emerald-500'
-                        : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100/80 hover:border-emerald-400 dark:bg-slate-900/60 dark:border-slate-700/80 dark:hover:bg-slate-900 dark:hover:border-slate-600');
+                        ? 'bg-blue-50/80 border-blue-500 dark:bg-blue-950/40 dark:border-blue-500'
+                        : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100/80 hover:border-blue-400 dark:bg-slate-900/60 dark:border-slate-700/80 dark:hover:bg-slate-900 dark:hover:border-slate-600');
 
                 const headerRow = document.createElement('div');
                 headerRow.className = 'flex items-start justify-between gap-2 w-full min-w-0 mb-1';
 
                 const titleDiv = document.createElement('div');
                 titleDiv.className = 'text-xs font-semibold leading-snug break-words flex-1 min-w-0 ' +
-                    (isSelected ? 'text-emerald-900 dark:text-emerald-200 font-bold' : 'text-slate-900 dark:text-slate-100');
+                    (isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-slate-900 dark:text-slate-100');
                 titleDiv.textContent = item.title;
                 headerRow.appendChild(titleDiv);
 
                 if (isSelected) {
                     const selBadge = document.createElement('span');
-                    selBadge.className = 'text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 shrink-0 bg-emerald-100/80 dark:bg-emerald-900/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700';
+                    selBadge.className = 'text-[11px] font-semibold text-blue-700 dark:text-blue-300 shrink-0 bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded border border-blue-300 dark:border-blue-700';
                     selBadge.textContent = 'Terpilih';
                     headerRow.appendChild(selBadge);
                 }

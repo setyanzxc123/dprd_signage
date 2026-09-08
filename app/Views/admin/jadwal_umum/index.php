@@ -6,7 +6,7 @@
     <div>
         <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Jadwal Umum</h1>
     </div>
-    <a href="<?= base_url('admin/jadwal-umum/create') ?>" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition">
+    <a href="<?= base_url('admin/jadwal-umum/create') ?>" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition">
         <i data-lucide="plus" class="size-4"></i>
         Tambah Jadwal
     </a>
@@ -15,7 +15,7 @@
 <section class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
     <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
         <div class="flex items-center gap-2.5">
-            <div class="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+            <div class="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
                 <i data-lucide="calendar-range" class="size-4"></i>
             </div>
             <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Daftar Jadwal Umum</h2>
@@ -105,7 +105,7 @@
                                         <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
-                                    <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-emerald-200/80 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white dark:hover:border-emerald-600 shadow-2xs transition" title="Buka / Buat Notulensi AI" aria-label="Notulensi AI <?= esc($schedule['judul']) ?>">
+                                    <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 hover:border-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 shadow-2xs transition" title="Buka / Buat Notulensi AI" aria-label="Notulensi AI <?= esc($schedule['judul']) ?>">
                                         <i data-lucide="mic" class="size-4"></i>
                                     </a>
                                     <form method="post" action="<?= base_url("admin/jadwal-umum/{$schedule['id']}/delete") ?>"

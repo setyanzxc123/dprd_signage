@@ -26,7 +26,7 @@
         <!-- Informasi Kelompok -->
         <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-4">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="users-round" class="size-4 text-emerald-500"></i>
+                <i data-lucide="users-round" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Informasi Kelompok</h2>
             </div>
 
@@ -35,7 +35,7 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="nama">
                         Nama Kelompok <span class="text-rose-500">*</span>
                     </label>
-                    <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="nama" name="nama"
+                    <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="nama" name="nama"
                         value="<?= esc($unitNama) ?>"
                         placeholder="Contoh: Komisi I, Pansus LKPJ, atau Bapemperda"
                         required />
@@ -47,7 +47,7 @@
                         <span class="text-xs font-semibold text-slate-800 dark:text-slate-200" id="aktif-label">
                             <?= ($unit['aktif'] ?? 1) ? 'Aktif' : 'Nonaktif' ?>
                         </span>
-                        <input class="size-4 text-emerald-600 rounded focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700" type="checkbox"
+                        <input class="size-4 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" type="checkbox"
                             id="aktif" name="aktif" value="1"
                             <?= ($unit['aktif'] ?? 1) ? 'checked' : '' ?> />
                     </label>
@@ -59,10 +59,10 @@
         <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-4">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center gap-2">
-                    <i data-lucide="contact-round" class="size-4 text-emerald-500"></i>
+                    <i data-lucide="contact-round" class="size-4 text-blue-500"></i>
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Anggota Kelompok</h2>
                 </div>
-                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400" id="member-count-badge">
+                <span class="text-xs font-semibold text-blue-600 dark:text-blue-400" id="member-count-badge">
                     <?= count($selectedAnggotaIds) ?> dipilih
                 </span>
             </div>
@@ -85,7 +85,7 @@
                         </div>
                         <div class="p-2 border-b border-slate-100 dark:border-slate-800">
                             <div class="relative">
-                                <input type="text" class="py-1.5 px-2.5 ps-8 block w-full border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="source-search"
+                                <input type="text" class="py-1.5 px-2.5 ps-8 block w-full border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="source-search"
                                     placeholder="Cari nama, komisi, jabatan..." autocomplete="off" aria-label="Cari anggota" />
                                 <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-2.5">
                                     <i data-lucide="search" class="size-3.5 text-slate-400"></i>
@@ -99,13 +99,13 @@
                                 $inputId = 'src-' . $memberId;
                                 $komisiLabel = $member['komisi'] ?: 'Tanpa komisi';
                             ?>
-                                <label class="flex items-center gap-2.5 px-3 py-2.5 anggota-source min-h-[44px] hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition <?= $checked ? 'bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 font-semibold' : '' ?>"
+                                <label class="flex items-center gap-2.5 px-3 py-2.5 anggota-source min-h-[44px] hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition <?= $checked ? 'bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-semibold' : '' ?>"
                                     for="<?= esc($inputId, 'attr') ?>"
                                     data-id="<?= $memberId ?>"
                                     data-name="<?= esc(strtolower($member['name']), 'attr') ?>"
                                     data-komisi="<?= esc(strtolower($komisiLabel), 'attr') ?>"
                                     data-jabatan="<?= esc(strtolower($member['jabatan'] ?? ''), 'attr') ?>">
-                                    <input class="size-4 text-emerald-600 rounded focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 source-checkbox"
+                                    <input class="size-4 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 source-checkbox"
                                         type="checkbox"
                                         id="<?= esc($inputId, 'attr') ?>"
                                         name="anggota_unit_rapat[]"
@@ -127,7 +127,7 @@
                     <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 flex flex-col h-full">
                         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/40 px-3.5 py-2.5">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Terpilih</span>
-                            <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400" id="target-count"><?= count($selectedAnggotaIds) ?></span>
+                            <span class="text-xs font-semibold text-blue-600 dark:text-blue-400" id="target-count"><?= count($selectedAnggotaIds) ?></span>
                         </div>
                         <div class="overflow-y-auto max-h-84 md:h-[326px] divide-y divide-slate-100 dark:divide-slate-800" id="target-list">
                             <?php
@@ -143,7 +143,7 @@
                             ?>
                                 <div class="flex items-center gap-2.5 px-3 py-2 transfer-target-item min-h-[44px]"
                                     id="target-<?= $memberId ?>" data-id="<?= $memberId ?>">
-                                    <span class="inline-flex items-center justify-center rounded-lg shrink-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 size-7 text-xs font-bold">
+                                    <span class="inline-flex items-center justify-center rounded-lg shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 size-7 text-xs font-bold">
                                         <?= esc($initial) ?>
                                     </span>
                                     <div class="flex-1 min-w-0">
@@ -179,7 +179,7 @@
         <a href="<?= base_url('admin/unit-rapat') ?>" class="py-2.5 px-4 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
             Batal
         </a>
-        <button type="submit" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+        <button type="submit" class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
             <i data-lucide="check" class="size-4"></i>
             <?= $unit ? 'Simpan Perubahan' : 'Simpan Kelompok' ?>
         </button>

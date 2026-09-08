@@ -54,13 +54,13 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                         </li>
                     <?php else: ?>
                         <li class="inline-flex items-center">
-                            <a href="<?= base_url('admin/dashboard') ?>" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition">Dashboard</a>
+                            <a href="<?= base_url('admin/dashboard') ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</a>
                         </li>
                         <?php foreach ($breadcrumbs as $crumb): ?>
                             <li class="inline-flex items-center gap-1.5">
                                 <svg class="size-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                                 <?php if (!empty($crumb['url'])): ?>
-                                    <a href="<?= base_url($crumb['url']) ?>" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition"><?= esc($crumb['label']) ?></a>
+                                    <a href="<?= base_url($crumb['url']) ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition"><?= esc($crumb['label']) ?></a>
                                 <?php else: ?>
                                     <span><?= esc($crumb['label']) ?></span>
                                 <?php endif; ?>
@@ -83,7 +83,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
             </label>
 
             <a href="<?= base_url('admin/profile') ?>" class="hidden sm:inline-flex items-center gap-x-2.5 py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Buka profil admin">
-                <span class="grid size-7 place-items-center rounded-lg bg-emerald-500/15 text-xs font-black text-emerald-600 dark:text-emerald-400"><?= esc($userInit) ?></span>
+                <span class="grid size-7 place-items-center rounded-lg bg-blue-500/15 text-xs font-black text-blue-600 dark:text-blue-400"><?= esc($userInit) ?></span>
                 <span class="hidden text-left lg:block leading-tight">
                     <strong class="block max-w-32 truncate text-xs font-bold text-slate-800 dark:text-slate-200"><?= esc($userName) ?></strong>
                     <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400"><?= esc($roleLabel) ?></span>

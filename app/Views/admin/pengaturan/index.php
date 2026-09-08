@@ -21,7 +21,7 @@
     <section class="bg-white border border-slate-200 rounded-xl shadow-sm dark:bg-slate-900 dark:border-slate-800 min-w-0 max-w-full">
         <div class="p-4 sm:p-5 min-w-0 space-y-5">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <i data-lucide="tv" class="size-5 text-emerald-600 dark:text-emerald-400"></i>
+                <i data-lucide="tv" class="size-5 text-blue-600 dark:text-blue-400"></i>
                 Pengaturan Signage
             </h2>
 
@@ -29,13 +29,13 @@
                 <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/50 min-w-0">
                     <span class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">Tema Layar</span>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
-                            <input type="radio" name="tema_signage" value="dark" class="shrink-0 border-slate-300 rounded-full text-emerald-600 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-emerald-500 dark:checked:border-emerald-500"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="tema_signage" value="dark" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['tema_signage'] === 'dark' ? 'checked' : '' ?> />
                             <span>Dark</span>
                         </label>
-                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
-                            <input type="radio" name="tema_signage" value="light" class="shrink-0 border-slate-300 rounded-full text-emerald-600 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-emerald-500 dark:checked:border-emerald-500"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="tema_signage" value="light" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['tema_signage'] === 'light' ? 'checked' : '' ?> />
                             <span>Light</span>
                         </label>
@@ -45,13 +45,13 @@
                 <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/50 min-w-0">
                     <span class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">Media Tampilan</span>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
-                            <input type="radio" name="media_mode" value="video" class="shrink-0 border-slate-300 rounded-full text-emerald-600 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-emerald-500 dark:checked:border-emerald-500"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="media_mode" value="video" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['media_mode'] === 'video' ? 'checked' : '' ?> />
                             <span>Video</span>
                         </label>
-                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
-                            <input type="radio" name="media_mode" value="image" class="shrink-0 border-slate-300 rounded-full text-emerald-600 focus:ring-emerald-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-emerald-500 dark:checked:border-emerald-500"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="media_mode" value="image" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['media_mode'] === 'image' ? 'checked' : '' ?> />
                             <span>Gambar</span>
                         </label>
@@ -62,7 +62,7 @@
             <div class="grid min-w-0 grid-cols-12 gap-4 border-t border-slate-200 dark:border-slate-800 pt-4">
                 <div class="col-span-12 min-w-0 lg:col-span-8">
                     <label for="media_file" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Upload Media</label>
-                    <input type="file" class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 file:bg-slate-100 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-300 cursor-pointer" id="media_file" name="media_file"
+                    <input type="file" class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 file:bg-slate-100 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-300 cursor-pointer" id="media_file" name="media_file"
                         accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
                     <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB. File dikirim bertahap agar lebih stabil.</p>
                 </div>
@@ -89,12 +89,12 @@
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Running Text</span>
                     <label for="running_text_aktif" class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="running_text_aktif" name="running_text_aktif" value="1" <?= $settings['running_text_aktif'] ? 'checked' : '' ?> class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-300 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:size-5 after:transition-all peer-checked:bg-emerald-600 dark:peer-checked:bg-emerald-500"></div>
+                        <div class="w-11 h-6 bg-slate-300 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:size-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
                         <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 ms-2.5 select-none">Aktif</span>
                     </label>
                 </div>
 
-                <textarea class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500" id="running_text" name="running_text" rows="2"
+                <textarea class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500" id="running_text" name="running_text" rows="2"
                     placeholder="Contoh: Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah."><?= esc($settings['running_text']) ?></textarea>
 
                 <div class="mt-3 min-w-0 max-w-full overflow-hidden rounded-xl bg-slate-950 p-3 text-slate-100 border border-slate-800">
@@ -115,11 +115,11 @@
         <div class="p-4 sm:p-5 min-w-0 space-y-5">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                    <i data-lucide="message-square" class="size-5 text-emerald-600 dark:text-emerald-400"></i>
+                    <i data-lucide="message-square" class="size-5 text-blue-600 dark:text-blue-400"></i>
                     Integrasi WhatsApp OTP Gateway
                 </h2>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400" id="wa-provider-badge">
+                    <span class="text-xs font-semibold text-blue-600 dark:text-blue-400" id="wa-provider-badge">
                         Provider: <?= esc(strtoupper($otpConfig->provider ?? 'HYBRID')) ?>
                     </span>
                     <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-2.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xs hover:bg-slate-50 focus:outline-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 transition" id="btn-refresh-wa-status" title="Periksa status koneksi WhatsApp">
@@ -182,14 +182,14 @@
                     </div>
                     <span id="settings-upload-percent">0%</span>
                 </div>
-                <progress class="w-full h-2 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:bg-emerald-600 [&::-moz-progress-bar]:bg-emerald-600 dark:[&::-webkit-progress-bar]:bg-slate-700 dark:[&::-webkit-progress-value]:bg-emerald-500" id="settings-upload-bar" value="0" max="100"></progress>
+                <progress class="w-full h-2 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600 dark:[&::-webkit-progress-bar]:bg-slate-700 dark:[&::-webkit-progress-value]:bg-blue-500" id="settings-upload-bar" value="0" max="100"></progress>
                 <div class="mt-1 text-right text-xs font-medium text-sky-700 dark:text-sky-400 opacity-80" id="settings-upload-speed" hidden>
                     Mengukur kecepatan...
                 </div>
             </div>
         </div>
 
-        <button type="submit" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 focus:outline-hidden focus:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none w-full sm:w-auto shadow-xs" id="settings-submit-button">
+        <button type="submit" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none w-full sm:w-auto shadow-xs" id="settings-submit-button">
             <span class="animate-spin inline-block size-4 border-2 border-current border-t-transparent text-white rounded-full" id="settings-submit-spinner" hidden aria-hidden="true"></span>
             <i data-lucide="save" class="size-4" id="settings-submit-icon"></i>
             <span id="settings-submit-label">Simpan Pengaturan</span>
@@ -203,7 +203,7 @@
         <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
             <div class="flex justify-between items-center py-3.5 px-4 sm:px-6 border-b border-slate-200 dark:border-slate-800">
                 <h3 id="modal_wa_pairing_label" class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                    <i data-lucide="smartphone" class="size-5 text-emerald-600 dark:text-emerald-400"></i>
+                    <i data-lucide="smartphone" class="size-5 text-blue-600 dark:text-blue-400"></i>
                     Tautkan WhatsApp Gateway
                 </h3>
                 <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-slate-100 text-slate-800 hover:bg-slate-200 focus:outline-hidden focus:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400" data-hs-overlay="#modal_wa_pairing">
@@ -229,7 +229,7 @@
 
                     <div class="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-xl min-h-56 dark:bg-slate-950/50 dark:border-slate-800">
                         <div id="wa-qr-loading" class="flex flex-col items-center gap-2">
-                            <span class="animate-spin inline-block size-6 border-2 border-current border-t-transparent text-emerald-600 rounded-full dark:text-emerald-400"></span>
+                            <span class="animate-spin inline-block size-6 border-2 border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-400"></span>
                             <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Mengambil QR Code dari Gateway...</span>
                         </div>
                         <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="max-w-48 max-h-48 rounded-lg shadow-xs bg-white p-2 border border-slate-200 dark:border-slate-700" hidden />
@@ -252,18 +252,18 @@
                     </p>
 
                     <div class="space-y-2">
-                        <input type="tel" id="input-pair-phone" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm font-mono placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
+                        <input type="tel" id="input-pair-phone" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm font-mono placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
                             placeholder="Contoh: 081234567890" aria-label="Nomor WhatsApp untuk pairing code" />
-                        <button type="button" class="py-2.5 px-4 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none shadow-xs" id="btn-request-pair-code">
+                        <button type="button" class="py-2.5 px-4 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none shadow-xs" id="btn-request-pair-code">
                             <span class="animate-spin inline-block size-4 border-2 border-current border-t-transparent text-white rounded-full" id="spinner-pair-code" hidden></span>
                             <i data-lucide="send" class="size-4" id="icon-pair-send"></i>
                             <span>Dapatkan Pairing Code</span>
                         </button>
                     </div>
 
-                    <div id="box-pair-result" class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-2 dark:bg-emerald-950/30 dark:border-emerald-800" hidden>
-                        <div class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Kode Pairing Anda</div>
-                        <div class="text-2xl font-black font-mono tracking-widest text-emerald-800 dark:text-emerald-300 select-all" id="text-pairing-code">-</div>
+                    <div id="box-pair-result" class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-center space-y-2 dark:bg-blue-950/30 dark:border-blue-800" hidden>
+                        <div class="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">Kode Pairing Anda</div>
+                        <div class="text-2xl font-black font-mono tracking-widest text-blue-800 dark:text-blue-300 select-all" id="text-pairing-code">-</div>
                         <p class="text-xs text-slate-600 dark:text-slate-300">
                             Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan dengan nomor telepon</strong>, lalu masukkan kode di atas.
                         </p>

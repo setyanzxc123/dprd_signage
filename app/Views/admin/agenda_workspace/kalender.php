@@ -62,10 +62,10 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
 <section class="mb-4 bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
     <div class="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
-            <i data-lucide="sliders-horizontal" class="size-4 text-emerald-500"></i>
+            <i data-lucide="sliders-horizontal" class="size-4 text-blue-500"></i>
             <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Filter Workspace</span>
             <?php if ($activeFilterCount > 0): ?>
-                <span class="py-0.5 px-2 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <span class="py-0.5 px-2 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                     <?= $activeFilterCount ?> aktif
                 </span>
             <?php endif; ?>
@@ -86,11 +86,11 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div>
                     <label for="filter-month" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Bulan</label>
-                    <input id="filter-month" class="py-2 px-3 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" type="month" name="month" value="<?= esc($month) ?>" />
+                    <input id="filter-month" class="py-2 px-3 block w-full border border-slate-200 rounded-xl text-xs focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" type="month" name="month" value="<?= esc($month) ?>" />
                 </div>
                 <div>
                     <label for="filter-source" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Sumber Agenda</label>
-                    <select id="filter-source" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="source">
+                    <select id="filter-source" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="source">
                         <option value="">Semua sumber</option>
                         <?php foreach ($filter_options['sources'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['source'] === $value ? 'selected' : '' ?>>
@@ -101,7 +101,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                 </div>
                 <div>
                     <label for="filter-unit" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Unit / Peserta</label>
-                    <select id="filter-unit" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="unit">
+                    <select id="filter-unit" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="unit">
                         <option value="">Semua unit</option>
                         <?php foreach ($filter_options['units'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['unit'] === $value ? 'selected' : '' ?>>
@@ -112,7 +112,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                 </div>
                 <div>
                     <label for="filter-lokasi" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Lokasi</label>
-                    <select id="filter-lokasi" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="lokasi">
+                    <select id="filter-lokasi" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="lokasi">
                         <option value="">Semua lokasi</option>
                         <?php foreach ($filter_options['locations'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['lokasi'] === $value ? 'selected' : '' ?>>
@@ -123,7 +123,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                 </div>
                 <div>
                     <label for="filter-status" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Status Waktu</label>
-                    <select id="filter-status" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="status">
+                    <select id="filter-status" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="status">
                         <option value="">Semua status</option>
                         <?php foreach ($filter_options['statuses'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['status'] === $value ? 'selected' : '' ?>>
@@ -134,7 +134,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                 </div>
                 <div>
                     <label for="filter-publikasi" class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Publikasi</label>
-                    <select id="filter-publikasi" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="publikasi">
+                    <select id="filter-publikasi" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" name="publikasi">
                         <option value="">Semua publikasi</option>
                         <?php foreach ($filter_options['publications'] as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= $filters['publikasi'] === $value ? 'selected' : '' ?>>
@@ -148,7 +148,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                 <a href="<?= base_url('admin/kalender') ?>" class="py-1.5 px-3 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
                     Reset Filter
                 </a>
-                <button type="submit" class="py-1.5 px-3.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+                <button type="submit" class="py-1.5 px-3.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                     <i data-lucide="filter" class="size-3.5"></i>
                     Terapkan
                 </button>
@@ -161,7 +161,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
 <section class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
     <div class="flex flex-col gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-2">
-            <i data-lucide="<?= $view_mode === 'list' ? 'list' : 'calendar-range' ?>" class="size-4 text-emerald-500"></i>
+            <i data-lucide="<?= $view_mode === 'list' ? 'list' : 'calendar-range' ?>" class="size-4 text-blue-500"></i>
             <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white"><?= esc($month_label) ?></h2>
         </div>
         <div class="inline-flex rounded-xl shadow-xs">
@@ -285,7 +285,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                                 </div>
                             </td>
                             <td class="px-4 py-3.5" data-label="Agenda">
-                                <a href="<?= esc($agenda['edit_url']) ?>" class="text-sm font-bold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+                                <a href="<?= esc($agenda['edit_url']) ?>" class="text-sm font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition">
                                     <?= esc($agenda['judul']) ?>
                                 </a>
                                 <?php if ($agenda['has_conflict']): ?>

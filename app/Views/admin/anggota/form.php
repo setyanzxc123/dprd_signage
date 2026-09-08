@@ -27,7 +27,7 @@ if (str_starts_with($whatsAppValue, '62')) {
 
     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-6 max-w-4xl">
         <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <i data-lucide="user-round" class="size-4 text-emerald-500"></i>
+            <i data-lucide="user-round" class="size-4 text-blue-500"></i>
             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Data Anggota</h2>
         </div>
 
@@ -36,14 +36,14 @@ if (str_starts_with($whatsAppValue, '62')) {
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="name">
                     Nama Lengkap <span class="text-rose-500">*</span>
                 </label>
-                <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="name" name="name"
+                <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="name" name="name"
                     value="<?= esc($member['name'] ?? '') ?>" placeholder="Masukkan nama lengkap"
                     required />
             </div>
 
             <div class="col-span-12 md:col-span-6">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="jabatan">Jabatan</label>
-                <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="jabatan" name="jabatan"
+                <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="jabatan" name="jabatan"
                     value="<?= esc($member['jabatan'] ?? '') ?>" placeholder="Masukkan jabatan (misal: Ketua Komisi I)" />
             </div>
 
@@ -51,7 +51,7 @@ if (str_starts_with($whatsAppValue, '62')) {
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="fraksi">
                     Fraksi <span class="text-rose-500">*</span>
                 </label>
-                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="fraksi" name="fraksi" required>
+                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="fraksi" name="fraksi" required>
                     <option value="">Pilih fraksi</option>
                     <?php foreach ($fraksi_list as $f):
                         $selected = ($member['fraksi'] ?? '') === $f ? 'selected' : '';
@@ -65,7 +65,7 @@ if (str_starts_with($whatsAppValue, '62')) {
 
             <div class="col-span-12 md:col-span-6">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="komisi">Komisi</label>
-                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="komisi" name="komisi">
+                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="komisi" name="komisi">
                     <option value="">Tidak dalam komisi</option>
                     <?php foreach ($komisi_list as $k):
                         $selected = ($member['komisi'] ?? '') === $k ? 'selected' : '';
@@ -79,7 +79,7 @@ if (str_starts_with($whatsAppValue, '62')) {
 
             <div class="col-span-12 md:col-span-6">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="status">Status</label>
-                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="status" name="aktif">
+                <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="status" name="aktif">
                     <option value="1" <?= ($member['aktif'] ?? 1) ? 'selected' : '' ?>>Aktif</option>
                     <option value="0" <?= !($member['aktif'] ?? 1) ? 'selected' : '' ?>>Nonaktif</option>
                 </select>
@@ -88,7 +88,7 @@ if (str_starts_with($whatsAppValue, '62')) {
 
         <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
             <div class="flex items-center gap-2">
-                <i data-lucide="message-square" class="size-4 text-emerald-500"></i>
+                <i data-lucide="message-square" class="size-4 text-blue-500"></i>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Kontak WhatsApp</h3>
             </div>
 
@@ -100,7 +100,7 @@ if (str_starts_with($whatsAppValue, '62')) {
                     <span class="px-3.5 inline-flex items-center min-w-fit rounded-s-xl border border-e-0 border-slate-200 bg-slate-50 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
                         +62
                     </span>
-                    <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-e-xl text-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="no_wa" name="no_wa"
+                    <input type="text" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-e-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="no_wa" name="no_wa"
                         value="<?= esc($whatsAppValue) ?>" placeholder="8123456789"
                         inputmode="numeric" pattern="8[0-9]{7,11}" maxlength="12"
                         title="Gunakan maksimal 12 digit setelah +62." required />
@@ -114,7 +114,7 @@ if (str_starts_with($whatsAppValue, '62')) {
         <a href="<?= base_url('admin/anggota') ?>" class="py-2.5 px-4 inline-flex items-center text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition">
             Batal
         </a>
-        <button type="submit" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+        <button type="submit" class="py-2.5 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
             <i data-lucide="check" class="size-4"></i>
             <?= $member ? 'Simpan Perubahan' : 'Tambah Anggota' ?>
         </button>

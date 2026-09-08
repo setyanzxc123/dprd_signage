@@ -7,7 +7,7 @@
         <h1 class="page-title">Notulensi & Risalah AI</h1>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Transkripsi rekaman rapat otomatis dan penyusunan risalah resmi menggunakan Google Gemini AI.</p>
     </div>
-    <button type="button" id="btn_open_upload_modal" data-hs-overlay="#modal_upload_notulen" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer w-full sm:w-auto">
+    <button type="button" id="btn_open_upload_modal" data-hs-overlay="#modal_upload_notulen" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer w-full sm:w-auto">
         <i data-lucide="upload" class="size-4"></i>
         Unggah Rekaman Rapat
     </button>
@@ -17,7 +17,7 @@
 <section class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden min-w-0">
     <div class="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 px-4 py-3.5 sm:px-5">
         <h2 class="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-            <i data-lucide="mic" class="size-4 text-emerald-600 dark:text-emerald-400"></i>
+            <i data-lucide="mic" class="size-4 text-blue-600 dark:text-blue-400"></i>
             Daftar Rekaman & Risalah Rapat
         </h2>
         <span class="py-0.5 px-2.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 whitespace-nowrap"><?= count($jobs) ?> rekaman</span>
@@ -77,7 +77,7 @@
                             <td class="dt-row-number" data-label="No"></td>
                             <td data-label="Rapat & Rekaman" data-order="<?= esc($job['created_at'] ?? $tanggalRapat) ?>">
                                 <div class="font-bold text-slate-900 dark:text-white">
-                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline">
+                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
                                         <?= esc($judulRapat) ?>
                                     </a>
                                 </div>
@@ -159,7 +159,7 @@
             <!-- Header modal -->
             <div class="flex justify-between items-center py-3.5 px-4 sm:px-6 border-b border-slate-200 dark:border-slate-800">
                 <h3 id="modal_upload_notulen_label" class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                    <i data-lucide="upload" class="size-5 text-emerald-600 dark:text-emerald-400"></i>
+                    <i data-lucide="upload" class="size-5 text-blue-600 dark:text-blue-400"></i>
                     Unggah Rekaman Rapat
                 </h3>
                 <button id="um_close_btn" type="button" class="size-9 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition outline-none focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600 cursor-pointer" aria-label="Tutup dialog" data-hs-overlay="#modal_upload_notulen">
@@ -263,7 +263,7 @@
                         <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                             <div class="min-w-0">
                                 <label for="modal_jadwal_type" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Jenis Jadwal</label>
-                                <select id="modal_jadwal_type" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700"
+                                <select id="modal_jadwal_type" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs outline-none focus:outline-none focus:border-blue-500 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700"
                                     title="Umum: rapat komisi, paripurna, dan fraksi. Banmus: rapat Badan Musyawarah.">
                                     <option value="umum">Jadwal Umum</option>
                                     <option value="banmus">Jadwal Banmus</option>
@@ -271,7 +271,7 @@
                             </div>
                             <div class="min-w-0">
                                 <label id="modal_sub_filter_label" for="modal_sub_filter" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Filter Komisi / Unit</label>
-                                <select id="modal_sub_filter" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700">
+                                <select id="modal_sub_filter" class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-lg text-xs outline-none focus:outline-none focus:border-blue-500 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700">
                                     <option value="">Semua Komisi / Unit</option>
                                 </select>
                             </div>
@@ -285,7 +285,7 @@
 
                             <div class="hs-dropdown [--strategy:absolute] [--auto-close:inside] relative w-full min-w-0" id="um_agenda_dropdown">
                                 <button type="button" id="um_agenda_trigger" tabindex="0"
-                                    class="hs-dropdown-toggle py-2 px-3 w-full border border-slate-200 rounded-lg text-xs flex items-center justify-between text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 cursor-pointer outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 min-w-0 max-w-full overflow-hidden disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700"
+                                    class="hs-dropdown-toggle py-2 px-3 w-full border border-slate-200 rounded-lg text-xs flex items-center justify-between text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 cursor-pointer outline-none focus:outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 min-w-0 max-w-full overflow-hidden disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 dark:disabled:bg-slate-800/80 dark:disabled:text-slate-500 dark:disabled:border-slate-700"
                                     aria-haspopup="listbox" aria-expanded="false" aria-controls="um_agenda_options_list">
                                     <span id="um_agenda_selected_label" class="truncate text-left flex-1 min-w-0" title="— Tanpa Relasi Agenda —">— Tanpa Relasi Agenda —</span>
                                     <i data-lucide="chevron-down" class="size-4 shrink-0 text-slate-400 ms-1 transition duration-200 hs-dropdown-open:rotate-180"></i>
@@ -294,7 +294,7 @@
                                     <div class="relative mb-2 min-w-0">
                                         <input type="text" id="um_agenda_search_input"
                                             placeholder="Ketik judul, komisi, tanggal, mitra, ruangan..."
-                                            class="py-1.5 px-2.5 ps-7 block w-full border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 outline-none focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
+                                            class="py-1.5 px-2.5 ps-7 block w-full border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 outline-none focus:outline-none focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
                                             autocomplete="off" aria-label="Cari agenda" role="searchbox" />
                                         <i data-lucide="search" class="size-3.5 text-slate-400 absolute start-2 top-2.5"></i>
                                     </div>
@@ -316,7 +316,7 @@
 
                     <!-- Dropzone -->
                     <div id="um_dropzone"
-                        class="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-5 text-center cursor-pointer transition-all duration-200 hover:border-emerald-500 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 outline-none focus:outline-none focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
+                        class="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-5 text-center cursor-pointer transition-all duration-200 hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 outline-none focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20"
                         role="button"
                         tabindex="0"
                         aria-label="Pilih atau seret berkas rekaman audio">
@@ -325,14 +325,14 @@
                                 <i data-lucide="upload-cloud" class="size-5 text-slate-500 dark:text-slate-400"></i>
                             </div>
                             <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                <span class="text-emerald-600 dark:text-emerald-400">Pilih berkas rekaman</span> atau seret ke sini
+                                <span class="text-blue-600 dark:text-blue-400">Pilih berkas rekaman</span> atau seret ke sini
                             </p>
                             <p id="audio_file_hint" class="text-xs text-slate-500 dark:text-slate-400">MP3 &bull; M4A &bull; WAV &bull; OGG &bull; AAC &bull; FLAC &bull; Maks. 300 MB</p>
                         </div>
 
                         <!-- File dipilih state -->
                         <div id="um_dz_selected" class="hidden items-center gap-3 text-left">
-                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
                                 <i data-lucide="file-audio" class="size-5"></i>
                             </div>
                             <div class="min-w-0 flex-1">
@@ -352,7 +352,7 @@
                 <div id="audio_preview_container" class="hidden rounded-xl bg-slate-100 dark:bg-slate-800/60 p-3">
                     <div class="mb-1.5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                         <span class="font-semibold flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                            <i data-lucide="volume-2" class="size-3.5 text-emerald-500"></i>
+                            <i data-lucide="volume-2" class="size-3.5 text-blue-500"></i>
                             Pratinjau Rekaman
                         </span>
                         <span id="audio_preview_info" class="font-mono text-xs text-slate-400"></span>
@@ -361,18 +361,18 @@
                 </div>
 
                 <!-- Progress upload -->
-                <div id="upload_progress_box" class="hidden rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-emerald-200 dark:border-emerald-800 p-3.5 space-y-2"
+                <div id="upload_progress_box" class="hidden rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-blue-200 dark:border-blue-800 p-3.5 space-y-2"
                     role="status" aria-live="polite" aria-label="Status unggahan">
                     <div class="flex items-center justify-between text-xs font-semibold">
-                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                        <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                             <span class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent rounded-full"></span>
                             <span id="upload_status_text">Mengunggah rekaman ke server...</span>
                         </div>
-                        <span id="upload_progress_percent" class="font-mono text-emerald-600 dark:text-emerald-400">0%</span>
+                        <span id="upload_progress_percent" class="font-mono text-blue-600 dark:text-blue-400">0%</span>
                     </div>
                     <div class="flex w-full h-2 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700"
                         role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Kemajuan unggahan berkas rekaman">
-                        <div id="upload_progress_bar" class="flex flex-col justify-center overflow-hidden bg-emerald-600 text-xs text-white text-center whitespace-nowrap transition duration-500" style="width: 0%"></div>
+                        <div id="upload_progress_bar" class="flex flex-col justify-center overflow-hidden bg-blue-600 text-xs text-white text-center whitespace-nowrap transition duration-500" style="width: 0%"></div>
                     </div>
                     <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
                         <div class="flex items-center gap-2.5">
@@ -397,7 +397,7 @@
             <!-- Footer actions -->
             <div class="flex justify-end items-center gap-x-2 py-3 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-800">
                 <button type="button" id="um_cancel_btn" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" data-hs-overlay="#modal_upload_notulen">Batal</button>
-                <button type="button" id="um_submit_btn" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition cursor-pointer">
+                <button type="button" id="um_submit_btn" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                     <span id="um_spinner" class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent rounded-full hidden"></span>
                     <i data-lucide="upload" id="um_btn_icon" class="size-3.5"></i>
                     <span id="um_btn_label">Unggah Rekaman</span>
