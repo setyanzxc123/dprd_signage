@@ -26,9 +26,24 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 p-5 sm:p-6 space-y-6 max-w-5xl">
         <!-- Informasi Agenda Dasar -->
         <div class="space-y-4">
-            <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="file-text" class="size-4 text-blue-500"></i>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Data Agenda</h2>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="file-text" class="size-4 text-blue-500"></i>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Data Agenda</h2>
+                </div>
+
+                <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shrink-0" role="radiogroup" aria-label="Kategori Agenda">
+                    <label class="inline-flex items-center gap-1.5 py-1 px-3 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-600 dark:text-slate-400 has-checked:bg-white has-checked:text-blue-600 has-checked:shadow-xs dark:has-checked:bg-slate-900 dark:has-checked:text-blue-400">
+                        <input type="radio" name="jenis_agenda" value="rapat" id="jenis_agenda_rapat" class="sr-only" <?= ($schedule['jenis_agenda'] ?? 'rapat') === 'rapat' ? 'checked' : '' ?> required />
+                        <i data-lucide="users" class="size-3.5"></i>
+                        <span>Rapat / Audiensi</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 py-1 px-3 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-600 dark:text-slate-400 has-checked:bg-white has-checked:text-purple-600 has-checked:shadow-xs dark:has-checked:bg-slate-900 dark:has-checked:text-purple-400">
+                        <input type="radio" name="jenis_agenda" value="non_rapat" id="jenis_agenda_non_rapat" class="sr-only" <?= ($schedule['jenis_agenda'] ?? 'rapat') === 'non_rapat' ? 'checked' : '' ?> required />
+                        <i data-lucide="calendar" class="size-3.5"></i>
+                        <span>Kegiatan / Acara Umum</span>
+                    </label>
+                </div>
             </div>
 
             <div>
@@ -66,12 +81,12 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Pelaksanaan &amp; Waktu</h2>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div id="rapat-waktu-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tanggal">
                         Tanggal <span class="text-rose-500">*</span>
                     </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="tanggal" name="tanggal" type="date" required
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="tanggal" name="tanggal" type="date"
                         value="<?= esc($schedule['tanggal'] ?? date('Y-m-d')) ?>" />
                 </div>
                 <div>
@@ -89,18 +104,38 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                         value="<?= esc(substr((string) ($schedule['waktu_selesai'] ?? ''), 0, 5)) ?>" />
                 </div>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">Kosongkan kedua jam untuk kegiatan sepanjang hari. Pemakaian ruangan DPRD memerlukan jam lengkap.</p>
+
+            <div id="non-rapat-waktu-grid" class="hidden grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tanggal_mulai">
+                        Tanggal Mulai <span class="text-rose-500">*</span>
+                    </label>
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="tanggal_mulai" name="tanggal_mulai" type="date"
+                        value="<?= esc($schedule['tanggal_mulai'] ?? $schedule['tanggal'] ?? date('Y-m-d')) ?>" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tanggal_selesai">
+                        Tanggal Selesai <span class="text-[10px] font-normal text-slate-400">(opsional, default sama)</span>
+                    </label>
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-semibold" id="tanggal_selesai" name="tanggal_selesai" type="date"
+                        value="<?= esc($schedule['tanggal_selesai'] ?? $schedule['tanggal'] ?? '') ?>" />
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 dark:text-slate-400" id="rapat-waktu-desc">Kosongkan kedua jam untuk kegiatan sepanjang hari. Pemakaian ruangan DPRD memerlukan jam lengkap.</p>
             <p class="hidden text-xs font-semibold text-rose-600 dark:text-rose-400" id="waktu-rapat-error">Jam selesai harus setelah jam mulai pada tanggal yang sama.</p>
         </div>
 
         <!-- Lokasi -->
-        <div class="space-y-4 pt-2">
+        <div class="space-y-4 pt-2" id="lokasi-section">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <i data-lucide="map-pin" class="size-4 text-blue-500"></i>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Lokasi <span class="text-rose-500">*</span></h2>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    <span id="lokasi-heading">Lokasi</span> <span class="text-rose-500" id="lokasi-required-star">*</span>
+                </h2>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 sm:max-w-md">
+            <div class="grid grid-cols-2 gap-3 sm:max-w-md" id="lokasi-mode-wrapper">
                 <label class="flex items-center gap-x-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer" for="lokasi-ruangan">
                     <input class="size-4 text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="lokasi-ruangan" name="lokasi_mode" type="radio"
                         value="ruangan" <?= $locationMode === 'ruangan' ? 'checked' : '' ?> />
@@ -134,12 +169,12 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
 
             <div id="lokasi-lainnya-panel" hidden>
                 <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="lokasi_lainnya" name="lokasi_lainnya" type="text" maxlength="255"
-                    value="<?= esc($otherLocation) ?>" placeholder="Masukkan nama lokasi (misal: Hotel Santika Palu)" />
+                    value="<?= esc($otherLocation) ?>" placeholder="Masukkan nama lokasi (misal: Ruang Terbuka Hijau / Lapangan Sinorang / Hotel Santika)" />
             </div>
         </div>
 
         <!-- Kelompok Peserta -->
-        <div class="space-y-4 pt-2">
+        <div class="space-y-4 pt-2" id="kelompok-peserta-section">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <i data-lucide="users" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Kelompok Peserta</h2>
@@ -186,7 +221,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         </div>
 
         <!-- Bahan dan Streaming -->
-        <div class="space-y-4 pt-2">
+        <div class="space-y-4 pt-2" id="bahan-stream-section">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <i data-lucide="share-2" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Bahan &amp; Live Streaming</h2>
@@ -228,7 +263,7 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
         </div>
 
         <!-- Undangan Rapat -->
-        <div class="space-y-4 pt-2">
+        <div class="space-y-4 pt-2" id="undangan-section">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <i data-lucide="file-check-2" class="size-4 text-blue-500"></i>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Undangan Rapat (PDF)</h2>
@@ -250,26 +285,45 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
             <?php endif; ?>
         </div>
 
-        <!-- Publikasi -->
+        <!-- Status & Akses Publikasi -->
         <div class="space-y-4 pt-2">
             <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <i data-lucide="eye" class="size-4 text-blue-500"></i>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Akses Publikasi</h2>
+                <i data-lucide="sliders" class="size-4 text-blue-500"></i>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Status &amp; Akses Publikasi</h2>
             </div>
 
-            <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4"
-                for="is_publik">
-                <input class="size-4 mt-0.5 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="is_publik" name="is_publik" type="checkbox"
-                    value="1" <?= (int) ($schedule['is_publik'] ?? 0) === 1 ? 'checked' : '' ?> />
-                <span class="min-w-0">
-                    <span class="block text-sm font-bold text-slate-900 dark:text-white">Tampilkan kepada publik</span>
-                    <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400" id="publik-label">
-                        <?= (int) ($schedule['is_publik'] ?? 0) === 1
-                            ? 'Agenda dapat tampil pada kanal publik setelah fase integrasi.'
-                            : 'Default internal, hanya terlihat oleh pengguna berwenang.' ?>
-                    </span>
-                </span>
-            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div id="general-status-wrapper">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="status_override">
+                        Status Agenda
+                    </label>
+                    <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="status_override" name="status_override">
+                        <option value="">Otomatis (Sesuai Waktu)</option>
+                        <option value="ditunda" <?= in_array(($schedule['status'] ?? ''), ['ditunda'], true) ? 'selected' : '' ?>>Ditunda</option>
+                        <option value="dibatalkan" <?= in_array(($schedule['status'] ?? ''), ['dibatalkan'], true) ? 'selected' : '' ?>>Dibatalkan</option>
+                    </select>
+                    <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Pilih status bila agenda ditunda atau dibatalkan tanpa menghapus data.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="is_publik">
+                        Visibilitas
+                    </label>
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/30 p-3"
+                        for="is_publik">
+                        <input class="size-4 mt-0.5 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="is_publik" name="is_publik" type="checkbox"
+                            value="1" <?= (int) ($schedule['is_publik'] ?? 0) === 1 ? 'checked' : '' ?> />
+                        <span class="min-w-0">
+                            <span class="block text-xs font-bold text-slate-900 dark:text-white">Tampilkan kepada publik</span>
+                            <span class="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400" id="publik-label">
+                                <?= (int) ($schedule['is_publik'] ?? 0) === 1
+                                    ? 'Agenda dapat tampil pada kanal publik.'
+                                    : 'Default internal, hanya terlihat pengguna berwenang.' ?>
+                            </span>
+                        </span>
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 

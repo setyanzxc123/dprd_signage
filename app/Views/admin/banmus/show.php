@@ -524,7 +524,17 @@ $resourceAccessLabels = [
                                         <option value="publik" selected>Publik</option>
                                     </select>
                                 </div>
-                                <div>
+                                <div id="banmus-status-override-wrapper">
+                                    <label for="field_status_override" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                                        Status Agenda
+                                    </label>
+                                    <select class="py-2 px-3 pe-9 block w-full border border-slate-200 rounded-xl text-xs focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="field_status_override" name="status_override">
+                                        <option value="">Otomatis (Sesuai Waktu)</option>
+                                        <option value="ditunda">Ditunda</option>
+                                        <option value="dibatalkan">Dibatalkan</option>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2">
                                     <label for="field_catatan" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                                         Catatan
                                     </label>

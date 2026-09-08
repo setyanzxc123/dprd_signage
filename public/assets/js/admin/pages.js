@@ -152,6 +152,16 @@
             });
         }
 
+        const agendaTypeRadios = Array.from(document.querySelectorAll('input[name="jenis_agenda"]'));
+        const rapatWaktuGrid = document.getElementById('rapat-waktu-grid');
+        const nonRapatWaktuGrid = document.getElementById('non-rapat-waktu-grid');
+        const rapatWaktuDesc = document.getElementById('rapat-waktu-desc');
+        const lokasiModeWrapper = document.getElementById('lokasi-mode-wrapper');
+        const kelompokPesertaSection = document.getElementById('kelompok-peserta-section');
+        const bahanStreamSection = document.getElementById('bahan-stream-section');
+        const undanganSection = document.getElementById('undangan-section');
+        const generalStatusWrapper = document.getElementById('general-status-wrapper');
+
         const lokasiModeInputs = Array.from(document.querySelectorAll('input[name="lokasi_mode"]'));
         const ruanganPanel = document.getElementById('ruangan-panel');
         const lokasiLainnyaPanel = document.getElementById('lokasi-lainnya-panel');
@@ -159,6 +169,9 @@
         const lokasiLainnyaInput = document.getElementById('lokasi_lainnya');
 
         const syncLocationMode = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) return;
+
             const mode = lokasiModeInputs.find(function(input) {
                 return input.checked;
             })?.value || 'ruangan';
@@ -182,14 +195,66 @@
         lokasiModeInputs.forEach(function(input) {
             input.addEventListener('change', syncLocationMode);
         });
-        syncLocationMode();
 
         const tanggalInput = document.getElementById('tanggal');
+        const tanggalMulaiInput = document.getElementById('tanggal_mulai');
+        const tanggalSelesaiInput = document.getElementById('tanggal_selesai');
         const waktuMulaiInput = document.getElementById('waktu_mulai');
         const waktuSelesaiInput = document.getElementById('waktu_selesai');
         const waktuError = document.getElementById('waktu-rapat-error');
 
+        const syncAgendaType = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+
+            if (rapatWaktuGrid) rapatWaktuGrid.classList.toggle('hidden', isNonRapat);
+            if (nonRapatWaktuGrid) nonRapatWaktuGrid.classList.toggle('hidden', !isNonRapat);
+            if (rapatWaktuDesc) rapatWaktuDesc.classList.toggle('hidden', isNonRapat);
+            if (lokasiModeWrapper) lokasiModeWrapper.classList.toggle('hidden', isNonRapat);
+            if (kelompokPesertaSection) kelompokPesertaSection.classList.toggle('hidden', isNonRapat);
+            if (bahanStreamSection) bahanStreamSection.classList.toggle('hidden', isNonRapat);
+            if (undanganSection) undanganSection.classList.toggle('hidden', isNonRapat);
+            if (generalStatusWrapper) generalStatusWrapper.classList.toggle('hidden', isNonRapat);
+
+            if (tanggalInput) tanggalInput.required = !isNonRapat;
+            if (tanggalMulaiInput) tanggalMulaiInput.required = isNonRapat;
+
+            if (isNonRapat) {
+                if (ruanganPanel) ruanganPanel.hidden = true;
+                if (lokasiLainnyaPanel) lokasiLainnyaPanel.hidden = false;
+                if (ruanganSelect) {
+                    ruanganSelect.required = false;
+                    ruanganSelect.disabled = true;
+                }
+                if (lokasiLainnyaInput) {
+                    lokasiLainnyaInput.required = false;
+                    lokasiLainnyaInput.disabled = false;
+                }
+            } else {
+                syncLocationMode();
+            }
+
+            syncTimeValidity();
+            syncTargetValidity();
+        };
+
+        agendaTypeRadios.forEach(function(radio) {
+            radio.addEventListener('change', syncAgendaType);
+        });
+
         const syncTimeValidity = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) {
+                if (waktuMulaiInput) {
+                    waktuMulaiInput.classList.remove('input-error', 'border-rose-500');
+                }
+                if (waktuSelesaiInput) {
+                    waktuSelesaiInput.classList.remove('input-error', 'border-rose-500');
+                    waktuSelesaiInput.setCustomValidity('');
+                }
+                if (waktuError) waktuError.classList.add('hidden');
+                return true;
+            }
+
             if (!waktuMulaiInput || !waktuSelesaiInput) return true;
 
             const hasSeparateDate = tanggalInput?.value
@@ -260,6 +325,15 @@
         };
 
         const syncTargetValidity = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) {
+                if (targetError) targetError.classList.add('hidden');
+                targetInputs.forEach(function(input) {
+                    if (!input.disabled) input.classList.remove('checkbox-error');
+                });
+                return true;
+            }
+
             const count = syncTargetCount();
             const valid = !requiresTargets || count > 0;
 
@@ -300,6 +374,18 @@
         });
 
         form?.addEventListener('submit', function(event) {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) {
+                if (tanggalMulaiInput && tanggalSelesaiInput && tanggalMulaiInput.value && tanggalSelesaiInput.value) {
+                    if (tanggalSelesaiInput.value < tanggalMulaiInput.value) {
+                        event.preventDefault();
+                        tanggalSelesaiInput.focus();
+                        return;
+                    }
+                }
+                return;
+            }
+
             const timeValid = syncTimeValidity();
             const targetValid = syncTargetValidity();
 
@@ -313,12 +399,13 @@
             }
         });
 
-        syncTimeValidity();
+        syncLocationMode();
+        syncAgendaType();
         syncTargetCount();
     };
 
     document.addEventListener('DOMContentLoaded', initScheduleForm);
-    })();
+})();
 
 (() => {
     function initSettingsPage() {
@@ -1343,6 +1430,8 @@
         const roomField = dialog.querySelector('#field_ruangan_id');
         const locationField = dialog.querySelector('#field_lokasi_lainnya');
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
+        const statusOverrideField = dialog.querySelector('#field_status_override');
+        const statusOverrideWrapper = dialog.querySelector('#banmus-status-override-wrapper');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
         const agendaTypeFields = [...dialog.querySelectorAll('input[name="jenis_agenda"]')];
         const fileInput = dialog.querySelector('#field_undangan_file');
@@ -1460,12 +1549,14 @@
                 rapatModeWrapper?.classList.add('hidden');
                 pastiWrapper?.classList.add('hidden');
                 nonRapatDatesWrapper?.classList.remove('hidden');
+                statusOverrideWrapper?.classList.add('hidden');
             } else {
                 if (labelPeriode) labelPeriode.textContent = 'Periode SK';
                 if (periodeField) periodeField.placeholder = 'Contoh: Juni–Juli 2026 atau Minggu ke-2 Juli';
 
                 rapatModeWrapper?.classList.remove('hidden');
                 nonRapatDatesWrapper?.classList.add('hidden');
+                statusOverrideWrapper?.classList.remove('hidden');
 
                 const isProyeksi = meetingMode === 'proyeksi';
                 if (isProyeksi) {
@@ -1516,6 +1607,11 @@
             if (endTimeField) endTimeField.value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
             if (field('field_catatan')) field('field_catatan').value = item.catatan || '';
             if (field('field_publikasi')) field('field_publikasi').value = item.publikasi || 'publik';
+            if (statusOverrideField) {
+                statusOverrideField.value = ['ditunda', 'dibatalkan'].includes(item.status)
+                    ? item.status
+                    : '';
+            }
             if (field('field_materi_url')) field('field_materi_url').value = item.materi_url || '';
             if (field('field_materi_akses')) field('field_materi_akses').value = item.materi_akses || 'publik';
             if (field('field_stream_url')) field('field_stream_url').value = item.stream_url || '';
@@ -1564,6 +1660,9 @@
             if (title) title.textContent = 'Tambah Item Agenda Banmus';
             currentAgendaType = 'rapat';
             currentMeetingMode = 'proyeksi';
+            if (statusOverrideField) {
+                statusOverrideField.value = '';
+            }
             syncFormDisplay('rapat', 'proyeksi');
             syncLocationDisclosure();
             showDialog();
