@@ -26,27 +26,140 @@ final class BaileysProvider
     public function sendOtp(string $phone, string $code): BaileysSendResult
     {
         if (! $this->isConfigured()) {
-            return new BaileysSendResult(false, error: 'Baileys gateway belum dikonfigurasi.');
+            return new BaileysSendResult(
+                false,
+                error: 'Baileys gateway belum dikonfigurasi.',
+                errorCode: 'NOT_CONFIGURED',
+                statusCode: 0,
+            );
         }
+
+        $body = [
+            'phone'          => $phone,
+            'otp'            => $code,
+            'app_name'       => $this->config->appName,
+            'wait_for_ack'   => $this->config->baileysWaitForAck,
+            'ack_timeout_ms' => $this->config->baileysAckTimeoutMs,
+        ];
+
+        if ($this->config->baileysOtpTemplate !== null) {
+            $body['template'] = $this->config->baileysOtpTemplate;
+        }
+
+        $timeoutSeconds = max(5, $this->config->baileysTimeoutSeconds);
 
         $response = $this->transport->postJson(
             $this->endpoint('/send-otp'),
             $this->headers(),
-            ['phone' => $phone, 'otp' => $code],
-            $this->config->baileysTimeoutSeconds,
+            $body,
+            $timeoutSeconds,
         );
 
+        return $this->parseSendResponse($response);
+    }
+
+    public function sendMessage(
+        string $to,
+        string $message,
+        ?bool $waitForAck = null,
+        ?int $ackTimeoutMs = null,
+    ): BaileysSendResult {
+        if (! $this->isConfigured()) {
+            return new BaileysSendResult(
+                false,
+                error: 'Baileys gateway belum dikonfigurasi.',
+                errorCode: 'NOT_CONFIGURED',
+                statusCode: 0,
+            );
+        }
+
+        $body = [
+            'to'             => $to,
+            'message'        => $message,
+            'wait_for_ack'   => $waitForAck ?? $this->config->baileysWaitForAck,
+            'ack_timeout_ms' => $ackTimeoutMs ?? $this->config->baileysAckTimeoutMs,
+        ];
+
+        $timeoutSeconds = max(5, $this->config->baileysTimeoutSeconds);
+
+        $response = $this->transport->postJson(
+            $this->endpoint('/send-message'),
+            $this->headers(),
+            $body,
+            $timeoutSeconds,
+        );
+
+        return $this->parseSendResponse($response);
+    }
+
+    private function parseSendResponse(\App\Libraries\WhatsApp\ValueObjects\HttpResponse $response): BaileysSendResult
+    {
         $payload = $this->payload($response->body);
-        if ($response->error !== null || $payload === null || $response->statusCode >= 400) {
-            return new BaileysSendResult(false, error: $response->error ?? $this->error($payload));
+        $statusCode = $response->statusCode;
+
+        if ($response->error !== null) {
+            $errorCode = $this->string($payload['code'] ?? null) ?? 'CONNECTION_ERROR';
+
+            return new BaileysSendResult(
+                false,
+                error: $response->error,
+                errorCode: $errorCode,
+                statusCode: $statusCode,
+            );
         }
 
-        $messageId = $this->string($payload['data']['messageId'] ?? null);
-        if (($payload['status'] ?? '') !== 'success' || $messageId === null) {
-            return new BaileysSendResult(false, error: $this->error($payload));
+        if ($payload === null) {
+            $errorCode = $this->defaultErrorCodeForStatus($statusCode);
+
+            return new BaileysSendResult(
+                false,
+                error: 'Respons dari WhatsApp Gateway tidak valid.',
+                errorCode: $errorCode,
+                statusCode: $statusCode,
+            );
         }
 
-        return new BaileysSendResult(true, $messageId);
+        $status = (string) ($payload['status'] ?? '');
+        $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
+        $messageId = $this->string($data['messageId'] ?? null);
+
+        if ($statusCode === 200 && $status === 'success' && $messageId !== null) {
+            $serverAck = (bool) ($data['server_ack'] ?? false);
+            $ackElapsedMs = isset($data['ack_elapsed_ms']) && is_numeric($data['ack_elapsed_ms'])
+                ? (int) $data['ack_elapsed_ms']
+                : null;
+
+            return new BaileysSendResult(
+                true,
+                messageId: $messageId,
+                statusCode: 200,
+                serverAck: $serverAck,
+                ackElapsedMs: $ackElapsedMs,
+            );
+        }
+
+        $errorCode = $this->string($payload['code'] ?? null) ?? $this->defaultErrorCodeForStatus($statusCode);
+        $errorMessage = $this->error($payload);
+
+        return new BaileysSendResult(
+            false,
+            error: $errorMessage,
+            errorCode: $errorCode,
+            statusCode: $statusCode,
+        );
+    }
+
+    private function defaultErrorCodeForStatus(int $statusCode): string
+    {
+        return match ($statusCode) {
+            502     => 'WA_SERVER_REJECTED',
+            504     => 'WA_SERVER_ACK_TIMEOUT',
+            503     => 'WA_GATEWAY_OFFLINE',
+            422     => 'WA_NUMBER_NOT_REGISTERED',
+            429     => 'RATE_LIMITED',
+            401     => 'UNAUTHORIZED',
+            default => 'SEND_FAILED',
+        };
     }
 
     public const OFFLINE_CACHE_KEY = 'baileys_gateway_offline_status';

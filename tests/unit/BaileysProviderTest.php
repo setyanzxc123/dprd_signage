@@ -84,6 +84,121 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertStringContainsString('belum dikonfigurasi', (string) $result->error);
     }
 
+    public function testSendsOtpWithServerAckAndElapsedMs(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status'  => 'success',
+            'message' => 'Kode OTP berhasil dikirim via WhatsApp.',
+            'data'    => [
+                'messageId'      => 'BAE5-ACK-1',
+                'phone'          => '628123456789',
+                'server_ack'     => true,
+                'ack_elapsed_ms' => 235,
+            ],
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->sendOtp('628123456789', '748192');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('BAE5-ACK-1', $result->messageId);
+        $this->assertTrue($result->serverAck);
+        $this->assertSame(235, $result->ackElapsedMs);
+        $this->assertSame(200, $result->statusCode);
+        $this->assertTrue($transport->payload['wait_for_ack']);
+        $this->assertSame(3000, $transport->payload['ack_timeout_ms']);
+        $this->assertSame('DPRD Sulawesi Tengah', $transport->payload['app_name']);
+    }
+
+    public function testHandles502ServerRejected(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(502, json_encode([
+            'status'  => 'error',
+            'code'    => 'WA_SERVER_REJECTED',
+            'message' => 'Server WhatsApp menolak pengiriman pesan (restriction 463).',
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->sendOtp('628123456789', '748192');
+
+        $this->assertFalse($result->success);
+        $this->assertSame(502, $result->statusCode);
+        $this->assertSame('WA_SERVER_REJECTED', $result->errorCode);
+        $this->assertStringContainsString('menolak', (string) $result->error);
+    }
+
+    public function testHandles504ServerAckTimeout(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(504, json_encode([
+            'status'  => 'error',
+            'code'    => 'WA_SERVER_ACK_TIMEOUT',
+            'message' => 'Batas waktu menunggu Server ACK terlampaui.',
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->sendOtp('628123456789', '748192');
+
+        $this->assertFalse($result->success);
+        $this->assertSame(504, $result->statusCode);
+        $this->assertSame('WA_SERVER_ACK_TIMEOUT', $result->errorCode);
+    }
+
+    public function testHandles422NumberNotRegistered(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(422, json_encode([
+            'status'  => 'error',
+            'code'    => 'WA_NUMBER_NOT_REGISTERED',
+            'message' => 'Nomor tujuan tidak terdaftar di WhatsApp.',
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->sendOtp('628123456789', '748192');
+
+        $this->assertFalse($result->success);
+        $this->assertSame(422, $result->statusCode);
+        $this->assertSame('WA_NUMBER_NOT_REGISTERED', $result->errorCode);
+    }
+
+    public function testHandles429RateLimited(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(429, json_encode([
+            'status'  => 'error',
+            'code'    => 'RATE_LIMITED',
+            'message' => 'Batas request per menit terlampaui.',
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->sendOtp('628123456789', '748192');
+
+        $this->assertFalse($result->success);
+        $this->assertSame(429, $result->statusCode);
+        $this->assertSame('RATE_LIMITED', $result->errorCode);
+    }
+
+    public function testSendMessageSendsPayloadToGateway(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status'  => 'success',
+            'message' => 'Pesan berhasil dikirim via WhatsApp.',
+            'data'    => [
+                'messageId'      => 'MSG-SEND-1',
+                'server_ack'     => true,
+                'ack_elapsed_ms' => 180,
+            ],
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->sendMessage('628123456789', 'Pemberitahuan rapat.');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('MSG-SEND-1', $result->messageId);
+        $this->assertTrue($result->serverAck);
+        $this->assertSame('http://127.0.0.1:3001/send-message', $transport->url);
+        $this->assertSame('628123456789', $transport->payload['to']);
+        $this->assertSame('Pemberitahuan rapat.', $transport->payload['message']);
+        $this->assertTrue($transport->payload['wait_for_ack']);
+    }
+
     public function testGetStatusReturnsConnectedDetailsWhenOnline(): void
     {
         $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([

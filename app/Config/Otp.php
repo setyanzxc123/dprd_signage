@@ -17,6 +17,10 @@ class Otp extends BaseConfig
     public string $baileysApiUrl = 'http://127.0.0.1:3001';
     public string $baileysApiKey = '';
     public int $baileysTimeoutSeconds = 5;
+    public int $baileysAckTimeoutMs = 3000;
+    public bool $baileysWaitForAck = true;
+    public string $appName = 'DPRD Sulawesi Tengah';
+    public ?string $baileysOtpTemplate = null;
     public int $length = 6;
     public int $ttlSeconds = 300;
     public int $challengeTtlSeconds = 900;
@@ -46,7 +50,12 @@ class Otp extends BaseConfig
         $this->fazpassFallbackEnabled = $this->envBool('FAZPASS_FALLBACK_ENABLED', $this->fazpassFallbackEnabled);
         $this->baileysApiUrl = rtrim((string) env('BAILEYS_API_URL', $this->baileysApiUrl), '/');
         $this->baileysApiKey = trim((string) env('BAILEYS_API_KEY', ''));
-        $this->baileysTimeoutSeconds = $this->envInt('BAILEYS_TIMEOUT_SECONDS', $this->baileysTimeoutSeconds);
+        $this->baileysTimeoutSeconds = max(5, $this->envInt('BAILEYS_TIMEOUT_SECONDS', $this->baileysTimeoutSeconds));
+        $this->baileysAckTimeoutMs = max(1000, $this->envInt('BAILEYS_ACK_TIMEOUT_MS', $this->baileysAckTimeoutMs));
+        $this->baileysWaitForAck = $this->envBool('BAILEYS_WAIT_FOR_ACK', $this->baileysWaitForAck);
+        $this->appName = trim((string) env('APP_NAME', $this->appName));
+        $envTemplate = trim((string) env('BAILEYS_OTP_TEMPLATE', ''));
+        $this->baileysOtpTemplate = $envTemplate !== '' ? $envTemplate : null;
         $this->ttlSeconds = $this->envInt('OTP_TTL_SECONDS', $this->ttlSeconds);
         $this->challengeTtlSeconds = $this->envInt('OTP_CHALLENGE_TTL_SECONDS', $this->challengeTtlSeconds);
         $this->resendCooldownSeconds = $this->envInt('OTP_RESEND_COOLDOWN_SECONDS', $this->resendCooldownSeconds);

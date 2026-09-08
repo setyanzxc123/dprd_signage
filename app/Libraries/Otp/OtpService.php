@@ -243,7 +243,17 @@ final class OtpService
             return $this->sendViaFazpass($otpId, $phone, $expiresAt, $now);
         }
 
-        $baileysResult = $this->baileysProvider->sendOtp($phone, $code);
+        try {
+            $baileysResult = $this->baileysProvider->sendOtp($phone, $code);
+        } catch (\Throwable $e) {
+            $baileysResult = new \App\Libraries\Otp\ValueObjects\BaileysSendResult(
+                false,
+                error: $e->getMessage(),
+                errorCode: 'EXCEPTION',
+                statusCode: 0,
+            );
+        }
+
         if ($baileysResult->success) {
             $this->repository->transitionStatus($otpId, [OtpStatus::CREATED], OtpStatus::PENDING, [
                 'provider'                => 'baileys',
@@ -254,9 +264,12 @@ final class OtpService
             return new OtpRequestResult(true, OtpStatus::PENDING, $this->config->resendCooldownSeconds, expiresAt: $expiresAt);
         }
 
-        log_message('warning', 'Pengiriman OTP via Baileys gagal untuk anggota {id}: {error}', [
-            'id'    => $anggotaId,
-            'error' => $baileysResult->error ?? 'unknown error',
+        log_message('warning', 'Pengiriman OTP via Baileys gagal untuk anggota {id} ({phone}). HTTP {status} | Code: {code} | Error: {error}', [
+            'id'     => $anggotaId,
+            'phone'  => $phone,
+            'status' => $baileysResult->statusCode,
+            'code'   => $baileysResult->errorCode ?? 'UNKNOWN',
+            'error'  => $baileysResult->error ?? 'unknown error',
         ]);
 
         $canFallback = $providerMode === 'hybrid'
@@ -264,8 +277,9 @@ final class OtpService
             && $this->fazpassProvider->isConfigured();
 
         if ($canFallback) {
-            log_message('notice', 'Mengalihkan pengiriman OTP ke Fazpass Fallback untuk anggota {id}.', [
-                'id' => $anggotaId,
+            log_message('notice', 'Memicu fallback instan ke Fazpass untuk anggota {id} setelah Baileys gagal ({code}).', [
+                'id'   => $anggotaId,
+                'code' => $baileysResult->errorCode ?? 'UNKNOWN',
             ]);
 
             return $this->sendViaFazpass($otpId, $phone, $expiresAt, $now);

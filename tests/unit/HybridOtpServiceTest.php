@@ -194,6 +194,133 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $this->assertSame(0, $fazpassTransport->requestCount);
     }
 
+    public function testHybridFallsBackOn502ServerRejected(): void
+    {
+        $repository = new HybridOtpMemoryRepository();
+        $baileysTransport = new HybridRecordingTransport([
+            '/send-otp' => new HttpResponse(502, json_encode([
+                'status'  => 'error',
+                'code'    => 'WA_SERVER_REJECTED',
+                'message' => 'Server WhatsApp menolak pengiriman pesan.',
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $fazpassTransport = new HybridRecordingTransport([
+            '/otp/request' => new HttpResponse(200, json_encode([
+                'status' => true,
+                'data'   => ['id' => 'faz-502', 'transaction_id' => 'tx-502'],
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
+
+        $result = $service->request(7, '628123456789');
+
+        $this->assertTrue($result->success);
+        $this->assertSame(OtpStatus::PENDING, $result->status);
+        $this->assertSame(1, $baileysTransport->requestCount);
+        $this->assertSame(1, $fazpassTransport->requestCount);
+        $this->assertSame('fazpass', $repository->otps[1]['provider']);
+    }
+
+    public function testHybridFallsBackOn504ServerAckTimeout(): void
+    {
+        $repository = new HybridOtpMemoryRepository();
+        $baileysTransport = new HybridRecordingTransport([
+            '/send-otp' => new HttpResponse(504, json_encode([
+                'status'  => 'error',
+                'code'    => 'WA_SERVER_ACK_TIMEOUT',
+                'message' => 'Batas waktu Server ACK terlampaui.',
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $fazpassTransport = new HybridRecordingTransport([
+            '/otp/request' => new HttpResponse(200, json_encode([
+                'status' => true,
+                'data'   => ['id' => 'faz-504', 'transaction_id' => 'tx-504'],
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
+
+        $result = $service->request(7, '628123456789');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('fazpass', $repository->otps[1]['provider']);
+        $this->assertSame(1, $baileysTransport->requestCount);
+        $this->assertSame(1, $fazpassTransport->requestCount);
+    }
+
+    public function testHybridFallsBackOn422NumberNotRegistered(): void
+    {
+        $repository = new HybridOtpMemoryRepository();
+        $baileysTransport = new HybridRecordingTransport([
+            '/send-otp' => new HttpResponse(422, json_encode([
+                'status'  => 'error',
+                'code'    => 'WA_NUMBER_NOT_REGISTERED',
+                'message' => 'Nomor tujuan tidak terdaftar di WhatsApp.',
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $fazpassTransport = new HybridRecordingTransport([
+            '/otp/request' => new HttpResponse(200, json_encode([
+                'status' => true,
+                'data'   => ['id' => 'faz-422', 'transaction_id' => 'tx-422'],
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
+
+        $result = $service->request(7, '628123456789');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('fazpass', $repository->otps[1]['provider']);
+        $this->assertSame(1, $baileysTransport->requestCount);
+        $this->assertSame(1, $fazpassTransport->requestCount);
+    }
+
+    public function testHybridFallsBackOn429RateLimited(): void
+    {
+        $repository = new HybridOtpMemoryRepository();
+        $baileysTransport = new HybridRecordingTransport([
+            '/send-otp' => new HttpResponse(429, json_encode([
+                'status'  => 'error',
+                'code'    => 'RATE_LIMITED',
+                'message' => 'Jeda cooldown gateway aktif.',
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $fazpassTransport = new HybridRecordingTransport([
+            '/otp/request' => new HttpResponse(200, json_encode([
+                'status' => true,
+                'data'   => ['id' => 'faz-429', 'transaction_id' => 'tx-429'],
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
+
+        $result = $service->request(7, '628123456789');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('fazpass', $repository->otps[1]['provider']);
+        $this->assertSame(1, $baileysTransport->requestCount);
+        $this->assertSame(1, $fazpassTransport->requestCount);
+    }
+
+    public function testHybridFallsBackOnNetworkTimeout(): void
+    {
+        $repository = new HybridOtpMemoryRepository();
+        $baileysTransport = new HybridRecordingTransport([
+            '/send-otp' => new HttpResponse(0, null, 'Operation timed out after 5000 milliseconds'),
+        ]);
+        $fazpassTransport = new HybridRecordingTransport([
+            '/otp/request' => new HttpResponse(200, json_encode([
+                'status' => true,
+                'data'   => ['id' => 'faz-timeout', 'transaction_id' => 'tx-timeout'],
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
+
+        $result = $service->request(7, '628123456789');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('fazpass', $repository->otps[1]['provider']);
+        $this->assertSame(1, $baileysTransport->requestCount);
+        $this->assertSame(1, $fazpassTransport->requestCount);
+    }
+
     public function testBaileysOnlyProviderModeDoesNotUseFazpass(): void
     {
         $config = $this->config();
