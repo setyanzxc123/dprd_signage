@@ -261,15 +261,21 @@ class JadwalBanmusModel extends Model
             return [];
         }
 
-        $builder = $this->db->table($this->table . ' p')
-            ->select(
-                'p.id, p.dokumen_banmus_id, p.agenda, p.jenis_agenda, p.periode_label,
+        $hasRuangan = $this->db->tableExists('ruangan');
+        $selectCols = 'p.id, p.dokumen_banmus_id, p.agenda, p.jenis_agenda, p.periode_label,
                  p.tanggal_mulai, p.tanggal_selesai, p.bulan_mulai, p.bulan_selesai,
                  p.urutan, p.catatan, p.status, p.tanggal, p.jam_mulai, p.jam_selesai,
                  p.ruangan_id, p.lokasi_lainnya, p.publikasi, p.materi_url, p.stream_url,
-                 p.undangan_file, p.undangan_nama_asli'
-            )
-            ->whereIn('p.dokumen_banmus_id', $documentIds)
+                 p.undangan_file, p.undangan_nama_asli' . ($hasRuangan ? ', r.name AS nama_ruangan' : '');
+
+        $builder = $this->db->table($this->table . ' p')
+            ->select($selectCols);
+
+        if ($hasRuangan) {
+            $builder->join('ruangan r', 'r.id = p.ruangan_id', 'left');
+        }
+
+        $builder->whereIn('p.dokumen_banmus_id', $documentIds)
             ->where('p.deleted_at', null);
         if (! $includeInternal) {
             $builder->where('p.publikasi', 'publik');
@@ -280,6 +286,34 @@ class JadwalBanmusModel extends Model
             ->orderBy('p.id', 'ASC')
             ->get()
             ->getResultArray();
+
+        if ($rows !== [] && $this->db->tableExists('jadwal_banmus_unit_rapat') && $this->db->tableExists('unit_rapat')) {
+            $itemIds = array_map('intval', array_column($rows, 'id'));
+            $unitRows = $this->db->table('jadwal_banmus_unit_rapat jbur')
+                ->select('jbur.jadwal_banmus_id, ur.id, ur.nama')
+                ->join('unit_rapat ur', 'ur.id = jbur.unit_rapat_id')
+                ->whereIn('jbur.jadwal_banmus_id', $itemIds)
+                ->orderBy('ur.urutan', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            $unitMap = [];
+            foreach ($unitRows as $u) {
+                $unitMap[(int) $u['jadwal_banmus_id']][] = [
+                    'id'   => (int) $u['id'],
+                    'nama' => (string) $u['nama'],
+                ];
+            }
+            foreach ($rows as &$row) {
+                $row['units'] = $unitMap[(int) $row['id']] ?? [];
+            }
+            unset($row);
+        } else {
+            foreach ($rows as &$row) {
+                $row['units'] = [];
+            }
+            unset($row);
+        }
 
         $grouped = [];
         foreach ($rows as $row) {

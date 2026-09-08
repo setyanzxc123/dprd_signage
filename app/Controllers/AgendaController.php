@@ -64,6 +64,7 @@ class AgendaController extends BaseController
             : null;
 
         return $this->privateResponse()->setBody(view('agenda/banmus', [
+            'namaInstansi'      => 'DPRD Provinsi Sulawesi Tengah',
             'logoUrl'           => base_url('assets/images/logo_dprd.png'),
             'portalUrl'         => base_url('agenda'),
             'member'            => $member,

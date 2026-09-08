@@ -70,12 +70,12 @@
     opacity: 0.4;
     mask-image: url('../images/motif_batik_palu_band.png');
     mask-repeat: repeat-x;
-    mask-size: auto 130%;
-    mask-position: left center;
+    mask-size: auto 170px;
+    mask-position: left -20px;
     -webkit-mask-image: url('../images/motif_batik_palu_band.png');
     -webkit-mask-repeat: repeat-x;
-    -webkit-mask-size: auto 130%;
-    -webkit-mask-position: left center;
+    -webkit-mask-size: auto 170px;
+    -webkit-mask-position: left -20px;
   }
 
   @media (min-width: 640px) {
