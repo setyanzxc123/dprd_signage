@@ -45,12 +45,12 @@ class NotulenController extends BaseController
             $isInvalid = false;
             if ($targetType === MeetingTranscriptionJobModel::TYPE_BANMUS) {
                 $checkItem = (new JadwalBanmusModel())->find($targetId);
-                if ($checkItem && (($checkItem['jenis_agenda'] ?? '') === JadwalBanmusModel::TYPE_NON_MEETING || ($checkItem['status'] ?? '') === 'dibatalkan')) {
+                if ($checkItem && (($checkItem['jenis_agenda'] ?? '') === JadwalBanmusModel::TYPE_NON_MEETING || in_array($checkItem['status'] ?? '', ['dibatalkan', 'proyeksi'], true) || empty($checkItem['tanggal']))) {
                     $isInvalid = true;
                 }
             } else {
                 $checkItem = (new JadwalUmumModel())->find($targetId);
-                if ($checkItem && (($checkItem['jenis_agenda'] ?? '') === JadwalUmumModel::TYPE_NON_MEETING || ($checkItem['status'] ?? '') === 'dibatalkan')) {
+                if ($checkItem && (($checkItem['jenis_agenda'] ?? '') === JadwalUmumModel::TYPE_NON_MEETING || in_array($checkItem['status'] ?? '', ['dibatalkan', 'non_rapat'], true))) {
                     $isInvalid = true;
                 }
             }
@@ -168,8 +168,9 @@ class NotulenController extends BaseController
             $banmusBuilder->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING);
         }
         if ($db->fieldExists('status', 'jadwal_banmus')) {
-            $banmusBuilder->whereNotIn('jb.status', ['dibatalkan', 'non_rapat']);
+            $banmusBuilder->whereNotIn('jb.status', ['dibatalkan', 'non_rapat', 'proyeksi']);
         }
+        $banmusBuilder->where('jb.tanggal IS NOT NULL', null, false)->where("jb.tanggal != ''", null, false);
         if ($db->tableExists('dokumen_banmus') && $db->fieldExists('dokumen_banmus_id', 'jadwal_banmus')) {
             $banmusBuilder->select('jb.dokumen_banmus_id, db.nomor_sk, db.judul AS dokumen_judul, db.masa_persidangan, db.tahun AS dokumen_tahun')
                 ->join('dokumen_banmus db', 'db.id = jb.dokumen_banmus_id', 'left');

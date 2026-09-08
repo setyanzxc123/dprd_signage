@@ -257,7 +257,7 @@ $resourceAccessLabels = [
                                             Edit
                                         </button>
 
-                                        <?php if (! $isNonMeeting): ?>
+                                        <?php if (! $isNonMeeting && $item['status'] !== 'dibatalkan' && $item['status'] !== 'proyeksi'): ?>
                                             <a
                                                 href="<?= base_url('admin/notulen?jadwal_type=banmus&jadwal_id=' . (int) $item['id']) ?>"
                                                 class="p-1.5 inline-flex items-center justify-center rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 hover:border-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 shadow-2xs transition"

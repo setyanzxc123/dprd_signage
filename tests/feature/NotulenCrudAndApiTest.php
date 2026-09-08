@@ -915,6 +915,70 @@ EOT;
         $this->assertStringContainsString('Ranperda disetujui', $pillars['kesimpulan_akhir'][0]);
     }
 
+    public function testPresetScheduleRejectsIneligibleAgendas(): void
+    {
+        // 1. Non-rapat banmus
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 101,
+            'agenda'       => 'Reses Masa Sidang I',
+            'jenis_agenda' => 'non_rapat',
+            'tanggal'      => '2026-09-01',
+            'status'       => 'menunggu',
+        ]);
+        $resp = $this->adminGet('/admin/notulen?jadwal_type=banmus&jadwal_id=101');
+        $resp->assertRedirectTo(base_url('admin/notulen'));
+
+        // 2. Proyeksi banmus
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 102,
+            'agenda'       => 'Rapat Proyeksi Banmus',
+            'jenis_agenda' => 'rapat',
+            'tanggal'      => null,
+            'status'       => 'proyeksi',
+        ]);
+        $resp = $this->adminGet('/admin/notulen?jadwal_type=banmus&jadwal_id=102');
+        $resp->assertRedirectTo(base_url('admin/notulen'));
+
+        // 3. Non-rapat umum
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'           => 201,
+            'judul'        => 'Kunjungan Kerja Luar Daerah',
+            'jenis_agenda' => 'non_rapat',
+            'tanggal'      => '2026-09-02',
+            'status'       => 'menunggu',
+        ]);
+        $resp = $this->adminGet('/admin/notulen?jadwal_type=umum&jadwal_id=201');
+        $resp->assertRedirectTo(base_url('admin/notulen'));
+    }
+
+    public function testServiceRejectsIneligibleScheduleWhenCreatingJob(): void
+    {
+        $service = new NotulenService($this->testDb);
+
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 103,
+            'agenda'       => 'Kunjungan Lapangan',
+            'jenis_agenda' => 'non_rapat',
+            'tanggal'      => '2026-09-03',
+            'status'       => 'menunggu',
+        ]);
+
+        $error = $service->validateScheduleEligibility('banmus', 103);
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('Agenda non-rapat', $error);
+
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 104,
+            'agenda'       => 'Rapat Paripurna Sah',
+            'jenis_agenda' => 'rapat',
+            'tanggal'      => '2026-09-04',
+            'status'       => 'menunggu',
+        ]);
+
+        $valid = $service->validateScheduleEligibility('banmus', 104);
+        $this->assertNull($valid);
+    }
+
     private function adminGet(string $path)
     {
         return $this->withSession(['auth_user' => ['id' => 1, 'name' => 'Administrator', 'username' => 'admin']])->get($path);
