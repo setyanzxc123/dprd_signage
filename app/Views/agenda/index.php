@@ -358,7 +358,7 @@ if ($isMember) {
                             <span v-else-if="item.status === 'dibatalkan'" class="text-rose-600 dark:text-rose-400 font-semibold truncate">· Dibatalkan</span>
                             <span v-else-if="item.status === 'ditunda'" class="text-amber-600 dark:text-amber-400 font-semibold truncate">· Ditunda</span>
                         </div>
-                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 sm:line-clamp-2 leading-snug [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ item.judul }}</p>
+                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 sm:line-clamp-2 leading-snug [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ cleanJudul(item.judul) }}</p>
                     </div>
                     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         <a v-if="item.has_stream && item.status !== 'dibatalkan'" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 min-h-[30px] sm:min-h-8 py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-bold shadow-xs transition whitespace-nowrap">
@@ -374,7 +374,7 @@ if ($isMember) {
             </ol>
         </div>
         <p v-if="todayAgendas.length === 0" class="py-3 text-xs font-medium text-slate-600 dark:text-slate-300 border-b border-slate-200/80 dark:border-slate-800/80">
-            Tidak ada jadwal sidang atau kegiatan dewan untuk hari ini.<span v-if="nearestUpcomingAgenda"> Agenda berikutnya: <strong class="text-slate-800 dark:text-slate-200 font-semibold">{{ fullDate(nearestUpcomingAgenda.tanggal) }}</strong> ({{ nearestUpcomingAgenda.judul }})</span>
+            Tidak ada jadwal sidang atau kegiatan dewan untuk hari ini.<span v-if="nearestUpcomingAgenda"> Agenda berikutnya: <strong class="text-slate-800 dark:text-slate-200 font-semibold">{{ fullDate(nearestUpcomingAgenda.tanggal) }}</strong> ({{ cleanJudul(nearestUpcomingAgenda.judul) }})</span>
         </p>
 
         <div class="xl:hidden mt-3 flex border-b border-slate-200 dark:border-slate-800 gap-x-4" role="tablist" aria-label="Pilih tampilan sisi agenda">
@@ -471,14 +471,20 @@ if ($isMember) {
                                 </div>
 
                                 <div class="min-w-0">
-                                    <span class="line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ item.judul }}</span>
-                                    <div class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-                                        <span v-if="item.status === 'dibatalkan'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                    <div class="flex items-start gap-2">
+                                        <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ cleanJudul(item.judul) }}</span>
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                            <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                            Live
+                                        </span>
+                                    </div>
+                                    <div v-if="(item.units && item.units.length > 0) || item.komisi" class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
                                         <template v-if="item.units && item.units.length > 0">
                                             <span
                                                 v-for="u in item.units"
@@ -512,11 +518,6 @@ if ($isMember) {
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Ruangan</span>
                                         <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
                                         <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ item.ruangan || '-' }}</span>
-                                    </div>
-                                    <div v-if="item.status && item.status !== 'proyeksi'" class="flex items-start gap-2">
-                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Status</span>
-                                        <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
-                                        <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ statusLabel(item.status) }}</span>
                                     </div>
                                     <div class="flex items-start gap-2">
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Sumber</span>
@@ -651,14 +652,20 @@ if ($isMember) {
                                 </div>
 
                                 <div class="min-w-0">
-                                    <span class="line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ item.judul }}</span>
-                                    <div class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-                                        <span v-if="item.status === 'dibatalkan'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                    <div class="flex items-start gap-2">
+                                        <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">{{ cleanJudul(item.judul) }}</span>
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                            <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                            Live
+                                        </span>
+                                    </div>
+                                    <div v-if="(item.units && item.units.length > 0) || item.komisi" class="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
                                         <template v-if="item.units && item.units.length > 0">
                                             <span
                                                 v-for="u in item.units"
@@ -692,11 +699,6 @@ if ($isMember) {
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Ruangan</span>
                                         <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
                                         <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ item.ruangan || '-' }}</span>
-                                    </div>
-                                    <div v-if="item.status && item.status !== 'proyeksi'" class="flex items-start gap-2">
-                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Status</span>
-                                        <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
-                                        <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ statusLabel(item.status) }}</span>
                                     </div>
                                     <div class="flex items-start gap-2">
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Sumber</span>
@@ -1792,6 +1794,15 @@ if ($isMember) {
                 }[name] || name;
             }
 
+            function cleanJudul(title) {
+                if (!title) {
+                    return '';
+                }
+                return String(title)
+                    .replace(/\s*[\(\[]\s*(ditunda|dibatalkan|selesai|berlangsung)\s*[\)\]]\s*$/i, '')
+                    .trim();
+            }
+
             function statusLabel(status) {
                 return {
                     proyeksi: 'Rencana',
@@ -2019,6 +2030,7 @@ if ($isMember) {
                 openRisalahModal,
                 closeRisalahModal,
                 compactUnitName,
+                cleanJudul,
                 statusLabel,
                 statusBadgeClass,
                 executionTime,

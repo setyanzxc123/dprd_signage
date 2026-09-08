@@ -601,7 +601,7 @@ class CurrentSystemDataSeeder extends Seeder
             ),
             $this->dummyBanmusItem(
                 $date,
-                'Rapat Gabungan Komisi Persiapan Agenda Banmus (Ditunda)',
+                'Rapat Gabungan Komisi Persiapan Agenda Banmus',
                 'rapat',
                 $date,
                 '17:30:00',
@@ -618,7 +618,7 @@ class CurrentSystemDataSeeder extends Seeder
             ),
             $this->dummyBanmusItem(
                 $tomorrow,
-                'Rapat Banmus Finalisasi Jadwal Hari Berikutnya (Dibatalkan)',
+                'Rapat Banmus Finalisasi Jadwal Hari Berikutnya',
                 'rapat',
                 $tomorrow,
                 '09:00:00',
@@ -1428,7 +1428,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'internal',
             ),
             $this->generalSchedule(
-                'Rapat Dengar Pendapat Penataan Ruang Wilayah (Ditunda)',
+                'Rapat Dengar Pendapat Penataan Ruang Wilayah',
                 $now->modify('+3 hours'),
                 $now->modify('+5 hours'),
                 'Ruang Komisi III',
@@ -1443,7 +1443,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'ditunda',
             ),
             $this->generalSchedule(
-                'Rapat Pleno Bapemperda Masa Sidang (Dibatalkan)',
+                'Rapat Pleno Bapemperda Masa Sidang',
                 $now->modify('+2 hours'),
                 $now->modify('+4 hours'),
                 'Ruang Komisi II',
@@ -1711,7 +1711,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'rapat',
             ),
             $this->generalAgenda(
-                'Audiensi Aliansi Masyarakat Peduli Pangan (Ditunda)',
+                'Audiensi Aliansi Masyarakat Peduli Pangan',
                 'audiensi',
                 'Aliansi Masyarakat Peduli Pangan',
                 new DateTimeImmutable('2027-08-03 10:00:00'),
@@ -1734,9 +1734,10 @@ class CurrentSystemDataSeeder extends Seeder
                 false,
                 [],
                 'rapat',
+                'menunggu',
             ),
             $this->generalAgenda(
-                'Kunjungan Edukasi Mahasiswa Fakultas Hukum (Dibatalkan)',
+                'Kunjungan Edukasi Mahasiswa Fakultas Hukum',
                 'kunjungan',
                 'Fakultas Hukum Universitas Tadulako',
                 new DateTimeImmutable('2027-08-05 09:30:00'),
