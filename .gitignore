@@ -87,6 +87,7 @@ php_errors.log
 vendor/
 !/public/assets/vendor/
 !/public/assets/vendor/**
+*.zip
 
 #-------------------------
 # Node / Frontend Build

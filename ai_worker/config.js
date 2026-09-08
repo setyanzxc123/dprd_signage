@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
@@ -15,17 +16,43 @@ function getEnv(key, defaultValue = '') {
     : defaultValue;
 }
 
+const rawHost = getEnv('database.default.hostname', getEnv('DB_HOST', '127.0.0.1'));
+const configuredSocket = getEnv('database.default.socket', getEnv('DB_SOCKET', ''));
+
+const candidateSockets = [
+  configuredSocket,
+  rawHost.startsWith('/') ? rawHost : '',
+  '/run/mysqld/mysqld.sock',
+  '/var/run/mysqld/mysqld.sock',
+  '/var/lib/mysql/mysql.sock',
+  '/tmp/mysql.sock',
+].filter(Boolean);
+
+let detectedSocket = '';
+if (configuredSocket && fs.existsSync(configuredSocket)) {
+  detectedSocket = configuredSocket;
+} else if (rawHost.startsWith('/') && fs.existsSync(rawHost)) {
+  detectedSocket = rawHost;
+} else if (process.platform === 'linux' && (rawHost === 'localhost' || configuredSocket !== '')) {
+  detectedSocket = candidateSockets.find((p) => fs.existsSync(p)) || '';
+}
+
 // Database config (kompatibel dengan format CI4 .env maupun variabel standar)
 const dbConfig = {
-  host: getEnv('database.default.hostname', getEnv('DB_HOST', '127.0.0.1')),
   user: getEnv('database.default.username', getEnv('DB_USER', 'root')),
   password: getEnv('database.default.password', getEnv('DB_PASS', '')),
   database: getEnv('database.default.database', getEnv('DB_NAME', 'dprd_signage')),
-  port: parseInt(getEnv('database.default.port', getEnv('DB_PORT', '3306')), 10),
   waitForConnections: true,
   connectionLimit: 5,
   queueLimit: 0,
 };
+
+if (detectedSocket) {
+  dbConfig.socketPath = detectedSocket;
+} else {
+  dbConfig.host = rawHost;
+  dbConfig.port = parseInt(getEnv('database.default.port', getEnv('DB_PORT', '3306')), 10);
+}
 
 // Gemini API Key & Model Chain
 const geminiApiKey = getEnv('GEMINI_API_KEY', getEnv('GOOGLE_AI_API_KEY', getEnv('AI_GEMINI_KEY', '')));

@@ -46,7 +46,8 @@ async function runSmokeTest() {
   // 1. Uji Koneksi Database
   try {
     const [dbTest] = await pool.query('SELECT 1 as connected');
-    console.log('[DB] Koneksi MySQL berhasil (127.0.0.1:3306)');
+    const target = config.db.socketPath ? `socket: ${config.db.socketPath}` : `${config.db.host}:${config.db.port}`;
+    console.log(`[DB] Koneksi MySQL berhasil (${target})`);
   } catch (err) {
     console.error('[DB] Gagal terhubung ke MySQL:', err.message);
     process.exit(1);
