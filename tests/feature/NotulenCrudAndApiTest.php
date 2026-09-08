@@ -1044,23 +1044,32 @@ EOT;
         $this->forge->createTable('anggota');
 
         $this->forge->addField([
-            'id'          => ['type' => 'INTEGER', 'auto_increment' => true],
-            'judul'       => ['type' => 'VARCHAR', 'constraint' => 255],
-            'tanggal'     => ['type' => 'DATE'],
-            'waktu_mulai' => ['type' => 'TIME', 'null' => true],
-            'created_at'  => ['type' => 'DATETIME', 'null' => true],
+            'id'             => ['type' => 'INTEGER', 'auto_increment' => true],
+            'judul'          => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
+            'tanggal'        => ['type' => 'DATE'],
+            'waktu_mulai'    => ['type' => 'TIME', 'null' => true],
+            'waktu_selesai'  => ['type' => 'TIME', 'null' => true],
+            'ruangan_id'     => ['type' => 'INTEGER', 'null' => true],
+            'lokasi_lainnya' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'pihak_eksternal'=> ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'status'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
+            'is_publik'      => ['type' => 'INTEGER', 'default' => 0],
+            'created_at'     => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('jadwal_umum');
 
         $this->forge->addField([
-            'id'          => ['type' => 'INTEGER', 'auto_increment' => true],
-            'agenda'      => ['type' => 'VARCHAR', 'constraint' => 255],
-            'tanggal'     => ['type' => 'DATE', 'null' => true],
-            'jam_mulai'   => ['type' => 'TIME', 'null' => true],
-            'jam_selesai' => ['type' => 'TIME', 'null' => true],
-            'deleted_at'  => ['type' => 'DATETIME', 'null' => true],
-            'created_at'  => ['type' => 'DATETIME', 'null' => true],
+            'id'           => ['type' => 'INTEGER', 'auto_increment' => true],
+            'agenda'       => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda' => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
+            'tanggal'      => ['type' => 'DATE', 'null' => true],
+            'jam_mulai'    => ['type' => 'TIME', 'null' => true],
+            'jam_selesai'  => ['type' => 'TIME', 'null' => true],
+            'status'       => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
+            'deleted_at'   => ['type' => 'DATETIME', 'null' => true],
+            'created_at'   => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('jadwal_banmus');

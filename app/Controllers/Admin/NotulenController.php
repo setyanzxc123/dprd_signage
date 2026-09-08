@@ -42,6 +42,25 @@ class NotulenController extends BaseController
 
         $presetSchedule = null;
         if ($targetId > 0 && in_array($targetType, [MeetingTranscriptionJobModel::TYPE_UMUM, MeetingTranscriptionJobModel::TYPE_BANMUS], true)) {
+            $isInvalid = false;
+            if ($targetType === MeetingTranscriptionJobModel::TYPE_BANMUS) {
+                $checkItem = (new JadwalBanmusModel())->find($targetId);
+                if ($checkItem && (($checkItem['jenis_agenda'] ?? '') === JadwalBanmusModel::TYPE_NON_MEETING || ($checkItem['status'] ?? '') === 'dibatalkan')) {
+                    $isInvalid = true;
+                }
+            } else {
+                $checkItem = (new JadwalUmumModel())->find($targetId);
+                if ($checkItem && (($checkItem['jenis_agenda'] ?? '') === JadwalUmumModel::TYPE_NON_MEETING || ($checkItem['status'] ?? '') === 'dibatalkan')) {
+                    $isInvalid = true;
+                }
+            }
+
+            if ($isInvalid) {
+                session()->setFlashdata('error', 'Kegiatan non-rapat atau agenda yang dibatalkan tidak memiliki notulensi AI.');
+
+                return redirect()->to(base_url('admin/notulen'));
+            }
+
             // Cek apakah sudah ada job notulen untuk jadwal ini
             $existingJob = $jobModel->where('jadwal_type', $targetType)
                 ->where('jadwal_id', $targetId)
@@ -106,6 +125,13 @@ class NotulenController extends BaseController
         $generalBuilder = $db->table('jadwal_umum ju')
             ->select('ju.id, ju.judul, ju.tanggal, ju.waktu_mulai');
 
+        if ($db->fieldExists('jenis_agenda', 'jadwal_umum')) {
+            $generalBuilder->where('ju.jenis_agenda', JadwalUmumModel::TYPE_MEETING);
+        }
+        if ($db->fieldExists('status', 'jadwal_umum')) {
+            $generalBuilder->whereNotIn('ju.status', ['dibatalkan', 'non_rapat']);
+        }
+
         if ($db->tableExists('ruangan') && $db->fieldExists('ruangan_id', 'jadwal_umum')) {
             $generalBuilder->select('r.name AS nama_ruangan')
                 ->join('ruangan r', 'r.id = ju.ruangan_id', 'left');
@@ -140,6 +166,9 @@ class NotulenController extends BaseController
         }
         if ($db->fieldExists('jenis_agenda', 'jadwal_banmus')) {
             $banmusBuilder->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING);
+        }
+        if ($db->fieldExists('status', 'jadwal_banmus')) {
+            $banmusBuilder->whereNotIn('jb.status', ['dibatalkan', 'non_rapat']);
         }
         if ($db->tableExists('dokumen_banmus') && $db->fieldExists('dokumen_banmus_id', 'jadwal_banmus')) {
             $banmusBuilder->select('jb.dokumen_banmus_id, db.nomor_sk, db.judul AS dokumen_judul, db.masa_persidangan, db.tahun AS dokumen_tahun')
