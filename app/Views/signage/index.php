@@ -3,6 +3,7 @@ $signageCssVersion = is_file(FCPATH . 'assets/css/signage.css') ? filemtime(FCPA
 $fontVersion       = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $vueVersion        = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
 $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? filemtime(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') : time();
+$logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 ?>
 <!DOCTYPE html>
 <html lang="id" data-theme="<?= esc($signageTema ?? 'dark') ?>">
@@ -13,7 +14,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
     <title>Layar Informasi - DPRD Sulawesi Tengah</title>
     <meta name="robots" content="noindex, nofollow" />
 
-    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/signage.css?v=' . $signageCssVersion) ?>" rel="stylesheet" />
     <script src="<?= base_url('assets/vendor/vue/vue.global.prod.js?v=' . $vueVersion) ?>"></script>
@@ -24,60 +25,81 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
     <div id="app" v-cloak>
 
-        <header id="panel-header" class="navbar border-b border-base-300 bg-base-100">
-            <div class="navbar-start min-w-0 gap-[1vw]">
-                <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>"
-                    alt="Logo DPRD Provinsi Sulawesi Tengah"
-                    class="h-[clamp(52px,9vh,112px)] w-auto rounded-box object-contain" />
-                <div class="min-w-0 leading-tight">
-                    <div class="text-[clamp(17px,1.08vw,24px)] font-bold uppercase tracking-[0.08em]">
-                        DPRD Provinsi
-                    </div>
-                    <div class="text-[clamp(13px,0.82vw,18px)] uppercase tracking-[0.08em] text-base-content/70">
-                        Sulawesi Tengah
-                    </div>
+        <header id="panel-header" class="relative z-20 border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs">
+            <h1 class="sr-only">Layar Informasi Agenda Rapat DPRD Provinsi Sulawesi Tengah</h1>
+            <div class="signage-header-motif" aria-hidden="true"></div>
+
+            <div class="flex w-full items-center justify-between gap-[1.2vw] relative z-10">
+                <div class="flex items-center gap-[1vw] min-w-0 flex-1">
+                    <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>"
+                        alt="Logo DPRD Provinsi Sulawesi Tengah"
+                        class="h-[clamp(56px,7.2vh,84px)] w-[clamp(56px,7.2vh,84px)] shrink-0 object-contain" />
+                    <span class="min-w-0 leading-tight">
+                        <span class="block truncate text-[clamp(17px,1.2vw,24px)] font-black uppercase tracking-[0.08em] text-slate-900 dark:text-white">
+                            DPRD Provinsi
+                        </span>
+                        <span class="block truncate text-[clamp(12px,0.85vw,17px)] uppercase tracking-[0.08em] text-slate-600 dark:text-slate-400 font-semibold">
+                            Sulawesi Tengah
+                        </span>
+                    </span>
                 </div>
-            </div>
 
-            <div class="navbar-end w-auto min-w-max">
-                <div class="stats stats-horizontal border border-base-300 bg-base-200 shadow-sm">
-                    <div class="stat place-items-center px-[1vw] py-[0.7vh]">
-                        <div class="stat-value flex items-center gap-[0.4vw] text-[clamp(20px,1.2vw,28px)]">
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/90 px-[0.8vw] py-[0.45vh] shadow-xs">
+                        <div class="flex items-center gap-[0.6vw] px-[1vw] py-[0.35vh]">
                             <img v-if="cuaca.icon_url" :src="cuaca.icon_url"
-                                class="h-[clamp(24px,1.8vw,34px)] w-[clamp(24px,1.8vw,34px)] object-contain"
+                                class="h-[clamp(28px,2vw,40px)] w-[clamp(28px,2vw,40px)] object-contain"
                                 alt="Ikon cuaca" />
-                            <span v-else class="status status-info status-lg"></span>
-                            <span>{{ cuaca.suhu }}</span>
+                            <span v-else class="h-3 w-3 rounded-full bg-sky-500"></span>
+                            <div class="text-left">
+                                <span class="block text-[clamp(18px,1.3vw,26px)] font-black leading-tight text-slate-900 dark:text-white">{{ cuaca.suhu }}</span>
+                                <span class="block max-w-[9.5vw] truncate text-[clamp(11px,0.75vw,15px)] font-medium text-slate-600 dark:text-slate-400">{{ cuaca.kondisi }}</span>
+                            </div>
                         </div>
-                        <div class="stat-desc text-[clamp(11px,0.68vw,14px)] font-semibold">
-                            {{ cuaca.kondisi }}
-                        </div>
-                    </div>
 
-                    <div class="stat px-[1vw] py-[0.7vh]">
-                        <div class="stat-title text-[clamp(11px,0.72vw,15px)] font-bold" v-if="cuaca.desa">
-                            {{ cuaca.desa }}, {{ cuaca.kecamatan }}
+                        <div class="flex flex-col justify-center px-[1vw] py-[0.35vh] text-left">
+                            <span class="block max-w-[15vw] truncate text-[clamp(12px,0.8vw,16px)] font-bold text-slate-800 dark:text-slate-200" v-if="cuaca.desa || cuaca.kecamatan">
+                                {{ cuaca.desa ? (cuaca.desa + ', ' + cuaca.kecamatan) : cuaca.kecamatan }}
+                            </span>
+                            <span class="block text-[clamp(10px,0.68vw,13.5px)] font-medium text-slate-600 dark:text-slate-400">
+                                Kelembapan {{ cuaca.kelembapan }} · Angin {{ cuaca.kec_angin }}
+                            </span>
+                            <span class="block text-[clamp(9px,0.6vw,12px)] font-medium italic text-slate-500 dark:text-slate-400">
+                                Sumber: BMKG
+                            </span>
                         </div>
-                        <div class="stat-value mt-[0.25vh] text-[clamp(10px,0.62vw,13px)] font-medium">
-                            Kelembapan {{ cuaca.kelembapan }} · Angin {{ cuaca.kec_angin }}
-                        </div>
-                        <div class="stat-desc text-[clamp(9px,0.58vw,12px)] italic">
-                            Sumber: BMKG
-                        </div>
-                    </div>
 
-                    <div class="stat place-items-center px-[1.4vw] py-[0.7vh] text-center">
-                        <div class="stat-title text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-[0.12em]">
-                            {{ dateDay }}
+                        <div class="flex flex-col items-center justify-center px-[1.1vw] py-[0.35vh] text-center">
+                            <span class="block text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                {{ dateDay }}
+                            </span>
+                            <span class="block text-[clamp(13.5px,0.95vw,19px)] font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                                {{ dateFull }}
+                            </span>
                         </div>
-                        <div class="stat-value text-[clamp(14px,1vw,20px)]">{{ dateFull }}</div>
-                    </div>
 
-                    <div class="stat place-items-center px-[1.4vw] py-[0.7vh] text-center">
-                        <div class="stat-value font-mono text-[clamp(34px,3vw,60px)] tabular-nums leading-none">
-                            {{ clock }}
+                        <div class="flex flex-col items-center justify-center px-[1.2vw] py-[0.35vh] text-center">
+                            <span class="block font-mono text-[clamp(30px,2.4vw,48px)] font-black tabular-nums leading-none text-slate-900 dark:text-white">
+                                {{ clock }}
+                            </span>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="block text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                                    WITA
+                                </span>
+                                <span v-if="connectionStatus === 'offline'"
+                                    class="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-1.5 py-0.5 border border-rose-500/30 text-[clamp(9px,0.55vw,11px)] font-semibold text-rose-600 dark:text-rose-400"
+                                    title="Perangkat sedang offline">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                    OFFLINE
+                                </span>
+                                <span v-else-if="connectionStatus === 'degraded'"
+                                    class="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 border border-amber-500/30 text-[clamp(9px,0.55vw,11px)] font-semibold text-amber-600 dark:text-amber-400"
+                                    title="Sinkronisasi data tertunda / menggunakan cache">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                    CACHE
+                                </span>
+                            </div>
                         </div>
-                        <div class="stat-desc mt-[0.25vh] uppercase tracking-[0.18em]">WITA</div>
                     </div>
                 </div>
             </div>
@@ -90,18 +112,19 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                             d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352Z" />
                     </defs>
                     <g class="parallaxonde">
-                        <use href="#onda" x="48" y="0" fill="rgba(17,170,159,0.6)" />
-                        <use href="#onda" x="48" y="3" fill="rgba(17,170,159,0.4)" />
-                        <use href="#onda" x="48" y="5" fill="rgba(17,170,159,0.1)" />
-                        <use href="#onda" x="48" y="7" fill="#0b6e67" />
+                        <use href="#onda" x="48" y="0" fill="rgba(16,185,129,0.20)" />
+                        <use href="#onda" x="48" y="3" fill="rgba(20,184,166,0.32)" />
+                        <use href="#onda" x="48" y="5" fill="rgba(16,185,129,0.45)" />
+                        <use href="#onda" x="48" y="7" fill="rgba(13,148,136,0.70)" />
                     </g>
                 </svg>
             </div>
         </header>
 
-        <section id="panel-media" class="card rounded-none bg-neutral">
-            <canvas ref="mediaBackdrop" class="media-bg" v-if="media.mode === 'video' && media.url"
-                aria-hidden="true"></canvas>
+        <section id="panel-media" class="rounded-none">
+            <video ref="mediaBackdropVideo" class="media-bg" v-if="media.mode === 'video' && media.url"
+                :src="media.url" crossorigin="anonymous" autoplay loop muted playsinline preload="auto" aria-hidden="true"
+                tabindex="-1" disablePictureInPicture></video>
             <img class="media-bg" v-if="media.mode === 'image' && media.url"
                 :src="media.url" alt="" aria-hidden="true" />
             <video ref="mediaVideo" class="media-main" v-if="media.mode === 'video' && media.url"
@@ -115,102 +138,154 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 :src="media.url" alt="Media Signage DPRD"
                 @load="handleMediaImageLoaded" @error="handleMediaError" />
 
-            <div v-if="(!media.url && !mediaStatusPending) || mediaError"
-                class="media-state card-body absolute inset-0 z-[2] items-center justify-center text-center text-neutral-content">
-                <span class="badge badge-warning">Media tidak tersedia</span>
-                <p class="max-w-[28vw] text-[clamp(11px,0.75vw,15px)] text-neutral-content/70">
-                    Periksa file media pada Pengaturan Sistem.
-                </p>
+            <div v-if="(!media.url && !mediaStatusPending) || mediaError" class="media-state">
+                <div class="flex flex-col items-center gap-3 text-center px-4 max-w-[28vw]">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-200/80 dark:bg-white/10 text-slate-600 dark:text-slate-300">
+                        <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-[clamp(14px,1.05vw,19px)] font-bold tracking-wide text-slate-800 dark:text-slate-100">
+                            {{ mediaError ? 'Media Gagal Dimuat' : 'Media Tidak Tersedia' }}
+                        </div>
+                        <p class="text-[clamp(11px,0.72vw,14px)] text-slate-600 dark:text-slate-400">
+                            {{ mediaError ? 'Terjadi kendala saat memuat berkas media' : 'Belum ada tayangan media yang diatur' }}
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <aside class="qr-panel card card-border bg-base-100/90 shadow-xl backdrop-blur-md"
+            <aside class="qr-panel flex flex-col border border-base-300/80 bg-base-100 shadow-2xl rounded-2xl"
                 v-if="qrBerkas || qrLive">
-                <div class="card-body items-center gap-[0.6vh] p-[clamp(10px,1vw,18px)]">
-                    <div class="card-title text-[clamp(10px,0.65vw,13px)] uppercase tracking-[0.1em] text-base-content/60"
+                <div class="flex flex-col items-center gap-[0.6vh] p-[clamp(10px,1vw,18px)]">
+                    <div class="flex items-center text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-[0.1em] text-base-content/60"
                         v-if="activeQR === 'berkas'">
                         Unduh Berkas Rapat
                     </div>
-                    <div class="card-title gap-[0.35vw] text-[clamp(10px,0.65vw,13px)] uppercase tracking-[0.1em] text-base-content/60"
+                    <div class="flex items-center gap-[0.35vw] text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-[0.1em] text-base-content/60"
                         v-else>
-                        <span class="badge badge-error badge-sm">LIVE</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[0.65vw] font-bold text-emerald-400 border border-emerald-500/40">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            LIVE
+                        </span>
                         Tonton Siaran
                     </div>
-                    <div id="qr-display" :class="{ 'qr-fading': qrFading }"></div>
-                    <div v-if="qrBerkas && qrLive" class="flex gap-1">
-                        <span :class="['status status-xs', activeQR === 'berkas' ? 'status-primary' : 'status-neutral']"></span>
-                        <span :class="['status status-xs', activeQR === 'live' ? 'status-primary' : 'status-neutral']"></span>
+                    <div class="relative w-[110px] h-[110px] flex items-center justify-center">
+                        <div id="qr-display-berkas" class="qr-box" v-show="activeQR === 'berkas'" :class="{ 'qr-fading': qrFading }"></div>
+                        <div id="qr-display-live" class="qr-box" v-show="activeQR === 'live'" :class="{ 'qr-fading': qrFading }"></div>
+                    </div>
+                    <div v-if="qrBerkas && qrLive" class="flex gap-1.5 mt-0.5">
+                        <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'berkas' ? 'bg-primary' : 'bg-base-300']"></span>
+                        <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'live' ? 'bg-primary' : 'bg-base-300']"></span>
                     </div>
                 </div>
             </aside>
         </section>
 
-        <section id="panel-info" class="card rounded-none bg-base-200">
-            <div class="card-body signage-schedule gap-0">
-                <h2 class="card-title border-b border-base-300 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
-                    Agenda Hari Ini
-                </h2>
+        <section id="panel-info" class="flex flex-col rounded-none">
+            <div ref="scheduleContainer" class="signage-schedule flex flex-1 flex-col gap-0 min-h-0">
+                <div class="flex items-center justify-between border-b border-base-300/80 pb-[0.8vh]">
+                    <h2 class="text-[clamp(13px,0.9vw,17px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
+                        Agenda Hari Ini
+                    </h2>
+                    <div v-if="totalSchedulePages > 1"
+                        class="flex items-center gap-2 text-[clamp(11px,0.72vw,14px)] font-bold text-base-content/70">
+                        <span>Hal {{ currentSchedulePage }} / {{ totalSchedulePages }}</span>
+                        <div class="flex items-center gap-1">
+                            <span v-for="page in totalSchedulePages" :key="page"
+                                :class="['h-1.5 rounded-full transition-all duration-300', page === currentSchedulePage ? 'w-4 bg-primary' : 'w-1.5 bg-base-300']">
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
                 <div v-if="jadwal.length === 0 && upcoming.length === 0"
-                    class="flex flex-1 flex-col items-center justify-center gap-2 text-base-content/35">
-                    <span class="text-[3vw] leading-none">—</span>
-                    <p class="text-[clamp(12px,0.9vw,18px)]">Tidak ada jadwal rapat hari ini</p>
+                    class="flex flex-1 flex-col items-center justify-center gap-3 text-center py-[4vh]">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-base-300/60 ring-1 ring-base-content/10 shadow-inner">
+                        <svg class="h-8 w-8 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[clamp(16px,1.2vw,24px)] font-semibold tracking-wide">Tidak Ada Agenda Sidang atau Kegiatan Dewan Hari Ini</p>
+                        <p class="text-[clamp(12px,0.8vw,16px)] text-base-content/60">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
+                    </div>
                 </div>
 
                 <div v-else-if="jadwal.length === 0"
-                    class="py-[1vh] text-[clamp(11px,0.78vw,15px)] text-base-content/65">
-                    Tidak ada jadwal rapat hari ini
+                    class="rounded-xl border border-dashed border-base-300 bg-base-100/40 p-[1.4vh] text-center text-[clamp(13px,0.85vw,16px)] text-base-content/75 font-medium">
+                    Tidak ada agenda sidang atau kegiatan dewan untuk hari ini. Silakan periksa agenda berikutnya di bawah.
                 </div>
 
-                <ul v-if="jadwal.length > 0" class="list mt-[1vh] gap-[0.8vh] p-0">
-                    <li v-for="item in jadwal" :key="item.id"
-                        :class="['list-row grid-cols-[8vw_minmax(0,1fr)_auto] gap-[1.2vw] border border-base-300 bg-base-100 px-[1.4vw] py-[1.2vh] shadow-sm', scheduleItemClasses(item.status)]">
+                <ul v-if="jadwal.length > 0" class="mt-[0.8vh] flex flex-col gap-[1vh] p-0">
+                    <li v-for="item in paginatedJadwal" :key="item.id"
+                        :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1.1vw] py-[0.8vh]', scheduleItemClasses(item.status)]">
                         <div>
-                            <div class="text-[1.1vw] font-bold tabular-nums text-primary">
+                            <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
                                 {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                             </div>
-                            <div class="mt-0.5 text-[0.75vw] text-base-content/65">{{ item.ruangan }}</div>
+                            <div class="mt-0.5 flex items-center gap-1 text-[clamp(11px,0.72vw,14px)] font-semibold text-slate-800 dark:text-slate-200">
+                                <svg class="h-3 w-3 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span class="truncate">{{ item.ruangan }}</span>
+                            </div>
                         </div>
                         <div class="min-w-0">
-                            <div class="text-[clamp(17px,1.18vw,28px)] font-bold leading-tight">
+                            <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">
                                 {{ item.judul }}
                             </div>
-                            <div class="mt-0.5 text-[0.75vw] text-base-content/65">{{ item.komisi }}</div>
+                            <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/85 font-medium truncate">{{ item.komisi }}</div>
                         </div>
                         <div class="self-center">
                             <span :class="statusClasses(item.status)">
-                                <span :class="statusDotClasses(item.status)"></span>
-                                {{ statusLabel(item.status) }}
+                                <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center">
+                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                                </span>
+                                <span v-else :class="statusDotClasses(item.status)"></span>
+                                <span>{{ statusLabel(item.status) }}</span>
                             </span>
                         </div>
                     </li>
                 </ul>
 
                 <div v-if="upcoming.length > 0" class="upcoming-section">
-                    <h2 class="card-title border-b border-base-300 pb-[0.8vh] text-[clamp(11px,0.75vw,15px)] uppercase tracking-[0.14em] text-base-content/70">
-                        Agenda Berikutnya
-                    </h2>
+                    <div class="flex items-center justify-between border-b border-base-300/80 pb-[0.6vh]">
+                        <h2 class="text-[clamp(12px,0.82vw,16px)] font-bold uppercase tracking-[0.14em] text-base-content/80">
+                            Agenda Berikutnya
+                        </h2>
+                    </div>
 
-                    <ul class="list mt-[0.8vh] gap-[0.55vh] p-0">
-                        <li v-for="item in upcoming" :key="'upcoming-' + item.id"
-                            class="list-row grid-cols-[8.2vw_minmax(0,1fr)_auto] gap-[0.9vw] border border-base-300 bg-base-100 px-[1.05vw] py-[0.85vh] shadow-sm">
+                    <ul class="mt-[0.8vh] flex flex-col gap-[1vh] p-0">
+                        <li v-for="item in displayedUpcoming" :key="'upcoming-' + item.id"
+                            class="grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1.1vw] py-[0.8vh]">
                             <div>
-                                <div class="text-[0.62vw] font-bold uppercase tracking-[0.1em] text-base-content/65">
+                                <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/85">
                                     {{ upcomingDateLabel(item.tanggal) }}
                                 </div>
-                                <div class="text-[0.9vw] font-bold tabular-nums text-primary">
+                                <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
                                     {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
                                 </div>
-                                <div class="text-[0.68vw] text-base-content/65">{{ item.ruangan }}</div>
+                                <div class="mt-0.5 flex items-center gap-1 text-[clamp(11px,0.72vw,14px)] font-semibold text-slate-800 dark:text-slate-200">
+                                    <svg class="h-3 w-3 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    <span class="truncate">{{ item.ruangan }}</span>
+                                </div>
                             </div>
                             <div class="min-w-0">
-                                <div class="text-[clamp(14px,0.92vw,20px)] font-bold leading-tight">
+                                <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
                                     {{ item.judul }}
                                 </div>
-                                <div class="mt-0.5 text-[0.68vw] text-base-content/65">{{ item.komisi }}</div>
+                                <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/85 font-medium truncate">{{ item.komisi }}</div>
                             </div>
                             <div class="self-center">
-                                <span class="badge badge-info gap-1 text-[0.7vw] font-bold uppercase tracking-wide">
-                                    <span class="status status-info status-xs"></span>
+                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30">
+                                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-sky-400"></span>
                                     Mendatang
                                 </span>
                             </div>
@@ -220,20 +295,20 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
             </div>
         </section>
 
-        <div id="panel-ticker" class="alert alert-horizontal rounded-none border-x-0 border-b-0 border-base-300 bg-neutral p-0 text-neutral-content"
-            role="status" v-if="runningTextAktif">
-            <span class="badge badge-primary h-full rounded-none border-0 px-[1.2vw] text-[0.75vw] font-bold uppercase tracking-[0.12em]">
+        <div id="panel-ticker" class="flex items-center rounded-none p-0"
+            role="status" aria-live="polite" v-if="runningTextAktif">
+            <span class="flex h-full items-center justify-center bg-sky-600 px-[1.4vw] text-[clamp(12px,0.85vw,16px)] font-bold uppercase tracking-[0.14em] text-white shadow-sm shrink-0">
                 Pengumuman
             </span>
-            <div class="ticker-track min-w-0 flex-1 overflow-hidden">
-                <span class="ticker-text">{{ runningText }}</span>
+            <div class="ticker-track min-w-0 flex-1 overflow-hidden py-1">
+                <span class="ticker-text" aria-label="Teks berjalan pengumuman">{{ runningText }}</span>
             </div>
         </div>
 
     </div>
 
     <script {csp-script-nonce}>
-        const { createApp, ref, watch, nextTick, onMounted, onUnmounted } = Vue;
+        const { createApp, ref, computed, watch, nextTick, onMounted, onUnmounted } = Vue;
 
         createApp({
             setup() {
@@ -244,6 +319,66 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 const dateFull = ref('');
                 const jadwal = ref([]);
                 const upcoming = ref([]);
+                const SCHEDULE_ITEMS_PER_PAGE = 4;
+                const currentSchedulePage = ref(1);
+                const scheduleContainer = ref(null);
+                const maxUpcomingSlots = ref(4);
+                let schedulePageTimer = null;
+
+                const totalSchedulePages = computed(() => {
+                    if (!jadwal.value || jadwal.value.length === 0) return 1;
+                    return Math.ceil(jadwal.value.length / SCHEDULE_ITEMS_PER_PAGE);
+                });
+
+                const paginatedJadwal = computed(() => {
+                    if (!jadwal.value || jadwal.value.length <= SCHEDULE_ITEMS_PER_PAGE) {
+                        return jadwal.value;
+                    }
+                    const start = (currentSchedulePage.value - 1) * SCHEDULE_ITEMS_PER_PAGE;
+                    return jadwal.value.slice(start, start + SCHEDULE_ITEMS_PER_PAGE);
+                });
+
+                const displayedUpcoming = computed(() => {
+                    if (!upcoming.value || upcoming.value.length === 0 || maxUpcomingSlots.value <= 0) return [];
+                    return upcoming.value.slice(0, maxUpcomingSlots.value);
+                });
+
+                function recalculateUpcomingSlots() {
+                    const todayCount = paginatedJadwal.value.length;
+                    const baseLimit = todayCount === 0 ? 5 : Math.max(1, 6 - todayCount);
+                    maxUpcomingSlots.value = Math.min(upcoming.value.length, baseLimit);
+                    nextTick(fitUpcomingToContainer);
+                }
+
+                function fitUpcomingToContainer() {
+                    const container = scheduleContainer.value || document.querySelector('.signage-schedule');
+                    if (!container) return;
+
+                    if (container.scrollHeight > container.clientHeight && maxUpcomingSlots.value > 1) {
+                        maxUpcomingSlots.value--;
+                        nextTick(fitUpcomingToContainer);
+                    }
+                }
+
+                watch([currentSchedulePage, paginatedJadwal, upcoming], () => {
+                    recalculateUpcomingSlots();
+                });
+
+                function syncSchedulePaging() {
+                    if (schedulePageTimer) {
+                        clearInterval(schedulePageTimer);
+                        schedulePageTimer = null;
+                    }
+
+                    if (totalSchedulePages.value > 1) {
+                        schedulePageTimer = setInterval(() => {
+                            currentSchedulePage.value = (currentSchedulePage.value % totalSchedulePages.value) + 1;
+                        }, 12000);
+                    } else {
+                        currentSchedulePage.value = 1;
+                    }
+                }
+
                 const runningText = ref('<?= esc($runningText ?? 'Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah') ?>');
                 const runningTextAktif = ref(<?= ($runningTextAktif ?? false) ? 'true' : 'false' ?>);
                 const configuredMediaMode = '<?= esc($mediaMode ?? 'video') ?>';
@@ -255,7 +390,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     url: waitForCachedMediaStatus ? '' : configuredMediaUrl,
                 });
                 const mediaVideo = ref(null);
-                const mediaBackdrop = ref(null);
+                const mediaBackdropVideo = ref(null);
                 const mediaError = ref(false);
                 const mediaStatusPending = ref(Boolean(waitForCachedMediaStatus));
                 const mediaOfflineStatus = ref(configuredMediaUrl ? 'checking' : 'unavailable');
@@ -278,9 +413,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                 const qrBerkas  = ref(false);
                 const qrLive    = ref(false);
-                const activeQR  = ref('berkas'); // 'berkas' | 'live'
+                const activeQR  = ref('berkas');
                 const qrFading  = ref(false);
                 const activeJadwalId = ref(null);
+                const activeMeeting  = ref(null);
                 const BASE_URL  = '<?= rtrim(base_url(), '/') ?>';
                 const SIGNAGE_WORKER_VERSION = '<?= esc((string) ($signageWorkerVersion ?? '1'), 'js') ?>';
                 const SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -291,13 +427,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 const DIAGNOSTICS_KEY = 'dprd-signage:diagnostics:v1';
                 let qrSlideTimer = null;
 
-
                 let clockTimer = null;
                 let dataTimer = null;
                 let weatherTimer = null;
                 let mediaWatchTimer = null;
-                let mediaBackdropFrame = null;
-                let lastBackdropPaint = 0;
                 let lastMediaCurrentTime = 0;
                 let lastMediaProgressAt = Date.now();
                 let mediaRecoveryAttempts = 0;
@@ -341,72 +474,6 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 const MEDIA_COMMIT_STABLE_MS = 10000;
                 const RECONNECT_RETRY_DELAYS_MS = [5000, 15000, 30000, 60000, 120000];
 
-                function paintMediaBackdrop(timestamp = 0) {
-                    const video = mediaVideo.value;
-                    const canvas = mediaBackdrop.value;
-
-                    if (!video || !canvas || media.value.mode !== 'video') {
-                        mediaBackdropFrame = null;
-                        return;
-                    }
-
-                    if (timestamp - lastBackdropPaint >= 66 && video.readyState >= 2 && video.videoWidth > 0) {
-                        const bounds = canvas.getBoundingClientRect();
-                        if (bounds.width <= 0 || bounds.height <= 0) {
-                            mediaBackdropFrame = requestAnimationFrame(paintMediaBackdrop);
-                            return;
-                        }
-                        const canvasWidth = Math.max(1, Math.min(720, Math.round(bounds.width)));
-                        const canvasHeight = Math.max(1, Math.round(canvasWidth * bounds.height / bounds.width));
-
-                        if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
-                            canvas.width = canvasWidth;
-                            canvas.height = canvasHeight;
-                        }
-
-                        const context = canvas.getContext('2d', { alpha: false });
-                        if (context) {
-                            const scale = Math.max(
-                                canvas.width / video.videoWidth,
-                                canvas.height / video.videoHeight
-                            );
-                            const sourceWidth = canvas.width / scale;
-                            const sourceHeight = canvas.height / scale;
-                            const sourceX = (video.videoWidth - sourceWidth) / 2;
-                            const sourceY = (video.videoHeight - sourceHeight) / 2;
-
-                            context.drawImage(
-                                video,
-                                sourceX,
-                                sourceY,
-                                sourceWidth,
-                                sourceHeight,
-                                0,
-                                0,
-                                canvas.width,
-                                canvas.height
-                            );
-                        }
-
-                        lastBackdropPaint = timestamp;
-                    }
-
-                    mediaBackdropFrame = requestAnimationFrame(paintMediaBackdrop);
-                }
-
-                function startMediaBackdrop() {
-                    if (mediaBackdropFrame !== null) return;
-                    lastBackdropPaint = 0;
-                    mediaBackdropFrame = requestAnimationFrame(paintMediaBackdrop);
-                }
-
-                function stopMediaBackdrop() {
-                    if (mediaBackdropFrame !== null) {
-                        cancelAnimationFrame(mediaBackdropFrame);
-                        mediaBackdropFrame = null;
-                    }
-                }
-
                 function ensureMediaPlayback(event = null) {
                     const video = event?.currentTarget instanceof HTMLVideoElement
                         ? event.currentTarget
@@ -420,6 +487,15 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         playback.catch((error) => {
                             console.warn('[Signage] Autoplay media tertunda, akan dicoba ulang:', error);
                         });
+                    }
+
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && bgVideo !== video) {
+                        bgVideo.muted = true;
+                        const bgPlayback = bgVideo.play();
+                        if (bgPlayback && typeof bgPlayback.catch === 'function') {
+                            bgPlayback.catch(() => {});
+                        }
                     }
                 }
 
@@ -487,7 +563,6 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         return;
                     }
 
-                    stopMediaBackdrop();
                     media.value = { mode: mode || configuredMediaMode, url };
                     mediaRecoveryAttempts = 0;
                     mediaStableSince = 0;
@@ -527,6 +602,11 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     mediaWaitingForConnection = false;
                     mediaError.value = false;
                     clearMediaRecoveryTimer();
+
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && Math.abs(bgVideo.currentTime - currentTime) > 0.3) {
+                        bgVideo.currentTime = currentTime;
+                    }
                 }
 
                 function resumeRecoveredMedia(video, savedTime) {
@@ -582,7 +662,8 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     console.warn(
                         `[Signage] Memulihkan media (${reason}), percobaan ${attempt}/${MEDIA_MAX_RECOVERY_ATTEMPTS}.`
                     );
-                    stopMediaBackdrop();
+                    const bgVideoRecovery = mediaBackdropVideo.value;
+                    if (bgVideoRecovery && !bgVideoRecovery.paused) bgVideoRecovery.pause();
                     mediaError.value = false;
 
                     const resume = () => {
@@ -619,7 +700,8 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 }
 
                 function handleMediaWaiting() {
-                    stopMediaBackdrop();
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && !bgVideo.paused) bgVideo.pause();
                     mediaStableSince = 0;
                     if (pendingMediaCommitUrl) {
                         pendingMediaCommitSince = 0;
@@ -630,7 +712,8 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                 }
 
                 function handleMediaError(event) {
-                    stopMediaBackdrop();
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && !bgVideo.paused) bgVideo.pause();
                     mediaError.value = true;
                     mediaStableSince = 0;
                     recordMediaPlaybackStatus('error', event?.currentTarget?.error?.message || 'Media gagal dimuat.');
@@ -654,7 +737,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     lastMediaCurrentTime = Number(event?.currentTarget?.currentTime) || lastMediaCurrentTime;
                     lastMediaProgressAt = Date.now();
                     recordMediaPlaybackStatus('playing');
-                    startMediaBackdrop();
+                    const bgVideo = mediaBackdropVideo.value;
+                    if (bgVideo && bgVideo.paused) {
+                        bgVideo.play().catch(() => {});
+                    }
                 }
 
                 function handleMediaImageLoaded() {
@@ -769,58 +855,70 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     }, retryDelay);
                 }
 
+                const clockFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Makassar', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+                const dateDayFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Makassar', weekday: 'long'
+                });
+                const dateFullFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Makassar', day: 'numeric', month: 'long', year: 'numeric'
+                });
+
                 function updateClock() {
                     const now = new Date();
-                    const opts = { timeZone: 'Asia/Makassar', hour12: false };
-
-                    clock.value = new Intl.DateTimeFormat('id-ID', {
-                        ...opts, hour: '2-digit', minute: '2-digit', second: '2-digit'
-                    }).format(now).replaceAll('.', ':');
-
-                    dateDay.value = new Intl.DateTimeFormat('id-ID', {
-                        ...opts, weekday: 'long'
-                    }).format(now).toUpperCase();
-
-                    dateFull.value = new Intl.DateTimeFormat('id-ID', {
-                        ...opts, day: 'numeric', month: 'long', year: 'numeric'
-                    }).format(now);
+                    clock.value = clockFormatter.format(now).replaceAll('.', ':');
+                    dateDay.value = dateDayFormatter.format(now).toUpperCase();
+                    dateFull.value = dateFullFormatter.format(now);
                 }
 
 
                 function statusLabel(status) {
                     const map = {
-                        berlangsung: 'Berlangsung',
+                        berlangsung: 'Sedang Berlangsung',
                         persiapan: 'Persiapan',
-                        menunggu: 'Menunggu',
+                        menunggu: 'Akan Datang',
                         selesai: 'Selesai',
+                        ditunda: 'Ditunda',
+                        dibatalkan: 'Dibatalkan',
+                        non_rapat: 'Kegiatan',
                     };
                     return map[status] ?? status;
                 }
 
                 function statusClasses(status) {
                     const map = {
-                        berlangsung: 'badge badge-error gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
-                        persiapan: 'badge badge-warning gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
-                        menunggu: 'badge badge-neutral gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
-                        selesai: 'badge badge-success gap-1 text-[0.7vw] font-bold uppercase tracking-wide',
+                        berlangsung: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30',
+                        persiapan: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30',
+                        menunggu: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30',
+                        selesai: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30',
+                        ditunda: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30',
+                        dibatalkan: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30',
+                        non_rapat: 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-bold uppercase tracking-wider bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30',
                     };
-                    return map[status] ?? 'badge gap-1 text-[0.7vw] font-bold uppercase tracking-wide';
+                    return map[status] ?? 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[clamp(10px,0.68vw,13px)] font-semibold uppercase tracking-wider bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30';
                 }
 
                 function statusDotClasses(status) {
                     const map = {
-                        berlangsung: 'status status-error status-xs pulse',
-                        persiapan: 'status status-warning status-xs',
-                        menunggu: 'status status-neutral status-xs',
-                        selesai: 'status status-success status-xs',
+                        berlangsung: 'h-2 w-2 rounded-full bg-red-500 dark:bg-red-400',
+                        persiapan: 'h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400',
+                        menunggu: 'h-2 w-2 rounded-full bg-sky-500 dark:bg-sky-400',
+                        selesai: 'h-2 w-2 rounded-full bg-slate-500 dark:bg-slate-400',
+                        ditunda: 'h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400',
+                        dibatalkan: 'h-2 w-2 rounded-full bg-rose-500 dark:bg-rose-400',
+                        non_rapat: 'h-2 w-2 rounded-full bg-teal-500 dark:bg-teal-400',
                     };
-                    return map[status] ?? 'status status-xs';
+                    return map[status] ?? 'h-2 w-2 rounded-full bg-slate-500 dark:bg-slate-400';
                 }
 
                 function scheduleItemClasses(status) {
                     const map = {
-                        berlangsung: 'border-error/30 bg-error/10',
-                        selesai: 'opacity-50',
+                        berlangsung: 'is-berlangsung',
+                        persiapan: 'border-amber-500/30 bg-amber-500/5',
+                        selesai: 'opacity-70',
+                        ditunda: 'border-amber-500/30 bg-amber-500/5',
+                        dibatalkan: 'opacity-60 bg-rose-500/5',
                     };
                     return map[status] ?? '';
                 }
@@ -848,7 +946,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     }).format(date);
                 }
 
-                function makeQR(containerId, url, size = 120) {
+                let lastRenderedBerkasUrl = '';
+                let lastRenderedLiveUrl = '';
+
+                function makeQR(containerId, url, size = 110) {
                     nextTick(() => {
                         const container = document.getElementById(containerId);
                         if (!container) return;
@@ -868,42 +969,63 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     });
                 }
 
-                // Render QR ke container tunggal #qr-display
                 function renderActiveQR() {
-                    if (!activeJadwalId.value || (!qrBerkas.value && !qrLive.value)) {
-                        makeQR('qr-display', '', 110);
+                    if (!activeMeeting.value || (!qrBerkas.value && !qrLive.value)) {
+                        lastRenderedBerkasUrl = '';
+                        lastRenderedLiveUrl = '';
+                        makeQR('qr-display-berkas', '', 110);
+                        makeQR('qr-display-live', '', 110);
                         return;
                     }
 
-                    const url = `${BASE_URL}/go/jadwal-banmus/${activeJadwalId.value}/${activeQR.value}`;
-                    makeQR('qr-display', url, 110);
+                    const meeting = activeMeeting.value;
+                    const targetId = meeting.source_id || Math.abs(meeting.id);
+                    const routeSegment = meeting.source === 'jadwal_umum' ? 'jadwal-umum' : 'jadwal-banmus';
+
+                    if (qrBerkas.value) {
+                        const berkasUrl = `${BASE_URL}/go/${routeSegment}/${targetId}/berkas`;
+                        if (berkasUrl !== lastRenderedBerkasUrl) {
+                            makeQR('qr-display-berkas', berkasUrl, 110);
+                            lastRenderedBerkasUrl = berkasUrl;
+                        }
+                    } else if (lastRenderedBerkasUrl) {
+                        lastRenderedBerkasUrl = '';
+                        makeQR('qr-display-berkas', '', 110);
+                    }
+
+                    if (qrLive.value) {
+                        const liveUrl = `${BASE_URL}/go/${routeSegment}/${targetId}/live`;
+                        if (liveUrl !== lastRenderedLiveUrl) {
+                            makeQR('qr-display-live', liveUrl, 110);
+                            lastRenderedLiveUrl = liveUrl;
+                        }
+                    } else if (lastRenderedLiveUrl) {
+                        lastRenderedLiveUrl = '';
+                        makeQR('qr-display-live', '', 110);
+                    }
                 }
 
-                // Fade-out, ganti QR, lalu fade-in
                 function switchQR() {
                     qrFading.value = true;
                     setTimeout(() => {
                         activeQR.value = activeQR.value === 'berkas' ? 'live' : 'berkas';
-                        renderActiveQR();
                         setTimeout(() => { qrFading.value = false; }, 50);
                     }, 300);
                 }
 
-                // Kelola slide timer berdasarkan ketersediaan QR
                 function syncQrSlide() {
                     clearInterval(qrSlideTimer);
                     qrSlideTimer = null;
 
                     if (!qrBerkas.value && !qrLive.value) {
-                        makeQR('qr-display', '', 110);
+                        renderActiveQR();
                         return;
                     }
 
                     if (qrBerkas.value && qrLive.value) {
-                        // Keduanya ada - jalankan slide setiap 8 detik
                         qrSlideTimer = setInterval(switchQR, 8000);
                     }
-                    // Pastikan activeQR valid (jika salah satu hilang)
+
                     if (!qrBerkas.value && activeQR.value === 'berkas') activeQR.value = 'live';
                     if (!qrLive.value   && activeQR.value === 'live')   activeQR.value = 'berkas';
 
@@ -1009,10 +1131,15 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                     jadwal.value = data.jadwal;
                     upcoming.value = data.upcoming;
+                    if (currentSchedulePage.value > totalSchedulePages.value) {
+                        currentSchedulePage.value = 1;
+                    }
+                    syncSchedulePaging();
                     const aktif = jadwal.value.find(item => item.status === 'berlangsung');
-                    activeJadwalId.value = aktif?.id ?? null;
-                    qrBerkas.value = !!aktif?.materi_url;
-                    qrLive.value = !!aktif?.stream_url;
+                    activeMeeting.value = aktif ?? null;
+                    activeJadwalId.value = aktif ? (aktif.source_id || Math.abs(aktif.id)) : null;
+                    qrBerkas.value = Boolean(aktif && (aktif.has_materi || aktif.materi_url));
+                    qrLive.value = Boolean(aktif && (aktif.has_stream || aktif.stream_url));
                     syncQrSlide();
                 }
 
@@ -1566,7 +1693,16 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
 
                     const workerUrl = `/signage-sw.js?v=${encodeURIComponent(SIGNAGE_WORKER_VERSION)}`;
                     try {
-                        const registration = await navigator.serviceWorker.register(workerUrl, { scope: '/' });
+                        const signageScope = window.location.pathname.replace(/\/+$/, '') + '/';
+                        const existingRegs = await navigator.serviceWorker.getRegistrations();
+                        for (const reg of existingRegs) {
+                            const regPath = new URL(reg.scope).pathname.replace(/\/+$/, '');
+                            if (regPath === '' || regPath === '/' || !regPath.endsWith('signage')) {
+                                await reg.unregister();
+                            }
+                        }
+
+                        const registration = await navigator.serviceWorker.register(workerUrl, { scope: signageScope });
                         if (registration.waiting) {
                             queueServiceWorkerUpdate(registration.waiting);
                         }
@@ -1632,6 +1768,7 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                         }
                     }, 5000);
                     document.addEventListener('visibilitychange', handleMediaVisibilityChange);
+                    window.addEventListener('resize', recalculateUpcomingSlots);
                     window.addEventListener('offline', handleNetworkOffline);
                     window.addEventListener('online', handleNetworkOnline);
                     if (navigator.onLine === false) handleNetworkOffline();
@@ -1644,17 +1781,18 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     clearInterval(mediaWatchTimer);
                     clearInterval(diagnosticsTimer);
                     clearInterval(qrSlideTimer);
+                    if (schedulePageTimer) clearInterval(schedulePageTimer);
                     clearMediaRecoveryTimer();
                     clearMediaStatusFallbackTimer();
                     clearMediaCommitTimer();
                     clearReconnectRetryTimer();
                     clearWorkerUpdateTimer();
                     document.removeEventListener('visibilitychange', handleMediaVisibilityChange);
+                    window.removeEventListener('resize', recalculateUpcomingSlots);
                     window.removeEventListener('offline', handleNetworkOffline);
                     window.removeEventListener('online', handleNetworkOnline);
                     navigator.serviceWorker?.removeEventListener('message', handleMediaWorkerMessage);
                     navigator.serviceWorker?.removeEventListener('controllerchange', handleServiceWorkerControllerChange);
-                    stopMediaBackdrop();
                 });
 
                 return {
@@ -1662,8 +1800,10 @@ $qrcodeVersion     = is_file(FCPATH . 'assets/vendor/qrcodejs/qrcode.min.js') ? 
                     connectionStatus, lastSyncAt,
                     mediaOfflineStatus, mediaOfflineSize, storagePersistent, mediaStatusPending,
                     cuaca, qrBerkas, qrLive, activeQR, qrFading,
-                    jadwal, upcoming, runningText, runningTextAktif, media,
-                    mediaVideo, mediaBackdrop, mediaError,
+                    jadwal, paginatedJadwal, currentSchedulePage, totalSchedulePages,
+                    upcoming, displayedUpcoming, scheduleContainer, maxUpcomingSlots,
+                    runningText, runningTextAktif, media,
+                    mediaVideo, mediaBackdropVideo, mediaError,
                     ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
                     handleMediaWaiting, handleMediaEnded, handleMediaImageLoaded, handleMediaError,
                     statusLabel, statusClasses, statusDotClasses, scheduleItemClasses, upcomingDateLabel

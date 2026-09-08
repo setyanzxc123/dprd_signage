@@ -8,13 +8,31 @@ class JadwalUmumModel extends Model
 {
     public const SOURCE = 'jadwal_umum';
 
+    public const TYPE_MEETING = 'rapat';
+    public const TYPE_NON_MEETING = 'non_rapat';
+    public const AGENDA_TYPES = [self::TYPE_MEETING, self::TYPE_NON_MEETING];
+
+    public const STATUS_MENUNGGU = 'menunggu';
+    public const STATUS_PERSIAPAN = 'persiapan';
+    public const STATUS_BERLANGSUNG = 'berlangsung';
+    public const STATUS_SELESAI = 'selesai';
+    public const STATUS_DITUNDA = 'ditunda';
+    public const STATUS_DIBATALKAN = 'dibatalkan';
+    public const STATUS_NON_RAPAT = 'non_rapat';
+
+    public const SCHEDULED_STATUSES = ['menunggu', 'persiapan', 'berlangsung', 'selesai'];
+    public const MANUAL_STATUSES = ['ditunda', 'dibatalkan'];
+
     protected $table         = 'jadwal_umum';
     protected $primaryKey    = 'id';
     protected $returnType    = 'array';
     protected $useTimestamps = true;
     protected $allowedFields = [
         'judul',
+        'jenis_agenda',
         'tanggal',
+        'tanggal_mulai',
+        'tanggal_selesai',
         'waktu_mulai',
         'waktu_selesai',
         'ruangan_id',
@@ -28,53 +46,99 @@ class JadwalUmumModel extends Model
         'stream_akses',
         'undangan_file',
         'undangan_nama_asli',
+        'status',
     ];
+
+    public function autoUpdateStatuses(?int $now = null): void
+    {
+        if (! $this->db->tableExists($this->table) || ! $this->db->fieldExists('status', $this->table)) {
+            return;
+        }
+
+        $now ??= time();
+        $builder = $this->db->table($this->table)
+            ->select('id, tanggal, waktu_mulai, waktu_selesai, status, jenis_agenda')
+            ->whereIn('status', self::SCHEDULED_STATUSES);
+        if ($this->db->fieldExists('jenis_agenda', $this->table)) {
+            $builder->where('jenis_agenda', self::TYPE_MEETING);
+        }
+
+        foreach ($builder->get()->getResultArray() as $item) {
+            $status = self::resolveLifecycleStatus(
+                (string) $item['tanggal'],
+                $item['waktu_mulai'],
+                $item['waktu_selesai'],
+                $now,
+                (string) ($item['jenis_agenda'] ?? self::TYPE_MEETING),
+            );
+            if ($status !== $item['status']) {
+                $this->update((int) $item['id'], ['status' => $status]);
+            }
+        }
+    }
 
     public static function resolveLifecycleStatus(
         string $tanggal,
         ?string $waktuMulai,
         ?string $waktuSelesai,
         ?int $now = null,
+        string $jenisAgenda = self::TYPE_MEETING,
+        ?string $manualStatus = null,
     ): string {
+        if ($manualStatus !== null && in_array($manualStatus, self::MANUAL_STATUSES, true)) {
+            return $manualStatus;
+        }
+
+        if ($jenisAgenda === self::TYPE_NON_MEETING) {
+            $now ??= time();
+            $today = date('Y-m-d', $now);
+
+            return match (true) {
+                $tanggal < $today => self::STATUS_SELESAI,
+                $tanggal > $today => self::STATUS_MENUNGGU,
+                default           => self::STATUS_BERLANGSUNG,
+            };
+        }
+
         $now ??= time();
         $today = date('Y-m-d', $now);
 
         if ($waktuMulai === null || trim($waktuMulai) === '') {
             return match (true) {
-                $tanggal < $today => 'selesai',
-                $tanggal > $today => 'menunggu',
-                default           => 'berlangsung',
+                $tanggal < $today => self::STATUS_SELESAI,
+                $tanggal > $today => self::STATUS_MENUNGGU,
+                default           => self::STATUS_BERLANGSUNG,
             };
         }
 
         $start = strtotime($tanggal . ' ' . $waktuMulai);
         if ($start === false) {
-            return 'menunggu';
+            return self::STATUS_MENUNGGU;
         }
 
         if ($waktuSelesai === null || trim($waktuSelesai) === '') {
             if ($tanggal < $today) {
-                return 'selesai';
+                return self::STATUS_SELESAI;
             }
             if ($start <= $now) {
-                return 'berlangsung';
+                return self::STATUS_BERLANGSUNG;
             }
 
-            return $start - $now <= 1800 ? 'persiapan' : 'menunggu';
+            return $start - $now <= 1800 ? self::STATUS_PERSIAPAN : self::STATUS_MENUNGGU;
         }
 
         $end = strtotime($tanggal . ' ' . $waktuSelesai);
         if ($end === false || $end <= $start) {
-            return 'menunggu';
+            return self::STATUS_MENUNGGU;
         }
         if ($end <= $now) {
-            return 'selesai';
+            return self::STATUS_SELESAI;
         }
         if ($start <= $now) {
-            return 'berlangsung';
+            return self::STATUS_BERLANGSUNG;
         }
 
-        return $start - $now <= 1800 ? 'persiapan' : 'menunggu';
+        return $start - $now <= 1800 ? self::STATUS_PERSIAPAN : self::STATUS_MENUNGGU;
     }
 
     public function hasRoomConflict(
@@ -95,6 +159,12 @@ class JadwalUmumModel extends Model
             ->where('waktu_selesai >', $waktuMulai);
         if ($ignoreJadwalUmumId !== null) {
             $builder->where('id !=', $ignoreJadwalUmumId);
+        }
+        if ($this->db->fieldExists('status', $this->table)) {
+            $builder->whereNotIn('status', ['dibatalkan', 'non_rapat']);
+        }
+        if ($this->db->fieldExists('jenis_agenda', $this->table)) {
+            $builder->where('jenis_agenda', self::TYPE_MEETING);
         }
         if ($builder->countAllResults() > 0) {
             return true;

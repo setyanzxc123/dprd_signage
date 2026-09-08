@@ -22,13 +22,16 @@ class AgendaController extends BaseController
         $member = $this->activeMember();
         $isMember = $member !== null;
         $isAdmin = ! $isMember && session()->has('auth_user');
+        if ($this->databaseDriverAvailable()) {
+            (new JadwalBanmusModel())->autoUpdateStatuses();
+        }
         $banmusProjections = $this->databaseDriverAvailable()
             ? $this->portalBanmusProjections($member)
             : [];
 
         return $this->privateResponse()->setBody(view('agenda/index', [
             'namaInstansi' => 'DPRD Provinsi Sulawesi Tengah',
-            'logoUrl'      => base_url('assets/images/logo_dprd.jpg'),
+            'logoUrl'      => base_url('assets/images/logo_dprd.png'),
             'portalUrl'    => base_url('agenda'),
             'apiUrl'       => base_url($isMember ? 'api/v1/anggota/jadwal' : 'api/v1/publik/jadwal'),
             'member'       => $member,
@@ -61,7 +64,8 @@ class AgendaController extends BaseController
             : null;
 
         return $this->privateResponse()->setBody(view('agenda/banmus', [
-            'logoUrl'           => base_url('assets/images/logo_dprd.jpg'),
+            'namaInstansi'      => 'DPRD Provinsi Sulawesi Tengah',
+            'logoUrl'           => base_url('assets/images/logo_dprd.png'),
             'portalUrl'         => base_url('agenda'),
             'member'            => $member,
             'isAdmin'           => $isAdmin,

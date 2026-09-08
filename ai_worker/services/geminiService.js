@@ -441,7 +441,7 @@ export const MINUTES_RESPONSE_SCHEMA = {
   properties: {
     ringkasan_utama: {
       type: Type.STRING,
-      description: 'Intisari komprehensif rapat dalam 2-4 paragraf: latar belakang, pokok masalah, dinamika perdebatan, dan hasil akhir.',
+      description: 'Intisari komprehensif rapat dalam 3-4 paragraf terpisah. Setiap paragraf WAJIB dipisahkan dengan karakter dua baris baru (\\n\\n). Dilarang menggabungkan seluruh teks menjadi satu paragraf panjang.',
     },
     poin_pembahasan: {
       type: Type.ARRAY,
@@ -474,7 +474,9 @@ export const MINUTES_RESPONSE_SCHEMA = {
 export function composeMinutesText(pillars) {
   const points = Array.isArray(pillars.poin_pembahasan) ? pillars.poin_pembahasan : [];
   const conclusions = Array.isArray(pillars.kesimpulan_akhir) ? pillars.kesimpulan_akhir : [];
-  const lines = ['I. RINGKASAN UTAMA', String(pillars.ringkasan_utama || '').trim(), '', 'II. POIN-POIN PEMBAHASAN'];
+  const rawSummary = String(pillars.ringkasan_utama || '').trim();
+  const cleanSummary = rawSummary.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+  const lines = ['I. RINGKASAN UTAMA', cleanSummary, '', 'II. POIN-POIN PEMBAHASAN'];
 
   points.forEach((point, i) => {
     const no = i + 1;
@@ -535,10 +537,16 @@ KONTEN TRANSKRIP RAPAT LENGKAP:
 ${fullTranscript}
 ---
 
-Isi setiap field dengan lengkap:
-- ringkasan_utama: intisari 2-4 paragraf (latar belakang, pokok masalah, dinamika perdebatan, hasil akhir).
-- poin_pembahasan: satu butir per pokok bahasan; sertakan pembicara bila dapat diidentifikasi.
-- kesimpulan_akhir: seluruh kesepakatan, keputusan resmi, rekomendasi, dan tindak lanjut yang disepakati.`;
+Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
+- ringkasan_utama:
+  * WAJIB disusun dalam 3 sampai 4 paragraf naratif terpisah yang mengalir dan mudah dibaca.
+  * Setiap pergantian paragraf WAJIB dipisahkan dengan DUA KALI BARIS BARU (\\n\\n). DILARANG KERAS menggabungkan seluruh ringkasan menjadi satu paragraf panjang tanpa jeda baris.
+  * Paragraf 1 (Latar Belakang & Kuorum): Waktu, tanggal, pimpinan sidang, kuorum kehadiran anggota dewan, serta pembukaan agenda resmi.
+  * Paragraf 2 (Substansi Pokok Pembahasan): Materi pokok rapat, angka/indikator utama dokumen yang dibahas, atau pokok permasalahan substantif.
+  * Paragraf 3 (Dinamika Fraksi & Tanggapan): Pokok-pokok pandangan umum, pertanyaan kritis, usulan prioritas dari fraksi/anggota dewan, serta tanggapan narasumber/eksekutif.
+  * Paragraf 4 (Kesepakatan & Arah Sidang): Kesimpulan forum, keputusan persetujuan/kelanjutan agenda, dan mekanisme tindak lanjut.
+- poin_pembahasan: satu butir per pokok bahasan; sertakan waktu (bila ada), topik spesifik, pembicara/fraksi, dan uraian substansi.
+- kesimpulan_akhir: seluruh butir kesepakatan, keputusan resmi, rekomendasi, dan tindak lanjut yang disepakati.`;
 
   const models = effectiveModelChain(config.gemini.modelChain);
   if (models.length === 0) {

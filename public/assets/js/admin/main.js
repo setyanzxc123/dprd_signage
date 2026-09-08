@@ -1,9 +1,29 @@
 /* Admin shell — Vanilla JS, tanpa Vue. */
 (function () {
 
-    /* ── Icon renderer ─────────────────────────────────────────────────── */
-    function renderAdminIcons() {
-        if (window.lucide) window.lucide.createIcons();
+    /* Icon renderer */
+    function renderAdminIcons(root) {
+        var target = (root instanceof Element || root instanceof Document) ? root : document;
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            try {
+                window.lucide.createIcons({ root: target });
+            } catch (error) {
+                console.error('Gagal merender ikon Lucide:', error);
+            }
+        } else if (!window.lucide) {
+            var retries = 0;
+            var checkInterval = setInterval(function () {
+                retries++;
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    clearInterval(checkInterval);
+                    try {
+                        window.lucide.createIcons({ root: target });
+                    } catch (_) {}
+                } else if (retries >= 20) {
+                    clearInterval(checkInterval);
+                }
+            }, 50);
+        }
     }
     window.renderAdminIcons = renderAdminIcons;
 
@@ -53,30 +73,115 @@
         });
     }
 
-    /* patchReadyCallbacksForTurbo dihapus — monkey-patch document.addEventListener
-     * sangat berbahaya dan menyebabkan konflik dengan jQuery/DataTables.
-     * Turbo sudah firing turbo:load setelah setiap navigasi, yang kita gunakan
-     * di bawah (lihat bagian Bootstrap). */
-
     function closeTransientShellUi() {
         document.body.classList.remove('mobile-agenda-open');
-        if (window.matchMedia('(max-width: 1023px)').matches) setDrawerOpen(false);
+        const sidebar = document.getElementById('application-sidebar');
+        if (sidebar && window.HSOverlay && window.matchMedia('(max-width: 1023px)').matches) {
+            window.HSOverlay.close(sidebar);
+        }
     }
 
-    function disableTurboFormSubmissions() {
-        document.querySelectorAll('form:not([data-turbo])').forEach(function (form) {
-            form.setAttribute('data-turbo', 'false');
-        });
-    }
+    let pendingConfirmForm = null;
 
     function bindFormConfirmations() {
         if (document.documentElement.dataset.adminConfirmBound === '1') return;
         document.documentElement.dataset.adminConfirmBound = '1';
 
+        const confirmModal = document.getElementById('admin-confirm-modal');
+        const confirmTitle = document.getElementById('admin-confirm-modal-label');
+        const confirmMessage = document.getElementById('admin-confirm-modal-message');
+        const confirmSubmitBtn = document.getElementById('admin-confirm-modal-submit');
+        const confirmIconWrap = document.getElementById('admin-confirm-modal-icon-wrap');
+        const confirmIcon = document.getElementById('admin-confirm-modal-icon');
+
+        if (confirmSubmitBtn) {
+            confirmSubmitBtn.addEventListener('click', function () {
+                if (pendingConfirmForm) {
+                    const formToSubmit = pendingConfirmForm;
+                    pendingConfirmForm = null;
+                    formToSubmit.dataset.confirmed = '1';
+                    if (window.HSOverlay && confirmModal) {
+                        window.HSOverlay.close(confirmModal);
+                    }
+                    formToSubmit.submit();
+                }
+            });
+        }
+
         document.addEventListener('submit', function (event) {
             const form = event.target.closest('form[data-confirm-message]');
-            if (!form || window.confirm(form.dataset.confirmMessage || 'Lanjutkan tindakan ini?')) return;
+            if (!form) return;
+
+            if (form.dataset.confirmed === '1') {
+                delete form.dataset.confirmed;
+                return;
+            }
+
             event.preventDefault();
+            pendingConfirmForm = form;
+
+            const msg = form.dataset.confirmMessage || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+            const title = form.dataset.confirmTitle || 'Konfirmasi Tindakan';
+            const btnText = form.dataset.confirmButton || 'Lanjutkan';
+            const variant = form.dataset.confirmVariant || 'danger';
+
+            if (confirmTitle) {
+                confirmTitle.textContent = title;
+            }
+            if (confirmMessage) {
+                confirmMessage.textContent = msg;
+            }
+            if (confirmSubmitBtn) {
+                confirmSubmitBtn.textContent = btnText;
+                confirmSubmitBtn.className = 'py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent shadow-xs transition cursor-pointer focus:outline-hidden';
+                if (variant === 'primary') {
+                    confirmSubmitBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'focus:bg-blue-700');
+                } else if (variant === 'warning') {
+                    confirmSubmitBtn.classList.add('bg-amber-600', 'text-white', 'hover:bg-amber-700', 'focus:bg-amber-700');
+                } else {
+                    confirmSubmitBtn.classList.add('bg-rose-600', 'text-white', 'hover:bg-rose-700', 'focus:bg-rose-700');
+                }
+            }
+
+            if (confirmIconWrap && confirmIcon) {
+                confirmIconWrap.className = 'flex size-11 shrink-0 items-center justify-center rounded-xl';
+                if (variant === 'primary') {
+                    confirmIconWrap.classList.add('bg-blue-50', 'text-blue-600', 'dark:bg-blue-950/40', 'dark:text-blue-400');
+                    confirmIcon.setAttribute('data-lucide', 'check-circle-2');
+                } else if (variant === 'warning') {
+                    confirmIconWrap.classList.add('bg-amber-50', 'text-amber-600', 'dark:bg-amber-950/40', 'dark:text-amber-400');
+                    confirmIcon.setAttribute('data-lucide', 'alert-triangle');
+                } else {
+                    confirmIconWrap.classList.add('bg-rose-50', 'text-rose-600', 'dark:bg-rose-950/40', 'dark:text-rose-400');
+                    confirmIcon.setAttribute('data-lucide', 'triangle-alert');
+                }
+                if (window.lucide && window.lucide.createIcons) {
+                    window.lucide.createIcons();
+                }
+            }
+
+            if (window.HSOverlay && confirmModal) {
+                window.HSOverlay.open(confirmModal);
+            } else if (window.confirm(msg)) {
+                form.dataset.confirmed = '1';
+                form.submit();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            const copyBtn = event.target.closest('[data-copy-otp]');
+            if (!copyBtn) return;
+            const code = copyBtn.dataset.code;
+            if (!code) return;
+            navigator.clipboard.writeText(code).then(function () {
+                const label = document.getElementById('copy-otp-label');
+                if (label) {
+                    label.textContent = 'Tersalin!';
+                    setTimeout(function () {
+                        label.textContent = 'Salin Kode';
+                    }, 2000);
+                }
+            });
         });
     }
 
@@ -90,7 +195,7 @@
         });
     }
 
-    /* ── Alert close handler ────────────────────────────────────────────── */
+    /* Alert close handler */
     function dismissAdminAlert(alert) {
         if (!alert || alert.dataset.dismissed === '1') return;
         alert.dataset.dismissed = '1';
@@ -122,130 +227,61 @@
         document.documentElement.dataset.adminAlertBound = '1';
         document.addEventListener('click', function (e) {
             const btn = e.target.closest('.alert-close-btn, .ta-alert-close');
-            if (btn) dismissAdminAlert(btn.closest('.alert, .ta-alert'));
+            if (btn) dismissAdminAlert(btn.closest('[data-admin-alert], .alert, .ta-alert'));
         });
     }
 
-    /* ── Sidebar ────────────────────────────────────────────────────────── */
-    function isMobilePrimaryPath(current, path) {
-        if (path === '/admin/dashboard') {
-            return current === '/admin' || isActivePath(current, path);
-        }
-
-        return isActivePath(current, path);
-    }
-
-    function isCurrentMobileMenuSection() {
-        const current = window.location.pathname.replace(/\/$/, '') || '/';
-        if (!current.startsWith('/admin')) return false;
-
-        return ![
-            '/admin/dashboard',
-            '/admin/jadwal-banmus',
-            '/admin/jadwal-umum',
-        ].some(function (path) {
-            return isMobilePrimaryPath(current, path);
-        });
-    }
-
-    function syncDrawerState() {
-        const drawer = document.getElementById('admin-drawer');
-        const isOpen = Boolean(drawer?.checked);
-        const shouldActivate = isOpen || isCurrentMobileMenuSection();
-
-        const desktopToggle = document.getElementById('sidebarToggle');
-        if (desktopToggle) {
-            desktopToggle.setAttribute('aria-expanded', String(isOpen));
-            desktopToggle.setAttribute('aria-label', isOpen ? 'Ciutkan sidebar' : 'Perluas sidebar');
-            desktopToggle.setAttribute('title', isOpen ? 'Ciutkan sidebar' : 'Perluas sidebar');
-        }
-
-        document.querySelectorAll('[data-mobile-menu-toggle]').forEach(function (button) {
-            button.classList.toggle('dock-active', shouldActivate);
-            button.setAttribute('aria-expanded', String(isOpen));
-            button.setAttribute('aria-label', isOpen ? 'Tutup menu lainnya' : 'Buka menu lainnya');
-        });
-    }
-
-    function setDrawerOpen(open) {
-        const drawer = document.getElementById('admin-drawer');
-        if (drawer) drawer.checked = Boolean(open);
-        syncDrawerState();
-    }
-
-    function applyResponsiveDrawerState() {
-        const drawer = document.getElementById('admin-drawer');
-        if (!drawer) return;
-
-        drawer.checked = window.matchMedia('(min-width: 1024px)').matches
-            ? localStorage.getItem(ADMIN_SIDEBAR_STORAGE_KEY) !== 'collapsed'
-            : false;
-        syncDrawerState();
-    }
-
+    /* Sidebar */
     function initSidebar() {
-        applyResponsiveDrawerState();
-
         if (document.documentElement.dataset.adminSidebarBound === '1') return;
         document.documentElement.dataset.adminSidebarBound = '1';
 
-        document.addEventListener('change', function (event) {
-            if (event.target.matches('#admin-drawer')) syncDrawerState();
-        });
-
         document.addEventListener('click', function (event) {
-            const drawer = document.getElementById('admin-drawer');
-
-            if (event.target.closest('#sidebarToggle') && drawer) {
-                drawer.checked = !drawer.checked;
-                localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, drawer.checked ? 'expanded' : 'collapsed');
-                syncDrawerState();
-                return;
-            }
-
-            const collapsedGroup = event.target.closest('[data-admin-nav-group] > summary');
-            if (collapsedGroup && drawer && !drawer.checked && window.matchMedia('(min-width: 1024px)').matches) {
-                event.preventDefault();
-                drawer.checked = true;
-                localStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, 'expanded');
-                collapsedGroup.parentElement.open = true;
-                syncDrawerState();
-                return;
-            }
-
-            if (event.target.closest('#sidebar a') && window.matchMedia('(max-width: 1023px)').matches) {
-                setDrawerOpen(false);
+            if (event.target.closest('#application-sidebar a') && window.matchMedia('(max-width: 1023px)').matches) {
+                const sidebar = document.getElementById('application-sidebar');
+                if (sidebar && window.HSOverlay) {
+                    window.HSOverlay.close(sidebar);
+                }
             }
         });
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') closeTransientShellUi();
         });
-
-        window.matchMedia('(min-width: 1024px)').addEventListener('change', applyResponsiveDrawerState);
     }
 
-    /* ── Active navigation ──────────────────────────────────────────────── */
+    /* Active navigation */
     function applyActiveNavigation() {
         const current = window.location.pathname.replace(/\/$/, '') || '/';
-        document.querySelectorAll('[data-admin-nav][data-path], #mobile-nav a[data-path]').forEach(function (link) {
-            const path = link.getAttribute('data-path');
-            const active = isMobilePrimaryPath(current, path);
-            link.classList.toggle('menu-active', active && link.matches('[data-admin-nav]'));
-            link.classList.toggle('dock-active', active && Boolean(link.closest('#mobile-nav')));
-            if (active) link.setAttribute('aria-current', 'page');
-            else link.removeAttribute('aria-current');
+        document.querySelectorAll('[data-admin-nav][data-path]').forEach(function (link) {
+            const path = (link.getAttribute('data-path') || '').replace(/\/$/, '');
+            const active = path && (current === path || (path !== '/admin' && current.startsWith(path + '/')));
+            link.classList.toggle('menu-active', Boolean(active));
+            if (active) {
+                link.setAttribute('aria-current', 'page');
+                const group = link.closest('[data-admin-nav-group]');
+                if (group) {
+                    group.classList.add('active');
+                    const content = group.querySelector('.hs-accordion-content');
+                    if (content) {
+                        content.classList.remove('hidden');
+                        content.style.display = 'block';
+                    }
+                    const toggle = group.querySelector('.hs-accordion-toggle');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+                    try {
+                        if (window.HSAccordion && Array.isArray(window.$hsAccordionCollection) && typeof window.HSAccordion.show === 'function') {
+                            window.HSAccordion.show(group);
+                        }
+                    } catch (_) {}
+                }
+            } else {
+                link.removeAttribute('aria-current');
+            }
         });
-        document.querySelectorAll('[data-admin-nav-group]').forEach(function (group) {
-            const hasActiveChild = Boolean(group.querySelector('[data-admin-nav].menu-active'));
-            group.open = hasActiveChild;
-        });
-        syncDrawerState();
     }
 
-    /* ── Clock ──────────────────────────────────────────────────────────── */
-    /* ── WA status (topbar) ─────────────────────────────────────────────── */
-    /* ── DataTables ─────────────────────────────────────────────────────── */
+    /* DataTables */
 
     function parseDataTableOrder(table) {
         const raw = table.getAttribute('data-dt-order');
@@ -261,11 +297,24 @@
         if (!wrapper) return;
 
         wrapper.querySelectorAll('.dt-paging .dt-paging-button').forEach(function (btn) {
-            if (!btn.classList.contains('btn')) {
-                btn.classList.add('btn', 'btn-sm');
+            var isCurrent = btn.classList.contains('current');
+            btn.classList.toggle('current', isCurrent);
+            btn.classList.toggle('disabled', Boolean(btn.disabled || btn.classList.contains('disabled')));
+            if (isCurrent) {
+                btn.setAttribute('aria-current', 'page');
+            } else {
+                btn.removeAttribute('aria-current');
             }
-            btn.classList.toggle('btn-active', btn.classList.contains('current'));
-            btn.classList.toggle('btn-disabled', btn.disabled || btn.classList.contains('disabled'));
+            if (btn.classList.contains('previous') && !btn.getAttribute('aria-label')) {
+                btn.setAttribute('aria-label', 'Halaman Sebelumnya');
+            } else if (btn.classList.contains('next') && !btn.getAttribute('aria-label')) {
+                btn.setAttribute('aria-label', 'Halaman Berikutnya');
+            } else if (!btn.getAttribute('aria-label')) {
+                var text = (btn.textContent || '').trim();
+                if (text && !isNaN(Number(text))) {
+                    btn.setAttribute('aria-label', 'Halaman ' + text);
+                }
+            }
         });
     }
 
@@ -276,14 +325,7 @@
         });
     }
 
-    /* ── DataTables column filters (client-side) ────────────────────────── */
-    /*
-     * Membaca atribut data-dt-col-filters pada <table> (JSON array):
-     *   [{"col": <index>, "label": "Label", "all": "Semua ..."}]
-     *   atau [{"column": <index>, "label": "Label"}]
-     * Lalu meng-inject dropdown DaisyUI ke area toolbar DataTables
-     * sehingga admin bisa filter Jenis / Status tanpa reload halaman.
-     */
+    /* DataTables column filters */
     function buildDtColumnFilters(table, api) {
         var raw = table.getAttribute('data-dt-col-filters');
         if (!raw) return;
@@ -301,7 +343,7 @@
         if (wrapper.querySelector('.dt-col-filter-bar')) return;
 
         var bar = document.createElement('div');
-        bar.className = 'dt-col-filter-bar flex flex-wrap gap-2 items-center mt-2 mb-1';
+        bar.className = 'dt-col-filter-bar flex flex-wrap gap-2 items-center';
 
         defs.forEach(function (def) {
             var colIdx  = def.col !== undefined ? def.col : def.column;
@@ -335,11 +377,11 @@
             wrap.className = 'flex items-center gap-1.5';
 
             var lbl = document.createElement('span');
-            lbl.className = 'text-xs font-bold text-base-content/50 whitespace-nowrap';
+            lbl.className = 'text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap';
             lbl.textContent = label + ':';
 
             var sel = document.createElement('select');
-            sel.className = 'select select-sm dt-col-filter-select';
+            sel.className = 'py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-blue-500 focus:ring-blue-500 shadow-xs cursor-pointer dt-col-filter-select';
             sel.setAttribute('data-dt-filter-col', colIdx);
             sel.setAttribute('aria-label', 'Filter ' + label);
 
@@ -383,7 +425,7 @@
                 updateDataTableRowNumbers(existingApi);
                 var wrapper = existingApi.table().container();
                 styleDataTableControls(wrapper);
-                renderAdminIcons();
+                renderAdminIcons(wrapper);
                 return;
             }
 
@@ -399,6 +441,7 @@
                     pageLength: pageLength,
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
                     order: parseDataTableOrder(table),
+                    searchDelay: 250,
                     search: {
                         search: initialSearch,
                     },
@@ -431,7 +474,7 @@
                         updateDataTableRowNumbers(api);
                         var wrapper = api.table().container();
                         styleDataTableControls(wrapper);
-                        renderAdminIcons();
+                        renderAdminIcons(wrapper);
                     },
                     initComplete: function () {
                         var api = this.api();
@@ -439,13 +482,13 @@
                         var wrapper = api.table().container();
                         styleDataTableControls(wrapper);
                         buildDtColumnFilters(table, api);
-                        renderAdminIcons();
+                        renderAdminIcons(wrapper);
                     },
                 });
 
             } catch (error) {
                 console.error('Gagal menginisialisasi DataTables admin:', error);
-                renderAdminIcons();
+                renderAdminIcons(table);
             }
         });
     }
@@ -456,10 +499,6 @@
         document.querySelectorAll('table[data-admin-datatable]').forEach(function (table) {
             if (window.jQuery.fn.DataTable.isDataTable(table)) {
                 try {
-                    /* destroy(false) = lepas DataTables dari tabel dan bersihkan
-                     * event handler-nya, tapi TIDAK menghapus node <table> dari DOM.
-                     * Ini penting untuk Turbo: snapshot cache akan menyimpan
-                     * <table> asli, dan saat restore turbo:load akan re-init DT. */
                     window.jQuery(table).DataTable().destroy(false);
                 } catch (e) {
                     /* abaikan error saat destroy */
@@ -468,50 +507,49 @@
         });
     }
 
-    function refreshAdminPage() {
-        initThemeControls();
-        initSidebar();
-        applyActiveNavigation();
-        renderAdminIcons();
-        disableTurboFormSubmissions();
-        initAutoDismissAlerts();
-        initAdminDataTables();
-        renderAdminIcons(); /* re-render ikon setelah DT menambah elemen baru */
+    function initPreline() {
+        try {
+            if (window.HSStaticMethods && typeof window.HSStaticMethods.autoInit === 'function') {
+                window.HSStaticMethods.autoInit();
+            }
+        } catch (err) {
+            console.warn('Preline autoInit error:', err);
+        }
     }
 
-    /* ── Bootstrap ──────────────────────────────────────────────────────── */
-    /* Script dimuat dengan defer; DOM awal sudah siap saat bootstrap berjalan.
-     *
-     * Alur Hotwire Turbo:
-     *  - turbo:load         → halaman baru selesai di-render (navigasi penuh / restore)
-     *  - turbo:before-cache → sebelum halaman saat ini di-cache Turbo
-     *
-     * Kita destroy DataTables SEBELUM halaman di-cache sehingga Turbo menyimpan
-     * markup tabel yang bersih (tanpa wrapper DT). Saat halaman di-restore,
-     * turbo:load akan re-init DataTables kembali.
-     *
-     * CATATAN: turbo:render TIDAK digunakan karena ia firing baik saat fresh
-     * navigation MAUPUN saat restore cache (setelah turbo:load sudah firing),
-     * sehingga menyebabkan double-init yang bisa merusak DataTables.
-     * turbo:load sudah cukup — ia meng-cover semua skenario.
-     */
+    function refreshAdminPage() {
+        try { initThemeControls(); } catch (e) { console.error(e); }
+        try { initSidebar(); } catch (e) { console.error(e); }
+        try { initPreline(); } catch (e) { console.error(e); }
+        try { applyActiveNavigation(); } catch (e) { console.error(e); }
+        try { initAutoDismissAlerts(); } catch (e) { console.error(e); }
+        try { initAdminDataTables(); } catch (e) { console.error(e); }
+        renderAdminIcons();
+    }
+
     bindAlertHandlers();
     bindFormConfirmations();
     bindAutoSubmitControls();
-    refreshAdminPage();
-    document.addEventListener('turbo:load', function () {
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refreshAdminPage);
+    } else {
         refreshAdminPage();
+    }
+
+    window.addEventListener('load', function () {
+        initPreline();
+        renderAdminIcons();
     });
 
-    document.addEventListener('turbo:before-cache', function () {
-        /* destroy(false) = lepas DataTables dari tabel tapi TIDAK hapus <table> dari DOM.
-         * Turbo menyimpan snapshot dengan <table> yang bersih (tanpa wrapper DT).
-         * Saat halaman di-restore, turbo:load akan re-init DataTables kembali. */
-        destroyAdminDataTables();
-        closeTransientShellUi();
-        document.querySelectorAll('[data-admin-alert]').forEach(function (alert) {
-            alert.remove();
-        });
+    document.addEventListener('open.hs.overlay', function (e) {
+        renderAdminIcons(e.target);
+    });
+    document.addEventListener('open.hs.accordion', function (e) {
+        renderAdminIcons(e.target);
+    });
+    document.addEventListener('change.hs.tab', function (e) {
+        renderAdminIcons(e.target);
     });
 
 })();

@@ -289,9 +289,34 @@ class JadwalBanmusService
             return ['error' => 'Jenis item Banmus tidak valid.'];
         }
 
+        $catatan = trim((string) ($input['catatan'] ?? ''));
+        $publikasi = trim((string) ($input['publikasi'] ?? ''));
+        $normalizedPublikasi = in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'publik';
+
         $tanggal = trim((string) ($input['tanggal'] ?? ''));
+        if ($agendaType === JadwalBanmusModel::TYPE_NON_MEETING) {
+            $periodeLabel = '';
+            $projectionRange = [
+                'tanggal_mulai'   => null,
+                'tanggal_selesai' => null,
+                'bulan_mulai'     => null,
+                'bulan_selesai'   => null,
+            ];
+            $tanggalMulaiInput = trim((string) ($input['tanggal_mulai'] ?? ''));
+            $tanggalSelesaiInput = trim((string) ($input['tanggal_selesai'] ?? ''));
+            if ($tanggal === '' && $tanggalMulaiInput !== '') {
+                $tanggal = $tanggalMulaiInput;
+            }
+            if ($tanggalMulaiInput !== '' && $this->validDate($tanggalMulaiInput)) {
+                $projectionRange['tanggal_mulai'] = $tanggalMulaiInput;
+            }
+            if ($tanggalSelesaiInput !== '' && $this->validDate($tanggalSelesaiInput)) {
+                $projectionRange['tanggal_selesai'] = $tanggalSelesaiInput;
+            }
+        }
+
         if ($tanggal !== '' && ! $this->validDate($tanggal)) {
-            return ['error' => 'Format tanggal pasti tidak valid.'];
+            return ['error' => 'Format tanggal pelaksanaan tidak valid.'];
         }
 
         $jamMulai = trim((string) ($input['jam_mulai'] ?? ''));
@@ -343,8 +368,6 @@ class JadwalBanmusService
             }
         }
 
-        $publikasi = trim((string) ($input['publikasi'] ?? ''));
-        $catatan = trim((string) ($input['catatan'] ?? ''));
         $materiUrl = $this->validatedOptionalUrl(
             (string) ($input['materi_url'] ?? ''),
             'Tautan materi atau dokumen tidak valid.',
@@ -372,27 +395,36 @@ class JadwalBanmusService
             return ['error' => $invitationCheck['error']];
         }
 
-        $isScheduleComplete = $tanggal !== ''
-            && $jamMulai !== ''
-            && $jamSelesai !== ''
-            && ($ruanganId !== null || $lokasiLainnya !== '')
-            && $unitIds !== [];
+        if ($agendaType === JadwalBanmusModel::TYPE_NON_MEETING) {
+            $isScheduleComplete = $tanggal !== '';
+        } else {
+            $isScheduleComplete = $tanggal !== ''
+                && $jamMulai !== ''
+                && $jamSelesai !== ''
+                && ($ruanganId !== null || $lokasiLainnya !== '')
+                && $unitIds !== [];
+        }
 
-        if ($isScheduleComplete && $ruanganId !== null && $this->hasRoomConflict(
+        if ($isScheduleComplete && $ruanganId !== null && $jamMulai !== '' && $jamSelesai !== '' && $this->hasRoomConflict(
             (int) $ruanganId,
-                $tanggal,
-                $jamMulai,
-                $jamSelesai,
+            $tanggal,
+            $jamMulai,
+            $jamSelesai,
             isset($existingItem['id']) ? (int) $existingItem['id'] : null,
         )) {
             return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
+        }
+
+        $statusOverride = trim((string) ($input['status'] ?? $input['status_override'] ?? ''));
+        if (! in_array($statusOverride, ['ditunda', 'dibatalkan'], true)) {
+            $statusOverride = null;
         }
 
         return [
             'payload' => [
                 'agenda'          => $agenda,
                 'jenis_agenda'    => $agendaType,
-                'periode_label'   => $periodeLabel !== '' ? $periodeLabel : null,
+                'periode_label'   => $agendaType === JadwalBanmusModel::TYPE_NON_MEETING ? null : ($periodeLabel !== '' ? $periodeLabel : null),
                 ...$projectionRange,
                 'tanggal'         => $tanggal !== '' ? $tanggal : null,
                 'jam_mulai'       => $jamMulai !== '' ? $jamMulai : null,
@@ -400,7 +432,7 @@ class JadwalBanmusService
                 'ruangan_id'      => $ruanganId !== null ? (int) $ruanganId : null,
                 'lokasi_lainnya'  => $lokasiLainnya !== '' ? $lokasiLainnya : null,
                 'catatan'         => $catatan !== '' ? $catatan : null,
-                'publikasi'       => in_array($publikasi, ['internal', 'publik'], true) ? $publikasi : 'publik',
+                'publikasi'       => $normalizedPublikasi,
                 'materi_url'      => $materiUrl['url'],
                 'materi_akses'    => $materiAkses,
                 'stream_url'      => $streamUrl['url'],
@@ -408,14 +440,15 @@ class JadwalBanmusService
             ],
             'unit_ids'             => $unitIds,
             'is_schedule_complete' => $isScheduleComplete,
-            'invitation_upload'    => $invitation,
+            'status_override'      => $statusOverride,
+            'invitation_upload'    => $invitationCheck['file'] ?? null,
             'remove_invitation'    => ($input['hapus_undangan'] ?? null) === '1',
         ];
     }
 
     /**
-     * Simpan item agenda baru; status (proyeksi/terjadwal) dihitung
-     * otomatis dari kelengkapan data pelaksanaan.
+     * Simpan item agenda baru; status (proyeksi/terjadwal/non_rapat) dihitung
+     * otomatis dari jenis agenda dan kelengkapan data pelaksanaan.
      *
      * @param array<string, mixed> $validated hasil validatedItemPayload
      * @return array<string, mixed> ['id' => int, 'status' => string] atau ['error' => pesan]
@@ -433,6 +466,9 @@ class JadwalBanmusService
                 $validated['payload']['tanggal'],
                 $validated['payload']['jam_mulai'],
                 $validated['payload']['jam_selesai'],
+                null,
+                $validated['payload']['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING,
+                $validated['status_override'] ?? null,
             ),
         ]);
 
@@ -475,6 +511,9 @@ class JadwalBanmusService
             $payload['tanggal'],
             $payload['jam_mulai'],
             $payload['jam_selesai'],
+            null,
+            $payload['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING,
+            $validated['status_override'] ?? null,
         );
 
         $storedInvitation = $this->storeInvitationUpload($validated);
@@ -514,6 +553,8 @@ class JadwalBanmusService
             $validated['payload']['tanggal'],
             $validated['payload']['jam_mulai'],
             $validated['payload']['jam_selesai'],
+            null,
+            $validated['payload']['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING,
         );
     }
 
@@ -587,15 +628,19 @@ class JadwalBanmusService
     /** @return array{payload?: array<string, mixed>, new_file?: ?string, error?: string} */
     private function storeInvitationUpload(array $input): array
     {
-        if (($input['remove_invitation'] ?? false) === true && ($input['invitation_upload'] ?? null) === null) {
+        $upload = $input['invitation_upload'] ?? null;
+        $shouldRemove = ($input['remove_invitation'] ?? false) === true;
+
+        if ($shouldRemove && ($upload === null || ! ($upload instanceof UploadedFile) || ! $upload->isValid())) {
             return ['payload' => ['undangan_file' => null, 'undangan_nama_asli' => null], 'new_file' => null];
         }
-        if (($input['invitation_upload'] ?? null) === null) {
+
+        if ($upload === null || ! ($upload instanceof UploadedFile) || ! $upload->isValid() || $upload->getError() !== UPLOAD_ERR_OK) {
             return ['payload' => [], 'new_file' => null];
         }
 
         try {
-            $stored = (new ScheduleInvitationStorage())->store($input['invitation_upload']);
+            $stored = (new ScheduleInvitationStorage())->store($upload);
 
             return [
                 'payload' => [

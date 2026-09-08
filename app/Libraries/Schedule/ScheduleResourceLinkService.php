@@ -36,6 +36,16 @@ final class ScheduleResourceLinkService
             : null;
     }
 
+    public function adminUrl(string $source, int $id, string $resource): ?string
+    {
+        $row = $this->findResource($source, $id, $resource, false);
+        if ($row === null) {
+            return null;
+        }
+
+        return $this->validExternalUrl($row['resource_url'] ?? null);
+    }
+
     public function memberUrl(
         string $source,
         int $id,

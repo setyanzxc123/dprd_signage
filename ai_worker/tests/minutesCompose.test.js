@@ -38,3 +38,13 @@ test('composeMinutesText menangani pilar kosong tanpa error', () => {
   assert.ok(text.includes('Tidak ada poin pembahasan'));
   assert.ok(text.includes('Tidak ada kesimpulan'));
 });
+
+test('composeMinutesText menjaga pemisahan paragraf pada ringkasan utama', () => {
+  const text = composeMinutesText({
+    ringkasan_utama: "Paragraf pembuka.\n\nParagraf pembahasan.\n\nParagraf kesimpulan.",
+    poin_pembahasan: [],
+    kesimpulan_akhir: [],
+  });
+  assert.ok(text.includes("Paragraf pembuka.\n\nParagraf pembahasan.\n\nParagraf kesimpulan."));
+});
+

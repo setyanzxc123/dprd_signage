@@ -1,70 +1,105 @@
 <?php
 $pageTitle   = $pageTitle ?? 'Dashboard';
 $breadcrumbs = $breadcrumbs ?? [];
+$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 
 $authUser  = session()->get('auth_user') ?? [];
 $userName  = $authUser['name'] ?? 'Admin Operator';
 $userRole  = $authUser['role'] ?? 'operator';
 $userInit  = strtoupper(substr($userName, 0, 1));
 $roleLabel = $userRole === 'superadmin' ? 'Super Admin' : 'Sekretariat DPRD';
+
+if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
+    $currentRoute = '/' . ltrim(service('uri')->getRoutePath(), '/');
+    $currentRoute = $currentRoute === '/' ? '/' : rtrim($currentRoute, '/');
+
+    $parentMap = [
+        '/admin/jadwal-banmus' => ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+        '/admin/jadwal-umum'   => ['label' => 'Jadwal Umum', 'url' => 'admin/jadwal-umum'],
+        '/admin/anggota'       => ['label' => 'Anggota DPRD', 'url' => 'admin/anggota'],
+        '/admin/unit-rapat'    => ['label' => 'Kelompok Peserta', 'url' => 'admin/unit-rapat'],
+        '/admin/ruangan'       => ['label' => 'Ruangan Rapat', 'url' => 'admin/ruangan'],
+        '/admin/kalender'      => ['label' => 'Kalender Agenda', 'url' => 'admin/kalender'],
+    ];
+
+    foreach ($parentMap as $parentPath => $crumb) {
+        if (str_starts_with($currentRoute, $parentPath . '/')) {
+            $breadcrumbs = [$crumb];
+            break;
+        }
+    }
+}
 ?>
 
-<header id="topbar" class="navbar sticky top-0 z-40 min-h-16 border-b border-base-300 bg-base-100/95 px-3 backdrop-blur sm:px-5">
-    <div class="navbar-start min-w-0 flex-1 gap-2">
-        <label for="admin-drawer" class="btn btn-ghost btn-circle drawer-button lg:hidden" aria-label="Buka navigasi utama">
-            <i data-lucide="menu"></i>
-        </label>
-
-        <div class="flex min-w-0 items-center gap-2 lg:hidden">
-            <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>" alt="Logo DPRD" class="h-9 w-9 rounded-box object-contain" />
-            <span class="min-w-0">
-                <strong class="block truncate text-sm">DPRD Sulawesi Tengah</strong>
-                <span class="block truncate text-xs text-base-content/60"><?= esc($pageTitle) ?></span>
-            </span>
-        </div>
-
-        <div class="breadcrumbs hidden min-w-0 text-sm lg:block" aria-label="Breadcrumb">
-            <ul>
-                <?php if ($pageTitle === 'Dashboard' && empty($breadcrumbs)): ?>
-                    <li><span class="font-bold"><?= esc($pageTitle) ?></span></li>
-                <?php else: ?>
-                    <li><a href="<?= base_url('admin/dashboard') ?>">Dashboard</a></li>
-                    <?php foreach ($breadcrumbs as $crumb): ?>
-                        <li>
-                            <?php if (!empty($crumb['url'])): ?>
-                                <a href="<?= base_url($crumb['url']) ?>"><?= esc($crumb['label']) ?></a>
-                            <?php else: ?>
-                                <span><?= esc($crumb['label']) ?></span>
-                            <?php endif; ?>
-                        </li>
-                    <?php endforeach; ?>
-                    <li><span class="font-bold"><?= esc($pageTitle) ?></span></li>
-                <?php endif; ?>
-            </ul>
-        </div>
-    </div>
-
-    <div class="navbar-end w-auto gap-1 sm:gap-2">
-        <label class="btn btn-ghost btn-circle swap swap-rotate" title="Gunakan tema gelap"
-               aria-label="Gunakan tema gelap" data-theme-toggle>
-            <input type="checkbox" value="dark" class="theme-controller" data-theme-toggle-input />
-            <i class="swap-on" data-lucide="sun"></i>
-            <i class="swap-off" data-lucide="moon"></i>
-        </label>
-
-        <a href="<?= base_url('admin/profile') ?>" class="btn btn-ghost hidden h-auto gap-2 px-2 sm:flex" title="Buka profil admin">
-            <span class="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-xs font-black text-primary"><?= esc($userInit) ?></span>
-            <span class="hidden text-left lg:block">
-                <strong class="block max-w-32 truncate text-xs"><?= esc($userName) ?></strong>
-                <span class="block text-[10px] font-normal text-base-content/60"><?= esc($roleLabel) ?></span>
-            </span>
-        </a>
-
-        <form class="hidden sm:block" method="post" action="<?= base_url('admin/logout') ?>" data-confirm-message="Yakin ingin keluar?">
-            <?= csrf_field() ?>
-            <button class="btn btn-ghost btn-circle hover:text-error" type="submit" title="Keluar" aria-label="Keluar">
-                <i data-lucide="log-out"></i>
+<header id="admin-topbar" class="h-16 sticky top-0 inset-x-0 z-40 flex items-center w-full bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 text-sm lg:ps-64 backdrop-blur-md">
+    <div class="w-full mx-auto px-4 sm:px-6 flex items-center justify-between h-full">
+        <div class="flex items-center gap-x-3">
+            <button type="button" class="py-2 px-2.5 inline-flex justify-center items-center gap-x-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs lg:hidden transition cursor-pointer" data-hs-overlay="#application-sidebar" aria-controls="application-sidebar" aria-haspopup="dialog" aria-expanded="false" aria-label="Buka navigasi">
+                <i data-lucide="menu" class="size-4.5"></i>
             </button>
-        </form>
+
+            <div class="flex min-w-0 items-center gap-2.5 lg:hidden">
+                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" alt="Logo DPRD" width="36" height="36" loading="eager" fetchpriority="high" decoding="async" class="size-9 shrink-0 object-contain" />
+                <div class="min-w-0 leading-tight">
+                    <strong class="block truncate text-xs font-bold text-slate-900 dark:text-white">E-Agenda</strong>
+                    <span class="block truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">DPRD Sulteng</span>
+                </div>
+            </div>
+
+            <nav class="hidden min-w-0 lg:block" aria-label="Breadcrumb">
+                <ol class="flex items-center whitespace-nowrap gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <?php if ($pageTitle === 'Dashboard' && empty($breadcrumbs)): ?>
+                        <li class="flex items-center text-slate-900 dark:text-white font-bold">
+                            <span><?= esc($pageTitle) ?></span>
+                        </li>
+                    <?php else: ?>
+                        <li class="inline-flex items-center">
+                            <a href="<?= base_url('admin/dashboard') ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition">Dashboard</a>
+                        </li>
+                        <?php foreach ($breadcrumbs as $crumb): ?>
+                            <li class="inline-flex items-center gap-1.5">
+                                <svg class="size-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                <?php if (!empty($crumb['url'])): ?>
+                                    <a href="<?= base_url($crumb['url']) ?>" class="hover:text-blue-600 dark:hover:text-blue-400 transition"><?= esc($crumb['label']) ?></a>
+                                <?php else: ?>
+                                    <span><?= esc($crumb['label']) ?></span>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                        <li class="inline-flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                            <svg class="size-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            <span><?= esc($pageTitle) ?></span>
+                        </li>
+                    <?php endif; ?>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+            <label class="inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition" title="Gunakan tema gelap" aria-label="Gunakan tema gelap" data-theme-toggle>
+                <input type="checkbox" value="dark" class="hidden" data-theme-toggle-input />
+                <i class="theme-icon-sun size-4" data-lucide="sun"></i>
+                <i class="theme-icon-moon size-4" data-lucide="moon"></i>
+            </label>
+
+            <a href="<?= base_url('admin/profile') ?>" class="inline-flex items-center gap-x-2.5 py-1.5 px-2 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Buka profil admin" aria-label="Profil <?= esc($userName) ?>">
+                <span class="grid size-7 place-items-center rounded-lg bg-blue-500/15 text-xs font-black text-blue-600 dark:text-blue-400"><?= esc($userInit) ?></span>
+                <span class="hidden text-left lg:block leading-tight">
+                    <strong class="block max-w-32 truncate text-xs font-bold text-slate-800 dark:text-slate-200"><?= esc($userName) ?></strong>
+                    <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400"><?= esc($roleLabel) ?></span>
+                </span>
+            </a>
+
+            <form class="hidden sm:block" method="post" action="<?= base_url('admin/logout') ?>"
+                  data-confirm-title="Keluar dari Panel Admin"
+                  data-confirm-message="Yakin ingin keluar dari sesi admin ini?"
+                  data-confirm-button="Keluar"
+                  data-confirm-variant="danger">
+                <?= csrf_field() ?>
+                <button class="inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 shadow-xs transition" type="submit" title="Keluar" aria-label="Keluar">
+                    <i data-lucide="log-out" class="size-4"></i>
+                </button>
+            </form>
+        </div>
     </div>
 </header>

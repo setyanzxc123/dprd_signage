@@ -18,14 +18,13 @@
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/outfit": "^5.2.8",
-    "@hotwired/turbo": "^8.0.23",
     "@tailwindcss/cli": "^4.3.1",
-    "daisyui": "^5.5.23",
     "datatables.net": "^2.3.8",
     "datatables.net-dt": "^2.3.8",
     "esbuild": "^0.25.12",
     "jquery": "^3.7.1",
     "lucide": "^1.17.0",
+    "preline": "^4.2.0",
     "qrcodejs": "^1.0.0",
     "vue": "^3.5.38"
   }

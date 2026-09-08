@@ -46,6 +46,17 @@ final class AdminLoginThrottle
         ($this->remover)($this->usernameKey($username));
     }
 
+    public function retryAfter(): int
+    {
+        try {
+            $time = service('throttler')->getTokenTime();
+
+            return $time > 0 ? $time : 60;
+        } catch (\Throwable) {
+            return 60;
+        }
+    }
+
     public function usernameFingerprint(string $username): string
     {
         return $this->fingerprint(mb_strtolower(trim($username)) ?: 'invalid-admin-username');

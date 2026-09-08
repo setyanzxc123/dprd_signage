@@ -29,6 +29,9 @@ class UnitRapatController extends BaseController
     {
         return view('admin/unit_rapat/form', [
             'pageTitle'          => 'Tambah Kelompok Peserta',
+            'breadcrumbs'        => [
+                ['label' => 'Kelompok Peserta', 'url' => 'admin/unit-rapat'],
+            ],
             'unit'               => null,
             'members'            => $this->memberOptions(),
             'selectedAnggotaIds' => [],
@@ -62,6 +65,9 @@ class UnitRapatController extends BaseController
 
         return view('admin/unit_rapat/form', [
             'pageTitle'          => 'Edit Kelompok Peserta',
+            'breadcrumbs'        => [
+                ['label' => 'Kelompok Peserta', 'url' => 'admin/unit-rapat'],
+            ],
             'unit'               => $unit,
             'members'            => $this->memberOptions(),
             'selectedAnggotaIds' => (new UnitRapatService())->memberIdsForUnit($id),
@@ -121,6 +127,9 @@ class UnitRapatController extends BaseController
 
         return $this->formViewErrorResponse('admin/unit_rapat/form', [
             'pageTitle'          => $id === null ? 'Tambah Kelompok Peserta' : 'Edit Kelompok Peserta',
+            'breadcrumbs'        => [
+                ['label' => 'Kelompok Peserta', 'url' => 'admin/unit-rapat'],
+            ],
             'unit'               => [
                 'id'    => $id,
                 'nama'  => trim((string) ($post['nama'] ?? '')),

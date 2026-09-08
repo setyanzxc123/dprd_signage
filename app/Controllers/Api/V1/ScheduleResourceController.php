@@ -17,8 +17,10 @@ class ScheduleResourceController extends BaseController
     use ApiResponse;
 
     private const SOURCE_MAP = [
-        'banmus'      => ScheduleResourceLinkService::SOURCE_BANMUS,
-        'jadwal-umum' => ScheduleResourceLinkService::SOURCE_GENERAL,
+        'umum'          => ScheduleResourceLinkService::SOURCE_GENERAL,
+        'jadwal-umum'   => ScheduleResourceLinkService::SOURCE_GENERAL,
+        'banmus'        => ScheduleResourceLinkService::SOURCE_BANMUS,
+        'jadwal-banmus' => ScheduleResourceLinkService::SOURCE_BANMUS,
     ];
 
     public function resolve(string $source, int $id, string $resource)
@@ -29,8 +31,14 @@ class ScheduleResourceController extends BaseController
             return $this->apiError('Sumber jadwal tidak dikenali.', 404);
         }
 
-        $memberId = service('requestIdentity')->currentAnggotaId();
-        $url = (new ScheduleResourceLinkService())->memberUrl($mappedSource, $id, $resource, $memberId);
+        $identity = service('requestIdentity');
+        $user = $identity->currentUser();
+        $isAdmin = $user !== null && $user->inGroup('superadmin', 'operator');
+
+        $linkService = new ScheduleResourceLinkService();
+        $url = $isAdmin
+            ? $linkService->adminUrl($mappedSource, $id, $resource)
+            : $linkService->memberUrl($mappedSource, $id, $resource, $identity->currentAnggotaId());
 
         if ($url === null) {
             return $this->apiError('Resource tidak tersedia atau tidak dapat Anda akses.', 403);

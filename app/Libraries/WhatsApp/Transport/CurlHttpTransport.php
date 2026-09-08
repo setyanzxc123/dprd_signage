@@ -15,13 +15,13 @@ final class CurlHttpTransport implements HttpTransportInterface
 
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL            => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $fields,
-            CURLOPT_HTTPHEADER     => $this->formatHeaders($headers),
-            CURLOPT_TIMEOUT        => max(1, $timeoutSeconds),
-            CURLOPT_CONNECTTIMEOUT => min(10, max(1, $timeoutSeconds)),
+            CURLOPT_URL               => $url,
+            CURLOPT_RETURNTRANSFER    => true,
+            CURLOPT_POST              => true,
+            CURLOPT_POSTFIELDS        => $fields,
+            CURLOPT_HTTPHEADER        => $this->formatHeaders($headers),
+            CURLOPT_TIMEOUT           => max(1, $timeoutSeconds),
+            CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeoutMs($url, $timeoutSeconds),
         ]);
 
         $body = curl_exec($curl);
@@ -45,13 +45,13 @@ final class CurlHttpTransport implements HttpTransportInterface
         $headers['Content-Type'] = 'application/json';
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL            => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($payload, JSON_THROW_ON_ERROR),
-            CURLOPT_HTTPHEADER     => $this->formatHeaders($headers),
-            CURLOPT_TIMEOUT        => max(1, $timeoutSeconds),
-            CURLOPT_CONNECTTIMEOUT => min(10, max(1, $timeoutSeconds)),
+            CURLOPT_URL               => $url,
+            CURLOPT_RETURNTRANSFER    => true,
+            CURLOPT_POST              => true,
+            CURLOPT_POSTFIELDS        => json_encode($payload, JSON_THROW_ON_ERROR),
+            CURLOPT_HTTPHEADER        => $this->formatHeaders($headers),
+            CURLOPT_TIMEOUT           => max(1, $timeoutSeconds),
+            CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeoutMs($url, $timeoutSeconds),
         ]);
 
         $body = curl_exec($curl);
@@ -70,12 +70,12 @@ final class CurlHttpTransport implements HttpTransportInterface
 
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL            => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPGET        => true,
-            CURLOPT_HTTPHEADER     => $this->formatHeaders($headers),
-            CURLOPT_TIMEOUT        => max(1, $timeoutSeconds),
-            CURLOPT_CONNECTTIMEOUT => min(10, max(1, $timeoutSeconds)),
+            CURLOPT_URL               => $url,
+            CURLOPT_RETURNTRANSFER    => true,
+            CURLOPT_HTTPGET           => true,
+            CURLOPT_HTTPHEADER        => $this->formatHeaders($headers),
+            CURLOPT_TIMEOUT           => max(1, $timeoutSeconds),
+            CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeoutMs($url, $timeoutSeconds),
         ]);
 
         $body = curl_exec($curl);
@@ -84,6 +84,16 @@ final class CurlHttpTransport implements HttpTransportInterface
         curl_close($curl);
 
         return new HttpResponse($statusCode, is_string($body) ? $body : null, $error !== '' ? $error : null);
+    }
+
+    private function connectTimeoutMs(string $url, int $timeoutSeconds): int
+    {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+            return 400;
+        }
+
+        return (int) min(10000, max(1000, $timeoutSeconds * 1000));
     }
 
     /**

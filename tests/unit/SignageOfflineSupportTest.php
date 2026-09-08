@@ -45,7 +45,7 @@ final class SignageOfflineSupportTest extends CIUnitTestCase
         $this->assertStringContainsString("'/assets/css/signage.css'", $source);
         $this->assertStringContainsString("'/assets/vendor/vue/vue.global.prod.js'", $source);
         $this->assertStringContainsString("'/assets/vendor/qrcodejs/qrcode.min.js'", $source);
-        $this->assertStringContainsString("'/assets/images/logo_dprd.jpg'", $source);
+        $this->assertStringContainsString("'/assets/images/logo_dprd.png'", $source);
         $this->assertStringContainsString("request.mode === 'navigate'", $source);
         $this->assertStringContainsString('ignoreSearch: true', $source);
         $this->assertStringContainsString('caches.delete(key)', $source);

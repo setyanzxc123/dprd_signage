@@ -105,6 +105,56 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $response->assertSee('Hapus');
     }
 
+    public function testWebAdminShowRendersFullRisalahDirectlyWithoutRingkasanTab(): void
+    {
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'               => 1,
+            'jadwal_type'      => 'umum',
+            'jadwal_id'        => 10,
+            'audio_filename'   => 'rapat_dengar_pendapat.mp3',
+            'audio_path'       => 'recordings/job_1/audio/original.mp3',
+            'audio_size'       => 15000000,
+            'status'           => 'completed',
+            'progress_percent' => 100,
+            'current_step'     => 'Selesai',
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'          => 10,
+            'judul'       => 'RDP Komisi I',
+            'tanggal'     => '2026-08-27',
+            'waktu_mulai' => '09:00:00',
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 1,
+            'transcripts_dir'     => 'recordings/job_1/transcripts',
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nRingkasan risalah komprehensif.\n\nII. POIN-POIN PEMBAHASAN\n1. Topik Utama\n\nIII. KESIMPULAN & KEPUTUSAN AKHIR\n1. Keputusan Sah",
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->adminGet('/admin/notulen/1');
+
+        $response->assertOK();
+        $response->assertSee('RISALAH RAPAT');
+        $response->assertSee('RDP Komisi I');
+        $response->assertSee('risalah_view_mode');
+        $response->assertSee('risalah_preview_text');
+        $response->assertSee('Ringkasan risalah komprehensif.');
+        $response->assertSee('Sunting Naskah');
+        $response->assertDontSee('tab_btn_ringkasan');
+        $response->assertDontSee('tab_panel_ringkasan');
+        $response->assertDontSee('Ada Perubahan');
+        $response->assertDontSee('Perlu peninjauan & verifikasi');
+        $response->assertDontSee('onsubmit=');
+        $response->assertSee('data-confirm-title="Sahkan Risalah Rapat"');
+    }
+
     public function testStatusAjaxEndpointReturnsJobProgress(): void
     {
         $this->testDb->table('meeting_transcription_jobs')->insert([
@@ -389,6 +439,107 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $this->assertArrayHasKey('ringkasan_utama', $json['tiga_pilar']);
         $this->assertArrayHasKey('poin_pembahasan', $json['tiga_pilar']);
         $this->assertArrayHasKey('kesimpulan_akhir', $json['tiga_pilar']);
+        $this->assertNotEmpty($json['pdf_url']);
+        $this->assertNotEmpty($json['api_pdf_url']);
+    }
+
+    public function testMobileApiExportPdfStreamsPdf(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'         => 21,
+            'judul'      => 'Sidang Paripurna Pembahasan APBD',
+            'tanggal'    => '2026-08-27',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 6,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 21,
+            'audio_filename' => 'sidang_21.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 6,
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nNaskah sidang...",
+            'status_verifikasi'   => 'final',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
+            ->get('/api/v1/jadwal/umum/21/risalah-pdf');
+
+        $response->assertOK();
+        $this->assertSame('application/pdf; charset=UTF-8', $response->response()->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('inline', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->response()->getBody());
+    }
+
+    public function testMemberWebExportPdfRejectsDraftMinutes(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'         => 20,
+            'judul'      => 'Rapat Dengar Pendapat',
+            'tanggal'    => '2026-08-27',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 5,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 20,
+            'audio_filename' => 'rdp_20.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 5,
+            'ringkasan_eksekutif' => 'Ringkasan draft',
+            'status_verifikasi'   => 'draft',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->expectException(\CodeIgniter\Exceptions\PageNotFoundException::class);
+        $this->withSession(['member_auth' => ['anggota_id' => 1, 'name' => 'Anggota Uji']])
+            ->get('/anggota/jadwal-umum/20/risalah-pdf');
+    }
+
+    public function testMemberWebExportPdfStreamsPdfWhenFinal(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'         => 21,
+            'judul'      => 'Sidang Paripurna Pembahasan APBD',
+            'tanggal'    => '2026-08-27',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_transcription_jobs')->insert([
+            'id'             => 6,
+            'jadwal_type'    => 'umum',
+            'jadwal_id'      => 21,
+            'audio_filename' => 'sidang_21.mp3',
+            'status'         => 'completed',
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
+        ]);
+        $this->testDb->table('meeting_minutes')->insert([
+            'job_id'              => 6,
+            'ringkasan_eksekutif' => "I. RINGKASAN UTAMA\nNaskah sidang...",
+            'status_verifikasi'   => 'final',
+            'created_at'          => date('Y-m-d H:i:s'),
+            'updated_at'          => date('Y-m-d H:i:s'),
+        ]);
+
+        $response = $this->withSession(['member_auth' => ['anggota_id' => 1, 'name' => 'Anggota Uji']])
+            ->get('/anggota/jadwal-umum/21/risalah-pdf');
+
+        $response->assertOK();
+        $this->assertSame('application/pdf; charset=UTF-8', $response->response()->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('inline', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringContainsString('Risalah_Sidang_Paripurna_Pembahasan_APBD_20260827.pdf', $response->response()->getHeaderLine('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF-', $response->response()->getBody());
     }
 
     public function testIndexRedirectsToExistingJobWhenScheduleReferenced(): void
@@ -430,7 +581,8 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $response->assertSee('data-preset-id="44"');
         $response->assertSee('data-preset-type="umum"');
         $response->assertSee('Rapat Paripurna Istimewa HUT Sulteng');
-        $response->assertSee('Terkunci');
+        $response->assertSee('um_preset_card');
+        $response->assertSee('Ganti Agenda');
     }
 
     public function testWebAdminShowAndStatusRendersDynamicAiModel(): void
@@ -763,6 +915,70 @@ EOT;
         $this->assertStringContainsString('Ranperda disetujui', $pillars['kesimpulan_akhir'][0]);
     }
 
+    public function testPresetScheduleRejectsIneligibleAgendas(): void
+    {
+        // 1. Non-rapat banmus
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 101,
+            'agenda'       => 'Reses Masa Sidang I',
+            'jenis_agenda' => 'non_rapat',
+            'tanggal'      => '2026-09-01',
+            'status'       => 'menunggu',
+        ]);
+        $resp = $this->adminGet('/admin/notulen?jadwal_type=banmus&jadwal_id=101');
+        $resp->assertRedirectTo(base_url('admin/notulen'));
+
+        // 2. Proyeksi banmus
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 102,
+            'agenda'       => 'Rapat Proyeksi Banmus',
+            'jenis_agenda' => 'rapat',
+            'tanggal'      => null,
+            'status'       => 'proyeksi',
+        ]);
+        $resp = $this->adminGet('/admin/notulen?jadwal_type=banmus&jadwal_id=102');
+        $resp->assertRedirectTo(base_url('admin/notulen'));
+
+        // 3. Non-rapat umum
+        $this->testDb->table('jadwal_umum')->insert([
+            'id'           => 201,
+            'judul'        => 'Kunjungan Kerja Luar Daerah',
+            'jenis_agenda' => 'non_rapat',
+            'tanggal'      => '2026-09-02',
+            'status'       => 'menunggu',
+        ]);
+        $resp = $this->adminGet('/admin/notulen?jadwal_type=umum&jadwal_id=201');
+        $resp->assertRedirectTo(base_url('admin/notulen'));
+    }
+
+    public function testServiceRejectsIneligibleScheduleWhenCreatingJob(): void
+    {
+        $service = new NotulenService($this->testDb);
+
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 103,
+            'agenda'       => 'Kunjungan Lapangan',
+            'jenis_agenda' => 'non_rapat',
+            'tanggal'      => '2026-09-03',
+            'status'       => 'menunggu',
+        ]);
+
+        $error = $service->validateScheduleEligibility('banmus', 103);
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('Agenda non-rapat', $error);
+
+        $this->testDb->table('jadwal_banmus')->insert([
+            'id'           => 104,
+            'agenda'       => 'Rapat Paripurna Sah',
+            'jenis_agenda' => 'rapat',
+            'tanggal'      => '2026-09-04',
+            'status'       => 'menunggu',
+        ]);
+
+        $valid = $service->validateScheduleEligibility('banmus', 104);
+        $this->assertNull($valid);
+    }
+
     private function adminGet(string $path)
     {
         return $this->withSession(['auth_user' => ['id' => 1, 'name' => 'Administrator', 'username' => 'admin']])->get($path);
@@ -892,23 +1108,32 @@ EOT;
         $this->forge->createTable('anggota');
 
         $this->forge->addField([
-            'id'          => ['type' => 'INTEGER', 'auto_increment' => true],
-            'judul'       => ['type' => 'VARCHAR', 'constraint' => 255],
-            'tanggal'     => ['type' => 'DATE'],
-            'waktu_mulai' => ['type' => 'TIME', 'null' => true],
-            'created_at'  => ['type' => 'DATETIME', 'null' => true],
+            'id'             => ['type' => 'INTEGER', 'auto_increment' => true],
+            'judul'          => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
+            'tanggal'        => ['type' => 'DATE'],
+            'waktu_mulai'    => ['type' => 'TIME', 'null' => true],
+            'waktu_selesai'  => ['type' => 'TIME', 'null' => true],
+            'ruangan_id'     => ['type' => 'INTEGER', 'null' => true],
+            'lokasi_lainnya' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'pihak_eksternal'=> ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'status'         => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
+            'is_publik'      => ['type' => 'INTEGER', 'default' => 0],
+            'created_at'     => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('jadwal_umum');
 
         $this->forge->addField([
-            'id'          => ['type' => 'INTEGER', 'auto_increment' => true],
-            'agenda'      => ['type' => 'VARCHAR', 'constraint' => 255],
-            'tanggal'     => ['type' => 'DATE', 'null' => true],
-            'jam_mulai'   => ['type' => 'TIME', 'null' => true],
-            'jam_selesai' => ['type' => 'TIME', 'null' => true],
-            'deleted_at'  => ['type' => 'DATETIME', 'null' => true],
-            'created_at'  => ['type' => 'DATETIME', 'null' => true],
+            'id'           => ['type' => 'INTEGER', 'auto_increment' => true],
+            'agenda'       => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda' => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
+            'tanggal'      => ['type' => 'DATE', 'null' => true],
+            'jam_mulai'    => ['type' => 'TIME', 'null' => true],
+            'jam_selesai'  => ['type' => 'TIME', 'null' => true],
+            'status'       => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
+            'deleted_at'   => ['type' => 'DATETIME', 'null' => true],
+            'created_at'   => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('jadwal_banmus');

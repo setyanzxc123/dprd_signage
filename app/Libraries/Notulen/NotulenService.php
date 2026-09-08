@@ -182,6 +182,13 @@ class NotulenService
             ? (int) $jadwalIdRaw
             : null;
 
+        if ($jadwalId !== null) {
+            $scheduleError = $this->validateScheduleEligibility($jadwalType, $jadwalId);
+            if ($scheduleError !== null) {
+                return ['error' => $scheduleError];
+            }
+        }
+
         $judulRapat = trim((string) ($input['judul_rapat'] ?? ''));
         if ($judulRapat === '') {
             // Coba ambil dari konteks jadwal bila ada
@@ -324,6 +331,13 @@ class NotulenService
         $jadwalId    = ($jadwalIdRaw !== null && is_numeric($jadwalIdRaw) && (int) $jadwalIdRaw > 0)
             ? (int) $jadwalIdRaw
             : null;
+
+        if ($jadwalId !== null) {
+            $scheduleError = $this->validateScheduleEligibility($jadwalType, $jadwalId);
+            if ($scheduleError !== null) {
+                return ['error' => $scheduleError];
+            }
+        }
 
         $judulRapat = trim((string) ($input['judul_rapat'] ?? ''));
 
@@ -1273,6 +1287,49 @@ class NotulenService
     private function resolveScheduleDate(string $type, ?int $id): ?string
     {
         return $this->resolveScheduleInfo($type, $id)['tanggal'];
+    }
+
+    public function validateScheduleEligibility(string $type, ?int $id): ?string
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        if ($type === MeetingTranscriptionJobModel::TYPE_BANMUS) {
+            $item = (new JadwalBanmusModel($this->db))->find($id);
+            if (! $item) {
+                return 'Jadwal Badan Musyawarah tidak ditemukan.';
+            }
+
+            if (($item['jenis_agenda'] ?? '') === JadwalBanmusModel::TYPE_NON_MEETING) {
+                return 'Agenda non-rapat Badan Musyawarah tidak memiliki risalah notulensi AI.';
+            }
+
+            if (in_array($item['status'] ?? '', ['dibatalkan', 'proyeksi', 'non_rapat'], true)) {
+                return 'Agenda yang berstatus dibatalkan, proyeksi, atau non-rapat tidak dapat dibuatkan risalah notulensi AI.';
+            }
+
+            if (empty($item['tanggal'])) {
+                return 'Agenda Badan Musyawarah yang belum memiliki tanggal definitif tidak dapat dibuatkan risalah notulensi AI.';
+            }
+
+            return null;
+        }
+
+        $item = (new JadwalUmumModel($this->db))->find($id);
+        if (! $item) {
+            return 'Jadwal umum / insidental tidak ditemukan.';
+        }
+
+        if (($item['jenis_agenda'] ?? '') === JadwalUmumModel::TYPE_NON_MEETING) {
+            return 'Agenda non-rapat / kegiatan tidak memiliki risalah notulensi AI.';
+        }
+
+        if (in_array($item['status'] ?? '', ['dibatalkan', 'non_rapat'], true)) {
+            return 'Agenda yang berstatus dibatalkan atau non-rapat tidak dapat dibuatkan risalah notulensi AI.';
+        }
+
+        return null;
     }
 
     /**

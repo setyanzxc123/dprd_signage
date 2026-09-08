@@ -2,6 +2,7 @@
 $adminCssVersion = is_file(FCPATH . 'assets/css/admin.css') ? filemtime(FCPATH . 'assets/css/admin.css') : time();
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemtime(FCPATH . 'assets/vendor/lucide/lucide.min.js') : time();
+$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 ?>
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
@@ -11,7 +12,7 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= esc($pageTitle ?? 'Portal Anggota DPRD') ?></title>
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
 </head>
@@ -20,8 +21,8 @@ $lucideVersion = is_file(FCPATH . 'assets/vendor/lucide/lucide.min.js') ? filemt
     <header class="border-b border-base-300 bg-base-100">
         <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
             <div class="flex min-w-0 items-center gap-3">
-                <img src="<?= base_url('assets/images/logo_dprd.jpg') ?>"
-                    alt="Logo DPRD" class="h-11 w-11 rounded-xl border border-base-300 object-contain" />
+                <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>"
+                    alt="Logo DPRD" class="h-11 w-11 shrink-0 object-contain" />
                 <div class="min-w-0">
                     <div class="truncate font-bold text-base-content">Portal Anggota DPRD</div>
                     <div class="truncate text-xs text-base-content/60">Sulawesi Tengah</div>

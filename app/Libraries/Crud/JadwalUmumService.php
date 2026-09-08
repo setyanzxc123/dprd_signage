@@ -41,31 +41,115 @@ class JadwalUmumService
             return ['error' => 'Judul wajib diisi dan maksimal 255 karakter.'];
         }
 
+        $agendaType = ($input['jenis_agenda'] ?? 'rapat') === 'non_rapat'
+            ? JadwalUmumModel::TYPE_NON_MEETING
+            : JadwalUmumModel::TYPE_MEETING;
+
+        $statusOverride = trim((string) ($input['status'] ?? $input['status_override'] ?? ''));
+        if (! in_array($statusOverride, ['ditunda', 'dibatalkan'], true)) {
+            $statusOverride = null;
+        }
+
         $tanggal = trim((string) ($input['tanggal'] ?? ''));
-        if (! $this->validDate($tanggal)) {
-            return ['error' => 'Tanggal wajib diisi dengan format yang valid.'];
-        }
+        $tanggalMulai = trim((string) ($input['tanggal_mulai'] ?? ''));
+        $tanggalSelesai = trim((string) ($input['tanggal_selesai'] ?? ''));
 
-        $times = $this->validatedTimes($input);
-        if (isset($times['error'])) {
-            return $times;
-        }
+        if ($agendaType === JadwalUmumModel::TYPE_NON_MEETING) {
+            if ($tanggalMulai === '' && $tanggal !== '') {
+                $tanggalMulai = $tanggal;
+            }
+            if ($tanggalSelesai === '' && $tanggalMulai !== '') {
+                $tanggalSelesai = $tanggalMulai;
+            }
+            if ($tanggal === '' && $tanggalMulai !== '') {
+                $tanggal = $tanggalMulai;
+            }
 
-        $location = $this->validatedLocation($input, $scheduleId);
-        if (isset($location['error'])) {
-            return $location;
-        }
-        if ($location['ruangan_id'] !== null
-            && ($times['waktu_mulai'] === null || $times['waktu_selesai'] === null)) {
-            return ['error' => 'Jam mulai dan selesai wajib diisi jika memakai ruangan DPRD.'];
-        }
+            if (! $this->validDate($tanggalMulai)) {
+                return ['error' => 'Tanggal pelaksanaan wajib diisi dengan format yang valid.'];
+            }
+            if ($tanggalSelesai !== '' && ! $this->validDate($tanggalSelesai)) {
+                return ['error' => 'Tanggal selesai pelaksanaan tidak valid.'];
+            }
+            if ($tanggalSelesai !== '' && $tanggalSelesai < $tanggalMulai) {
+                return ['error' => 'Tanggal selesai harus sama atau setelah tanggal mulai.'];
+            }
 
-        $unitIds = $this->postedUnitIds($input);
-        if ($unitIds !== [] && $this->invalidUnitIds($unitIds) !== []) {
-            return ['error' => 'Kelompok peserta tidak valid atau sudah nonaktif.'];
-        }
-        if ($unitIds !== [] && $this->unitIdsWithoutActiveMembers($unitIds) !== []) {
-            return ['error' => 'Kelompok peserta yang dipilih harus mempunyai anggota aktif.'];
+            $tanggal = $tanggalMulai;
+            $times = ['waktu_mulai' => null, 'waktu_selesai' => null];
+            $location = [
+                'ruangan_id'     => null,
+                'lokasi_lainnya' => trim((string) ($input['lokasi_lainnya'] ?? '')) ?: null,
+            ];
+            $unitIds = [];
+            $materialUrl = ['url' => null];
+            $streamUrl = ['url' => null];
+            $invitationCheck = ['file' => null];
+            $removeInvitation = true;
+            $status = JadwalUmumModel::STATUS_NON_RAPAT;
+        } else {
+            if (! $this->validDate($tanggal)) {
+                return ['error' => 'Tanggal wajib diisi dengan format yang valid.'];
+            }
+            $tanggalMulai = $tanggal;
+            $tanggalSelesai = $tanggal;
+
+            $times = $this->validatedTimes($input);
+            if (isset($times['error'])) {
+                return $times;
+            }
+
+            $location = $this->validatedLocation($input, $scheduleId);
+            if (isset($location['error'])) {
+                return $location;
+            }
+            if ($location['ruangan_id'] !== null
+                && ($times['waktu_mulai'] === null || $times['waktu_selesai'] === null)) {
+                return ['error' => 'Jam mulai dan selesai wajib diisi jika memakai ruangan DPRD.'];
+            }
+
+            $unitIds = $this->postedUnitIds($input);
+            if ($unitIds !== [] && $this->invalidUnitIds($unitIds) !== []) {
+                return ['error' => 'Kelompok peserta tidak valid atau sudah nonaktif.'];
+            }
+            if ($unitIds !== [] && $this->unitIdsWithoutActiveMembers($unitIds) !== []) {
+                return ['error' => 'Kelompok peserta yang dipilih harus mempunyai anggota aktif.'];
+            }
+
+            $invitationCheck = (new ScheduleInvitationStorage())->validate($invitation);
+            if (isset($invitationCheck['error'])) {
+                return ['error' => $invitationCheck['error']];
+            }
+            $materialUrl = $this->validatedOptionalUrl((string) ($input['materi_url'] ?? ''), 'Tautan bahan rapat tidak valid.');
+            if (isset($materialUrl['error'])) {
+                return ['error' => $materialUrl['error']];
+            }
+            $streamUrl = $this->validatedOptionalUrl((string) ($input['stream_url'] ?? ''), 'Tautan live streaming tidak valid.');
+            if (isset($streamUrl['error'])) {
+                return ['error' => $streamUrl['error']];
+            }
+
+            if ($location['ruangan_id'] !== null
+                && (new JadwalUmumModel())->hasRoomConflict(
+                    $location['ruangan_id'],
+                    $tanggal,
+                    $times['waktu_mulai'],
+                    $times['waktu_selesai'],
+                    $scheduleId,
+                )) {
+                return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
+            }
+
+            $removeInvitation = ($input['hapus_undangan'] ?? null) === '1';
+
+            $status = JadwalUmumModel::resolveLifecycleStatus(
+                $tanggal,
+                $times['waktu_mulai'],
+                $times['waktu_selesai'],
+                null,
+                JadwalUmumModel::TYPE_MEETING,
+                $statusOverride,
+            );
         }
 
         $pihakEksternal = trim((string) ($input['pihak_eksternal'] ?? ''));
@@ -77,34 +161,13 @@ class JadwalUmumService
             return ['error' => 'Keterangan maksimal 5.000 karakter.'];
         }
 
-        $invitationCheck = (new ScheduleInvitationStorage())->validate($invitation);
-        if (isset($invitationCheck['error'])) {
-            return ['error' => $invitationCheck['error']];
-        }
-        $materialUrl = $this->validatedOptionalUrl((string) ($input['materi_url'] ?? ''), 'Tautan bahan rapat tidak valid.');
-        if (isset($materialUrl['error'])) {
-            return ['error' => $materialUrl['error']];
-        }
-        $streamUrl = $this->validatedOptionalUrl((string) ($input['stream_url'] ?? ''), 'Tautan live streaming tidak valid.');
-        if (isset($streamUrl['error'])) {
-            return ['error' => $streamUrl['error']];
-        }
-
-        if ($location['ruangan_id'] !== null
-            && (new JadwalUmumModel())->hasRoomConflict(
-                $location['ruangan_id'],
-                $tanggal,
-                $times['waktu_mulai'],
-                $times['waktu_selesai'],
-                $scheduleId,
-            )) {
-            return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
-        }
-
         return [
             'payload' => [
                 'judul'           => $judul,
+                'jenis_agenda'    => $agendaType,
                 'tanggal'         => $tanggal,
+                'tanggal_mulai'   => $tanggalMulai !== '' ? $tanggalMulai : null,
+                'tanggal_selesai' => $tanggalSelesai !== '' ? $tanggalSelesai : null,
                 'waktu_mulai'     => $times['waktu_mulai'],
                 'waktu_selesai'   => $times['waktu_selesai'],
                 'ruangan_id'      => $location['ruangan_id'],
@@ -116,10 +179,11 @@ class JadwalUmumService
                 'materi_akses'    => ScheduleResourceAccess::normalize($input['materi_akses'] ?? null, ScheduleResourceAccess::PARTICIPANT),
                 'stream_url'      => $streamUrl['url'],
                 'stream_akses'    => ScheduleResourceAccess::normalize($input['stream_akses'] ?? null, ScheduleResourceAccess::MEMBER),
+                'status'          => $status,
             ],
-            'unit_ids' => $unitIds,
-            'invitation_upload' => $invitation,
-            'remove_invitation' => ($input['hapus_undangan'] ?? null) === '1',
+            'unit_ids'          => $unitIds,
+            'invitation_upload' => $invitationCheck['file'] ?? null,
+            'remove_invitation' => $removeInvitation,
         ];
     }
 
@@ -131,15 +195,19 @@ class JadwalUmumService
      */
     public function storeInvitationUpload(array $input): array
     {
-        if (($input['remove_invitation'] ?? false) === true && ($input['invitation_upload'] ?? null) === null) {
+        $upload = $input['invitation_upload'] ?? null;
+        $shouldRemove = ($input['remove_invitation'] ?? false) === true;
+
+        if ($shouldRemove && ($upload === null || ! ($upload instanceof UploadedFile) || ! $upload->isValid())) {
             return ['payload' => ['undangan_file' => null, 'undangan_nama_asli' => null], 'new_file' => null];
         }
-        if (($input['invitation_upload'] ?? null) === null) {
+
+        if ($upload === null || ! ($upload instanceof UploadedFile) || ! $upload->isValid() || $upload->getError() !== UPLOAD_ERR_OK) {
             return ['payload' => [], 'new_file' => null];
         }
 
         try {
-            $stored = (new ScheduleInvitationStorage())->store($input['invitation_upload']);
+            $stored = (new ScheduleInvitationStorage())->store($upload);
 
             return [
                 'payload' => [

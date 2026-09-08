@@ -26,9 +26,12 @@ class RoomController extends BaseController
     public function create(): string
     {
         return view('admin/ruangan/form', [
-            'pageTitle'  => 'Tambah Ruangan',
-            'room'       => null,
-            'action_url' => base_url('admin/ruangan/store'),
+            'pageTitle'   => 'Tambah Ruangan',
+            'breadcrumbs' => [
+                ['label' => 'Ruangan Rapat', 'url' => 'admin/ruangan'],
+            ],
+            'room'        => null,
+            'action_url'  => base_url('admin/ruangan/store'),
         ]);
     }
 
@@ -57,9 +60,12 @@ class RoomController extends BaseController
         }
 
         return view('admin/ruangan/form', [
-            'pageTitle'  => 'Edit Ruangan',
-            'room'       => $room,
-            'action_url' => base_url("admin/ruangan/{$id}/update"),
+            'pageTitle'   => 'Edit Ruangan',
+            'breadcrumbs' => [
+                ['label' => 'Ruangan Rapat', 'url' => 'admin/ruangan'],
+            ],
+            'room'        => $room,
+            'action_url'  => base_url("admin/ruangan/{$id}/update"),
         ]);
     }
 
@@ -100,9 +106,12 @@ class RoomController extends BaseController
     private function failForm(string $message, ?int $id = null)
     {
         return $this->formViewErrorResponse('admin/ruangan/form', [
-            'pageTitle'  => $id === null ? 'Tambah Ruangan' : 'Edit Ruangan',
-            'room'       => $this->postedRoom($id),
-            'action_url' => $id === null
+            'pageTitle'   => $id === null ? 'Tambah Ruangan' : 'Edit Ruangan',
+            'breadcrumbs' => [
+                ['label' => 'Ruangan Rapat', 'url' => 'admin/ruangan'],
+            ],
+            'room'        => $this->postedRoom($id),
+            'action_url'  => $id === null
                 ? base_url('admin/ruangan/store')
                 : base_url("admin/ruangan/{$id}/update"),
         ], $message);

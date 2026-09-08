@@ -18,152 +18,164 @@
     <?= csrf_field() ?>
     <input type="hidden" name="media_upload_key" id="media_upload_key" value="">
 
-    <section class="card card-border min-w-0 max-w-full bg-base-100 shadow-sm">
-        <div class="card-body min-w-0 gap-5 p-4 sm:p-5">
-            <h2 class="card-title text-base">
-                <i data-lucide="tv" class="h-5 w-5 text-primary"></i>
+    <section class="bg-white border border-slate-200 rounded-xl shadow-sm dark:bg-slate-900 dark:border-slate-800 min-w-0 max-w-full">
+        <div class="p-4 sm:p-5 min-w-0 space-y-5">
+            <h2 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <i data-lucide="tv" class="size-5 text-blue-600 dark:text-blue-400"></i>
                 Pengaturan Signage
             </h2>
 
             <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
-                <fieldset class="fieldset min-w-0 rounded-box border border-base-300 bg-base-200 p-4">
-                    <legend class="fieldset-legend">Tema Layar</legend>
+                <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/50 min-w-0">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">Tema Layar</span>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="label cursor-pointer justify-start gap-3 rounded-field border border-base-300 bg-base-100 px-3 py-2">
-                            <input type="radio" name="tema_signage" value="dark" class="radio radio-primary radio-sm"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="tema_signage" value="dark" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['tema_signage'] === 'dark' ? 'checked' : '' ?> />
-                            <span class="font-semibold">Dark</span>
+                            <span>Dark</span>
                         </label>
-                        <label class="label cursor-pointer justify-start gap-3 rounded-field border border-base-300 bg-base-100 px-3 py-2">
-                            <input type="radio" name="tema_signage" value="light" class="radio radio-primary radio-sm"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="tema_signage" value="light" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['tema_signage'] === 'light' ? 'checked' : '' ?> />
-                            <span class="font-semibold">Light</span>
+                            <span>Light</span>
                         </label>
                     </div>
-                </fieldset>
+                </div>
 
-                <fieldset class="fieldset min-w-0 rounded-box border border-base-300 bg-base-200 p-4">
-                    <legend class="fieldset-legend">Media Tampilan</legend>
+                <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/50 min-w-0">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">Media Tampilan</span>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="label cursor-pointer justify-start gap-3 rounded-field border border-base-300 bg-base-100 px-3 py-2">
-                            <input type="radio" name="media_mode" value="video" class="radio radio-primary radio-sm"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="media_mode" value="video" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['media_mode'] === 'video' ? 'checked' : '' ?> />
-                            <span class="font-semibold">Video</span>
+                            <span>Video</span>
                         </label>
-                        <label class="label cursor-pointer justify-start gap-3 rounded-field border border-base-300 bg-base-100 px-3 py-2">
-                            <input type="radio" name="media_mode" value="image" class="radio radio-primary radio-sm"
+                        <label class="flex items-center gap-x-3 py-2 px-3 w-full bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition">
+                            <input type="radio" name="media_mode" value="image" class="shrink-0 border-slate-300 rounded-full text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500"
                                 <?= $settings['media_mode'] === 'image' ? 'checked' : '' ?> />
-                            <span class="font-semibold">Gambar</span>
+                            <span>Gambar</span>
                         </label>
                     </div>
-                </fieldset>
+                </div>
             </div>
 
-            <div class="grid min-w-0 grid-cols-12 gap-4 border-t border-base-300 pt-4">
-                <fieldset class="fieldset col-span-12 min-w-0 lg:col-span-8">
-                    <legend class="fieldset-legend">Upload Media</legend>
-                    <input type="file" class="file-input file-input-sm w-full min-w-0 max-w-full overflow-hidden" id="media_file" name="media_file"
+            <div class="grid min-w-0 grid-cols-12 gap-4 border-t border-slate-200 dark:border-slate-800 pt-4">
+                <div class="col-span-12 min-w-0 lg:col-span-8">
+                    <label for="media_file" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Upload Media</label>
+                    <input type="file" class="block w-full border border-slate-200 shadow-xs rounded-xl text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 file:bg-slate-100 file:border-0 file:me-4 file:py-2.5 file:px-4 dark:file:bg-slate-800 dark:file:text-slate-300 cursor-pointer" id="media_file" name="media_file"
                         accept="video/mp4,video/webm,image/jpeg,image/png,image/webp" />
-                    <p class="label block w-full min-w-0 whitespace-normal break-words">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB. File dikirim bertahap agar lebih stabil.</p>
-                </fieldset>
+                    <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">MP4, WebM, JPG, PNG, atau WebP. Maksimal 200 MB. File dikirim bertahap agar lebih stabil.</p>
+                </div>
 
-                <fieldset class="fieldset col-span-12 min-w-0 lg:col-span-4">
-                    <legend class="fieldset-legend">File Aktif</legend>
+                <div class="col-span-12 min-w-0 lg:col-span-4">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">File Aktif</span>
                     <?php if (! empty($settings['media_file'])): ?>
-                        <div class="alert alert-info min-h-8 w-full min-w-0 max-w-full grid-cols-[auto_minmax(0,1fr)] overflow-hidden py-2 text-sm" role="status"
+                        <div class="inline-flex items-center gap-2 p-2.5 w-full bg-sky-50 border border-sky-200 text-sky-800 rounded-xl text-xs font-medium dark:bg-sky-950/40 dark:border-sky-800 dark:text-sky-300 overflow-hidden" role="status"
                             title="<?= esc(basename($settings['media_file'])) ?>">
-                            <i data-lucide="file-check-2" class="h-4 w-4 shrink-0"></i>
+                            <i data-lucide="file-check-2" class="size-4 shrink-0 text-sky-600 dark:text-sky-400"></i>
                             <span class="min-w-0 truncate"><?= esc(basename($settings['media_file'])) ?></span>
                         </div>
                     <?php else: ?>
-                        <div class="alert min-h-8 py-2 text-sm" role="status">
-                            <i data-lucide="file-x-2" class="h-4 w-4 shrink-0"></i>
+                        <div class="inline-flex items-center gap-2 p-2.5 w-full bg-slate-50 border border-slate-200 text-slate-500 rounded-xl text-xs font-medium dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400" role="status">
+                            <i data-lucide="file-x-2" class="size-4 shrink-0"></i>
                             <span>Belum ada file</span>
                         </div>
                     <?php endif; ?>
-                </fieldset>
+                </div>
             </div>
 
-            <fieldset class="fieldset min-w-0 rounded-box border border-base-300 p-4">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <span class="font-bold">Running Text</span>
-                    <label class="label cursor-pointer gap-2">
-                        <span class="font-semibold">Aktif</span>
-                        <input class="toggle toggle-primary toggle-sm" type="checkbox" role="switch" id="running_text_aktif"
-                            name="running_text_aktif" value="1" <?= $settings['running_text_aktif'] ? 'checked' : '' ?> />
+            <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/50 min-w-0">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Running Text</span>
+                    <label for="running_text_aktif" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="running_text_aktif" name="running_text_aktif" value="1" <?= $settings['running_text_aktif'] ? 'checked' : '' ?> class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-300 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:size-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
+                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 ms-2.5 select-none">Aktif</span>
                     </label>
                 </div>
 
-                <textarea class="textarea mt-2 min-h-16 w-full min-w-0 max-w-full" id="running_text" name="running_text" rows="2"
+                <textarea class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500" id="running_text" name="running_text" rows="2"
                     placeholder="Contoh: Selamat datang di Gedung DPRD Provinsi Sulawesi Tengah."><?= esc($settings['running_text']) ?></textarea>
 
-                <div class="mt-2 min-w-0 max-w-full overflow-hidden rounded-box bg-neutral p-3 text-neutral-content">
-                    <div class="mb-2 flex items-center gap-1 text-xs font-bold uppercase tracking-wider opacity-60">
-                        <i data-lucide="eye" class="h-3.5 w-3.5"></i>
+                <div class="mt-3 min-w-0 max-w-full overflow-hidden rounded-xl bg-slate-950 p-3 text-slate-100 border border-slate-800">
+                    <div class="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                        <i data-lucide="eye" class="size-3.5"></i>
                         Pratinjau
                     </div>
                     <div class="settings-running-track" id="preview-track">
                         <span id="preview-text"><?= esc($settings['running_text']) ?: 'Teks berjalan akan tampil di sini...' ?></span>
                     </div>
                 </div>
-            </fieldset>
+            </div>
         </div>
     </section>
 
-    <section class="card card-border min-w-0 max-w-full bg-base-100 shadow-sm" id="wa-integration-card"
+    <section class="bg-white border border-slate-200 rounded-xl shadow-sm dark:bg-slate-900 dark:border-slate-800 min-w-0 max-w-full" id="wa-integration-card"
         data-connected="<?= ! empty($whatsapp['connected']) ? '1' : '0' ?>">
-        <div class="card-body min-w-0 gap-5 p-4 sm:p-5">
+        <div class="p-4 sm:p-5 min-w-0 space-y-5">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <h2 class="card-title text-base">
-                    <i data-lucide="message-square" class="h-5 w-5 text-primary"></i>
-                    Integrasi WhatsApp OTP Gateway
+                <h2 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <i data-lucide="message-square" class="size-5 text-blue-600 dark:text-blue-400"></i>
+                    Layanan WhatsApp
                 </h2>
                 <div class="flex items-center gap-2">
-                    <span class="badge badge-outline badge-primary text-xs font-semibold" id="wa-provider-badge">
-                        Provider: <?= esc(strtoupper($otpConfig->provider ?? 'HYBRID')) ?>
+                    <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800" id="wa-provider-badge">
+                        <i data-lucide="shield-check" class="size-3.5"></i>
+                        <span>Mode: <?= esc($otpConfig->provider === 'hybrid' ? 'Otomatis (Utama & Cadangan)' : ($otpConfig->provider === 'baileys' ? 'WhatsApp Langsung' : ($otpConfig->provider === 'fazpass' ? 'Layanan Cadangan' : strtoupper($otpConfig->provider ?? 'HYBRID')))) ?></span>
                     </span>
-                    <button type="button" class="btn btn-ghost btn-xs gap-1" id="btn-refresh-wa-status" title="Periksa status koneksi WhatsApp">
-                        <i data-lucide="refresh-cw" class="h-3.5 w-3.5" id="icon-refresh-wa"></i>
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-2.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xs hover:bg-slate-50 focus:outline-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 transition" id="btn-refresh-wa-status" title="Periksa status koneksi WhatsApp">
+                        <i data-lucide="refresh-cw" class="size-3.5" id="icon-refresh-wa"></i>
                         <span>Cek Status</span>
                     </button>
                 </div>
             </div>
 
-            <div class="rounded-box border border-base-300 bg-base-200 p-4 space-y-3" id="wa-primary-status-card">
+            <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3 dark:border-slate-800 dark:bg-slate-950/50" id="wa-primary-status-card">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-bold uppercase tracking-wider opacity-70">Status Koneksi Gateway</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Koneksi WhatsApp</span>
                 </div>
                 <div id="wa-primary-status">
                     <?php if (! empty($whatsapp['connected'])): ?>
-                        <div class="flex items-center gap-2 text-success font-semibold">
-                            <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
-                            <span>WhatsApp Gateway Terhubung</span>
+                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+                            <i data-lucide="check-circle-2" class="size-5 shrink-0"></i>
+                            <span>WhatsApp Terhubung</span>
                         </div>
-                        <p class="text-xs text-base-content/80 mt-1">
-                            No. Pengirim: <strong>+<?= esc($whatsapp['phone'] ?? '-') ?></strong>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                            Nomor Pengirim: <strong>+<?= esc($whatsapp['phone'] ?? '-') ?></strong>
                             <?php if (! empty($whatsapp['name'])): ?>
                                 (<?= esc($whatsapp['name']) ?>)
                             <?php endif; ?>
                         </p>
                         <div class="flex flex-wrap gap-2 pt-2">
-                            <button type="button" class="btn btn-error btn-outline btn-xs gap-1.5 font-semibold" id="btn-wa-logout">
-                                <i data-lucide="log-out" class="h-4 w-4"></i>
+                            <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout" aria-haspopup="dialog" aria-expanded="false" aria-controls="modal_wa_logout">
+                                <i data-lucide="log-out" class="size-4"></i>
                                 <span>Putuskan Perangkat</span>
                             </button>
                         </div>
                     <?php else: ?>
-                        <div class="flex items-center gap-2 text-error font-semibold">
-                            <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
+                        <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold text-sm">
+                            <i data-lucide="alert-triangle" class="size-5 shrink-0"></i>
                             <span>WhatsApp Belum Terhubung</span>
                         </div>
-                        <p class="text-xs text-base-content/80 mt-1" id="wa-error-text">
-                            <?= esc($whatsapp['error'] ?? 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.') ?>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1" id="wa-error-text">
+                            <?= esc(! empty($whatsapp['error']) && str_contains(strtolower($whatsapp['error']), 'gateway') ? 'Nomor WhatsApp belum terhubung ke sistem. Silakan tautkan nomor dengan scan QR Code atau kode pairing.' : ($whatsapp['error'] ?? 'Nomor WhatsApp belum terhubung ke sistem. Silakan tautkan nomor dengan scan QR Code atau kode pairing.')) ?>
                         </p>
+
+                        <?php if (($otpConfig->provider ?? '') === 'hybrid' && ! empty($otpConfig->fazpassFallbackEnabled)): ?>
+                            <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs mt-2" id="wa-fallback-notice">
+                                <i data-lucide="info" class="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"></i>
+                                <div>
+                                    <span class="font-semibold">Layanan Cadangan Aktif:</span>
+                                    <span class="block mt-0.5 text-slate-600 dark:text-slate-400">Karena WhatsApp belum terhubung, pengiriman kode OTP otomatis dialihkan ke layanan cadangan (Fazpass) agar verifikasi login anggota tetap berjalan normal.</span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="pt-2">
-                            <button type="button" class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn"
-                                onclick="document.getElementById('modal_wa_pairing').showModal()">
-                                <i data-lucide="qr-code" class="h-4 w-4"></i>
-                                <span>Buka Scan QR / Pairing Code</span>
+                            <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
+                                data-hs-overlay="#modal_wa_pairing" aria-haspopup="dialog" aria-expanded="false" aria-controls="modal_wa_pairing" onclick="window.switchWaTab('qr');">
+                                <i data-lucide="qr-code" class="size-4"></i>
+                                <span>Tautkan Nomor WhatsApp</span>
                             </button>
                         </div>
                     <?php endif; ?>
@@ -172,130 +184,143 @@
         </div>
     </section>
 
-    <div class="form-actions-sticky mt-5 flex flex-col gap-3 sm:items-end">
-        <div class="alert alert-info w-full max-w-xl" id="settings-upload-progress" hidden aria-live="polite">
+    <div class="mt-6 flex flex-col gap-3 sm:items-end">
+        <div class="w-full max-w-xl p-3 bg-sky-50 border border-sky-200 text-sky-800 rounded-xl dark:bg-sky-950/40 dark:border-sky-800 dark:text-sky-300" id="settings-upload-progress" hidden aria-live="polite">
             <div class="w-full">
-                <div class="mb-2 grid grid-cols-[auto_1fr_auto] items-center gap-2 text-sm font-bold">
-                    <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
-                    <span id="settings-upload-status">Menyiapkan upload...</span>
-                    <strong id="settings-upload-percent">0%</strong>
+                <div class="mb-2 flex items-center justify-between text-xs font-bold text-sky-900 dark:text-sky-300">
+                    <div class="flex items-center gap-2">
+                        <span class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent text-sky-600 rounded-full dark:text-sky-400" aria-hidden="true"></span>
+                        <span id="settings-upload-status">Menyiapkan upload...</span>
+                    </div>
+                    <span id="settings-upload-percent">0%</span>
                 </div>
-                <progress class="progress progress-primary w-full" id="settings-upload-bar" value="0" max="100"></progress>
-                <div class="mt-1 text-right text-xs font-semibold opacity-70" id="settings-upload-speed" hidden>
+                <progress class="w-full h-2 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600 dark:[&::-webkit-progress-bar]:bg-slate-700 dark:[&::-webkit-progress-value]:bg-blue-500" id="settings-upload-bar" value="0" max="100"></progress>
+                <div class="mt-1 text-right text-xs font-medium text-sky-700 dark:text-sky-400 opacity-80" id="settings-upload-speed" hidden>
                     Mengukur kecepatan...
                 </div>
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary w-full gap-1 sm:btn-sm sm:w-auto" id="settings-submit-button">
-            <span class="loading loading-spinner loading-sm" id="settings-submit-spinner" hidden aria-hidden="true"></span>
-            <i data-lucide="save" class="h-4 w-4" id="settings-submit-icon"></i>
+        <button type="submit" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none w-full sm:w-auto shadow-xs" id="settings-submit-button">
+            <span class="animate-spin inline-block size-4 border-2 border-current border-t-transparent text-white rounded-full" id="settings-submit-spinner" hidden aria-hidden="true"></span>
+            <i data-lucide="save" class="size-4" id="settings-submit-icon"></i>
             <span id="settings-submit-label">Simpan Pengaturan</span>
         </button>
     </div>
 </form>
 
-<!-- Modal Penautan WhatsApp Gateway (QR Code & Pairing Code) -->
-<dialog id="modal_wa_pairing" class="modal">
-    <div class="modal-box w-full max-w-md space-y-4">
-        <div class="flex items-center justify-between gap-3 border-b border-base-300 pb-3">
-            <h3 class="text-base font-bold flex items-center gap-2">
-                <i data-lucide="smartphone" class="h-5 w-5 text-primary"></i>
-                Tautkan WhatsApp Gateway
-            </h3>
-            <button type="button" class="btn btn-ghost btn-xs btn-circle" onclick="document.getElementById('modal_wa_pairing').close()">
-                <i data-lucide="x" class="h-4 w-4"></i>
-            </button>
-        </div>
-
-        <div class="tabs tabs-boxed bg-base-200 p-1 grid grid-cols-2">
-            <button type="button" class="tab tab-active font-semibold text-xs" id="tab-btn-qr" onclick="switchWaTab('qr')">
-                <i data-lucide="qr-code" class="h-3.5 w-3.5 mr-1.5"></i> Scan QR Code
-            </button>
-            <button type="button" class="tab font-semibold text-xs" id="tab-btn-pair" onclick="switchWaTab('pair')">
-                <i data-lucide="key-round" class="h-3.5 w-3.5 mr-1.5"></i> Pairing Code (8 Digit)
-            </button>
-        </div>
-
-        <!-- Panel 1: Scan QR Code -->
-        <div id="panel-wa-qr" class="space-y-3">
-            <div class="text-xs text-base-content/70">
-                Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan Perangkat</strong>, lalu scan kode berikut:
+<div id="modal_wa_pairing" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="modal_wa_pairing_label">
+    <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+        <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
+            <div class="flex justify-between items-center py-3.5 px-4 sm:px-6 border-b border-slate-200 dark:border-slate-800">
+                <h3 id="modal_wa_pairing_label" class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <i data-lucide="smartphone" class="size-5 text-blue-600 dark:text-blue-400"></i>
+                    Tautkan Nomor WhatsApp
+                </h3>
+                <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-slate-100 text-slate-800 hover:bg-slate-200 focus:outline-hidden focus:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400" data-hs-overlay="#modal_wa_pairing">
+                    <span class="sr-only">Tutup</span>
+                    <i data-lucide="x" class="size-4"></i>
+                </button>
             </div>
 
-            <div class="flex flex-col items-center justify-center p-4 bg-base-200 rounded-box min-h-56">
-                <div id="wa-qr-loading" class="flex flex-col items-center gap-2">
-                    <span class="loading loading-spinner loading-md text-primary"></span>
-                    <span class="text-xs font-semibold opacity-70">Mengambil QR Code dari Gateway...</span>
+            <div class="p-4 sm:p-6 space-y-4">
+                <nav class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl dark:bg-slate-800/80" aria-label="Tabs" role="tablist">
+                    <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-2 px-3 inline-flex justify-center items-center gap-x-2 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition active" id="tab-btn-qr" aria-selected="true" data-hs-tab="#panel-wa-qr" aria-controls="panel-wa-qr" role="tab">
+                        <i data-lucide="qr-code" class="size-3.5"></i> Scan QR Code
+                    </button>
+                    <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-2 px-3 inline-flex justify-center items-center gap-x-2 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition" id="tab-btn-pair" aria-selected="false" data-hs-tab="#panel-wa-pair" aria-controls="panel-wa-pair" role="tab">
+                        <i data-lucide="key-round" class="size-3.5"></i> Pairing Code (8 Digit)
+                    </button>
+                </nav>
+
+                <div id="panel-wa-qr" class="space-y-3" role="tabpanel" aria-labelledby="tab-btn-qr">
+                    <p class="text-xs text-slate-600 dark:text-slate-400">
+                        Buka aplikasi WhatsApp di ponsel pengirim, pilih menu <strong>Perangkat Tertaut</strong> &gt; <strong>Tautkan Perangkat</strong>, lalu pindai kode QR berikut:
+                    </p>
+
+                    <div class="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-xl min-h-56 dark:bg-slate-950/50 dark:border-slate-800">
+                        <div id="wa-qr-loading" class="flex flex-col items-center gap-2">
+                            <span class="animate-spin inline-block size-6 border-2 border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-400"></span>
+                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Menyiapkan QR Code...</span>
+                        </div>
+                        <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="max-w-48 max-h-48 rounded-lg shadow-xs bg-white p-2 border border-slate-200 dark:border-slate-700" hidden />
+                        <div id="wa-qr-error" class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs mt-2 w-full dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300" hidden></div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5" id="wa-qr-timer">
+                            <i data-lucide="clock" class="size-3.5"></i> Auto-refresh tiap 15 detik
+                        </span>
+                        <button type="button" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 shadow-xs dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700" id="btn-reload-qr">
+                            <i data-lucide="refresh-cw" class="size-3.5"></i> Muat Ulang QR
+                        </button>
+                    </div>
                 </div>
-                <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="max-w-48 max-h-48 rounded-lg shadow-sm bg-white p-2" hidden />
-                <div id="wa-qr-error" class="alert alert-warning text-xs mt-2" hidden></div>
+
+                <div id="panel-wa-pair" class="space-y-3 hidden" role="tabpanel" aria-labelledby="tab-btn-pair">
+                    <p class="text-xs text-slate-600 dark:text-slate-400">
+                        Masukkan nomor WhatsApp resmi DPRD (contoh: <code>081234567890</code>) untuk menerima 8 digit kode pairing:
+                    </p>
+
+                    <div class="space-y-2">
+                        <input type="tel" id="input-pair-phone" class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm font-mono placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500"
+                            placeholder="Contoh: 081234567890" aria-label="Nomor WhatsApp untuk pairing code" />
+                        <button type="button" class="py-2.5 px-4 w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none shadow-xs" id="btn-request-pair-code">
+                            <span class="animate-spin inline-block size-4 border-2 border-current border-t-transparent text-white rounded-full" id="spinner-pair-code" hidden></span>
+                            <i data-lucide="send" class="size-4" id="icon-pair-send"></i>
+                            <span>Dapatkan Pairing Code</span>
+                        </button>
+                    </div>
+
+                    <div id="box-pair-result" class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-center space-y-2 dark:bg-blue-950/30 dark:border-blue-800" hidden>
+                        <div class="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">Kode Pairing Anda</div>
+                        <div class="text-2xl font-black font-mono tracking-widest text-blue-800 dark:text-blue-300 select-all" id="text-pairing-code">-</div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">
+                            Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan dengan nomor telepon</strong>, lalu masukkan 8 digit kode di atas.
+                        </p>
+                    </div>
+
+                    <div id="box-pair-error" class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300" hidden></div>
+                </div>
             </div>
 
-            <div class="flex justify-between items-center pt-2">
-                <span class="text-xs opacity-60 flex items-center gap-1" id="wa-qr-timer">
-                    <i data-lucide="clock" class="h-3 w-3"></i> Auto-refresh tiap 15 detik
-                </span>
-                <button type="button" class="btn btn-outline btn-xs gap-1" id="btn-reload-qr">
-                    <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i> Muat Ulang QR
+            <div class="flex justify-end items-center py-3 px-4 sm:px-6 border-t border-slate-200 dark:border-slate-800">
+                <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xs hover:bg-slate-50 focus:outline-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700" data-hs-overlay="#modal_wa_pairing">
+                    Tutup
                 </button>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Panel 2: Pairing Code -->
-        <div id="panel-wa-pair" class="space-y-3" hidden>
-            <div class="text-xs text-base-content/70">
-                Masukkan nomor WhatsApp resmi DPRD (contoh: <code>08123456789</code> atau <code>628123456789</code>) untuk menerima 8 digit kode pairing:
-            </div>
-
-            <div class="space-y-2">
-                <input type="tel" id="input-pair-phone" class="input input-bordered input-sm w-full font-mono"
-                    placeholder="Contoh: 081234567890" />
-                <button type="button" class="btn btn-primary btn-sm w-full gap-1.5 font-semibold" id="btn-request-pair-code">
-                    <span class="loading loading-spinner loading-xs" id="spinner-pair-code" hidden></span>
-                    <i data-lucide="send" class="h-4 w-4" id="icon-pair-send"></i>
-                    <span>Dapatkan Pairing Code</span>
-                </button>
-            </div>
-
-            <div id="box-pair-result" class="p-4 bg-primary/10 border border-primary/30 rounded-box text-center space-y-2" hidden>
-                <div class="text-xs font-bold uppercase tracking-wider text-primary">Kode Pairing Anda</div>
-                <div class="text-2xl font-black font-mono tracking-widest text-primary select-all" id="text-pairing-code">-</div>
-                <p class="text-xs text-base-content/80">
-                    Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan dengan nomor telepon</strong>, lalu masukkan kode di atas.
+<div id="modal_wa_logout" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="modal_wa_logout_label">
+    <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-md sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+        <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
+            <div class="p-4 sm:p-6 space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex size-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
+                        <i data-lucide="log-out" class="size-5"></i>
+                    </div>
+                    <h3 id="modal_wa_logout_label" class="text-base font-bold text-slate-800 dark:text-slate-200">
+                        Putuskan Nomor WhatsApp?
+                    </h3>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400">
+                    Nomor WhatsApp pengirim akan diputuskan dari sistem. Pengiriman pesan melalui nomor ini akan dihentikan sampai nomor ditautkan kembali.
                 </p>
+                <p class="text-xs font-semibold text-rose-600 dark:text-rose-400" id="wa-logout-error" hidden></p>
+                <div class="flex justify-end gap-x-2 pt-2">
+                    <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xs hover:bg-slate-50 focus:outline-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700" id="btn-wa-logout-cancel" data-hs-overlay="#modal_wa_logout">
+                        Batal
+                    </button>
+                    <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none shadow-xs" id="btn-wa-logout-confirm">
+                        <span class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent text-white rounded-full" id="spinner-wa-logout-confirm" hidden></span>
+                        Ya, Putuskan
+                    </button>
+                </div>
             </div>
-
-            <div id="box-pair-error" class="alert alert-error text-xs" hidden></div>
-        </div>
-
-        <div class="modal-action border-t border-base-300 pt-3">
-            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal_wa_pairing').close()">
-                Tutup
-            </button>
         </div>
     </div>
-</dialog>
-
-<!-- Konfirmasi pemutusan perangkat WhatsApp -->
-<dialog id="modal_wa_logout" class="modal">
-    <div class="modal-box max-w-sm space-y-4">
-        <h3 class="text-base font-bold flex items-center gap-2">
-            <i data-lucide="log-out" class="h-5 w-5 text-error"></i>
-            Putuskan Perangkat WhatsApp?
-        </h3>
-        <p class="text-sm text-base-content/80">
-            Sesi WhatsApp yang aktif akan dihapus dari gateway dan nomor pengirim berhenti menerima OTP sampai pairing dilakukan ulang.
-        </p>
-        <p class="text-xs font-semibold text-error" id="wa-logout-error" hidden></p>
-        <div class="modal-action">
-            <button type="button" class="btn btn-ghost btn-sm" id="btn-wa-logout-cancel">Batal</button>
-            <button type="button" class="btn btn-error btn-sm gap-1.5 font-semibold" id="btn-wa-logout-confirm">
-                <span class="loading loading-spinner loading-xs" id="spinner-wa-logout-confirm" hidden></span>
-                Ya, Putuskan
-            </button>
-        </div>
-    </div>
-</dialog>
+</div>
 
 <?= $this->endSection() ?>

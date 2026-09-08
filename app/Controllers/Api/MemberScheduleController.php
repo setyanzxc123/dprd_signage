@@ -4,11 +4,16 @@ namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
 use App\Libraries\Schedule\ScheduleReadService;
+use App\Models\JadwalBanmusModel;
+use App\Models\JadwalUmumModel;
 
 class MemberScheduleController extends BaseController
 {
     public function jadwal()
     {
+        (new JadwalBanmusModel())->autoUpdateStatuses();
+        (new JadwalUmumModel())->autoUpdateStatuses();
+
         $anggota = service('requestIdentity')->currentAnggota();
         $memberId = (int) ($anggota['anggota_id'] ?? 0);
 
@@ -29,15 +34,19 @@ class MemberScheduleController extends BaseController
         $result['data'] = array_map(static function (array $schedule): array {
             $id = (int) ($schedule['source_id'] ?? $schedule['id']);
             $source = (string) ($schedule['source'] ?? '');
+            $apiSource = $source === 'banmus' ? 'banmus' : 'umum';
             $routeSource = $source === 'banmus' ? 'jadwal-banmus' : ($source === 'jadwal_umum' ? 'jadwal-umum' : null);
             if ($routeSource !== null && $schedule['has_materi']) {
-                $schedule['materi_url'] = base_url("anggota/{$routeSource}/{$id}/berkas");
+                $schedule['materi_url'] = base_url("api/v1/jadwal/{$apiSource}/{$id}/materi");
+                $schedule['web_materi_url'] = base_url("anggota/{$routeSource}/{$id}/berkas");
             }
             if ($routeSource !== null && $schedule['has_stream']) {
-                $schedule['stream_url'] = base_url("anggota/{$routeSource}/{$id}/live");
+                $schedule['stream_url'] = base_url("api/v1/jadwal/{$apiSource}/{$id}/stream");
+                $schedule['web_stream_url'] = base_url("anggota/{$routeSource}/{$id}/live");
             }
             if ($routeSource !== null && ($schedule['has_undangan'] ?? false)) {
-                $schedule['undangan_url'] = base_url("anggota/{$routeSource}/{$id}/undangan");
+                $schedule['undangan_url'] = base_url("api/v1/jadwal/{$apiSource}/{$id}/undangan");
+                $schedule['web_undangan_url'] = base_url("anggota/{$routeSource}/{$id}/undangan");
             }
 
             return $schedule;
@@ -67,10 +76,13 @@ class MemberScheduleController extends BaseController
             $id = (int) ($schedule['source_id'] ?? $schedule['id']);
             $source = (string) ($schedule['source'] ?? '');
             $apiSource = $source === 'banmus' ? 'banmus' : 'umum';
+            $routeSource = $source === 'banmus' ? 'jadwal-banmus' : 'jadwal-umum';
             $hasFinal = $finalMap[$apiSource][$id] ?? false;
             $schedule['risalah_tersedia'] = $hasFinal;
             if ($hasFinal) {
                 $schedule['risalah_url'] = base_url("api/v1/jadwal/{$apiSource}/{$id}/risalah");
+                $schedule['risalah_pdf_url'] = base_url("api/v1/jadwal/{$apiSource}/{$id}/risalah-pdf");
+                $schedule['web_risalah_pdf_url'] = base_url("anggota/{$routeSource}/{$id}/risalah-pdf");
             }
 
             return $schedule;

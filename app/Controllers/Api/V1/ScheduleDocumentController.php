@@ -19,8 +19,10 @@ class ScheduleDocumentController extends BaseController
     use ApiResponse;
 
     private const SOURCE_MAP = [
-        'banmus'      => ScheduleResourceLinkService::SOURCE_BANMUS,
-        'jadwal-umum' => ScheduleResourceLinkService::SOURCE_GENERAL,
+        'umum'          => ScheduleResourceLinkService::SOURCE_GENERAL,
+        'jadwal-umum'   => ScheduleResourceLinkService::SOURCE_GENERAL,
+        'banmus'        => ScheduleResourceLinkService::SOURCE_BANMUS,
+        'jadwal-banmus' => ScheduleResourceLinkService::SOURCE_BANMUS,
     ];
 
     public function undangan(string $source, int $id)
@@ -48,8 +50,11 @@ class ScheduleDocumentController extends BaseController
             return $this->apiError('Dokumen tidak ditemukan.', 404);
         }
 
-        $isMember = service('requestIdentity')->currentAnggota() !== null;
-        if ((int) ($document['is_publik'] ?? 0) !== 1 && ! $isMember) {
+        $identity = service('requestIdentity');
+        $isMember = $identity->currentAnggota() !== null;
+        $isAdmin = $identity->currentUser()?->inGroup('superadmin', 'operator') ?? false;
+
+        if ((int) ($document['is_publik'] ?? 0) !== 1 && ! $isMember && ! $isAdmin) {
             return $this->apiForbidden();
         }
 

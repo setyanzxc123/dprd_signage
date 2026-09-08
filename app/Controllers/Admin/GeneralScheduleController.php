@@ -23,10 +23,17 @@ class GeneralScheduleController extends BaseController
         foreach ($rows as &$row) {
             $row['lokasi'] = $row['nama_ruangan'] ?: $row['lokasi_lainnya'];
             $row['unit_names'] = $unitNames[(int) $row['id']] ?? [];
+            $jenisAgenda = (string) ($row['jenis_agenda'] ?? JadwalUmumModel::TYPE_MEETING);
+            $storedStatus = (string) ($row['status'] ?? '');
+            $manualStatus = in_array($storedStatus, ['ditunda', 'dibatalkan'], true) ? $storedStatus : null;
+
             $row['status'] = JadwalUmumModel::resolveLifecycleStatus(
                 (string) $row['tanggal'],
                 $row['waktu_mulai'],
                 $row['waktu_selesai'],
+                null,
+                $jenisAgenda,
+                $manualStatus,
             );
         }
         unset($row);
@@ -130,6 +137,9 @@ class GeneralScheduleController extends BaseController
     {
         return [
             'pageTitle'       => $title,
+            'breadcrumbs'     => [
+                ['label' => 'Jadwal Umum', 'url' => 'admin/jadwal-umum'],
+            ],
             'schedule'        => $schedule,
             'rooms'           => $this->roomOptions((int) ($schedule['ruangan_id'] ?? 0)),
             'unit_rapat_list' => $this->unitOptions(),
@@ -160,7 +170,11 @@ class GeneralScheduleController extends BaseController
         return [
             'id'              => $id,
             'judul'           => trim((string) ($post['judul'] ?? '')),
+            'jenis_agenda'    => trim((string) ($post['jenis_agenda'] ?? ($existing['jenis_agenda'] ?? 'rapat'))),
             'tanggal'         => trim((string) ($post['tanggal'] ?? '')),
+            'tanggal_mulai'   => trim((string) ($post['tanggal_mulai'] ?? ($existing['tanggal_mulai'] ?? ''))),
+            'tanggal_selesai' => trim((string) ($post['tanggal_selesai'] ?? ($existing['tanggal_selesai'] ?? ''))),
+            'status'          => trim((string) ($post['status'] ?? ($post['status_override'] ?? ($existing['status'] ?? 'auto')))),
             'waktu_mulai'     => trim((string) ($post['waktu_mulai'] ?? '')),
             'waktu_selesai'   => trim((string) ($post['waktu_selesai'] ?? '')),
             'ruangan_id'      => ($post['lokasi_mode'] ?? null) === 'lainnya'

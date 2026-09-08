@@ -37,7 +37,11 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
     public function findUpcomingPublic(string $afterDate, int $limit): array
     {
         $rows = $this->findSchedules(true, null, null, null);
-        $rows = array_values(array_filter($rows, static fn (array $row): bool => ($row['tanggal'] ?? '') > $afterDate));
+        $rows = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => ($row['tanggal'] ?? '') > $afterDate
+                && ! in_array($row['status'] ?? '', ['dibatalkan', 'selesai', 'proyeksi'], true)
+        ));
 
         return array_slice($rows, 0, $limit);
     }
@@ -157,14 +161,21 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
         ?int $unitId,
         ?array $allowedScheduleIds
     ): BaseBuilder {
+        $statusSelect = $this->db->fieldExists('status', 'jadwal_umum')
+            ? "COALESCE(ju.status, 'menunggu') AS status"
+            : "'menunggu' AS status";
+        $jenisSelect = $this->db->fieldExists('jenis_agenda', 'jadwal_umum')
+            ? "COALESCE(ju.jenis_agenda, 'rapat') AS jenis"
+            : "'jadwal_umum' AS jenis";
+
         $builder = $this->db->table('jadwal_umum ju')
             ->select(
                 "ju.id, ju.id AS source_id, 'jadwal_umum' AS source, NULL AS lingkup, "
                 . 'NULL AS dokumen_banmus_id, ju.judul, ju.keterangan, ju.tanggal, '
-                . "ju.waktu_mulai, ju.waktu_selesai, 'menunggu' AS status, "
+                . "ju.waktu_mulai, ju.waktu_selesai, {$statusSelect}, "
                 . 'ju.materi_url, ju.materi_akses, ju.stream_url, ju.stream_akses, '
                 . 'ju.undangan_file, ju.undangan_nama_asli, '
-                . "'jadwal_umum' AS jenis, ju.is_publik, ju.lokasi_lainnya, "
+                . "{$jenisSelect}, ju.is_publik, ju.lokasi_lainnya, "
                 . 'r.name AS nama_ruangan, ju.pihak_eksternal',
                 false,
             )
@@ -201,14 +212,15 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
                 . 'jb.tanggal, jb.jam_mulai AS waktu_mulai, jb.jam_selesai AS waktu_selesai, jb.status, '
                 . 'jb.materi_url, jb.materi_akses, jb.stream_url, jb.stream_akses, '
                 . 'jb.undangan_file, jb.undangan_nama_asli, '
-                . "'rapat' AS jenis, CASE WHEN jb.publikasi = 'publik' AND db.is_publik = 1 THEN 1 ELSE 0 END AS is_publik, "
+                . "COALESCE(jb.jenis_agenda, 'rapat') AS jenis, CASE WHEN jb.publikasi = 'publik' AND db.is_publik = 1 THEN 1 ELSE 0 END AS is_publik, "
                 . 'jb.lokasi_lainnya, r.name AS nama_ruangan, NULL AS pihak_eksternal',
                 false,
             )
             ->join('dokumen_banmus db', 'db.id = jb.dokumen_banmus_id')
             ->join('ruangan r', 'r.id = jb.ruangan_id', 'left')
-            ->where('jb.jenis_agenda', JadwalBanmusModel::TYPE_MEETING)
-            ->whereIn('jb.status', JadwalBanmusModel::SCHEDULED_STATUSES)
+            ->where('jb.status !=', 'proyeksi')
+            ->where('jb.tanggal IS NOT NULL', null, false)
+            ->where("jb.tanggal != ''", null, false)
             ->where('jb.deleted_at', null);
 
         if ($publicOnly) {

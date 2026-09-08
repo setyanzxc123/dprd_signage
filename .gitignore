@@ -141,3 +141,6 @@ googleai_studio_docs/
 js_genai_docs/
 features_list.json
 writable/worker.lock
+
+# Session scratch artifacts
+temp/

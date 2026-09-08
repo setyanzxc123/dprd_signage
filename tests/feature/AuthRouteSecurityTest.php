@@ -133,9 +133,9 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('Filter periode agenda rapat', $body);
         $this->assertStringContainsString('Filter periode jadwal umum', $body);
         $this->assertStringContainsString('Semester ini', $body);
-        $this->assertStringContainsString('Jumlah agenda per halaman', $body);
-        $this->assertStringContainsString('Jumlah jadwal umum per halaman', $body);
-        $this->assertStringContainsString('collapse collapse-arrow', $body);
+        $this->assertStringNotContainsString('Jumlah agenda per halaman', $body);
+        $this->assertStringNotContainsString('Jumlah jadwal umum per halaman', $body);
+        $this->assertStringContainsString('agenda-collapse', $body);
         $this->assertStringContainsString('handleAgendaToggle($event, item.key)', $body);
         $this->assertSame(2, substr_count($body, ':href="item.materi_url"'));
         $this->assertSame(2, substr_count($body, ':href="item.stream_url"'));
@@ -200,6 +200,15 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         $response = $this->get('/admin/profile');
 
         $response->assertRedirectTo(base_url('login?akses=admin'));
+    }
+
+    public function testMemberRisalahPdfRequiresAuthentication(): void
+    {
+        $responseBanmus = $this->get('/anggota/jadwal-banmus/1/risalah-pdf');
+        $responseBanmus->assertRedirectTo(base_url('login?akses=anggota'));
+
+        $responseGeneral = $this->get('/anggota/jadwal-umum/1/risalah-pdf');
+        $responseGeneral->assertRedirectTo(base_url('login?akses=anggota'));
     }
 
     public function testEmergencyOtpActionDoesNotExposeReasonInput(): void

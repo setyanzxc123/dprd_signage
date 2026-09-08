@@ -15,14 +15,18 @@ class MemberApiAuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        $anggota = service('requestIdentity')->currentAnggota();
+        $identity = service('requestIdentity');
+        $anggota = $identity->currentAnggota();
 
         if ($anggota === null) {
-            return $this->unauthorized();
+            $user = $identity->currentUser();
+            $isAdmin = $user !== null && $user->inGroup('superadmin', 'operator');
+            if (! $isAdmin) {
+                return $this->unauthorized();
+            }
         }
 
-        // Sesi web: segarkan state sesi seperti perilaku sebelumnya.
-        if (session()->has('member_auth')) {
+        if ($anggota !== null && session()->has('member_auth')) {
             session()->set('member_auth', [
                 'anggota_id' => (int) $anggota['anggota_id'],
                 'name'       => (string) $anggota['name'],

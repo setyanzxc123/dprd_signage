@@ -50,9 +50,11 @@ $routes->group('anggota', ['filter' => 'memberauth'], function ($routes) {
     $routes->get('jadwal-banmus/(:num)/live',   'Member\ScheduleLinkController::liveBanmus/$1');
     $routes->get('jadwal-banmus/(:num)/berkas', 'Member\ScheduleLinkController::berkasBanmus/$1');
     $routes->get('jadwal-banmus/(:num)/undangan', 'Member\ScheduleInvitationController::banmus/$1');
+    $routes->get('jadwal-banmus/(:num)/risalah-pdf', 'Member\ScheduleMinutesController::banmusPdf/$1');
     $routes->get('jadwal-umum/(:num)/live',       'Member\ScheduleLinkController::liveGeneral/$1');
     $routes->get('jadwal-umum/(:num)/berkas',     'Member\ScheduleLinkController::berkasGeneral/$1');
     $routes->get('jadwal-umum/(:num)/undangan',   'Member\ScheduleInvitationController::general/$1');
+    $routes->get('jadwal-umum/(:num)/risalah-pdf', 'Member\ScheduleMinutesController::generalPdf/$1');
 });
 
 // Admin — semua route dilindungi filter auth
@@ -167,6 +169,7 @@ $routes->group('api/v1/jadwal', ['namespace' => 'App\Controllers\Api\V1', 'filte
     $routes->get('(:segment)/(:num)/(materi|stream)', 'ScheduleResourceController::resolve/$1/$2/$3');
     $routes->get('(:segment)/(:num)/undangan', 'ScheduleDocumentController::undangan/$1/$2');
     $routes->get('(:segment)/(:num)/risalah', 'ScheduleMinutesController::show/$1/$2');
+    $routes->get('(:segment)/(:num)/risalah-pdf', 'ScheduleMinutesController::exportPdf/$1/$2');
 });
 
 // API v1 Dokumen SK banmus (publik bila is_publik, selain itu anggota)

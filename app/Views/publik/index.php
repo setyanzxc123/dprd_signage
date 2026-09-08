@@ -1,6 +1,7 @@
 <?php
 $fontVersion = is_file(FCPATH . 'assets/vendor/fonts/fonts.css') ? filemtime(FCPATH . 'assets/vendor/fonts/fonts.css') : time();
 $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemtime(FCPATH . 'assets/vendor/vue/vue.global.prod.js') : time();
+$logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -14,7 +15,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
     <meta property="og:description" content="Pantau jadwal rapat DPRD Provinsi Sulawesi Tengah secara langsung." />
     <meta property="og:type" content="website" />
 
-    <link rel="icon" type="image/jpeg" href="<?= base_url('assets/images/logo_dprd.jpg') ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -38,7 +39,7 @@ $vueVersion  = is_file(FCPATH . 'assets/vendor/vue/vue.global.prod.js') ? filemt
     <header class="sticky top-0 z-50 border-b border-base-300 bg-base-100/95 backdrop-blur-xl">
         <div class="mx-auto flex min-h-[72px] w-[min(960px,calc(100%-20px))] items-center justify-between gap-2 px-1 py-2 sm:min-h-[88px] sm:w-[min(960px,calc(100%-28px))] sm:gap-3 sm:py-3">
             <a class="flex min-w-0 items-center gap-3 sm:gap-4" href="<?= base_url('jadwal') ?>" aria-label="Agenda rapat DPRD">
-                <img class="h-12 w-12 shrink-0 rounded-xl border border-base-300 bg-white object-contain sm:h-16 sm:w-16 sm:rounded-2xl" src="<?= esc($logoUrl) ?>" alt="Logo DPRD" />
+                <img class="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" src="<?= esc($logoUrl) ?>" alt="Logo DPRD" />
                 <span class="min-w-0">
                     <span class="block truncate text-sm font-black leading-tight text-base-content min-[380px]:text-base sm:text-xl">Agenda Rapat DPRD</span>
                     <span class="mt-0.5 block truncate text-[10px] font-bold leading-tight text-base-content/65 min-[380px]:text-xs sm:text-sm">Provinsi Sulawesi Tengah</span>

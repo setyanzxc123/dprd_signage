@@ -24,6 +24,9 @@ class MemberController extends BaseController
     {
         return view('admin/anggota/form', [
             'pageTitle'          => 'Tambah Anggota',
+            'breadcrumbs'        => [
+                ['label' => 'Anggota DPRD', 'url' => 'admin/anggota'],
+            ],
             'member'             => null,
             'fraksi_list'        => AnggotaService::FRAKSI_LIST,
             'komisi_list'        => $this->komisiOptions(),
@@ -59,6 +62,9 @@ class MemberController extends BaseController
 
         return view('admin/anggota/form', [
             'pageTitle'          => 'Edit Anggota',
+            'breadcrumbs'        => [
+                ['label' => 'Anggota DPRD', 'url' => 'admin/anggota'],
+            ],
             'member'             => $member,
             'fraksi_list'        => AnggotaService::FRAKSI_LIST,
             'komisi_list'        => $this->komisiOptions($member['komisi'] ?? ''),
@@ -151,6 +157,9 @@ class MemberController extends BaseController
     {
         return $this->formViewErrorResponse('admin/anggota/form', [
             'pageTitle'         => $id === null ? 'Tambah Anggota' : 'Edit Anggota',
+            'breadcrumbs'       => [
+                ['label' => 'Anggota DPRD', 'url' => 'admin/anggota'],
+            ],
             'member'            => $this->postedMember($id),
             'fraksi_list'       => AnggotaService::FRAKSI_LIST,
             'komisi_list'       => $this->komisiOptions(trim((string) $this->request->getPost('komisi'))),

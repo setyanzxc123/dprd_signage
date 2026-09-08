@@ -1,4 +1,4 @@
-/* Page controllers for the Turbo-powered admin area. */
+/* Page controllers for the admin area. */
 (() => {
     const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const dayNames   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -129,7 +129,7 @@
     }
 
     let dashboardController = null;
-    document.addEventListener('turbo:load', () => {
+    document.addEventListener('DOMContentLoaded', () => {
         dashboardController?.abort();
         dashboardController = new AbortController();
         setDate();
@@ -147,10 +147,20 @@
         if (toggle && label) {
             toggle.addEventListener('change', function() {
                 label.textContent = this.checked
-                    ? 'Agenda dapat tampil pada kanal publik.'
-                    : 'Default internal, hanya terlihat oleh pengguna berwenang.';
+                    ? 'Tampilkan kepada publik'
+                    : 'Internal DPRD saja';
             });
         }
+
+        const agendaTypeRadios = Array.from(document.querySelectorAll('input[name="jenis_agenda"]'));
+        const rapatWaktuGrid = document.getElementById('rapat-waktu-grid');
+        const nonRapatWaktuGrid = document.getElementById('non-rapat-waktu-grid');
+        const rapatWaktuDesc = document.getElementById('rapat-waktu-desc');
+        const lokasiModeWrapper = document.getElementById('lokasi-mode-wrapper');
+        const kelompokPesertaSection = document.getElementById('kelompok-peserta-section');
+        const bahanStreamSection = document.getElementById('bahan-stream-section');
+        const undanganSection = document.getElementById('undangan-section');
+        const generalStatusWrapper = document.getElementById('general-status-wrapper');
 
         const lokasiModeInputs = Array.from(document.querySelectorAll('input[name="lokasi_mode"]'));
         const ruanganPanel = document.getElementById('ruangan-panel');
@@ -159,6 +169,9 @@
         const lokasiLainnyaInput = document.getElementById('lokasi_lainnya');
 
         const syncLocationMode = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) return;
+
             const mode = lokasiModeInputs.find(function(input) {
                 return input.checked;
             })?.value || 'ruangan';
@@ -182,14 +195,66 @@
         lokasiModeInputs.forEach(function(input) {
             input.addEventListener('change', syncLocationMode);
         });
-        syncLocationMode();
 
         const tanggalInput = document.getElementById('tanggal');
+        const tanggalMulaiInput = document.getElementById('tanggal_mulai');
+        const tanggalSelesaiInput = document.getElementById('tanggal_selesai');
         const waktuMulaiInput = document.getElementById('waktu_mulai');
         const waktuSelesaiInput = document.getElementById('waktu_selesai');
         const waktuError = document.getElementById('waktu-rapat-error');
 
+        const syncAgendaType = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+
+            if (rapatWaktuGrid) rapatWaktuGrid.classList.toggle('hidden', isNonRapat);
+            if (nonRapatWaktuGrid) nonRapatWaktuGrid.classList.toggle('hidden', !isNonRapat);
+            if (rapatWaktuDesc) rapatWaktuDesc.classList.toggle('hidden', isNonRapat);
+            if (lokasiModeWrapper) lokasiModeWrapper.classList.toggle('hidden', isNonRapat);
+            if (kelompokPesertaSection) kelompokPesertaSection.classList.toggle('hidden', isNonRapat);
+            if (bahanStreamSection) bahanStreamSection.classList.toggle('hidden', isNonRapat);
+            if (undanganSection) undanganSection.classList.toggle('hidden', isNonRapat);
+            if (generalStatusWrapper) generalStatusWrapper.classList.toggle('hidden', isNonRapat);
+
+            if (tanggalInput) tanggalInput.required = !isNonRapat;
+            if (tanggalMulaiInput) tanggalMulaiInput.required = isNonRapat;
+
+            if (isNonRapat) {
+                if (ruanganPanel) ruanganPanel.hidden = true;
+                if (lokasiLainnyaPanel) lokasiLainnyaPanel.hidden = false;
+                if (ruanganSelect) {
+                    ruanganSelect.required = false;
+                    ruanganSelect.disabled = true;
+                }
+                if (lokasiLainnyaInput) {
+                    lokasiLainnyaInput.required = false;
+                    lokasiLainnyaInput.disabled = false;
+                }
+            } else {
+                syncLocationMode();
+            }
+
+            syncTimeValidity();
+            syncTargetValidity();
+        };
+
+        agendaTypeRadios.forEach(function(radio) {
+            radio.addEventListener('change', syncAgendaType);
+        });
+
         const syncTimeValidity = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) {
+                if (waktuMulaiInput) {
+                    waktuMulaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                }
+                if (waktuSelesaiInput) {
+                    waktuSelesaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                    waktuSelesaiInput.setCustomValidity('');
+                }
+                if (waktuError) waktuError.classList.add('hidden');
+                return true;
+            }
+
             if (!waktuMulaiInput || !waktuSelesaiInput) return true;
 
             const hasSeparateDate = tanggalInput?.value
@@ -204,8 +269,8 @@
             const start = startValue ? new Date(startValue) : null;
             const end = endValue ? new Date(endValue) : null;
             if (!start || !end) {
-                waktuMulaiInput.classList.remove('input-error');
-                waktuSelesaiInput.classList.remove('input-error');
+                waktuMulaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                waktuSelesaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                 waktuSelesaiInput.setCustomValidity('');
                 if (waktuError) waktuError.classList.add('hidden');
                 return true;
@@ -215,8 +280,14 @@
                 || waktuMulaiInput.value.slice(0, 10) === waktuSelesaiInput.value.slice(0, 10);
             const valid = !!(start && end && end > start && sameDate);
 
-            waktuMulaiInput.classList.toggle('input-error', !valid && !!waktuMulaiInput.value);
-            waktuSelesaiInput.classList.toggle('input-error', !valid && !!waktuSelesaiInput.value);
+            waktuMulaiInput.classList.toggle('border-rose-500', !valid && !!waktuMulaiInput.value);
+            waktuMulaiInput.classList.toggle('focus:border-rose-500', !valid && !!waktuMulaiInput.value);
+            waktuMulaiInput.classList.toggle('focus:ring-rose-500', !valid && !!waktuMulaiInput.value);
+
+            waktuSelesaiInput.classList.toggle('border-rose-500', !valid && !!waktuSelesaiInput.value);
+            waktuSelesaiInput.classList.toggle('focus:border-rose-500', !valid && !!waktuSelesaiInput.value);
+            waktuSelesaiInput.classList.toggle('focus:ring-rose-500', !valid && !!waktuSelesaiInput.value);
+
             if (waktuError) waktuError.classList.toggle('hidden', valid || !waktuMulaiInput.value || !waktuSelesaiInput.value);
 
             waktuSelesaiInput.setCustomValidity(valid ? '' : 'Waktu selesai harus setelah waktu mulai pada tanggal yang sama.');
@@ -240,8 +311,10 @@
             if (!option) return;
 
             option.classList.toggle('is-selected', input.checked);
-            option.classList.toggle('bg-primary/10', input.checked);
-            option.classList.toggle('text-primary', input.checked);
+            option.classList.toggle('bg-blue-50', input.checked);
+            option.classList.toggle('dark:bg-blue-950/30', input.checked);
+            option.classList.toggle('text-blue-700', input.checked);
+            option.classList.toggle('dark:text-blue-300', input.checked);
             option.classList.toggle('font-semibold', input.checked);
         };
 
@@ -258,12 +331,26 @@
         };
 
         const syncTargetValidity = function() {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) {
+                if (targetError) targetError.classList.add('hidden');
+                targetInputs.forEach(function(input) {
+                    if (!input.disabled) {
+                        input.classList.remove('border-rose-500', 'focus:ring-rose-500');
+                    }
+                });
+                return true;
+            }
+
             const count = syncTargetCount();
             const valid = !requiresTargets || count > 0;
 
             if (targetError) targetError.classList.toggle('hidden', valid);
             targetInputs.forEach(function(input) {
-                if (!input.disabled) input.classList.toggle('checkbox-error', !valid);
+                if (!input.disabled) {
+                    input.classList.toggle('border-rose-500', !valid);
+                    input.classList.toggle('focus:ring-rose-500', !valid);
+                }
             });
 
             return valid;
@@ -278,22 +365,38 @@
             syncTargetVisual(input);
         });
 
+        let targetSearchTimer = null;
         targetSearch?.addEventListener('input', function() {
-            const q = (this.value || '').trim().toLowerCase();
-            let shown = 0;
+            clearTimeout(targetSearchTimer);
+            targetSearchTimer = setTimeout(() => {
+                const q = (this.value || '').trim().toLowerCase();
+                let shown = 0;
 
-            targetOptions.forEach(function(option) {
-                const match = (option.getAttribute('data-name') || '').includes(q);
-                option.style.display = match ? '' : 'none';
-                if (match) shown++;
-            });
+                targetOptions.forEach(function(option) {
+                    const match = (option.getAttribute('data-name') || '').includes(q);
+                    option.style.display = match ? '' : 'none';
+                    if (match) shown++;
+                });
 
-            if (targetEmpty) {
-                targetEmpty.classList.toggle('hidden', shown > 0);
-            }
+                if (targetEmpty) {
+                    targetEmpty.classList.toggle('hidden', shown > 0);
+                }
+            }, 150);
         });
 
         form?.addEventListener('submit', function(event) {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            if (isNonRapat) {
+                if (tanggalMulaiInput && tanggalSelesaiInput && tanggalMulaiInput.value && tanggalSelesaiInput.value) {
+                    if (tanggalSelesaiInput.value < tanggalMulaiInput.value) {
+                        event.preventDefault();
+                        tanggalSelesaiInput.focus();
+                        return;
+                    }
+                }
+                return;
+            }
+
             const timeValid = syncTimeValidity();
             const targetValid = syncTargetValidity();
 
@@ -307,12 +410,13 @@
             }
         });
 
-        syncTimeValidity();
+        syncLocationMode();
+        syncAgendaType();
         syncTargetCount();
     };
 
-    document.addEventListener('turbo:load', initScheduleForm);
-    })();
+    document.addEventListener('DOMContentLoaded', initScheduleForm);
+})();
 
 (() => {
     function initSettingsPage() {
@@ -384,10 +488,8 @@
 
         const preparePanel = (hasMediaFile) => {
             panel.hidden = false;
-            panel.classList.remove('alert-error');
-            panel.classList.add('alert-info');
-            bar.classList.remove('progress-error');
-            bar.classList.add('progress-primary');
+            panel.classList.remove('bg-rose-50', 'border-rose-200', 'text-rose-800', 'dark:bg-rose-950/40', 'dark:border-rose-800', 'dark:text-rose-300');
+            panel.classList.add('bg-sky-50', 'border-sky-200', 'text-sky-800', 'dark:bg-sky-950/40', 'dark:border-sky-800', 'dark:text-sky-300');
             if (speed) {
                 speed.textContent = 'Mengukur kecepatan...';
                 speed.hidden = !hasMediaFile;
@@ -397,10 +499,8 @@
         const showError = (message) => {
             const currentValue = Number(bar.value) || 0;
             panel.hidden = false;
-            panel.classList.remove('alert-info');
-            panel.classList.add('alert-error');
-            bar.classList.remove('progress-primary');
-            bar.classList.add('progress-error');
+            panel.classList.remove('bg-sky-50', 'border-sky-200', 'text-sky-800', 'dark:bg-sky-950/40', 'dark:border-sky-800', 'dark:text-sky-300');
+            panel.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800', 'dark:bg-rose-950/40', 'dark:border-rose-800', 'dark:text-rose-300');
             if (speed) speed.hidden = true;
             setProgress(currentValue, message || 'Gagal menyimpan pengaturan.');
             setBusy(false);
@@ -665,6 +765,20 @@
 
         let waPollInterval = null;
 
+        const isWaModalOpen = () => Boolean(
+            modalWaPairing && (!modalWaPairing.classList.contains('hidden') || modalWaPairing.open)
+        );
+
+        const closeWaPairingModal = () => {
+            if (!modalWaPairing) return;
+            if (window.HSOverlay) {
+                window.HSOverlay.close(modalWaPairing);
+            }
+            if (typeof modalWaPairing.close === 'function') {
+                modalWaPairing.close();
+            }
+        };
+
         const stopWaPolling = () => {
             if (waPollInterval) {
                 clearInterval(waPollInterval);
@@ -675,30 +789,35 @@
         const startWaPolling = (intervalMs = 3000) => {
             stopWaPolling();
             waPollInterval = setInterval(async () => {
-                const isModalOpen = Boolean(modalWaPairing && modalWaPairing.open);
-                await checkWaStatus(isModalOpen);
+                if (document.visibilityState !== 'visible') return;
+                await checkWaStatus(isWaModalOpen());
             }, intervalMs);
         };
 
-        window.switchWaTab = (tab) => {
-            const tabQr = document.getElementById('tab-btn-qr');
-            const tabPair = document.getElementById('tab-btn-pair');
-            const panelQr = document.getElementById('panel-wa-qr');
-            const panelPair = document.getElementById('panel-wa-pair');
+        const tabQr = document.getElementById('tab-btn-qr');
+        const tabPair = document.getElementById('tab-btn-pair');
 
-            if (tab === 'qr') {
-                tabQr?.classList.add('tab-active');
-                tabPair?.classList.remove('tab-active');
-                if (panelQr) panelQr.hidden = false;
-                if (panelPair) panelPair.hidden = true;
-                loadWaQrCode();
-            } else {
-                tabPair?.classList.add('tab-active');
-                tabQr?.classList.remove('tab-active');
-                if (panelPair) panelPair.hidden = false;
-                if (panelQr) panelQr.hidden = true;
+        window.switchWaTab = (tab) => {
+            const targetBtn = tab === 'qr' ? tabQr : tabPair;
+            try {
+                if (window.HSTabs && Array.isArray(window.$hsTabsCollection) && typeof window.HSTabs.open === 'function' && targetBtn) {
+                    window.HSTabs.open(targetBtn);
+                } else if (targetBtn) {
+                    targetBtn.click();
+                }
+            } catch (_) {
+                if (targetBtn) targetBtn.click();
             }
         };
+
+        tabQr?.addEventListener('click', () => {
+            loadWaQrCode();
+            startWaPolling(3000);
+        });
+
+        tabPair?.addEventListener('click', () => {
+            stopWaPolling();
+        });
 
         const loadWaQrCode = async () => {
             if (!waQrImage || !waQrLoading) return;
@@ -716,27 +835,38 @@
                 const qr = result?.qr || {};
 
                 if (gw.connected) {
-                    if (modalWaPairing && modalWaPairing.open) modalWaPairing.close();
+                    if (isWaModalOpen()) closeWaPairingModal();
                     stopWaPolling();
                     renderConnectedStatus(gw);
                     return;
                 }
 
-                if (qr.qr_data_url) {
+                if (gw.status === 'offline') {
+                    stopWaPolling();
+                    waQrLoading.hidden = true;
+                    if (waQrError) {
+                        waQrError.textContent = qr?.error || gw.error || 'Layanan WhatsApp sedang offline.';
+                        waQrError.hidden = false;
+                    }
+                    return;
+                }
+
+                if (qr?.qr_data_url) {
                     waQrImage.src = qr.qr_data_url;
                     waQrImage.hidden = false;
                     waQrLoading.hidden = true;
                 } else {
                     waQrLoading.hidden = true;
                     if (waQrError) {
-                        waQrError.textContent = qr.error || gw.error || 'QR Code belum siap atau gateway sedang offline.';
+                        waQrError.textContent = qr?.error || gw.error || 'QR Code belum siap atau layanan WhatsApp sedang offline.';
                         waQrError.hidden = false;
                     }
                 }
             } catch (e) {
+                stopWaPolling();
                 waQrLoading.hidden = true;
                 if (waQrError) {
-                    waQrError.textContent = 'Gagal terhubung ke service WhatsApp Gateway.';
+                    waQrError.textContent = 'Gagal terhubung ke layanan WhatsApp.';
                     waQrError.hidden = false;
                 }
             }
@@ -746,16 +876,16 @@
             if (!waPrimaryStatus) return;
             const nameStr = gw.name ? ` (${gw.name})` : '';
             waPrimaryStatus.innerHTML = `
-                <div class="flex items-center gap-2 text-success font-semibold">
-                    <i data-lucide="check-circle-2" class="h-5 w-5 shrink-0"></i>
-                    <span>WhatsApp Gateway Terhubung</span>
+                <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+                    <i data-lucide="check-circle-2" class="size-5 shrink-0"></i>
+                    <span>WhatsApp Terhubung</span>
                 </div>
-                <p class="text-xs text-base-content/80 mt-1">
-                    No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                    Nomor Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
                 </p>
                 <div class="flex flex-wrap gap-2 pt-2">
-                    <button type="button" class="btn btn-error btn-outline btn-xs gap-1.5 font-semibold" id="btn-wa-logout">
-                        <i data-lucide="log-out" class="h-4 w-4"></i>
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
+                        <i data-lucide="log-out" class="size-4"></i>
                         <span>Putuskan Perangkat</span>
                     </button>
                 </div>
@@ -765,21 +895,36 @@
             }
         };
 
-        const renderDisconnectedStatus = (errorMsg) => {
+        const renderDisconnectedStatus = (errorMsg, canFallback = true) => {
             if (!waPrimaryStatus) return;
+            const displayError = errorMsg && !errorMsg.toLowerCase().includes('gateway')
+                ? errorMsg
+                : 'Nomor WhatsApp belum terhubung ke sistem. Silakan tautkan nomor dengan scan QR Code atau kode pairing.';
+
+            const fallbackHtml = canFallback ? `
+                <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs mt-2" id="wa-fallback-notice">
+                    <i data-lucide="info" class="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"></i>
+                    <div>
+                        <span class="font-semibold">Layanan Cadangan Aktif:</span>
+                        <span class="block mt-0.5 text-slate-600 dark:text-slate-400">Karena WhatsApp belum terhubung, pengiriman kode OTP otomatis dialihkan ke layanan cadangan (Fazpass) agar verifikasi login anggota tetap berjalan normal.</span>
+                    </div>
+                </div>
+            ` : '';
+
             waPrimaryStatus.innerHTML = `
-                <div class="flex items-center gap-2 text-error font-semibold">
-                    <i data-lucide="alert-triangle" class="h-5 w-5 shrink-0"></i>
+                <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold text-sm">
+                    <i data-lucide="alert-triangle" class="size-5 shrink-0"></i>
                     <span>WhatsApp Belum Terhubung</span>
                 </div>
-                <p class="text-xs text-base-content/80 mt-1">
-                    ${errorMsg}
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                    ${displayError}
                 </p>
+                ${fallbackHtml}
                 <div class="pt-2">
-                    <button type="button" class="btn btn-warning btn-xs gap-1.5 font-semibold" id="wa-qr-btn"
-                        onclick="document.getElementById('modal_wa_pairing').showModal(); window.switchWaTab('qr');">
-                        <i data-lucide="qr-code" class="h-4 w-4"></i>
-                        <span>Buka Scan QR / Pairing Code</span>
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
+                        data-hs-overlay="#modal_wa_pairing" onclick="window.switchWaTab('qr');">
+                        <i data-lucide="qr-code" class="size-4"></i>
+                        <span>Tautkan Nomor WhatsApp</span>
                     </button>
                 </div>
             `;
@@ -788,8 +933,10 @@
             }
         };
 
+        let isWaChecking = false;
         const checkWaStatus = async (updateQrIfModalOpen = false) => {
-            if (!waPrimaryStatus) return;
+            if (!waPrimaryStatus || isWaChecking) return;
+            isWaChecking = true;
 
             try {
                 const response = await fetch('/admin/pengaturan/whatsapp/status', {
@@ -799,15 +946,22 @@
                 const result = await response.json();
                 const gw = result?.gateway || {};
                 const qr = result?.qr || {};
+                const canFallback = Boolean(result?.can_fallback ?? (result?.fallback && result?.provider === 'hybrid'));
 
                 if (gw.connected) {
-                    if (modalWaPairing && modalWaPairing.open) modalWaPairing.close();
+                    if (isWaModalOpen()) closeWaPairingModal();
                     stopWaPolling();
                     renderConnectedStatus(gw);
                     return;
                 }
 
-                if (updateQrIfModalOpen && modalWaPairing && modalWaPairing.open && qr.qr_data_url && waQrImage) {
+                if (gw.status === 'offline') {
+                    stopWaPolling();
+                    renderDisconnectedStatus(gw.error || 'Layanan WhatsApp sedang offline.', canFallback);
+                    return;
+                }
+
+                if (updateQrIfModalOpen && isWaModalOpen() && qr.qr_data_url && waQrImage) {
                     if (waQrImage.src !== qr.qr_data_url) {
                         waQrImage.src = qr.qr_data_url;
                     }
@@ -816,7 +970,9 @@
                     if (waQrError) waQrError.hidden = true;
                 }
             } catch (e) {
-                // Polling error silently handled
+                stopWaPolling();
+            } finally {
+                isWaChecking = false;
             }
         };
 
@@ -825,21 +981,23 @@
                 refreshWaBtn.disabled = true;
                 if (refreshWaIcon) refreshWaIcon.classList.add('animate-spin');
                 try {
-                    const response = await fetch('/admin/pengaturan/whatsapp/status', {
+                    const response = await fetch('/admin/pengaturan/whatsapp/status?refresh=1', {
                         headers: { Accept: 'application/json' },
                         credentials: 'same-origin',
                     });
                     const result = await response.json();
                     const gw = result?.gateway || {};
+                    const canFallback = Boolean(result?.can_fallback ?? (result?.fallback && result?.provider === 'hybrid'));
                     if (gw.connected) {
                         stopWaPolling();
                         renderConnectedStatus(gw);
                     } else {
-                        renderDisconnectedStatus(gw.error || 'Gateway belum terhubung. Silakan scan QR Code.');
-                        startWaPolling(4000);
+                        stopWaPolling();
+                        renderDisconnectedStatus(gw.error || 'Nomor WhatsApp belum terhubung ke sistem.', canFallback);
                     }
                 } catch (e) {
-                    renderDisconnectedStatus('Gagal terhubung ke service WhatsApp Gateway.');
+                    stopWaPolling();
+                    renderDisconnectedStatus('Gagal terhubung ke layanan WhatsApp.');
                 } finally {
                     refreshWaBtn.disabled = false;
                     if (refreshWaIcon) refreshWaIcon.classList.remove('animate-spin');
@@ -863,7 +1021,16 @@
             modalWaPairing.addEventListener('close', () => {
                 stopWaPolling();
             });
+            modalWaPairing.addEventListener('close.hs.overlay', () => {
+                stopWaPolling();
+            });
         }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && waPollInterval) {
+                checkWaStatus(isWaModalOpen());
+            }
+        });
 
         if (btnRequestPairCode && inputPairPhone) {
             btnRequestPairCode.addEventListener('click', async () => {
@@ -924,25 +1091,47 @@
         const modalWaLogout = document.getElementById('modal_wa_logout');
         const waLogoutError = document.getElementById('wa-logout-error');
 
-        if (waPrimaryStatus && modalWaLogout instanceof HTMLDialogElement) {
+        const openWaLogoutModal = () => {
+            if (!modalWaLogout) return;
+            if (waLogoutError) waLogoutError.hidden = true;
+            if (window.HSOverlay) {
+                window.HSOverlay.open(modalWaLogout);
+            } else if (modalWaLogout instanceof HTMLDialogElement) {
+                modalWaLogout.showModal();
+            }
+        };
+
+        const closeWaLogoutModal = () => {
+            if (!modalWaLogout) return;
+            if (window.HSOverlay) {
+                window.HSOverlay.close(modalWaLogout);
+            } else if (modalWaLogout instanceof HTMLDialogElement) {
+                modalWaLogout.close();
+            }
+        };
+
+        if (waPrimaryStatus) {
             waPrimaryStatus.addEventListener('click', (event) => {
                 if ((event.target instanceof Element) && event.target.closest('#btn-wa-logout')) {
-                    if (waLogoutError) waLogoutError.hidden = true;
-                    modalWaLogout.showModal();
+                    openWaLogoutModal();
+                }
+                if ((event.target instanceof Element) && event.target.closest('#wa-qr-btn')) {
+                    loadWaQrCode();
+                    startWaPolling(2500);
                 }
             });
         }
 
         const waLogoutCancel = document.getElementById('btn-wa-logout-cancel');
-        if (waLogoutCancel && modalWaLogout instanceof HTMLDialogElement) {
+        if (waLogoutCancel) {
             waLogoutCancel.addEventListener('click', () => {
-                modalWaLogout.close();
+                closeWaLogoutModal();
             });
         }
 
         const waLogoutConfirm = document.getElementById('btn-wa-logout-confirm');
         const waLogoutSpinner = document.getElementById('spinner-wa-logout-confirm');
-        if (waLogoutConfirm && modalWaLogout instanceof HTMLDialogElement) {
+        if (waLogoutConfirm) {
             waLogoutConfirm.addEventListener('click', async () => {
                 waLogoutConfirm.disabled = true;
                 if (waLogoutSpinner) waLogoutSpinner.hidden = false;
@@ -967,10 +1156,9 @@
                         throw new Error(data.message || 'Gagal memutus sesi WhatsApp.');
                     }
 
-                    modalWaLogout.close();
+                    closeWaLogoutModal();
                     stopWaPolling();
                     renderDisconnectedStatus(data.message || 'Sesi WhatsApp telah diputus. Lakukan pairing ulang untuk menghubungkan kembali.');
-                    startWaPolling(4000);
                 } catch (err) {
                     if (waLogoutError) {
                         waLogoutError.textContent = err.message || 'Terjadi kesalahan sistem.';
@@ -983,17 +1171,11 @@
             });
         }
 
-        // Jika gateway terdeteksi belum terhubung saat buka halaman, jalankan gentle polling
-        const isCurrentlyConnected = document.getElementById('wa-integration-card')?.dataset.connected === '1';
-        if (!isCurrentlyConnected) {
-            startWaPolling(4000);
-        }
-
-        document.addEventListener('turbo:before-cache', stopWaPolling, { once: true });
-        document.addEventListener('turbo:before-visit', stopWaPolling, { once: true });
+        window.addEventListener('beforeunload', stopWaPolling, { once: true });
+        window.addEventListener('pagehide', stopWaPolling, { once: true });
     }
 
-    document.addEventListener('turbo:load', initSettingsPage);
+    document.addEventListener('DOMContentLoaded', initSettingsPage);
 })();
 
 (function() {
@@ -1036,8 +1218,11 @@
             allCheckboxes.forEach(function(cb) {
                 const src = cb.closest('.anggota-source');
                 if (src) {
-                    src.classList.toggle('bg-primary/10', cb.checked);
-                    src.classList.toggle('text-primary', cb.checked);
+                    src.classList.toggle('bg-blue-50/70', cb.checked);
+                    src.classList.toggle('dark:bg-blue-950/30', cb.checked);
+                    src.classList.toggle('text-blue-700', cb.checked);
+                    src.classList.toggle('dark:text-blue-300', cb.checked);
+                    src.classList.toggle('font-semibold', cb.checked);
                 }
             });
 
@@ -1054,9 +1239,9 @@
 
             if (count === 0) {
                 const div = document.createElement('div');
-                div.className = 'flex flex-col items-center justify-center text-base-content/50 py-4 gap-1';
+                div.className = 'flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 py-8 gap-1.5';
                 div.id = 'target-empty';
-                div.innerHTML = '<i data-lucide="shuffle" class="w-5 h-5 opacity-40"></i><small>Pilih anggota dari panel kiri</small>';
+                div.innerHTML = '<i data-lucide="shuffle" class="size-5 text-slate-300 dark:text-slate-600"></i><span class="text-xs">Pilih anggota dari panel kiri</span>';
                 targetList.appendChild(div);
                 window.renderAdminIcons?.();
                 syncMemberValidity(true);
@@ -1068,38 +1253,39 @@
                 if (!src) return;
 
                 const id = src.getAttribute('data-id');
-                const name = src.querySelector('.font-semibold')?.textContent || '';
+                const name = src.querySelector('.text-xs')?.textContent || '';
                 const detail = src.querySelector('.member-detail')?.textContent?.trim() || '';
                 const initial = name.trim().charAt(0).toUpperCase();
 
                 const el = document.createElement('div');
-                el.className = 'flex items-center gap-2 px-3 py-1 border-b transfer-target-item min-h-[42px]';
+                el.className = 'flex items-center gap-2.5 px-3 py-2 transfer-target-item min-h-[44px]';
                 el.id = 'target-' + id;
                 el.setAttribute('data-id', id);
 
                 const avatar = document.createElement('span');
-                avatar.className = 'inline-flex items-center justify-center rounded shrink-0 bg-primary text-primary-content w-7 h-7 text-xs font-bold';
+                avatar.className = 'inline-flex items-center justify-center rounded-lg shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 size-7 text-xs font-bold';
                 avatar.textContent = initial;
 
                 const memberContent = document.createElement('div');
                 memberContent.className = 'flex-1 min-w-0';
 
                 const memberName = document.createElement('div');
-                memberName.className = 'text-xs font-semibold truncate';
+                memberName.className = 'text-xs font-semibold text-slate-900 dark:text-white truncate';
                 memberName.textContent = name;
 
                 const memberDetail = document.createElement('div');
-                memberDetail.className = 'text-[11px] text-base-content/60 truncate';
+                memberDetail.className = 'text-[11px] text-slate-500 dark:text-slate-400 truncate';
                 memberDetail.textContent = detail;
 
                 const removeButton = document.createElement('button');
                 removeButton.type = 'button';
-                removeButton.className = 'btn btn-sm btn-ghost btn-circle text-error w-6 h-6 min-h-6 leading-none';
-                removeButton.title = 'Hapus dari unit';
+                removeButton.className = 'size-8 inline-flex items-center justify-center rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer';
+                removeButton.title = 'Hapus dari kelompok';
+                removeButton.setAttribute('aria-label', `Hapus ${name} dari kelompok`);
 
                 const removeIcon = document.createElement('i');
                 removeIcon.setAttribute('data-lucide', 'x');
-                removeIcon.className = 'w-3.5 h-3.5';
+                removeIcon.className = 'size-4';
 
                 memberContent.append(memberName, memberDetail);
                 removeButton.appendChild(removeIcon);
@@ -1141,24 +1327,28 @@
             }
         };
 
+        let sourceSearchTimer = null;
         sourceSearch?.addEventListener('input', function() {
-            const q = (this.value || '').trim().toLowerCase();
-            let n = 0;
-            allSourceItems.forEach(function(item) {
-                const name = item.getAttribute('data-name') || '';
-                const komisi = item.getAttribute('data-komisi') || '';
-                const jabatan = item.getAttribute('data-jabatan') || '';
-                const match = name.includes(q) || komisi.includes(q) || jabatan.includes(q);
-                item.style.display = match ? '' : 'none';
-                if (match) n++;
-            });
-            if (sourceCount) sourceCount.textContent = n;
+            clearTimeout(sourceSearchTimer);
+            sourceSearchTimer = setTimeout(() => {
+                const q = (this.value || '').trim().toLowerCase();
+                let n = 0;
+                allSourceItems.forEach(function(item) {
+                    const name = item.getAttribute('data-name') || '';
+                    const komisi = item.getAttribute('data-komisi') || '';
+                    const jabatan = item.getAttribute('data-jabatan') || '';
+                    const match = name.includes(q) || komisi.includes(q) || jabatan.includes(q);
+                    item.style.display = match ? '' : 'none';
+                    if (match) n++;
+                });
+                if (sourceCount) sourceCount.textContent = n;
+            }, 150);
         });
 
         syncMemberValidity(false);
     };
 
-    document.addEventListener('turbo:load', initUnitForm);
+    document.addEventListener('DOMContentLoaded', initUnitForm);
     })();
 
 (() => {
@@ -1223,26 +1413,51 @@
             refreshItems();
         };
 
-        document.addEventListener('turbo:load', initializeBanmusForm);
+        document.addEventListener('DOMContentLoaded', initializeBanmusForm);
     })();
 
 (() => {
     const initializeBanmusItemWorkspace = () => {
         const dialog = document.querySelector('[data-banmus-item-dialog]');
-        if (!(dialog instanceof HTMLDialogElement)) return;
+        if (!dialog) return;
         if (dialog.dataset.initialized === 'true') return;
         dialog.dataset.initialized = 'true';
 
         const form = dialog.querySelector('#item_form');
-        const title = dialog.querySelector('#modal_title span');
+        const pastiWrapper = dialog.querySelector('#banmus-pasti-wrapper');
+        const nonRapatDatesWrapper = dialog.querySelector('#banmus-non-rapat-dates');
+        const rapatModeWrapper = dialog.querySelector('#rapat-mode-wrapper');
+        const btnModeProyeksi = dialog.querySelector('#btn-mode-proyeksi');
+        const btnModePasti = dialog.querySelector('#btn-mode-pasti');
+        const labelPeriode = dialog.querySelector('#label_periode');
+        const periodeField = dialog.querySelector('#field_periode_label');
+
+        const title = dialog.querySelector('#modal_title');
         const dateField = dialog.querySelector('#field_tanggal');
+        const startDateField = dialog.querySelector('#field_tanggal_mulai');
+        const endDateField = dialog.querySelector('#field_tanggal_selesai');
+        const startTimeField = dialog.querySelector('#field_jam_mulai');
+        const endTimeField = dialog.querySelector('#field_jam_selesai');
         const roomField = dialog.querySelector('#field_ruangan_id');
         const locationField = dialog.querySelector('#field_lokasi_lainnya');
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
+        const statusOverrideField = dialog.querySelector('#field_status_override');
+        const statusOverrideWrapper = dialog.querySelector('#banmus-status-override-wrapper');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
         const agendaTypeFields = [...dialog.querySelectorAll('input[name="jenis_agenda"]')];
-        const invitationExisting = dialog.querySelector('#field_undangan_existing');
-        const invitationName = dialog.querySelector('#field_undangan_name');
+        const fileInput = dialog.querySelector('#field_undangan_file');
+        const fileStatus = dialog.querySelector('#field_undangan_status');
+        const errorAlert = dialog.querySelector('#item_modal_error_alert');
+        const errorMessage = dialog.querySelector('#item_modal_error_message');
+        const btnDismissError = dialog.querySelector('#btn_dismiss_item_error');
+        const submitBtn = dialog.querySelector('#btn_submit_banmus_item');
+        const submitText = dialog.querySelector('#btn_submit_banmus_item_text');
+        const submitLoading = dialog.querySelector('#btn_submit_banmus_item_loading');
+        const scrollContainer = form?.querySelector('.overflow-y-auto');
+
+        let currentAgendaType = 'rapat';
+        let currentMeetingMode = 'proyeksi';
+        let currentExistingInvitationName = '';
 
         if (!(form instanceof HTMLFormElement)
             || !(dateField instanceof HTMLInputElement)
@@ -1252,21 +1467,131 @@
 
         const field = (id) => dialog.querySelector(`#${id}`);
 
+        const setSubmitting = (isSubmitting) => {
+            if (submitBtn) submitBtn.disabled = isSubmitting;
+            if (submitText) {
+                submitText.classList.toggle('hidden', isSubmitting);
+                submitText.classList.toggle('inline-flex', !isSubmitting);
+            }
+            if (submitLoading) {
+                submitLoading.classList.toggle('hidden', !isSubmitting);
+                submitLoading.classList.toggle('inline-flex', isSubmitting);
+            }
+        };
+
+        const escapeHtml = (str) => {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        };
+
+        const truncateFileName = (name, max = 24) => {
+            if (!name || typeof name !== 'string') return '';
+            const trimmed = name.trim();
+            if (trimmed.length <= max) return trimmed;
+            return trimmed.slice(0, max).trim() + '...';
+        };
+
+        const updateInvitationStatusText = () => {
+            if (!fileStatus) return;
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                const fullName = fileInput.files[0].name;
+                const displayName = truncateFileName(fullName, 24);
+                fileStatus.innerHTML = `File baru: <span class="font-semibold text-emerald-600 dark:text-emerald-400 inline-block max-w-xs truncate align-bottom" title="${escapeHtml(fullName)}">${escapeHtml(displayName)}</span> (menggantikan file sebelumnya).`;
+            } else if (currentExistingInvitationName) {
+                const displayName = truncateFileName(currentExistingInvitationName, 24);
+                fileStatus.innerHTML = `Tersimpan: <span class="font-semibold text-blue-600 dark:text-blue-400 inline-block max-w-xs truncate align-bottom" title="${escapeHtml(currentExistingInvitationName)}">${escapeHtml(displayName)}</span> (pilih baru untuk mengganti).`;
+            } else {
+                fileStatus.textContent = 'Format PDF, maks. 10 MB (opsional).';
+            }
+        };
+
+        fileInput?.addEventListener('change', updateInvitationStatusText);
+
+        const showErrorAlert = (msg) => {
+            if (!errorAlert || !errorMessage) return;
+            errorMessage.textContent = msg;
+            errorAlert.classList.remove('hidden');
+            if (scrollContainer) {
+                scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        const hideErrorAlert = () => {
+            if (!errorAlert) return;
+            errorAlert.classList.add('hidden');
+            if (errorMessage) errorMessage.textContent = '';
+        };
+
+        btnDismissError?.addEventListener('click', hideErrorAlert);
+
         const syncLocationDisclosure = () => {
             locationWrapper?.classList.toggle('hidden', roomField.value !== 'other');
         };
 
         const showDialog = () => {
             syncLocationDisclosure();
-            if (!dialog.open) dialog.showModal();
+            if (window.HSOverlay && typeof window.HSOverlay.open === 'function') {
+                window.HSOverlay.open(dialog);
+            } else {
+                dialog.classList.remove('hidden');
+            }
         };
 
-        const openCreateDialog = () => {
-            form.reset();
-            invitationExisting?.classList.add('hidden');
-            form.action = dialog.dataset.storeUrl || '';
-            if (title) title.textContent = 'Tambah Item Agenda Banmus';
-            showDialog();
+        const hideDialog = () => {
+            if (window.HSOverlay && typeof window.HSOverlay.close === 'function') {
+                window.HSOverlay.close(dialog);
+            } else {
+                dialog.classList.add('hidden');
+            }
+        };
+
+        const syncFormDisplay = (agendaType, meetingMode = 'proyeksi') => {
+            const isNonRapat = agendaType === 'non_rapat';
+
+            agendaTypeFields.forEach((input) => {
+                input.checked = input.value === (isNonRapat ? 'non_rapat' : 'rapat');
+            });
+
+            const periodeWrapper = dialog.querySelector('#banmus-periode-wrapper');
+            const labelTanggal = dialog.querySelector('label[for="field_tanggal"]');
+
+            if (isNonRapat) {
+                if (labelTanggal) labelTanggal.textContent = 'Tanggal Pelaksanaan';
+                periodeWrapper?.classList.add('hidden');
+                rapatModeWrapper?.classList.add('hidden');
+                nonRapatDatesWrapper?.classList.add('hidden');
+                pastiWrapper?.classList.remove('hidden');
+                statusOverrideWrapper?.classList.remove('hidden');
+            } else {
+                if (labelTanggal) labelTanggal.textContent = 'Tanggal Rapat';
+                if (labelPeriode) labelPeriode.textContent = 'Periode SK';
+                if (periodeField) periodeField.placeholder = 'Contoh: Juni–Juli 2026 atau Minggu ke-2 Juli';
+
+                periodeWrapper?.classList.remove('hidden');
+                rapatModeWrapper?.classList.remove('hidden');
+                nonRapatDatesWrapper?.classList.add('hidden');
+                statusOverrideWrapper?.classList.remove('hidden');
+
+                const isProyeksi = meetingMode === 'proyeksi';
+                if (isProyeksi) {
+                    btnModeProyeksi?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition bg-white text-amber-700 shadow-xs dark:bg-slate-800 dark:text-amber-400');
+                    btnModeProyeksi?.setAttribute('aria-selected', 'true');
+                    btnModePasti?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white');
+                    btnModePasti?.setAttribute('aria-selected', 'false');
+                    pastiWrapper?.classList.add('hidden');
+                } else {
+                    btnModeProyeksi?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white');
+                    btnModeProyeksi?.setAttribute('aria-selected', 'false');
+                    btnModePasti?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition bg-white text-emerald-700 shadow-xs dark:bg-slate-800 dark:text-emerald-400');
+                    btnModePasti?.setAttribute('aria-selected', 'true');
+                    pastiWrapper?.classList.remove('hidden');
+                }
+            }
+
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
         };
 
         const parseUnitIds = (value) => {
@@ -1281,39 +1606,41 @@
             }
         };
 
-        const openEditDialog = (item) => {
+        const populateItemForm = (item) => {
             form.reset();
-            form.action = (dialog.dataset.updateUrlTemplate || '')
-                .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
+            setSubmitting(false);
+            currentExistingInvitationName = item.undangan_file ? (item.undangan_nama_asli || 'undangan-rapat.pdf') : '';
+            updateInvitationStatusText();
 
-            if (title) title.textContent = 'Edit Item Agenda Banmus';
             field('field_agenda').value = item.agenda || '';
-            field('field_periode_label').value = item.periode_label || '';
-            const agendaType = ['rapat', 'non_rapat'].includes(item.jenis_agenda)
-                ? item.jenis_agenda
-                : 'rapat';
-            agendaTypeFields.forEach((input) => {
-                input.checked = input.value === agendaType;
-            });
-            dateField.value = item.tanggal || '';
-            field('field_jam_mulai').value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
-            field('field_jam_selesai').value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
-            field('field_catatan').value = item.catatan || '';
-            field('field_publikasi').value = item.publikasi || 'publik';
-            field('field_materi_url').value = item.materi_url || '';
-            field('field_materi_akses').value = item.materi_akses || 'publik';
-            field('field_stream_url').value = item.stream_url || '';
-            field('field_stream_akses').value = item.stream_akses || 'publik';
-            if (invitationName) invitationName.textContent = item.undangan_nama_asli || 'undangan-rapat.pdf';
-            invitationExisting?.classList.toggle('hidden', !item.undangan_file);
+            if (periodeField) periodeField.value = item.periode_label || '';
+            if (startDateField) startDateField.value = item.tanggal_mulai || '';
+            if (endDateField) endDateField.value = item.tanggal_selesai || '';
+
+            dateField.value = item.tanggal || item.tanggal_mulai || '';
+            if (startTimeField) startTimeField.value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
+            if (endTimeField) endTimeField.value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
+            if (field('field_catatan')) field('field_catatan').value = item.catatan || '';
+            if (field('field_publikasi')) field('field_publikasi').value = item.publikasi || 'publik';
+            if (statusOverrideField) {
+                statusOverrideField.value = ['ditunda', 'dibatalkan'].includes(item.status)
+                    ? item.status
+                    : '';
+            }
+            if (field('field_materi_url')) field('field_materi_url').value = item.materi_url || '';
+            if (field('field_materi_akses')) field('field_materi_akses').value = item.materi_akses || 'publik';
+            if (field('field_stream_url')) field('field_stream_url').value = item.stream_url || '';
+            if (field('field_stream_akses')) field('field_stream_akses').value = item.stream_akses || 'publik';
 
             if (item.ruangan_id) {
                 roomField.value = String(item.ruangan_id);
+                if (locationField) locationField.value = '';
             } else if (item.lokasi_lainnya) {
                 roomField.value = 'other';
                 if (locationField) locationField.value = item.lokasi_lainnya;
             } else {
                 roomField.value = '';
+                if (locationField) locationField.value = '';
             }
 
             const unitIds = parseUnitIds(item.unit_ids);
@@ -1321,8 +1648,86 @@
                 checkbox.checked = unitIds.includes(Number(checkbox.value));
             });
 
+            currentAgendaType = ['rapat', 'non_rapat'].includes(item.jenis_agenda)
+                ? item.jenis_agenda
+                : 'rapat';
+
+            if (currentAgendaType === 'non_rapat') {
+                currentMeetingMode = 'pasti';
+            } else {
+                const hasSchedule = Boolean(
+                    item.tanggal || item.jam_mulai || item.ruangan_id || (item.status && item.status !== 'proyeksi')
+                );
+                currentMeetingMode = hasSchedule ? 'pasti' : 'proyeksi';
+            }
+
+            syncFormDisplay(currentAgendaType, currentMeetingMode);
+            syncLocationDisclosure();
+        };
+
+        const openCreateDialog = () => {
+            form.reset();
+            hideErrorAlert();
+            setSubmitting(false);
+            currentExistingInvitationName = '';
+            updateInvitationStatusText();
+            form.action = dialog.dataset.storeUrl || '';
+            if (title) title.textContent = 'Tambah Item Agenda Banmus';
+            currentAgendaType = 'rapat';
+            currentMeetingMode = 'proyeksi';
+            if (statusOverrideField) {
+                statusOverrideField.value = '';
+            }
+            syncFormDisplay('rapat', 'proyeksi');
+            syncLocationDisclosure();
+            showDialog();
+            field('field_agenda')?.focus();
+        };
+
+        const openEditDialog = (item) => {
+            populateItemForm(item);
+            hideErrorAlert();
+            setSubmitting(false);
+            form.action = (dialog.dataset.updateUrlTemplate || '')
+                .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
+
+            if (title) title.textContent = 'Edit Item Agenda Banmus';
             showDialog();
         };
+
+        const openScheduleDialog = (item) => {
+            populateItemForm(item);
+            hideErrorAlert();
+            setSubmitting(false);
+            form.action = (dialog.dataset.updateUrlTemplate || '')
+                .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
+
+            if (title) title.textContent = 'Tetapkan Jadwal Agenda Banmus';
+            currentAgendaType = 'rapat';
+            currentMeetingMode = 'pasti';
+            syncFormDisplay('rapat', 'pasti');
+            showDialog();
+            setTimeout(() => dateField?.focus(), 150);
+        };
+
+        btnModeProyeksi?.addEventListener('click', () => {
+            currentMeetingMode = 'proyeksi';
+            syncFormDisplay('rapat', 'proyeksi');
+        });
+
+        btnModePasti?.addEventListener('click', () => {
+            currentMeetingMode = 'pasti';
+            syncFormDisplay('rapat', 'pasti');
+            dateField?.focus();
+        });
+
+        agendaTypeFields.forEach((radio) => {
+            radio.addEventListener('change', () => {
+                const selected = agendaTypeFields.find((r) => r.checked)?.value || 'rapat';
+                currentAgendaType = selected;
+                syncFormDisplay(currentAgendaType, currentMeetingMode);
+            });
+        });
 
         document.querySelectorAll('[data-banmus-item-open]').forEach((button) => {
             button.addEventListener('click', openCreateDialog);
@@ -1333,29 +1738,98 @@
                 try {
                     openEditDialog(JSON.parse(button.dataset.item || '{}'));
                 } catch {
-                    // Payload edit invalid: biarkan dialog tetap tertutup.
+                    // Invalid edit payload
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-banmus-item-schedule]').forEach((button) => {
+            button.addEventListener('click', () => {
+                try {
+                    openScheduleDialog(JSON.parse(button.dataset.item || '{}'));
+                } catch {
+                    // Invalid schedule payload
                 }
             });
         });
 
         dialog.querySelectorAll('[data-banmus-item-close]').forEach((button) => {
-            button.addEventListener('click', () => dialog.close());
+            button.addEventListener('click', hideDialog);
         });
 
         roomField.addEventListener('change', syncLocationDisclosure);
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            hideErrorAlert();
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            setSubmitting(true);
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await response.json();
+                    if (response.ok && data.status === 'success') {
+                        window.location.href = data.redirect_url || window.location.href;
+                        return;
+                    }
+                    showErrorAlert(data.message || 'Terjadi kesalahan saat menyimpan item agenda.');
+                } else if (!response.ok) {
+                    showErrorAlert('Gagal memproses permohonan ke server (Kode: ' + response.status + ').');
+                } else {
+                    window.location.reload();
+                    return;
+                }
+            } catch {
+                showErrorAlert('Terjadi gangguan koneksi internet. Silakan periksa jaringan dan coba kembali.');
+            } finally {
+                setSubmitting(false);
+            }
+        });
+
+        const checkOldFlashdata = () => {
+            const oldItemRaw = dialog.dataset.oldItem;
+            if (!oldItemRaw) return;
+
+            try {
+                const oldItem = JSON.parse(oldItemRaw);
+                populateItemForm(oldItem);
+                showDialog();
+
+                const oldError = dialog.dataset.oldError;
+                if (oldError) {
+                    showErrorAlert(oldError);
+                }
+            } catch {
+                // Ignore parse errors
+            }
+        };
+
+        checkOldFlashdata();
     };
 
-    document.addEventListener('turbo:load', initializeBanmusItemWorkspace);
-    document.addEventListener('turbo:before-cache', () => {
-        const dialog = document.querySelector('[data-banmus-item-dialog]');
-        if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close();
-    });
+    document.addEventListener('DOMContentLoaded', initializeBanmusItemWorkspace);
 })();
 
 (() => {
     const initializeNotulenUploadWorkspace = () => {
         const modal = document.getElementById('modal_upload_notulen');
-        if (!(modal instanceof HTMLDialogElement)) return;
+        if (!modal) return;
         if (modal.dataset.initialized === 'true') return;
         modal.dataset.initialized = 'true';
 
@@ -1366,19 +1840,18 @@
         const backdropBtn = document.getElementById('um_backdrop_btn');
         const retryBtn    = document.getElementById('um_retry_btn');
         const fileInput   = document.getElementById('modal_audio_file');
+        let selectedAgendaTitle = '';
 
-        const judulInput  = document.getElementById('modal_judul_rapat');
-
-        const jadwalType  = document.getElementById('modal_jadwal_type');
-        const jadwalId    = document.getElementById('modal_jadwal_id');
+        const jadwalType          = document.getElementById('modal_jadwal_type');
+        const subFilter           = document.getElementById('modal_sub_filter');
+        const subFilterLabel      = document.getElementById('modal_sub_filter_label');
+        const jadwalId            = document.getElementById('modal_jadwal_id');
+        const agendaCount         = document.getElementById('um_agenda_count');
         const agendaDropdown      = document.getElementById('um_agenda_dropdown');
         const agendaTrigger       = document.getElementById('um_agenda_trigger');
         const agendaSelectedLabel = document.getElementById('um_agenda_selected_label');
         const agendaSearchInput   = document.getElementById('um_agenda_search_input');
         const agendaOptionsList   = document.getElementById('um_agenda_options_list');
-
-
-
 
         // Dropzone refs
         const dropzone    = document.getElementById('um_dropzone');
@@ -1394,6 +1867,54 @@
         const confirmKeepBtn   = document.getElementById('um_confirm_keep_btn');
         const confirmCancelBtn = document.getElementById('um_confirm_cancel_btn');
         let pendingCloseAction = null;
+
+        const submitText    = document.getElementById('um_submit_btn_text');
+        const submitLoading = document.getElementById('um_submit_btn_loading');
+        const btnLabel      = document.getElementById('um_btn_label');
+        const spinnerLabel  = document.getElementById('um_spinner_label');
+        const spinner       = document.getElementById('um_spinner');
+        const btnIcon       = document.getElementById('um_btn_icon');
+
+        const setUploadSubmitting = (isSubmitting, label = 'Unggah Rekaman') => {
+            if (submitBtn) submitBtn.disabled = isSubmitting;
+            if (btnLabel && label) btnLabel.textContent = label;
+            if (spinnerLabel && label) spinnerLabel.textContent = label;
+
+            if (submitText) {
+                submitText.classList.toggle('hidden', isSubmitting);
+                submitText.classList.toggle('inline-flex', !isSubmitting);
+            }
+            if (submitLoading) {
+                submitLoading.classList.toggle('hidden', !isSubmitting);
+                submitLoading.classList.toggle('inline-flex', isSubmitting);
+            }
+            if (spinner) {
+                spinner.classList.toggle('hidden', !isSubmitting);
+            }
+            if (btnIcon) {
+                btnIcon.classList.toggle('hidden', isSubmitting);
+            }
+        };
+
+        setUploadSubmitting(false);
+
+        function openOverlay(el) {
+            if (!el) return;
+            if (window.HSOverlay && typeof window.HSOverlay.open === 'function') {
+                window.HSOverlay.open(el);
+            } else if (typeof el.showModal === 'function') {
+                el.showModal();
+            }
+        }
+
+        function closeOverlay(el) {
+            if (!el) return;
+            if (window.HSOverlay && typeof window.HSOverlay.close === 'function') {
+                window.HSOverlay.close(el);
+            } else if (typeof el.close === 'function') {
+                el.close();
+            }
+        }
 
         // Server config dari data attributes
         const UPLOAD_TOKEN = modal.dataset.uploadToken || '';
@@ -1427,8 +1948,8 @@
 
         function openConfirmDialog(onConfirm) {
             pendingCloseAction = onConfirm;
-            if (confirmDialog instanceof HTMLDialogElement) {
-                confirmDialog.showModal();
+            if (confirmDialog) {
+                openOverlay(confirmDialog);
                 rerenderIcons();
             }
         }
@@ -1436,13 +1957,13 @@
         if (confirmKeepBtn) {
             confirmKeepBtn.addEventListener('click', () => {
                 pendingCloseAction = null;
-                if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+                closeOverlay(confirmDialog);
             });
         }
 
         if (confirmCancelBtn) {
             confirmCancelBtn.addEventListener('click', () => {
-                if (confirmDialog instanceof HTMLDialogElement) confirmDialog.close();
+                closeOverlay(confirmDialog);
                 if (typeof pendingCloseAction === 'function') {
                     pendingCloseAction();
                     pendingCloseAction = null;
@@ -1526,25 +2047,65 @@
             });
         }
 
+        const presetCard        = document.getElementById('um_preset_card');
+        const manualPickerGroup = document.getElementById('um_manual_picker_group');
+        const unlockPresetBtn   = document.getElementById('um_unlock_preset_btn');
+
         const presetType  = modal.dataset.presetType || '';
         const presetId    = parseInt(modal.dataset.presetId || '0', 10);
         const presetTitle = modal.dataset.presetTitle || '';
         const presetLabel = modal.dataset.presetLabel || '';
+        let isPresetLocked = Boolean(presetId > 0 && presetType);
 
         function applyPresetIfAvailable() {
-            if (presetId > 0 && presetType) {
+            if (presetId > 0 && presetType && isPresetLocked) {
+                if (presetCard) presetCard.classList.remove('hidden');
+                if (manualPickerGroup) manualPickerGroup.classList.add('hidden');
                 if (jadwalType) {
                     jadwalType.value = presetType;
                     jadwalType.disabled = true;
+                    jadwalType.setAttribute('aria-disabled', 'true');
+                }
+                if (subFilter) {
+                    subFilter.disabled = true;
+                    subFilter.setAttribute('aria-disabled', 'true');
                 }
                 if (agendaTrigger) {
                     agendaTrigger.disabled = true;
-                    agendaTrigger.classList.add('cursor-not-allowed', 'opacity-70', 'bg-base-200');
+                    agendaTrigger.setAttribute('aria-disabled', 'true');
+                    agendaTrigger.classList.add('cursor-not-allowed', 'opacity-70', 'bg-slate-100', 'dark:bg-slate-800');
                 }
                 selectAgendaItem(String(presetId), presetTitle, presetLabel);
                 return true;
             }
             return false;
+        }
+
+        if (unlockPresetBtn) {
+            unlockPresetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                isPresetLocked = false;
+                if (presetCard) presetCard.classList.add('hidden');
+                if (manualPickerGroup) manualPickerGroup.classList.remove('hidden');
+                if (jadwalType) {
+                    jadwalType.disabled = false;
+                    jadwalType.removeAttribute('aria-disabled');
+                }
+                if (subFilter) {
+                    subFilter.disabled = false;
+                    subFilter.removeAttribute('aria-disabled');
+                }
+                if (agendaTrigger) {
+                    agendaTrigger.disabled = false;
+                    agendaTrigger.removeAttribute('aria-disabled');
+                    agendaTrigger.classList.remove('cursor-not-allowed', 'opacity-70', 'bg-slate-100', 'dark:bg-slate-800');
+                }
+                updateJadwalOptions();
+                rerenderIcons();
+                if (agendaTrigger) {
+                    setTimeout(() => agendaTrigger.focus(), 50);
+                }
+            });
         }
 
         function resetForm() {
@@ -1572,24 +2133,43 @@
             if (fileInput) fileInput.value = '';
 
             if (presetId > 0 && presetType) {
+                isPresetLocked = true;
                 applyPresetIfAvailable();
             } else {
-                if (judulInput) judulInput.value = '';
+                isPresetLocked = false;
+                if (presetCard) presetCard.classList.add('hidden');
+                if (manualPickerGroup) manualPickerGroup.classList.remove('hidden');
+                if (jadwalType) {
+                    jadwalType.disabled = false;
+                    jadwalType.removeAttribute('aria-disabled');
+                }
+                if (subFilter) {
+                    subFilter.disabled = false;
+                    subFilter.removeAttribute('aria-disabled');
+                    subFilter.value = '';
+                }
+                if (agendaTrigger) {
+                    agendaTrigger.disabled = false;
+                    agendaTrigger.removeAttribute('aria-disabled');
+                    agendaTrigger.classList.remove('cursor-not-allowed', 'opacity-70', 'bg-slate-100', 'dark:bg-slate-800');
+                }
+                selectedAgendaTitle = '';
                 if (jadwalId) jadwalId.value = '';
                 if (agendaSearchInput) agendaSearchInput.value = '';
-                if (agendaSelectedLabel) agendaSelectedLabel.textContent = '— Tanpa Relasi Agenda —';
+                if (agendaSelectedLabel) {
+                    agendaSelectedLabel.textContent = '— Tanpa Relasi Agenda —';
+                    agendaSelectedLabel.title = '— Tanpa Relasi Agenda —';
+                }
                 if (typeof renderAgendaOptions === 'function') renderAgendaOptions('');
+            }
+
+            if (agendaDropdown && window.HSDropdown) {
+                window.HSDropdown.close(agendaDropdown);
             }
 
             showDropzoneIdle();
 
-            if (submitBtn) submitBtn.disabled = false;
-            const spinner = document.getElementById('um_spinner');
-            const btnIcon = document.getElementById('um_btn_icon');
-            const btnLabel = document.getElementById('um_btn_label');
-            if (spinner) spinner.classList.add('hidden');
-            if (btnIcon) btnIcon.classList.remove('hidden');
-            if (btnLabel) btnLabel.textContent = 'Unggah Rekaman';
+            setUploadSubmitting(false, 'Unggah Rekaman');
 
             setProgress(0, 'Mengunggah rekaman ke server...');
             const transferInfo = document.getElementById('upload_transfer_info');
@@ -1610,15 +2190,59 @@
 
         function selectAgendaItem(id, title, label) {
             if (jadwalId) jadwalId.value = id || '';
+            const selectedLabel = label || '— Tanpa Relasi Agenda —';
             if (agendaSelectedLabel) {
-                agendaSelectedLabel.textContent = label || '— Tanpa Relasi Agenda —';
+                agendaSelectedLabel.textContent = selectedLabel;
+                agendaSelectedLabel.title = selectedLabel;
             }
-            if (judulInput) {
-                judulInput.value = title || '';
+            selectedAgendaTitle = title || '';
+
+            if (agendaDropdown && window.HSDropdown) {
+                window.HSDropdown.close(agendaDropdown);
             }
 
             if (document.activeElement && typeof document.activeElement.blur === 'function') {
                 document.activeElement.blur();
+            }
+        }
+
+        function updateSubFilterOptions() {
+            if (!subFilter || !jadwalId || !jadwalType) return;
+            subFilter.innerHTML = '';
+
+            const isBanmus = jadwalType.value === 'banmus';
+            if (subFilterLabel) {
+                subFilterLabel.textContent = isBanmus ? 'Filter Dokumen SK' : 'Filter Komisi / Unit';
+            }
+
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = isBanmus ? 'Semua Dokumen SK' : 'Semua Komisi / Unit';
+            subFilter.appendChild(defaultOpt);
+
+            try {
+                if (isBanmus) {
+                    const docs = JSON.parse(jadwalId.dataset.banmusDocs || '[]');
+                    docs.forEach((doc) => {
+                        const opt = document.createElement('option');
+                        opt.value = String(doc.id);
+                        const parts = [];
+                        if (doc.nomor_sk) parts.push(`SK ${doc.nomor_sk}`);
+                        if (doc.masa_persidangan) parts.push(doc.masa_persidangan);
+                        opt.textContent = parts.length > 0 ? parts.join(' — ') : (doc.judul || `Dokumen #${doc.id}`);
+                        subFilter.appendChild(opt);
+                    });
+                } else {
+                    const units = JSON.parse(jadwalId.dataset.unitList || '[]');
+                    units.forEach((unit) => {
+                        const opt = document.createElement('option');
+                        opt.value = unit.nama;
+                        opt.textContent = unit.nama;
+                        subFilter.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                /* fallback empty */
             }
         }
 
@@ -1627,21 +2251,62 @@
             agendaOptionsList.innerHTML = '';
 
             const term = (searchTerm || '').trim().toLowerCase();
+            const tokens = term.split(/\s+/).filter(Boolean);
+            const selectedSub = subFilter ? subFilter.value : '';
+            const currentType = jadwalType ? jadwalType.value : 'umum';
+
             const filtered = currentAgendaItems.filter((item) => {
-                if (!term) return true;
-                const titleMatch = (item.title || '').toLowerCase().includes(term);
-                const labelMatch = (item.label || '').toLowerCase().includes(term);
-                const dateMatch  = (item.date || '').toLowerCase().includes(term);
-                return titleMatch || labelMatch || dateMatch;
+                if (selectedSub) {
+                    if (currentType === 'banmus') {
+                        if (String(item.doc_id || '') !== String(selectedSub)) {
+                            return false;
+                        }
+                    } else {
+                        const inList = Array.isArray(item.units_list) && item.units_list.some((u) => String(u).toLowerCase() === selectedSub.toLowerCase());
+                        const inStr = (item.unit || '').toLowerCase().includes(selectedSub.toLowerCase());
+                        if (!inList && !inStr) {
+                            return false;
+                        }
+                    }
+                }
+
+                if (tokens.length > 0) {
+                    const haystack = [
+                        item.title,
+                        item.date,
+                        item.time,
+                        item.location,
+                        item.sk_nomor,
+                        item.sk_judul,
+                        item.session_term,
+                        item.unit,
+                        item.external
+                    ].filter(Boolean).join(' ').toLowerCase();
+
+                    return tokens.every((tok) => haystack.includes(tok));
+                }
+
+                return true;
             });
+
+            if (agendaCount) {
+                agendaCount.textContent = `${filtered.length} agenda`;
+            }
 
             if (!term || 'tanpa relasi agenda'.includes(term)) {
                 const liNone = document.createElement('li');
+                liNone.className = 'w-full min-w-0';
                 const btnNone = document.createElement('button');
                 btnNone.type = 'button';
+                btnNone.setAttribute('role', 'option');
                 const isSelected = !jadwalId || !jadwalId.value;
-                btnNone.className = 'flex items-center justify-between py-1.5 px-2 rounded hover:bg-base-200 text-xs ' + (isSelected ? 'active font-bold bg-base-200 text-base-content' : 'text-base-content/70');
-                btnNone.innerHTML = '<span>— Tanpa Relasi Agenda —</span>';
+                btnNone.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                btnNone.className = 'w-full flex items-center justify-between p-2.5 rounded-lg text-xs transition cursor-pointer text-left min-w-0 border outline-none focus:outline-none focus-visible:outline-none ' +
+                    (isSelected
+                        ? 'bg-blue-50/80 border-blue-500 text-blue-900 dark:bg-blue-950/50 dark:border-blue-500 dark:text-blue-200 font-semibold'
+                        : 'bg-slate-50/80 border-dashed border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 dark:bg-slate-900/60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900');
+                btnNone.innerHTML = '<span class="truncate min-w-0 flex-1 font-medium">— Tanpa Relasi Agenda —</span>' +
+                    (isSelected ? '<span class="text-[11px] font-semibold text-blue-700 dark:text-blue-300 shrink-0 bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded border border-blue-300 dark:border-blue-700">Terpilih</span>' : '');
                 btnNone.addEventListener('click', (e) => {
                     e.preventDefault();
                     selectAgendaItem('', '', '— Tanpa Relasi Agenda —');
@@ -1650,31 +2315,115 @@
                 agendaOptionsList.appendChild(liNone);
             }
 
-            if (filtered.length === 0 && term) {
+            if (filtered.length === 0 && (term || selectedSub)) {
                 const liEmpty = document.createElement('li');
-                liEmpty.className = 'py-3 text-center text-xs text-base-content/40 italic';
-                liEmpty.textContent = 'Tidak ada agenda yang cocok';
+                liEmpty.className = 'p-4 text-center text-xs text-slate-500 dark:text-slate-400 italic border border-dashed border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/50 dark:bg-slate-900/40';
+                liEmpty.textContent = 'Tidak ada agenda yang cocok dengan filter / pencarian';
                 agendaOptionsList.appendChild(liEmpty);
                 return;
             }
 
             filtered.forEach((item) => {
-                const isSelected = jadwalId && jadwalId.value === item.id;
+                const isSelected = jadwalId && String(jadwalId.value) === String(item.id);
                 const li = document.createElement('li');
+                li.className = 'w-full min-w-0';
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'flex flex-col items-start gap-0.5 py-1.5 px-2 rounded hover:bg-base-200 text-left ' + (isSelected ? 'active bg-primary/10 text-primary font-semibold' : 'text-base-content');
+                btn.setAttribute('role', 'option');
+                btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                btn.className = 'w-full flex flex-col items-start p-2.5 rounded-lg text-left transition cursor-pointer min-w-0 border outline-none focus:outline-none focus-visible:outline-none ' +
+                    (isSelected
+                        ? 'bg-blue-50/80 border-blue-500 dark:bg-blue-950/40 dark:border-blue-500'
+                        : 'bg-slate-50/80 border-slate-200 hover:bg-slate-100/80 hover:border-blue-400 dark:bg-slate-900/60 dark:border-slate-700/80 dark:hover:bg-slate-900 dark:hover:border-slate-600');
 
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'text-xs font-semibold leading-snug line-clamp-2';
-                titleSpan.textContent = item.title;
+                const headerRow = document.createElement('div');
+                headerRow.className = 'flex items-start justify-between gap-2 w-full min-w-0 mb-1';
 
-                const dateSpan = document.createElement('span');
-                dateSpan.className = 'text-[10px] font-mono text-base-content/50';
-                dateSpan.textContent = item.date || item.label;
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'text-xs font-semibold leading-snug break-words flex-1 min-w-0 ' +
+                    (isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-slate-900 dark:text-slate-100');
+                titleDiv.textContent = item.title;
+                headerRow.appendChild(titleDiv);
 
-                btn.appendChild(titleSpan);
-                btn.appendChild(dateSpan);
+                if (isSelected) {
+                    const selBadge = document.createElement('span');
+                    selBadge.className = 'text-[11px] font-semibold text-blue-700 dark:text-blue-300 shrink-0 bg-blue-100/80 dark:bg-blue-900/60 px-2 py-0.5 rounded border border-blue-300 dark:border-blue-700';
+                    selBadge.textContent = 'Terpilih';
+                    headerRow.appendChild(selBadge);
+                }
+
+                btn.appendChild(headerRow);
+
+                if (item.date) {
+                    const rowDate = document.createElement('div');
+                    rowDate.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                    const labelCal = document.createElement('span');
+                    labelCal.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                    labelCal.textContent = 'Tanggal & Waktu:';
+                    const valCal = document.createElement('span');
+                    valCal.className = 'font-semibold text-slate-800 dark:text-slate-200 font-mono text-[11px]';
+                    valCal.textContent = item.date + (item.time ? ' • ' + item.time : '');
+                    rowDate.appendChild(labelCal);
+                    rowDate.appendChild(valCal);
+                    btn.appendChild(rowDate);
+                }
+
+                if (currentType === 'banmus') {
+                    if (item.sk_nomor) {
+                        const rowSk = document.createElement('div');
+                        rowSk.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                        const labelSk = document.createElement('span');
+                        labelSk.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                        labelSk.textContent = 'Dokumen SK:';
+                        const valSk = document.createElement('span');
+                        valSk.className = 'font-semibold text-amber-800 dark:text-amber-300 font-mono text-[11px]';
+                        valSk.textContent = `SK ${item.sk_nomor}${item.session_term ? ' (' + item.session_term + ')' : ''}`;
+                        rowSk.appendChild(labelSk);
+                        rowSk.appendChild(valSk);
+                        btn.appendChild(rowSk);
+                    }
+                } else {
+                    if (item.unit) {
+                        const rowUnit = document.createElement('div');
+                        rowUnit.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                        const labelUnit = document.createElement('span');
+                        labelUnit.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                        labelUnit.textContent = 'Komisi / Unit:';
+                        const valUnit = document.createElement('span');
+                        valUnit.className = 'font-semibold text-blue-800 dark:text-blue-300 text-[11px]';
+                        valUnit.textContent = item.unit;
+                        rowUnit.appendChild(labelUnit);
+                        rowUnit.appendChild(valUnit);
+                        btn.appendChild(rowUnit);
+                    }
+                    if (item.external) {
+                        const rowExt = document.createElement('div');
+                        rowExt.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mb-1 w-full min-w-0';
+                        const labelExt = document.createElement('span');
+                        labelExt.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                        labelExt.textContent = 'Mitra Kerja:';
+                        const valExt = document.createElement('span');
+                        valExt.className = 'font-semibold text-purple-800 dark:text-purple-300 text-[11px]';
+                        valExt.textContent = item.external;
+                        rowExt.appendChild(labelExt);
+                        rowExt.appendChild(valExt);
+                        btn.appendChild(rowExt);
+                    }
+                }
+
+                if (item.location) {
+                    const rowLoc = document.createElement('div');
+                    rowLoc.className = 'flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 w-full min-w-0';
+                    const labelLoc = document.createElement('span');
+                    labelLoc.className = 'text-slate-500 dark:text-slate-400 font-medium text-[11px] shrink-0';
+                    labelLoc.textContent = 'Ruangan:';
+                    const valLoc = document.createElement('span');
+                    valLoc.className = 'font-semibold text-slate-800 dark:text-slate-200 text-[11px] truncate';
+                    valLoc.textContent = item.location;
+                    rowLoc.appendChild(labelLoc);
+                    rowLoc.appendChild(valLoc);
+                    btn.appendChild(rowLoc);
+                }
 
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -1684,6 +2433,8 @@
                 li.appendChild(btn);
                 agendaOptionsList.appendChild(li);
             });
+
+            rerenderIcons();
         }
 
         function updateJadwalOptions() {
@@ -1693,8 +2444,11 @@
             try {
                 generalOpts = JSON.parse(jadwalId.dataset.generalOptions || '[]');
                 banmusOpts = JSON.parse(jadwalId.dataset.banmusOptions || '[]');
-            } catch (e) { /* fallback empty */ }
+            } catch (e) {
+                /* fallback empty */
+            }
 
+            updateSubFilterOptions();
             currentAgendaItems = (jadwalType.value === 'banmus') ? banmusOpts : generalOpts;
             if (agendaSearchInput) agendaSearchInput.value = '';
             selectAgendaItem('', '', '— Tanpa Relasi Agenda —');
@@ -1707,15 +2461,81 @@
             });
         }
 
+        if (subFilter) {
+            subFilter.addEventListener('change', () => {
+                const term = agendaSearchInput ? agendaSearchInput.value : '';
+                renderAgendaOptions(term);
+            });
+        }
+
+        if (agendaDropdown) {
+            agendaDropdown.addEventListener('open.hs.dropdown', () => {
+                if (agendaSearchInput) {
+                    setTimeout(() => agendaSearchInput.focus(), 50);
+                }
+            });
+        }
+
+        let agendaSearchTimer = null;
         if (agendaSearchInput) {
+            agendaSearchInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
             agendaSearchInput.addEventListener('input', () => {
-                renderAgendaOptions(agendaSearchInput.value);
+                clearTimeout(agendaSearchTimer);
+                agendaSearchTimer = setTimeout(() => {
+                    renderAgendaOptions(agendaSearchInput.value);
+                }, 150);
             });
             agendaSearchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const firstOption = agendaOptionsList ? agendaOptionsList.querySelector('button[role="option"]') : null;
+                    if (firstOption) firstOption.click();
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const firstOption = agendaOptionsList ? agendaOptionsList.querySelector('button[role="option"]') : null;
+                    if (firstOption) firstOption.focus();
+                } else if (e.key === 'Escape') {
                     e.stopPropagation();
                     if (document.activeElement && typeof document.activeElement.blur === 'function') {
                         document.activeElement.blur();
+                    }
+                    if (agendaDropdown && window.HSDropdown) {
+                        window.HSDropdown.close(agendaDropdown);
+                    }
+                }
+            });
+        }
+
+        if (agendaOptionsList) {
+            agendaOptionsList.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            agendaOptionsList.addEventListener('keydown', (e) => {
+                const currentBtn = e.target.closest('button[role="option"]');
+                if (!currentBtn) return;
+                const allButtons = Array.from(agendaOptionsList.querySelectorAll('button[role="option"]'));
+                const currentIndex = allButtons.indexOf(currentBtn);
+                if (currentIndex === -1) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = allButtons[currentIndex + 1] || allButtons[0];
+                    if (next) next.focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (currentIndex === 0) {
+                        if (agendaSearchInput) agendaSearchInput.focus();
+                    } else {
+                        const prev = allButtons[currentIndex - 1];
+                        if (prev) prev.focus();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    if (agendaTrigger) agendaTrigger.focus();
+                    if (agendaDropdown && window.HSDropdown) {
+                        window.HSDropdown.close(agendaDropdown);
                     }
                 }
             });
@@ -1726,9 +2546,14 @@
         } else {
             // Auto open modal on page load if preset was requested
             setTimeout(() => {
-                if (modal && !modal.open) {
-                    modal.showModal();
+                if (modal) {
+                    resetForm();
+                    applyPresetIfAvailable();
+                    openOverlay(modal);
                     rerenderIcons();
+                    if (isPresetLocked && dropzone) {
+                        setTimeout(() => dropzone.focus(), 50);
+                    }
                 }
             }, 100);
         }
@@ -1739,11 +2564,10 @@
                 if (!applyPresetIfAvailable()) {
                     updateJadwalOptions();
                 }
-                modal.showModal();
+                openOverlay(modal);
                 rerenderIcons();
             });
         }
-
 
         function confirmCancelUpload(onConfirmed) {
             if (isUploading) {
@@ -1757,30 +2581,29 @@
             }
         }
 
-        // Penjagaan tombol Escape native HTML5 <dialog>
         modal.addEventListener('cancel', (e) => {
             if (isUploading) {
                 e.preventDefault();
-                confirmCancelUpload(() => modal.close());
+                confirmCancelUpload(() => closeOverlay(modal));
             }
         });
 
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                confirmCancelUpload(() => modal.close());
+                confirmCancelUpload(() => closeOverlay(modal));
             });
         }
 
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
-                confirmCancelUpload(() => modal.close());
+                confirmCancelUpload(() => closeOverlay(modal));
             });
         }
 
         if (backdropBtn) {
             backdropBtn.addEventListener('click', () => {
                 if (isUploading) return;
-                modal.close();
+                closeOverlay(modal);
             });
         }
 
@@ -1791,12 +2614,15 @@
             });
         }
 
-        modal.addEventListener('close', () => {
+        const handleModalClose = () => {
             if (activeUploadId && !isCancelling) {
                 doCancel(activeUploadId);
             }
             resetForm();
-        });
+        };
+
+        modal.addEventListener('close', handleModalClose);
+        modal.addEventListener('close.hs.overlay', handleModalClose);
 
         if (fileInput) {
             fileInput.addEventListener('change', () => {
@@ -1883,25 +2709,27 @@
             const bar = document.getElementById('upload_progress_bar');
             const percent = document.getElementById('upload_progress_percent');
             const text = document.getElementById('upload_status_text');
-            if (bar) bar.value = pct;
-            if (percent) percent.textContent = Math.round(pct) + '%';
+            const rounded = Math.round(pct);
+            if (bar) {
+                if ('value' in bar) bar.value = pct;
+                bar.style.width = rounded + '%';
+                const parent = bar.parentElement;
+                if (parent && parent.getAttribute('role') === 'progressbar') {
+                    parent.setAttribute('aria-valuenow', String(rounded));
+                }
+            }
+            if (percent) percent.textContent = rounded + '%';
             if (text && msg !== undefined) text.textContent = msg;
         }
 
         function showError(msg, allowRetry) {
             isUploading = false;
-            if (submitBtn) submitBtn.disabled = false;
-            const spinner = document.getElementById('um_spinner');
-            const btnIcon = document.getElementById('um_btn_icon');
-            const btnLabel = document.getElementById('um_btn_label');
+            setUploadSubmitting(false, 'Kirim Rekaman');
             const warningBanner = document.getElementById('upload_warning_banner');
             const retryEl = document.getElementById('um_retry_btn');
             const errorText = document.getElementById('um_error_text');
             const errorBox = document.getElementById('um_error_box');
 
-            if (spinner) spinner.classList.add('hidden');
-            if (btnIcon) btnIcon.classList.remove('hidden');
-            if (btnLabel) btnLabel.textContent = 'Kirim Rekaman';
             if (warningBanner) warningBanner.classList.add('hidden');
 
             if (retryEl) {
@@ -2118,12 +2946,12 @@
             const fd = new FormData();
             fd.append('upload_id', uploadId);
 
-            const actualJadwalType = (presetId > 0 && presetType) ? presetType : (jadwalType ? jadwalType.value : 'umum');
-            const actualJadwalId   = (presetId > 0) ? String(presetId) : (jadwalId ? jadwalId.value : '');
+            const actualJadwalType = (presetId > 0 && presetType && isPresetLocked) ? presetType : (jadwalType ? jadwalType.value : 'umum');
+            const actualJadwalId   = (presetId > 0 && isPresetLocked) ? String(presetId) : (jadwalId ? jadwalId.value : '');
             fd.append('jadwal_type', actualJadwalType);
             fd.append('jadwal_id', actualJadwalId);
 
-            let finalTitle = judulInput && judulInput.value ? judulInput.value.trim() : (presetTitle || '');
+            let finalTitle = (isPresetLocked ? presetTitle : selectedAgendaTitle) || '';
             if (!finalTitle) {
                 const todayFormatted = new Intl.DateTimeFormat('id-ID', {
                     day: 'numeric', month: 'long', year: 'numeric'
@@ -2158,13 +2986,7 @@
             if (warningBanner) warningBanner.classList.remove('hidden');
 
             if (submitBtn) submitBtn.disabled = true;
-            const spinner = document.getElementById('um_spinner');
-            const btnIcon = document.getElementById('um_btn_icon');
-            const btnLabel = document.getElementById('um_btn_label');
-
-            if (spinner) spinner.classList.remove('hidden');
-            if (btnIcon) btnIcon.classList.add('hidden');
-            if (btnLabel) btnLabel.textContent = 'Mengunggah rekaman...';
+            setUploadSubmitting(true, 'Mengunggah rekaman...');
 
             uploadInChunks(file)
                 .then(uploadId => commitUpload(uploadId))
@@ -2175,11 +2997,7 @@
                     setProgress(100, 'Selesai! Mengalihkan ke halaman notulensi...');
                     if (res.redirect) {
                         setTimeout(() => {
-                            if (window.Turbo) {
-                                window.Turbo.visit(res.redirect);
-                            } else {
-                                window.location.href = res.redirect;
-                            }
+                            window.location.href = res.redirect;
                         }, 500);
                     }
                 })
@@ -2205,24 +3023,18 @@
         }
     };
 
-    document.addEventListener('turbo:load', initializeNotulenUploadWorkspace);
     if (document.readyState !== 'loading') {
         initializeNotulenUploadWorkspace();
     } else {
         document.addEventListener('DOMContentLoaded', initializeNotulenUploadWorkspace);
     }
-    document.addEventListener('turbo:before-cache', () => {
-        const modal = document.getElementById('modal_upload_notulen');
-        if (modal instanceof HTMLDialogElement && modal.open) modal.close();
-        const confirmDialog = document.getElementById('um_confirm_dialog');
-        if (confirmDialog instanceof HTMLDialogElement && confirmDialog.open) confirmDialog.close();
-    });
 })();
 
 
 (() => {
     let notulenPollTimer = null;
     let notulenPollAbort = null;
+    let notulenVisibilityHandler = null;
     let isNotulenDirty = false;
 
     const initializeNotulenShowWorkspace = () => {
@@ -2235,44 +3047,15 @@
             notulenPollAbort.abort();
             notulenPollAbort = null;
         }
+        if (notulenVisibilityHandler) {
+            document.removeEventListener('visibilitychange', notulenVisibilityHandler);
+            notulenVisibilityHandler = null;
+        }
         isNotulenDirty = false;
 
         const textarea = document.getElementById('ringkasan_eksekutif');
         const form = document.getElementById('form_update_minutes');
-        const dirtyBadge = document.getElementById('dirty_indicator');
         const audioPlayer = document.getElementById('audio_player');
-
-        // Main Tabs Switcher (Ringkasan & Risalah)
-        const tabBtns = document.querySelectorAll('.notulen-main-tab-btn');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetId = btn.dataset.tabTarget;
-                if (!targetId) return;
-
-                // Deactivate all tab buttons
-                tabBtns.forEach(b => {
-                    b.setAttribute('aria-selected', 'false');
-                    b.classList.remove('bg-base-100', 'text-base-content', 'shadow-xs', 'border', 'border-base-300/40');
-                    b.classList.add('text-base-content/70');
-                });
-
-                // Activate clicked button
-                btn.setAttribute('aria-selected', 'true');
-                btn.classList.add('bg-base-100', 'text-base-content', 'shadow-xs', 'border', 'border-base-300/40');
-                btn.classList.remove('text-base-content/70');
-
-                // Toggle panels
-                const panelRingkasan = document.getElementById('tab_panel_ringkasan');
-                const panelRisalah = document.getElementById('tab_panel_risalah');
-                if (panelRingkasan) panelRingkasan.classList.toggle('hidden', targetId !== 'tab_panel_ringkasan');
-                if (panelRisalah) panelRisalah.classList.toggle('hidden', targetId !== 'tab_panel_risalah');
-
-                // Trigger lucide icons inside revealed tab if needed
-                if (window.lucide && window.lucide.createIcons) {
-                    window.lucide.createIcons();
-                }
-            });
-        });
 
         // Toggle Mode Sunting vs Preview Naskah Risalah
         const btnToggleEdit = document.getElementById('btn_toggle_edit_risalah');
@@ -2321,9 +3104,6 @@
                     if (t.value !== initialSectionValues.get(t)) anyDirty = true;
                 });
                 isNotulenDirty = anyDirty;
-                if (dirtyBadge) {
-                    dirtyBadge.classList.toggle('hidden', !isNotulenDirty);
-                }
             });
         });
 
@@ -2361,7 +3141,6 @@
                 if (response.ok && data.status === 'success') {
                     isNotulenDirty = false;
                     sectionTextareas.forEach((t) => initialSectionValues.set(t, t.value));
-                    if (dirtyBadge) dirtyBadge.classList.add('hidden');
                     
                     if (previewTextEl) {
                         const s1 = document.getElementById('section_ringkasan')?.value || '';
@@ -2383,7 +3162,15 @@
                         if (window.lucide) window.lucide.createIcons();
                     }
                 } else {
-                    alert(data.message || 'Gagal menyimpan draf risalah.');
+                    if (lastSavedTime) {
+                        lastSavedTime.innerHTML = '<span class="text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1"><i data-lucide="alert-circle" class="size-3.5"></i> ' + (data.message || 'Gagal menyimpan draf risalah.') + '</span>';
+                    }
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i data-lucide="alert-circle" class="size-4 text-rose-500"></i> Gagal Simpan';
+                    }
+                    if (window.lucide && window.lucide.createIcons) {
+                        window.lucide.createIcons();
+                    }
                 }
             } catch (err) {
                 console.error('Quick save error:', err);
@@ -2455,7 +3242,12 @@
 
         if (!activeStatuses.includes(initialStatus) || !statusUrl) return;
 
+        let isNotulenPolling = false;
         const poll = () => {
+            if (document.visibilityState !== 'visible') return;
+            if (isNotulenPolling) return;
+            isNotulenPolling = true;
+
             if (notulenPollAbort) notulenPollAbort.abort();
             notulenPollAbort = new AbortController();
 
@@ -2472,7 +3264,10 @@
                     const title = document.getElementById('live_status_title');
 
                     if (pct) pct.textContent = d.progress_percent + '%';
-                    if (bar) bar.value = d.progress_percent;
+                    if (bar) {
+                        bar.style.width = d.progress_percent + '%';
+                        bar.setAttribute('aria-valuenow', d.progress_percent);
+                    }
                     if (step) step.textContent = d.current_step || '-';
                     if (chunks) chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
                     if (title && d.current_step) title.textContent = d.current_step;
@@ -2484,7 +3279,20 @@
                         if (modelMetaEl) modelMetaEl.textContent = d.ai_model_label;
                     }
 
-                    // Update Stepper 5 Langkah
+                    const updateActivePill = (targetItemId) => {
+                        document.querySelectorAll('.notulen-active-pill').forEach(el => el.remove());
+                        if (!targetItemId) return;
+                        const item = document.getElementById(targetItemId);
+                        if (item && !item.querySelector('.notulen-active-pill')) {
+                            const pill = document.createElement('div');
+                            pill.className = 'notulen-active-pill';
+                            item.appendChild(pill);
+                        }
+                    };
+
+                    const prelineSpinnerHtml = '<span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-emerald-600 dark:text-emerald-400 rounded-full" role="status" aria-label="loading"></span>';
+
+                    // Stepper progress indicator
                     const chunkCircle = document.getElementById('step_chunking_circle');
                     const chunkStatus = document.getElementById('step_chunking_status');
                     const transCircle = document.getElementById('step_transcribing_circle');
@@ -2496,18 +3304,20 @@
 
                     if (['transcribing', 'summarizing', 'completed'].includes(d.status)) {
                         if (chunkCircle) chunkCircle.className = 'notulen-step-circle done';
-                        if (chunkStatus) chunkStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                        if (chunkStatus) chunkStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (chunkCircle) chunkCircle.className = 'notulen-step-circle active';
-                        if (chunkStatus) chunkStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Menyiapkan audio...';
+                        if (chunkStatus) chunkStatus.innerHTML = prelineSpinnerHtml + ' Menyiapkan audio...';
+                        updateActivePill('step_chunking_item');
                     }
 
                     if (['summarizing', 'completed'].includes(d.status)) {
                         if (transCircle) transCircle.className = 'notulen-step-circle done';
-                        if (transStatus) transStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                        if (transStatus) transStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                     } else if (d.status === 'transcribing') {
                         if (transCircle) transCircle.className = 'notulen-step-circle active';
-                        if (transStatus) transStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Mentranskripsi (' + d.progress_percent + '%)';
+                        if (transStatus) transStatus.innerHTML = prelineSpinnerHtml + ' Mentranskripsi (' + d.progress_percent + '%)';
+                        updateActivePill('step_transcribing_item');
                     } else if (['chunking', 'queued'].includes(d.status)) {
                         if (transCircle) transCircle.className = 'notulen-step-circle';
                         if (transStatus) transStatus.textContent = 'Menunggu';
@@ -2515,12 +3325,21 @@
 
                     if (d.status === 'completed') {
                         if (summCircle) summCircle.className = 'notulen-step-circle done';
-                        if (summStatus) summStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Selesai';
+                        if (summStatus) summStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Selesai';
                         if (compCircle) compCircle.className = 'notulen-step-circle done';
-                        if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 text-success"></i> Siap Ditinjau';
+                        if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Siap Ditinjau';
+                        updateActivePill(null);
+
+                        if (bar) {
+                            bar.style.width = '100%';
+                            bar.setAttribute('aria-valuenow', 100);
+                        }
+                        if (pct) pct.textContent = '100%';
+                        if (title) title.textContent = 'Pemrosesan selesai! Memuat naskah risalah...';
                     } else if (d.status === 'summarizing') {
                         if (summCircle) summCircle.className = 'notulen-step-circle active';
-                        if (summStatus) summStatus.innerHTML = '<span class="loading loading-spinner loading-xs text-base-content"></span> Menyusun risalah...';
+                        if (summStatus) summStatus.innerHTML = prelineSpinnerHtml + ' Menyusun risalah...';
+                        updateActivePill('step_summarizing_item');
                     } else {
                         if (summCircle) summCircle.className = 'notulen-step-circle';
                         if (summStatus) summStatus.textContent = 'Menunggu';
@@ -2533,19 +3352,15 @@
                     }
 
                     if (d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled') {
+                        updateActivePill(null);
                         if (notulenPollTimer) {
                             clearInterval(notulenPollTimer);
                             notulenPollTimer = null;
                         }
-                        // Jika notulis sedang mengetik draf, jangan reload paksa yang merusak editan
                         if (isNotulenDirty) return;
 
                         setTimeout(() => {
-                            if (window.Turbo) {
-                                window.Turbo.visit(window.location.href, { action: 'replace' });
-                            } else {
-                                window.location.reload();
-                            }
+                            window.location.reload();
                         }, 1200);
                     }
                 })
@@ -2553,8 +3368,18 @@
                     if (e.name !== 'AbortError') {
                         console.warn('Poll error:', e);
                     }
+                })
+                .finally(() => {
+                    isNotulenPolling = false;
                 });
         };
+
+        notulenVisibilityHandler = () => {
+            if (document.visibilityState === 'visible' && notulenPollTimer) {
+                poll();
+            }
+        };
+        document.addEventListener('visibilitychange', notulenVisibilityHandler);
 
         notulenPollTimer = setInterval(poll, 3500);
     };
@@ -2567,17 +3392,13 @@
         }
     });
 
-    document.addEventListener('turbo:before-visit', (e) => {
-        if (isNotulenDirty) {
-            const confirmLeave = window.confirm('Terdapat perubahan draf risalah yang belum disimpan. Yakin ingin berpindah halaman?');
-            if (!confirmLeave) {
-                e.preventDefault();
-            }
-        }
-    });
+    if (document.readyState !== 'loading') {
+        initializeNotulenShowWorkspace();
+    } else {
+        document.addEventListener('DOMContentLoaded', initializeNotulenShowWorkspace);
+    }
 
-    document.addEventListener('turbo:load', initializeNotulenShowWorkspace);
-    document.addEventListener('turbo:before-cache', () => {
+    window.addEventListener('pagehide', () => {
         if (notulenPollTimer) {
             clearInterval(notulenPollTimer);
             notulenPollTimer = null;
@@ -2585,6 +3406,10 @@
         if (notulenPollAbort) {
             notulenPollAbort.abort();
             notulenPollAbort = null;
+        }
+        if (notulenVisibilityHandler) {
+            document.removeEventListener('visibilitychange', notulenVisibilityHandler);
+            notulenVisibilityHandler = null;
         }
         if (window.__notulenKeyHandler) {
             document.removeEventListener('keydown', window.__notulenKeyHandler);

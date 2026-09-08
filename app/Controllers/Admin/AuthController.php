@@ -30,7 +30,11 @@ class AuthController extends BaseController
         if (! $throttle->allows($username, $ipAddress)) {
             $this->auditFailure($throttle, $username, $ipAddress, 'throttled');
 
-            return $this->loginFailure('Terlalu banyak percobaan login. Silakan tunggu beberapa saat.', $username);
+            return $this->loginFailure(
+                'Terlalu banyak percobaan login. Silakan tunggu beberapa saat.',
+                $username,
+                $throttle->retryAfter(),
+            );
         }
 
         // Kredensial diverifikasi terhadap identitas Shield; hash dummy
@@ -69,12 +73,17 @@ class AuthController extends BaseController
         return redirect()->to(base_url('login?akses=admin'), 303);
     }
 
-    private function loginFailure(string $message, string $username)
+    private function loginFailure(string $message, string $username, int $retryAfter = 0)
     {
-        session()->setFlashdata([
+        $payload = [
             'auth_form_error'   => $message,
             'auth_old_username' => $username,
-        ]);
+        ];
+        if ($retryAfter > 0) {
+            $payload['auth_retry_after'] = $retryAfter;
+        }
+
+        session()->setFlashdata($payload);
 
         return redirect()->to(base_url('login?akses=admin'), 303);
     }

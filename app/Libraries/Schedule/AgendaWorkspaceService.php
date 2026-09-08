@@ -72,20 +72,29 @@ final class AgendaWorkspaceService
             ->get()
             ->getResultArray();
 
-        return array_map(fn (array $row): array => $this->normalizeAgenda([
-            ...$row,
-            'source'      => JadwalUmumModel::SOURCE,
-            'source_id'   => (int) $row['id'],
-            'publikasi'   => (int) $row['is_publik'] === 1 ? 'publik' : 'internal',
-            'status'      => JadwalUmumModel::resolveLifecycleStatus(
-                (string) $row['tanggal'],
-                $row['waktu_mulai'] ?? null,
-                $row['waktu_selesai'] ?? null,
-            ),
-            'lokasi'      => $row['lokasi_lainnya'] ?: $row['nama_ruangan'],
-            'edit_url'    => base_url("admin/jadwal-umum/{$row['id']}/edit"),
-            'document_id' => null,
-        ]), $rows);
+        return array_map(function (array $row): array {
+            $jenisAgenda = (string) ($row['jenis_agenda'] ?? JadwalUmumModel::TYPE_MEETING);
+            $storedStatus = (string) ($row['status'] ?? '');
+            $manualStatus = in_array($storedStatus, ['ditunda', 'dibatalkan'], true) ? $storedStatus : null;
+
+            return $this->normalizeAgenda([
+                ...$row,
+                'source'      => JadwalUmumModel::SOURCE,
+                'source_id'   => (int) $row['id'],
+                'publikasi'   => (int) $row['is_publik'] === 1 ? 'publik' : 'internal',
+                'status'      => JadwalUmumModel::resolveLifecycleStatus(
+                    (string) $row['tanggal'],
+                    $row['waktu_mulai'] ?? null,
+                    $row['waktu_selesai'] ?? null,
+                    null,
+                    $jenisAgenda,
+                    $manualStatus,
+                ),
+                'lokasi'      => $row['lokasi_lainnya'] ?: $row['nama_ruangan'],
+                'edit_url'    => base_url("admin/jadwal-umum/{$row['id']}/edit"),
+                'document_id' => null,
+            ]);
+        }, $rows);
     }
 
     private function findBanmus(string $startDate, string $endDate): array
@@ -195,7 +204,9 @@ final class AgendaWorkspaceService
         $count = count($agendas);
         for ($left = 0; $left < $count; ++$left) {
             for ($right = $left + 1; $right < $count; ++$right) {
-                if ($agendas[$left]['source'] === $agendas[$right]['source']
+                if ($agendas[$left]['key'] === $agendas[$right]['key']
+                    || in_array($agendas[$left]['status'], ['dibatalkan', 'non_rapat'], true)
+                    || in_array($agendas[$right]['status'], ['dibatalkan', 'non_rapat'], true)
                     || $agendas[$left]['tanggal'] !== $agendas[$right]['tanggal']
                     || $agendas[$left]['location_key'] === ''
                     || $agendas[$left]['location_key'] !== $agendas[$right]['location_key']

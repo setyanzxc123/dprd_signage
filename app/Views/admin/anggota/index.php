@@ -2,110 +2,92 @@
 
 <?= $this->section('content') ?>
 
-<?php if ($emergencyOtp = ($emergency_otp ?? null)): ?>
-    <div role="alert" class="alert alert-warning mb-4 items-start shadow-sm">
-        <i data-lucide="key-round" class="h-5 w-5 shrink-0"></i>
-        <div class="min-w-0">
-            <h2 class="font-bold">OTP darurat — <?= esc($emergencyOtp['member']) ?></h2>
-            <div class="my-1 font-mono text-xl font-black tracking-widest"><?= esc($emergencyOtp['code']) ?></div>
-            <p class="text-xs">Berlaku sampai <?= esc($emergencyOtp['expires_at']) ?> dan hanya ditampilkan sekali.</p>
-        </div>
+<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Anggota DPRD</h1>
     </div>
-<?php endif; ?>
-
-<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h1 class="page-title">Anggota DPRD</h1>
-    <a href="<?= base_url('admin/anggota/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
-        <i data-lucide="plus" class="h-4 w-4"></i>
+    <a href="<?= base_url('admin/anggota/create') ?>" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition">
+        <i data-lucide="plus" class="size-4"></i>
         Tambah Anggota
     </a>
 </div>
 
-<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
-    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
-        <h2 class="card-title text-base">
-            <i data-lucide="users" class="h-5 w-5 text-primary"></i>
-            Daftar Anggota
-        </h2>
-        <span class="badge badge-ghost whitespace-nowrap"><?= count($members) ?> anggota</span>
+<section class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
+        <div class="flex items-center gap-2.5">
+            <div class="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                <i data-lucide="users" class="size-4"></i>
+            </div>
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Daftar Anggota</h2>
+        </div>
+        <span class="py-0.5 px-2.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <?= count($members) ?> anggota
+        </span>
     </div>
 
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
-            <table class="table table-zebra table-md w-full admin-data-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
-                <thead>
-                    <tr class="bg-base-200">
-                        <th class="dt-row-number no-sort">No</th>
-                        <th>Nama Lengkap</th>
-                        <th>Fraksi</th>
-                        <th>Komisi</th>
-                        <th>No WhatsApp</th>
-                        <th>Status</th>
-                        <th class="text-right no-sort">Aksi</th>
+            <table class="table w-full text-start divide-y divide-slate-200 dark:divide-slate-800 admin-data-table" id="table-anggota" data-admin-datatable data-dt-order='[[1,"asc"]]'>
+                <thead class="bg-slate-50/75 dark:bg-slate-800/40">
+                    <tr>
+                        <th class="dt-row-number no-sort px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">No</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Nama Lengkap</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Fraksi</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Komisi</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">No WhatsApp</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
+                        <th class="px-4 py-3 text-end text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 no-sort">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
                     <?php foreach ($members as $m): ?>
-                        <tr class="transition-colors hover:bg-base-200/40">
-                            <td class="dt-row-number" data-label="No"></td>
-                            <td data-label="Nama Lengkap">
+                        <tr class="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                            <td class="dt-row-number px-4 py-3.5" data-label="No"></td>
+                            <td class="px-4 py-3.5" data-label="Nama Lengkap">
                                 <div class="flex items-center gap-3">
-                                    <div class="avatar placeholder">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-content">
-                                            <span><?= esc(strtoupper(substr($m['name'], 0, 1))) ?></span>
-                                        </div>
+                                    <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-xs font-bold">
+                                        <?= esc(strtoupper(substr($m['name'], 0, 1))) ?>
                                     </div>
                                     <div class="min-w-0">
-                                        <div class="text-sm font-bold text-base-content"><?= esc($m['name']) ?></div>
+                                        <div class="text-sm font-bold text-slate-900 dark:text-white"><?= esc($m['name']) ?></div>
                                         <?php if (! empty($m['jabatan'])): ?>
-                                            <div class="mt-0.5 text-xs text-base-content/60"><?= esc($m['jabatan']) ?></div>
+                                            <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400"><?= esc($m['jabatan']) ?></div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             </td>
-                            <td data-label="Fraksi" class="text-base-content/85"><?= esc($m['fraksi']) ?></td>
-                            <td data-label="Komisi">
-                                <span class="badge badge-ghost h-auto px-2 py-1 text-xs">
-                                    <?= esc($m['komisi']) ?>
-                                </span>
-                            </td>
-                            <td data-label="No WhatsApp" class="font-mono text-sm text-base-content/85"><?= esc($m['no_wa']) ?></td>
-                            <td data-label="Status">
+                            <td class="px-4 py-3.5 text-slate-600 dark:text-slate-400" data-label="Fraksi"><?= esc($m['fraksi']) ?></td>
+                            <td class="px-4 py-3.5 text-xs text-slate-700 dark:text-slate-300" data-label="Komisi"><?= esc($m['komisi']) ?></td>
+                            <td class="px-4 py-3.5 font-mono text-xs text-slate-600 dark:text-slate-400" data-label="No WhatsApp"><?= esc($m['no_wa']) ?></td>
+                            <td class="px-4 py-3.5 whitespace-nowrap" data-label="Status">
                                 <?php if ($m['aktif']): ?>
-                                    <span class="badge badge-success h-auto gap-1.5 whitespace-nowrap px-2 py-0.5 text-xs font-semibold">
-                                        <span class="status status-success"></span>
-                                        Aktif
-                                    </span>
+                                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Aktif</span>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost h-auto gap-1.5 whitespace-nowrap px-2 py-0.5 text-xs font-semibold text-base-content/60">
-                                        <span class="status"></span>
-                                        Nonaktif
-                                    </span>
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Nonaktif</span>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="Aksi">
-                                <div class="member-row-actions flex flex-wrap items-center justify-end gap-1.5">
+                            <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">
+                                <div class="member-row-actions flex items-center justify-end gap-1.5">
                                     <?php if (! empty($m['aktif'])): ?>
                                         <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/otp-darurat") ?>"
                                             class="m-0 inline-flex"
-                                            data-confirm-message="Buat OTP darurat untuk anggota ini? Pastikan identitas anggota sudah diverifikasi.">
+                                            data-confirm-message="Buat OTP darurat untuk <?= esc($m['name']) ?>? Pastikan identitas anggota sudah diverifikasi.">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-outline btn-warning btn-xs w-20 gap-1" title="Buat OTP darurat">
-                                                <i data-lucide="key-round" class="h-3.5 w-3.5"></i>
+                                            <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-amber-300/80 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 hover:border-amber-400 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-600 dark:hover:text-white dark:hover:border-amber-600 shadow-2xs transition cursor-pointer" title="Buat OTP darurat" aria-label="Buat OTP darurat untuk <?= esc($m['name']) ?>">
+                                                <i data-lucide="key-round" class="size-3.5"></i>
                                                 OTP
                                             </button>
                                         </form>
                                     <?php endif; ?>
-                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="btn btn-xs w-20 gap-1">
-                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                                    <a href="<?= base_url("admin/anggota/{$m['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-blue-200/80 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 shadow-2xs transition" title="Edit Anggota" aria-label="Edit <?= esc($m['name']) ?>">
+                                        <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
                                     <form method="post" action="<?= base_url("admin/anggota/{$m['id']}/delete") ?>"
-                                        data-confirm-message="Hapus anggota ini?" class="m-0 inline-flex">
+                                        data-confirm-message="Hapus anggota <?= esc($m['name']) ?>?" class="m-0 inline-flex">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-ghost btn-error btn-xs w-20 gap-1">
-                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
-                                            Hapus
+                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-rose-200/80 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 shadow-2xs transition cursor-pointer" title="Hapus Anggota" aria-label="Hapus anggota <?= esc($m['name']) ?>">
+                                            <i data-lucide="trash-2" class="size-4"></i>
                                         </button>
                                     </form>
                                 </div>

@@ -33,7 +33,7 @@ const APP_SHELL = [
     '/assets/vendor/fonts/files/outfit-latin-600-normal.woff2',
     '/assets/vendor/fonts/files/outfit-latin-700-normal.woff2',
     '/assets/vendor/fonts/files/outfit-latin-800-normal.woff2',
-    '/assets/images/logo_dprd.jpg',
+    '/assets/images/logo_dprd.png',
 ];
 
 let activeMediaDownload = null;
@@ -85,7 +85,7 @@ async function networkFirstSignage(request) {
 
 async function cacheFirstAsset(request) {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request, { ignoreSearch: true });
+    const cached = await cache.match(request);
     if (cached) return cached;
 
     const response = await fetch(request);

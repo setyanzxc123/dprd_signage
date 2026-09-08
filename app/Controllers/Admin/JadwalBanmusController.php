@@ -37,9 +37,12 @@ class JadwalBanmusController extends BaseController
     public function create(): string
     {
         return view('admin/banmus/form', [
-            'pageTitle'  => 'Tambah SK Banmus',
-            'document'   => null,
-            'action_url' => base_url('admin/jadwal-banmus/store'),
+            'pageTitle'   => 'Tambah SK Banmus',
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => null,
+            'action_url'  => base_url('admin/jadwal-banmus/store'),
         ]);
     }
 
@@ -82,14 +85,17 @@ class JadwalBanmusController extends BaseController
         $items = $itemModel->attachUnitIds($items);
 
         return view('admin/banmus/show', [
-            'pageTitle' => "Agenda SK Banmus No. {$document['nomor_sk']}",
-            'document'  => $document,
-            'items'     => $items,
-            'rooms'     => (new RuanganModel())
+            'pageTitle'   => "Agenda SK Banmus No. {$document['nomor_sk']}",
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => $document,
+            'items'       => $items,
+            'rooms'       => (new RuanganModel())
                 ->where('tersedia', 1)
                 ->orderBy('name', 'ASC')
                 ->findAll(),
-            'units'     => (new UnitRapatModel())
+            'units'       => (new UnitRapatModel())
                 ->where('aktif', 1)
                 ->orderBy('urutan', 'ASC')
                 ->orderBy('nama', 'ASC')
@@ -107,9 +113,12 @@ class JadwalBanmusController extends BaseController
         }
 
         return view('admin/banmus/form', [
-            'pageTitle'  => 'Edit SK Banmus',
-            'document'   => $document,
-            'action_url' => base_url("admin/jadwal-banmus/{$id}/update"),
+            'pageTitle'   => 'Edit SK Banmus',
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => $document,
+            'action_url'  => base_url("admin/jadwal-banmus/{$id}/update"),
         ]);
     }
 
@@ -167,6 +176,12 @@ class JadwalBanmusController extends BaseController
     {
         $document = (new BanmusDocumentModel())->find($documentId);
         if ($document === null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Dokumen SK Banmus tidak ditemukan.',
+                ]);
+            }
             session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
@@ -180,22 +195,50 @@ class JadwalBanmusController extends BaseController
             (int) $document['tahun'],
         );
         if (isset($validated['error'])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'status'  => 'error',
+                    'message' => $validated['error'],
+                ]);
+            }
             session()->setFlashdata('error', $validated['error']);
+            session()->setFlashdata('old_banmus_item', $this->request->getPost());
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
         $result = $service->storeItem($documentId, $validated);
         if (isset($result['error'])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'status'  => 'error',
+                    'message' => $result['error'],
+                ]);
+            }
             session()->setFlashdata('error', $result['error']);
+            session()->setFlashdata('old_banmus_item', $this->request->getPost());
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
+        $message = match ($result['status']) {
+            'non_rapat' => 'Item kegiatan non-rapat berhasil disimpan.',
+            'proyeksi'  => 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
+            default     => 'Item agenda berhasil disimpan sebagai jadwal.',
+        };
+
+        if ($this->request->isAJAX()) {
+            session()->setFlashdata('success', $message);
+
+            return $this->response->setJSON([
+                'status'       => 'success',
+                'message'      => $message,
+                'redirect_url' => base_url("admin/jadwal-banmus/{$documentId}"),
+            ]);
+        }
+
         return $this->formSuccessResponse(
-            $result['status'] !== 'proyeksi'
-                ? 'Item agenda berhasil disimpan sebagai jadwal.'
-                : 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
+            $message,
             base_url("admin/jadwal-banmus/{$documentId}"),
         );
     }
@@ -204,6 +247,12 @@ class JadwalBanmusController extends BaseController
     {
         $item = (new JadwalBanmusModel())->where('dokumen_banmus_id', $documentId)->find($itemId);
         if ($item === null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Item agenda tidak ditemukan.',
+                ]);
+            }
             session()->setFlashdata('error', 'Item agenda tidak ditemukan.');
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
@@ -211,6 +260,12 @@ class JadwalBanmusController extends BaseController
 
         $document = (new BanmusDocumentModel())->find($documentId);
         if ($document === null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Dokumen SK Banmus tidak ditemukan.',
+                ]);
+            }
             session()->setFlashdata('error', 'Dokumen SK Banmus tidak ditemukan.');
 
             return redirect()->to(base_url('admin/jadwal-banmus'));
@@ -224,24 +279,51 @@ class JadwalBanmusController extends BaseController
             (int) $document['tahun'],
         );
         if (isset($validated['error'])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'status'  => 'error',
+                    'message' => $validated['error'],
+                ]);
+            }
             session()->setFlashdata('error', $validated['error']);
+            session()->setFlashdata('old_banmus_item', $this->request->getPost());
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
         $error = $service->updateItem($item, $validated);
         if ($error !== null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'status'  => 'error',
+                    'message' => $error,
+                ]);
+            }
             session()->setFlashdata('error', $error);
+            session()->setFlashdata('old_banmus_item', $this->request->getPost());
 
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
         $finalStatus = $service->resolveUpdatedStatus($validated);
+        $message = match ($finalStatus) {
+            'non_rapat' => 'Item kegiatan non-rapat berhasil diperbarui.',
+            'proyeksi'  => 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
+            default     => 'Item agenda dan jadwal Banmus berhasil diperbarui.',
+        };
+
+        if ($this->request->isAJAX()) {
+            session()->setFlashdata('success', $message);
+
+            return $this->response->setJSON([
+                'status'       => 'success',
+                'message'      => $message,
+                'redirect_url' => base_url("admin/jadwal-banmus/{$documentId}"),
+            ]);
+        }
 
         return $this->formSuccessResponse(
-            $finalStatus !== 'proyeksi'
-                ? 'Item agenda dan jadwal Banmus berhasil diperbarui.'
-                : 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
+            $message,
             base_url("admin/jadwal-banmus/{$documentId}"),
         );
     }
@@ -278,9 +360,12 @@ class JadwalBanmusController extends BaseController
         ];
 
         return $this->formViewErrorResponse('admin/banmus/form', [
-            'pageTitle'  => $id === null ? 'Tambah SK Banmus' : 'Edit SK Banmus',
-            'document'   => $document,
-            'action_url' => $id === null ? base_url('admin/jadwal-banmus/store') : base_url("admin/jadwal-banmus/{$id}/update"),
+            'pageTitle'   => $id === null ? 'Tambah SK Banmus' : 'Edit SK Banmus',
+            'breadcrumbs' => [
+                ['label' => 'Agenda Banmus', 'url' => 'admin/jadwal-banmus'],
+            ],
+            'document'    => $document,
+            'action_url'  => $id === null ? base_url('admin/jadwal-banmus/store') : base_url("admin/jadwal-banmus/{$id}/update"),
         ], $message);
     }
 }

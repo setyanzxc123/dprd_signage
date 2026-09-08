@@ -2,113 +2,155 @@
 
 <?= $this->section('content') ?>
 
-<div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <h1 class="page-title">Jadwal Umum</h1>
-    <a href="<?= base_url('admin/jadwal-umum/create') ?>" class="btn btn-primary btn-sm w-full gap-1 sm:w-auto">
-        <i data-lucide="plus" class="h-4 w-4"></i>
+<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Jadwal Umum</h1>
+    </div>
+    <a href="<?= base_url('admin/jadwal-umum/create') ?>" class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition">
+        <i data-lucide="plus" class="size-4"></i>
         Tambah Jadwal
     </a>
 </div>
 
-<section class="card card-border min-w-0 overflow-hidden bg-base-100 shadow-sm">
-    <div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-4 sm:px-5">
-        <h2 class="card-title text-base">
-            <i data-lucide="calendar-range" class="h-5 w-5 text-primary"></i>
-            Daftar Jadwal Umum
-        </h2>
-        <span class="badge badge-ghost whitespace-nowrap"><?= count($schedules) ?> jadwal</span>
+<section class="bg-white border border-slate-200 shadow-sm rounded-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
+        <div class="flex items-center gap-2.5">
+            <div class="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                <i data-lucide="calendar-range" class="size-4"></i>
+            </div>
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Daftar Jadwal Umum</h2>
+        </div>
+        <span class="py-0.5 px-2.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <?= count($schedules) ?> jadwal
+        </span>
     </div>
 
     <div class="min-w-0">
         <div class="w-full overflow-x-auto">
-            <table class="general-schedule-table table table-zebra table-md w-full admin-data-table"
+            <table class="general-schedule-table table w-full text-start divide-y divide-slate-200 dark:divide-slate-800 admin-data-table"
                 id="table-jadwal-umum"
                 data-admin-datatable
                 data-dt-order='[[1,"desc"]]'
-                data-dt-col-filters='[{"col":4,"label":"Status"},{"col":5,"label":"Publikasi"}]'>
-                <thead>
-                    <tr class="bg-base-200">
-                        <th class="dt-row-number no-sort">No</th>
-                        <th>Jadwal</th>
-                        <th>Agenda</th>
-                        <th>Lokasi &amp; Peserta</th>
-                        <th>Status</th>
-                        <th>Publikasi</th>
-                        <th class="text-right no-sort">Aksi</th>
+                data-dt-col-filters='[{"col":3,"label":"Jenis"},{"col":5,"label":"Status"},{"col":6,"label":"Publikasi"}]'>
+                <thead class="bg-slate-50/75 dark:bg-slate-800/40">
+                    <tr>
+                        <th class="dt-row-number no-sort px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">No</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Jadwal</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Agenda</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Jenis</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Lokasi &amp; Peserta</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
+                        <th class="px-4 py-3 text-start text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Publikasi</th>
+                        <th class="px-4 py-3 text-end text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 no-sort">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
                     <?php foreach ($schedules as $schedule): ?>
-                        <tr class="transition-colors hover:bg-base-200/40">
-                            <td class="dt-row-number" data-label="No"></td>
-                            <td data-label="Jadwal" data-order="<?= esc($schedule['tanggal'] . ' ' . ($schedule['waktu_mulai'] ?? '00:00:00')) ?>">
+                        <?php
+                        $isNonMeeting = ($schedule['jenis_agenda'] ?? 'rapat') === 'non_rapat';
+                        $hasDateRange = ! empty($schedule['tanggal_mulai']) && ! empty($schedule['tanggal_selesai']) && $schedule['tanggal_mulai'] !== $schedule['tanggal_selesai'];
+                        ?>
+                        <tr class="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                            <td class="dt-row-number px-4 py-3.5" data-label="No"></td>
+                            <td class="px-4 py-3.5 whitespace-nowrap" data-label="Jadwal" data-order="<?= esc($schedule['tanggal'] . ' ' . ($schedule['waktu_mulai'] ?? '00:00:00')) ?>">
                                 <div>
-                                <div class="whitespace-nowrap text-sm font-bold">
-                                    <?= esc(date('d/m/Y', strtotime($schedule['tanggal']))) ?>
-                                </div>
-                                <div class="mt-0.5 whitespace-nowrap text-xs text-base-content/55">
-                                    <?php if (empty($schedule['waktu_mulai'])): ?>
-                                        Sepanjang hari
-                                    <?php else: ?>
-                                        <?= esc(substr($schedule['waktu_mulai'], 0, 5)) ?>
-                                        <?= ! empty($schedule['waktu_selesai']) ? '–' . esc(substr($schedule['waktu_selesai'], 0, 5)) : '' ?>
-                                        WITA
-                                    <?php endif; ?>
-                                </div>
+                                    <div class="whitespace-nowrap text-xs font-bold text-slate-900 dark:text-white">
+                                        <?php if ($hasDateRange): ?>
+                                            <?= esc(date('d/m/Y', strtotime($schedule['tanggal_mulai']))) ?> &ndash; <?= esc(date('d/m/Y', strtotime($schedule['tanggal_selesai']))) ?>
+                                        <?php else: ?>
+                                            <?= esc(date('d/m/Y', strtotime($schedule['tanggal']))) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="mt-0.5 whitespace-nowrap font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                        <?php if ($isNonMeeting): ?>
+                                            Rentang hari
+                                        <?php elseif (empty($schedule['waktu_mulai'])): ?>
+                                            Sepanjang hari
+                                        <?php else: ?>
+                                            <?= esc(substr($schedule['waktu_mulai'], 0, 5)) ?>
+                                            <?= ! empty($schedule['waktu_selesai']) ? '&ndash;' . esc(substr($schedule['waktu_selesai'], 0, 5)) : '' ?>
+                                            WITA
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </td>
-                            <td data-label="Agenda">
-                                <div class="max-w-md text-sm font-bold"><?= esc($schedule['judul']) ?></div>
+                            <td class="px-4 py-3.5" data-label="Agenda">
+                                <div class="max-w-md text-sm font-bold leading-snug text-slate-900 dark:text-white"><?= esc($schedule['judul']) ?></div>
                                 <?php if (! empty($schedule['pihak_eksternal'])): ?>
-                                    <div class="mt-1 max-w-md text-xs text-base-content/55">
+                                    <div class="mt-1 max-w-md text-xs text-slate-500 dark:text-slate-400">
                                         Pihak luar: <?= esc($schedule['pihak_eksternal']) ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="Lokasi & Peserta">
-                                <div class="max-w-xs text-sm font-semibold"><?= esc($schedule['lokasi']) ?></div>
-                                <div class="mt-1 max-w-xs text-xs text-base-content/55">
-                                    <?= $schedule['unit_names'] !== []
-                                        ? esc(implode(', ', $schedule['unit_names']))
-                                        : 'Tanpa kelompok peserta khusus' ?>
-                                </div>
-                            </td>
-                            <td data-label="Status" data-filter="<?= esc(ucfirst($schedule['status'])) ?>">
-                                <?php
-                                $statusClass = match ($schedule['status']) {
-                                    'berlangsung' => 'badge-success',
-                                    'persiapan'   => 'badge-warning',
-                                    'selesai'     => 'badge-info',
-                                    default       => 'badge-ghost',
-                                };
-                                ?>
-                                <span class="badge badge-sm <?= $statusClass ?>">
-                                    <?= esc(ucfirst($schedule['status'])) ?>
-                                </span>
-                            </td>
-                            <td data-label="Publikasi" data-filter="<?= (int) $schedule['is_publik'] === 1 ? 'Publik' : 'Internal' ?>">
-                                <?php if ((int) $schedule['is_publik'] === 1): ?>
-                                    <span class="badge badge-success badge-sm">Publik</span>
+                            <td class="px-4 py-3.5 whitespace-nowrap" data-label="Jenis" data-filter="<?= $isNonMeeting ? 'Kegiatan' : 'Rapat' ?>">
+                                <?php if ($isNonMeeting): ?>
+                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/60">
+                                        <i data-lucide="calendar" class="size-3 text-purple-600 dark:text-purple-400"></i>
+                                        <span>Kegiatan</span>
+                                    </span>
                                 <?php else: ?>
-                                    <span class="badge badge-ghost badge-sm">Internal</span>
+                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60">
+                                        <i data-lucide="users" class="size-3 text-blue-600 dark:text-blue-400"></i>
+                                        <span>Rapat</span>
+                                    </span>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="Aksi">
-                                <div class="general-schedule-actions flex flex-wrap items-center justify-end gap-1.5">
-                                    <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="btn btn-ghost btn-xs gap-1 text-primary" title="Buka / Buat Notulensi AI">
-                                        <i data-lucide="mic" class="h-3.5 w-3.5"></i>
-                                        Notulen
-                                    </a>
-                                    <a href="<?= base_url("admin/jadwal-umum/{$schedule['id']}/edit") ?>" class="btn btn-xs w-16 gap-1">
-                                        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+                            <td class="px-4 py-3.5" data-label="Lokasi &amp; Peserta">
+                                <div class="max-w-xs text-xs font-semibold text-slate-800 dark:text-slate-200"><?= esc($schedule['lokasi'] ?: '-') ?></div>
+                                <div class="mt-0.5 max-w-xs text-[11px] text-slate-500 dark:text-slate-400">
+                                    <?= $schedule['unit_names'] !== []
+                                        ? esc(implode(', ', $schedule['unit_names']))
+                                        : ($isNonMeeting ? 'Kegiatan umum' : 'Tanpa kelompok peserta khusus') ?>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3.5 whitespace-nowrap" data-label="Status" data-filter="<?= $isNonMeeting ? 'Kegiatan' : esc(ucfirst($schedule['status'])) ?>">
+                                <?php if ($isNonMeeting): ?>
+                                    <span class="inline-flex items-center justify-center py-0.5 px-2 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400" title="Kegiatan kalender terjadwal">&mdash;</span>
+                                <?php else: ?>
+                                    <?php
+                                    $statusBadgeClass = match ($schedule['status']) {
+                                        'berlangsung' => 'border-emerald-200/80 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300',
+                                        'persiapan'   => 'border-amber-200/80 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300',
+                                        'selesai'     => 'border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-300',
+                                        'ditunda'     => 'border-amber-200/80 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300 italic',
+                                        'dibatalkan'  => 'border-rose-200/80 bg-rose-50 text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300 line-through',
+                                        default       => 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+                                    };
+                                    $statusLabel = match ($schedule['status']) {
+                                        'berlangsung' => 'Berlangsung',
+                                        'persiapan'   => 'Persiapan',
+                                        'selesai'     => 'Selesai',
+                                        'ditunda'     => 'Ditunda',
+                                        'dibatalkan'  => 'Dibatalkan',
+                                        default       => ucfirst($schedule['status']),
+                                    };
+                                    ?>
+                                    <span class="inline-flex items-center py-0.5 px-2 rounded-lg text-xs font-semibold border <?= $statusBadgeClass ?>">
+                                        <?= esc($statusLabel) ?>
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3.5 whitespace-nowrap" data-label="Publikasi" data-filter="<?= (int) $schedule['is_publik'] === 1 ? 'Publik' : 'Internal' ?>">
+                                <span class="inline-flex items-center py-0.5 px-2 rounded-lg text-xs font-medium border <?= (int) $schedule['is_publik'] === 1 ? 'border-emerald-200/80 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400' ?>">
+                                    <?= (int) $schedule['is_publik'] === 1 ? 'Publik' : 'Internal' ?>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3.5 whitespace-nowrap text-end" data-label="Aksi">
+                                <div class="general-schedule-actions flex items-center justify-end gap-1.5">
+                                    <a href="<?= base_url("admin/jadwal-umum/{$schedule['id']}/edit") ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-blue-200/80 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 shadow-2xs transition" title="Edit Jadwal Umum" aria-label="Edit <?= esc($schedule['judul']) ?>">
+                                        <i data-lucide="pencil" class="size-3.5"></i>
                                         Edit
                                     </a>
+                                    <?php if (! $isNonMeeting && $schedule['status'] !== 'dibatalkan'): ?>
+                                        <a href="<?= base_url('admin/notulen?jadwal_type=umum&jadwal_id=' . (int) $schedule['id']) ?>" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 hover:border-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 shadow-2xs transition" title="Buka / Buat Notulensi AI" aria-label="Notulensi AI <?= esc($schedule['judul']) ?>">
+                                            <i data-lucide="mic" class="size-4"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <form method="post" action="<?= base_url("admin/jadwal-umum/{$schedule['id']}/delete") ?>"
                                         class="m-0 inline-flex" data-confirm-message="Hapus Jadwal Umum ini?">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-ghost btn-error btn-xs w-20 gap-1">
-                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
-                                            Hapus
+                                        <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-rose-200/80 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 shadow-2xs transition cursor-pointer" title="Hapus Jadwal" aria-label="Hapus <?= esc($schedule['judul']) ?>">
+                                            <i data-lucide="trash-2" class="size-4"></i>
                                         </button>
                                     </form>
                                 </div>
