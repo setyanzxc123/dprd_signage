@@ -280,7 +280,6 @@ body {
     z-index: 10;
     bottom: 2vh;
     left: 50%;
-    min-width: 9vw;
     transform: translateX(-50%);
 }
 
@@ -296,9 +295,10 @@ body {
 }
 
 #qr-display canvas,
-.qr-panel .qr-box canvas {
+#qr-display img,
+.qr-panel .qr-box canvas,
+.qr-panel .qr-box img {
     display: block;
-    border-radius: 0.5rem;
 }
 
 #panel-ticker {

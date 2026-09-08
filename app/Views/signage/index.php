@@ -156,28 +156,28 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 </div>
             </div>
 
-            <aside class="qr-panel flex flex-col border border-base-300/80 bg-base-100 shadow-2xl rounded-2xl"
+            <aside class="qr-panel flex flex-col border border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl rounded-xl transition-all"
                 v-if="qrBerkas || qrLive">
-                <div class="flex flex-col items-center gap-[0.6vh] p-[clamp(10px,1vw,18px)]">
-                    <div class="flex items-center text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-[0.1em] text-base-content/60"
+                <div class="flex flex-col items-center gap-1 p-2">
+                    <div class="flex items-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
                         v-if="activeQR === 'berkas'">
-                        Unduh Berkas Rapat
+                        Berkas Rapat
                     </div>
-                    <div class="flex items-center gap-[0.35vw] text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-[0.1em] text-base-content/60"
+                    <div class="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
                         v-else>
-                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[0.65vw] font-bold text-emerald-400 border border-emerald-500/40">
-                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
+                            <span class="size-1 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
                             LIVE
                         </span>
-                        Tonton Siaran
+                        Siaran
                     </div>
-                    <div class="relative w-[110px] h-[110px] flex items-center justify-center">
+                    <div class="relative bg-white p-1.5 rounded-lg shadow-2xs border border-slate-200/80 flex items-center justify-center">
                         <div id="qr-display-berkas" class="qr-box" v-show="activeQR === 'berkas'" :class="{ 'qr-fading': qrFading }"></div>
                         <div id="qr-display-live" class="qr-box" v-show="activeQR === 'live'" :class="{ 'qr-fading': qrFading }"></div>
                     </div>
-                    <div v-if="qrBerkas && qrLive" class="flex gap-1.5 mt-0.5">
-                        <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'berkas' ? 'bg-primary' : 'bg-base-300']"></span>
-                        <span :class="['h-1.5 w-4 rounded-full transition-all duration-300', activeQR === 'live' ? 'bg-primary' : 'bg-base-300']"></span>
+                    <div v-if="qrBerkas && qrLive" class="flex items-center gap-1 mt-0.5">
+                        <span :class="['h-1 rounded-full transition-all duration-300', activeQR === 'berkas' ? 'w-3.5 bg-blue-600 dark:bg-blue-400' : 'w-1 bg-slate-300 dark:bg-slate-700']"></span>
+                        <span :class="['h-1 rounded-full transition-all duration-300', activeQR === 'live' ? 'w-3.5 bg-blue-600 dark:bg-blue-400' : 'w-1 bg-slate-300 dark:bg-slate-700']"></span>
                     </div>
                 </div>
             </aside>
@@ -949,21 +949,19 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 let lastRenderedBerkasUrl = '';
                 let lastRenderedLiveUrl = '';
 
-                function makeQR(containerId, url, size = 110) {
+                function makeQR(containerId, url, size = 100) {
                     nextTick(() => {
                         const container = document.getElementById(containerId);
                         if (!container) return;
                         container.innerHTML = '';
                         if (url) {
-                            const theme = document.documentElement.getAttribute('data-theme') || 'dark';
-                            const themeStyles = getComputedStyle(document.documentElement);
-                            const qrColor = themeStyles.getPropertyValue('--color-base-content').trim();
                             new QRCode(container, {
                                 text: url,
                                 width: size,
                                 height: size,
-                                colorDark: qrColor || (theme === 'dark' ? '#ffffff' : '#1f2937'),
-                                colorLight: 'transparent',
+                                colorDark: '#000000',
+                                colorLight: '#ffffff',
+                                correctLevel: QRCode.CorrectLevel.M,
                             });
                         }
                     });
@@ -973,8 +971,8 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     if (!activeMeeting.value || (!qrBerkas.value && !qrLive.value)) {
                         lastRenderedBerkasUrl = '';
                         lastRenderedLiveUrl = '';
-                        makeQR('qr-display-berkas', '', 110);
-                        makeQR('qr-display-live', '', 110);
+                        makeQR('qr-display-berkas', '', 100);
+                        makeQR('qr-display-live', '', 100);
                         return;
                     }
 
@@ -985,23 +983,23 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     if (qrBerkas.value) {
                         const berkasUrl = `${BASE_URL}/go/${routeSegment}/${targetId}/berkas`;
                         if (berkasUrl !== lastRenderedBerkasUrl) {
-                            makeQR('qr-display-berkas', berkasUrl, 110);
+                            makeQR('qr-display-berkas', berkasUrl, 100);
                             lastRenderedBerkasUrl = berkasUrl;
                         }
                     } else if (lastRenderedBerkasUrl) {
                         lastRenderedBerkasUrl = '';
-                        makeQR('qr-display-berkas', '', 110);
+                        makeQR('qr-display-berkas', '', 100);
                     }
 
                     if (qrLive.value) {
                         const liveUrl = `${BASE_URL}/go/${routeSegment}/${targetId}/live`;
                         if (liveUrl !== lastRenderedLiveUrl) {
-                            makeQR('qr-display-live', liveUrl, 110);
+                            makeQR('qr-display-live', liveUrl, 100);
                             lastRenderedLiveUrl = liveUrl;
                         }
                     } else if (lastRenderedLiveUrl) {
                         lastRenderedLiveUrl = '';
-                        makeQR('qr-display-live', '', 110);
+                        makeQR('qr-display-live', '', 100);
                     }
                 }
 
@@ -1023,7 +1021,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     }
 
                     if (qrBerkas.value && qrLive.value) {
-                        qrSlideTimer = setInterval(switchQR, 8000);
+                        qrSlideTimer = setInterval(switchQR, 16000);
                     }
 
                     if (!qrBerkas.value && activeQR.value === 'berkas') activeQR.value = 'live';
