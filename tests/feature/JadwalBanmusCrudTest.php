@@ -482,6 +482,135 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertSame(0, $this->banmusDb->table('jadwal_banmus')->countAllResults());
     }
 
+    public function testStoreNonRapatItemSavesNullMeetingFieldsAndStatusNonRapat(): void
+    {
+        $response = $this->postItem([
+            'agenda'          => 'Masa Reses Pimpinan dan Anggota DPRD',
+            'jenis_agenda'    => 'non_rapat',
+            'periode_label'   => 'Juli - Agustus 2026',
+            'tanggal_mulai'   => '2026-07-01',
+            'tanggal_selesai' => '2026-07-31',
+            'tanggal'         => '2026-07-15',
+            'jam_mulai'       => '09:00',
+            'jam_selesai'     => '11:00',
+            'ruangan_id'      => '1',
+            'unit_ids'        => ['1'],
+            'materi_url'      => 'https://example.com/materi.pdf',
+        ]);
+
+        $response->assertStatus(303);
+
+        $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($item);
+        $this->assertSame('non_rapat', $item['jenis_agenda']);
+        $this->assertSame('non_rapat', $item['status']);
+        $this->assertSame('2026-07-01', $item['tanggal_mulai']);
+        $this->assertSame('2026-07-31', $item['tanggal_selesai']);
+        $this->assertNull($item['tanggal']);
+        $this->assertNull($item['jam_mulai']);
+        $this->assertNull($item['jam_selesai']);
+        $this->assertNull($item['ruangan_id']);
+        $this->assertNull($item['materi_url']);
+
+        $unitsCount = $this->banmusDb->table('jadwal_banmus_unit_rapat')
+            ->where('jadwal_banmus_id', $item['id'])
+            ->countAllResults();
+        $this->assertSame(0, $unitsCount);
+    }
+
+    public function testUpdateItemToNonRapatClearsMeetingDataAndSetsStatusNonRapat(): void
+    {
+        $this->postItem([
+            'agenda'       => 'Rapat Banmus terjadwal',
+            'tanggal'      => $this->futureDate('+10 days'),
+            'jam_mulai'    => '09:00',
+            'jam_selesai'  => '11:00',
+            'ruangan_id'   => '1',
+            'unit_ids'     => ['1'],
+        ])->assertStatus(303);
+
+        $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($item);
+        $this->assertSame('menunggu', $item['status']);
+
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->post("/admin/jadwal-banmus/{$this->documentId}/item/{$item['id']}/update", [
+                csrf_token()      => csrf_hash(),
+                'agenda'          => 'Diubah menjadi Masa Reses',
+                'jenis_agenda'    => 'non_rapat',
+                'periode_label'   => 'Agustus 2026',
+                'tanggal_mulai'   => '2026-08-01',
+                'tanggal_selesai' => '2026-08-15',
+            ]);
+
+        $response->assertStatus(303);
+
+        $updated = $this->banmusDb->table('jadwal_banmus')
+            ->where('id', $item['id'])
+            ->get()
+            ->getRowArray();
+
+        $this->assertSame('non_rapat', $updated['jenis_agenda']);
+        $this->assertSame('non_rapat', $updated['status']);
+        $this->assertNull($updated['tanggal']);
+        $this->assertNull($updated['ruangan_id']);
+        $this->assertSame('2026-08-01', $updated['tanggal_mulai']);
+        $this->assertSame('2026-08-15', $updated['tanggal_selesai']);
+    }
+
+    public function testTableDisplaysNonRapatItemWithDashStatusAndWithoutScheduleOrNotulenActions(): void
+    {
+        $this->postItem([
+            'agenda'       => 'Rapat Terjadwal',
+            'tanggal'      => $this->futureDate('+5 days'),
+            'jam_mulai'    => '09:00',
+            'jam_selesai'  => '11:00',
+            'ruangan_id'   => '1',
+            'unit_ids'     => ['1'],
+        ])->assertStatus(303);
+
+        $this->postItem([
+            'agenda'        => 'Proyeksi Rapat',
+            'periode_label' => 'Agustus 2026',
+        ])->assertStatus(303);
+
+        $this->postItem([
+            'agenda'          => 'Masa Reses Pimpinan dan Anggota',
+            'jenis_agenda'    => 'non_rapat',
+            'periode_label'   => 'Juli - Agustus 2026',
+            'tanggal_mulai'   => '2026-07-01',
+            'tanggal_selesai' => '2026-07-31',
+        ])->assertStatus(303);
+
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->get("/admin/jadwal-banmus/{$this->documentId}");
+
+        $response->assertOK();
+        $body = $response->response()->getBody();
+
+        $this->assertStringContainsString('Tahun 2026', $body);
+        $this->assertStringContainsString('title="Kegiatan kalender terjadwal">—', $body);
+
+        $items = $this->banmusDb->table('jadwal_banmus')
+            ->orderBy('id', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $nonRapat = $items[2];
+        $this->assertSame('non_rapat', $nonRapat['jenis_agenda']);
+
+        $this->assertStringContainsString(
+            "/item/{$nonRapat['id']}/delete",
+            $body,
+        );
+        $this->assertStringNotContainsString(
+            "admin/notulen?jadwal_type=banmus&jadwal_id={$nonRapat['id']}",
+            $body,
+        );
+    }
+
     private function postItem(array $payload)
     {
         return $this

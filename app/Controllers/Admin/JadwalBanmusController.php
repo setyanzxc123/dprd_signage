@@ -221,9 +221,11 @@ class JadwalBanmusController extends BaseController
             return redirect()->to(base_url("admin/jadwal-banmus/{$documentId}"));
         }
 
-        $message = $result['status'] !== 'proyeksi'
-            ? 'Item agenda berhasil disimpan sebagai jadwal.'
-            : 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.';
+        $message = match ($result['status']) {
+            'non_rapat' => 'Item kegiatan non-rapat berhasil disimpan.',
+            'proyeksi'  => 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
+            default     => 'Item agenda berhasil disimpan sebagai jadwal.',
+        };
 
         if ($this->request->isAJAX()) {
             session()->setFlashdata('success', $message);
@@ -304,9 +306,11 @@ class JadwalBanmusController extends BaseController
         }
 
         $finalStatus = $service->resolveUpdatedStatus($validated);
-        $message = $finalStatus !== 'proyeksi'
-            ? 'Item agenda dan jadwal Banmus berhasil diperbarui.'
-            : 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.';
+        $message = match ($finalStatus) {
+            'non_rapat' => 'Item kegiatan non-rapat berhasil diperbarui.',
+            'proyeksi'  => 'Item agenda berhasil disimpan sebagai proyeksi. Data pelaksanaan dapat dilengkapi kemudian.',
+            default     => 'Item agenda dan jadwal Banmus berhasil diperbarui.',
+        };
 
         if ($this->request->isAJAX()) {
             session()->setFlashdata('success', $message);

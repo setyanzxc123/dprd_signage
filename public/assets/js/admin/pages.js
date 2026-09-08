@@ -1326,24 +1326,23 @@
         dialog.dataset.initialized = 'true';
 
         const form = dialog.querySelector('#item_form');
-        const wizardStep1 = dialog.querySelector('#banmus-wizard-step1');
-        const btnSelectProyeksi = dialog.querySelector('#btn-select-proyeksi');
-        const btnSelectPasti = dialog.querySelector('#btn-select-pasti');
-        const btnBackToStep1 = dialog.querySelector('#btn-back-to-step1');
-        const btnSwitchToPasti = dialog.querySelector('#btn-switch-to-pasti');
-        const formModeIndicator = dialog.querySelector('#form-mode-indicator');
-        const formGrid = dialog.querySelector('#banmus-form-grid');
-        const scheduleFields = dialog.querySelector('#banmus-schedule-fields');
-        const publicationFields = dialog.querySelector('#banmus-publication-fields');
+        const pastiWrapper = dialog.querySelector('#banmus-pasti-wrapper');
+        const nonRapatDatesWrapper = dialog.querySelector('#banmus-non-rapat-dates');
+        const rapatModeWrapper = dialog.querySelector('#rapat-mode-wrapper');
+        const btnModeProyeksi = dialog.querySelector('#btn-mode-proyeksi');
+        const btnModePasti = dialog.querySelector('#btn-mode-pasti');
+        const labelPeriode = dialog.querySelector('#label_periode');
+        const periodeField = dialog.querySelector('#field_periode_label');
 
         const title = dialog.querySelector('#modal_title');
         const dateField = dialog.querySelector('#field_tanggal');
+        const startDateField = dialog.querySelector('#field_tanggal_mulai');
+        const endDateField = dialog.querySelector('#field_tanggal_selesai');
+        const startTimeField = dialog.querySelector('#field_jam_mulai');
+        const endTimeField = dialog.querySelector('#field_jam_selesai');
         const roomField = dialog.querySelector('#field_ruangan_id');
         const locationField = dialog.querySelector('#field_lokasi_lainnya');
         const locationWrapper = dialog.querySelector('#field_lokasi_lainnya_wrapper');
-        const roomWrapper = dialog.querySelector('#banmus-room-wrapper');
-        const streamWrapper = dialog.querySelector('#banmus-stream-wrapper');
-        const unitsWrapper = dialog.querySelector('#banmus-units-wrapper');
         const unitCheckboxes = [...dialog.querySelectorAll('.unit-checkbox')];
         const agendaTypeFields = [...dialog.querySelectorAll('input[name="jenis_agenda"]')];
         const fileInput = dialog.querySelector('#field_undangan_file');
@@ -1354,8 +1353,10 @@
         const submitBtn = dialog.querySelector('#btn_submit_banmus_item');
         const submitText = dialog.querySelector('#btn_submit_banmus_item_text');
         const submitLoading = dialog.querySelector('#btn_submit_banmus_item_loading');
-        const scrollContainer = form.querySelector('.overflow-y-auto');
+        const scrollContainer = form?.querySelector('.overflow-y-auto');
 
+        let currentAgendaType = 'rapat';
+        let currentMeetingMode = 'proyeksi';
         let currentExistingInvitationName = '';
 
         if (!(form instanceof HTMLFormElement)
@@ -1378,15 +1379,30 @@
             }
         };
 
+        const escapeHtml = (str) => {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        };
+
+        const truncateFileName = (name, max = 24) => {
+            if (!name || typeof name !== 'string') return '';
+            const trimmed = name.trim();
+            if (trimmed.length <= max) return trimmed;
+            return trimmed.slice(0, max).trim() + '...';
+        };
+
         const updateInvitationStatusText = () => {
             if (!fileStatus) return;
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                const fileName = fileInput.files[0].name;
-                fileStatus.innerHTML = `File baru dipilih: <span class="font-semibold text-emerald-600 dark:text-emerald-400">${fileName}</span> (akan menggantikan file sebelumnya).`;
+                const fullName = fileInput.files[0].name;
+                const displayName = truncateFileName(fullName, 24);
+                fileStatus.innerHTML = `File baru: <span class="font-semibold text-emerald-600 dark:text-emerald-400 inline-block max-w-xs truncate align-bottom" title="${escapeHtml(fullName)}">${escapeHtml(displayName)}</span> (menggantikan file sebelumnya).`;
             } else if (currentExistingInvitationName) {
-                fileStatus.innerHTML = `File tersimpan: <span class="font-semibold text-blue-600 dark:text-blue-400">${currentExistingInvitationName}</span> (Pilih file baru jika ingin mengganti, atau biarkan kosong agar tidak berubah).`;
+                const displayName = truncateFileName(currentExistingInvitationName, 24);
+                fileStatus.innerHTML = `Tersimpan: <span class="font-semibold text-blue-600 dark:text-blue-400 inline-block max-w-xs truncate align-bottom" title="${escapeHtml(currentExistingInvitationName)}">${escapeHtml(displayName)}</span> (pilih baru untuk mengganti).`;
             } else {
-                fileStatus.textContent = 'Format PDF, maksimal 10 MB (opsional). Dokumen hanya dapat diakses oleh anggota DPRD yang login.';
+                fileStatus.textContent = 'Format PDF, maks. 10 MB (opsional).';
             }
         };
 
@@ -1413,21 +1429,8 @@
             locationWrapper?.classList.toggle('hidden', roomField.value !== 'other');
         };
 
-        const syncAgendaTypeFields = () => {
-            const isNonRapat = agendaTypeFields.find((r) => r.checked)?.value === 'non_rapat';
-            roomWrapper?.classList.toggle('hidden', isNonRapat);
-            if (isNonRapat) {
-                locationWrapper?.classList.add('hidden');
-            } else {
-                syncLocationDisclosure();
-            }
-            streamWrapper?.classList.toggle('hidden', isNonRapat);
-            unitsWrapper?.classList.toggle('hidden', isNonRapat);
-        };
-
         const showDialog = () => {
             syncLocationDisclosure();
-            syncAgendaTypeFields();
             if (window.HSOverlay && typeof window.HSOverlay.open === 'function') {
                 window.HSOverlay.open(dialog);
             } else {
@@ -1443,91 +1446,47 @@
             }
         };
 
-        const setWizardStep = (step, mode = 'proyeksi') => {
-            if (step === 1) {
-                wizardStep1?.classList.remove('hidden');
-                form.classList.add('hidden');
-                form.classList.remove('flex');
+        const syncFormDisplay = (agendaType, meetingMode = 'proyeksi') => {
+            const isNonRapat = agendaType === 'non_rapat';
+
+            agendaTypeFields.forEach((input) => {
+                input.checked = input.value === (isNonRapat ? 'non_rapat' : 'rapat');
+            });
+
+            if (isNonRapat) {
+                if (labelPeriode) labelPeriode.textContent = 'Waktu / Periode Pelaksanaan';
+                if (periodeField) periodeField.placeholder = 'Contoh: Juli–Agustus 2026 atau Menyesuaikan Masa Sidang';
+
+                rapatModeWrapper?.classList.add('hidden');
+                pastiWrapper?.classList.add('hidden');
+                nonRapatDatesWrapper?.classList.remove('hidden');
             } else {
-                wizardStep1?.classList.add('hidden');
-                form.classList.remove('hidden');
-                form.classList.add('flex');
+                if (labelPeriode) labelPeriode.textContent = 'Periode SK';
+                if (periodeField) periodeField.placeholder = 'Contoh: Juni–Juli 2026 atau Minggu ke-2 Juli';
 
-                const isProyeksi = mode === 'proyeksi';
+                rapatModeWrapper?.classList.remove('hidden');
+                nonRapatDatesWrapper?.classList.add('hidden');
 
-                if (formModeIndicator) {
-                    if (isProyeksi) {
-                        formModeIndicator.textContent = 'Proyeksi';
-                        formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60';
-                    } else {
-                        formModeIndicator.textContent = 'Jadwal Pasti';
-                        formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60';
-                    }
-                }
-
-                scheduleFields?.classList.toggle('hidden', isProyeksi);
-                publicationFields?.classList.toggle('hidden', isProyeksi);
-
-                if (btnSwitchToPasti) {
-                    btnSwitchToPasti.classList.toggle('hidden', !isProyeksi || !btnBackToStep1?.classList.contains('hidden'));
-                }
-
-                if (formGrid) {
-                    if (isProyeksi) {
-                        formGrid.classList.remove('lg:grid-cols-2');
-                    } else {
-                        formGrid.classList.add('lg:grid-cols-2');
-                    }
-                }
-
-                if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                    window.lucide.createIcons();
+                const isProyeksi = meetingMode === 'proyeksi';
+                if (isProyeksi) {
+                    btnModeProyeksi?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition bg-white text-amber-700 shadow-xs dark:bg-slate-800 dark:text-amber-400');
+                    btnModeProyeksi?.setAttribute('aria-selected', 'true');
+                    btnModePasti?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white');
+                    btnModePasti?.setAttribute('aria-selected', 'false');
+                    pastiWrapper?.classList.add('hidden');
+                } else {
+                    btnModeProyeksi?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white');
+                    btnModeProyeksi?.setAttribute('aria-selected', 'false');
+                    btnModePasti?.setAttribute('class', 'py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer transition bg-white text-emerald-700 shadow-xs dark:bg-slate-800 dark:text-emerald-400');
+                    btnModePasti?.setAttribute('aria-selected', 'true');
+                    pastiWrapper?.classList.remove('hidden');
                 }
             }
+
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
         };
-
-        const openCreateDialog = () => {
-            form.reset();
-            hideErrorAlert();
-            setSubmitting(false);
-            currentExistingInvitationName = '';
-            updateInvitationStatusText();
-            form.action = dialog.dataset.storeUrl || '';
-            if (title) title.textContent = 'Tambah Item Agenda Banmus';
-            btnBackToStep1?.classList.remove('hidden');
-            btnSwitchToPasti?.classList.add('hidden');
-            setWizardStep(1);
-            showDialog();
-        };
-
-        btnSelectProyeksi?.addEventListener('click', () => {
-            dateField.value = '';
-            field('field_jam_mulai').value = '';
-            field('field_jam_selesai').value = '';
-            roomField.value = '';
-            if (locationField) locationField.value = '';
-            unitCheckboxes.forEach((checkbox) => {
-                checkbox.checked = false;
-            });
-            field('field_materi_url').value = '';
-            field('field_stream_url').value = '';
-            setWizardStep(2, 'proyeksi');
-            field('field_agenda')?.focus();
-        });
-
-        btnSelectPasti?.addEventListener('click', () => {
-            setWizardStep(2, 'pasti');
-            field('field_agenda')?.focus();
-        });
-
-        btnBackToStep1?.addEventListener('click', () => {
-            setWizardStep(1);
-        });
-
-        btnSwitchToPasti?.addEventListener('click', () => {
-            setWizardStep(2, 'pasti');
-            dateField?.focus();
-        });
 
         const parseUnitIds = (value) => {
             if (Array.isArray(value)) return value.map(Number);
@@ -1548,36 +1507,67 @@
             updateInvitationStatusText();
 
             field('field_agenda').value = item.agenda || '';
-            field('field_periode_label').value = item.periode_label || '';
-            const agendaType = ['rapat', 'non_rapat'].includes(item.jenis_agenda)
-                ? item.jenis_agenda
-                : 'rapat';
-            agendaTypeFields.forEach((input) => {
-                input.checked = input.value === agendaType;
-            });
+            if (periodeField) periodeField.value = item.periode_label || '';
+            if (startDateField) startDateField.value = item.tanggal_mulai || '';
+            if (endDateField) endDateField.value = item.tanggal_selesai || '';
+
             dateField.value = item.tanggal || '';
-            field('field_jam_mulai').value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
-            field('field_jam_selesai').value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
-            field('field_catatan').value = item.catatan || '';
-            field('field_publikasi').value = item.publikasi || 'publik';
-            field('field_materi_url').value = item.materi_url || '';
-            field('field_materi_akses').value = item.materi_akses || 'publik';
-            field('field_stream_url').value = item.stream_url || '';
-            field('field_stream_akses').value = item.stream_akses || 'publik';
+            if (startTimeField) startTimeField.value = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
+            if (endTimeField) endTimeField.value = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
+            if (field('field_catatan')) field('field_catatan').value = item.catatan || '';
+            if (field('field_publikasi')) field('field_publikasi').value = item.publikasi || 'publik';
+            if (field('field_materi_url')) field('field_materi_url').value = item.materi_url || '';
+            if (field('field_materi_akses')) field('field_materi_akses').value = item.materi_akses || 'publik';
+            if (field('field_stream_url')) field('field_stream_url').value = item.stream_url || '';
+            if (field('field_stream_akses')) field('field_stream_akses').value = item.stream_akses || 'publik';
 
             if (item.ruangan_id) {
                 roomField.value = String(item.ruangan_id);
+                if (locationField) locationField.value = '';
             } else if (item.lokasi_lainnya) {
                 roomField.value = 'other';
                 if (locationField) locationField.value = item.lokasi_lainnya;
             } else {
                 roomField.value = '';
+                if (locationField) locationField.value = '';
             }
 
             const unitIds = parseUnitIds(item.unit_ids);
             unitCheckboxes.forEach((checkbox) => {
                 checkbox.checked = unitIds.includes(Number(checkbox.value));
             });
+
+            currentAgendaType = ['rapat', 'non_rapat'].includes(item.jenis_agenda)
+                ? item.jenis_agenda
+                : 'rapat';
+
+            if (currentAgendaType === 'non_rapat') {
+                currentMeetingMode = 'proyeksi';
+            } else {
+                const hasSchedule = Boolean(
+                    item.tanggal || item.jam_mulai || item.ruangan_id || (item.status && item.status !== 'proyeksi')
+                );
+                currentMeetingMode = hasSchedule ? 'pasti' : 'proyeksi';
+            }
+
+            syncFormDisplay(currentAgendaType, currentMeetingMode);
+            syncLocationDisclosure();
+        };
+
+        const openCreateDialog = () => {
+            form.reset();
+            hideErrorAlert();
+            setSubmitting(false);
+            currentExistingInvitationName = '';
+            updateInvitationStatusText();
+            form.action = dialog.dataset.storeUrl || '';
+            if (title) title.textContent = 'Tambah Item Agenda Banmus';
+            currentAgendaType = 'rapat';
+            currentMeetingMode = 'proyeksi';
+            syncFormDisplay('rapat', 'proyeksi');
+            syncLocationDisclosure();
+            showDialog();
+            field('field_agenda')?.focus();
         };
 
         const openEditDialog = (item) => {
@@ -1588,9 +1578,6 @@
                 .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
 
             if (title) title.textContent = 'Edit Item Agenda Banmus';
-            btnBackToStep1?.classList.add('hidden');
-            const mode = item.status === 'proyeksi' ? 'proyeksi' : 'pasti';
-            setWizardStep(2, mode);
             showDialog();
         };
 
@@ -1602,15 +1589,31 @@
                 .replace('__ITEM_ID__', encodeURIComponent(String(item.id || '')));
 
             if (title) title.textContent = 'Tetapkan Jadwal Agenda Banmus';
-            btnBackToStep1?.classList.add('hidden');
-            setWizardStep(2, 'pasti');
-            if (formModeIndicator) {
-                formModeIndicator.textContent = 'Penetapan Jadwal Pasti';
-                formModeIndicator.className = 'inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60';
-            }
+            currentAgendaType = 'rapat';
+            currentMeetingMode = 'pasti';
+            syncFormDisplay('rapat', 'pasti');
             showDialog();
             setTimeout(() => dateField?.focus(), 150);
         };
+
+        btnModeProyeksi?.addEventListener('click', () => {
+            currentMeetingMode = 'proyeksi';
+            syncFormDisplay('rapat', 'proyeksi');
+        });
+
+        btnModePasti?.addEventListener('click', () => {
+            currentMeetingMode = 'pasti';
+            syncFormDisplay('rapat', 'pasti');
+            dateField?.focus();
+        });
+
+        agendaTypeFields.forEach((radio) => {
+            radio.addEventListener('change', () => {
+                const selected = agendaTypeFields.find((r) => r.checked)?.value || 'rapat';
+                currentAgendaType = selected;
+                syncFormDisplay(currentAgendaType, currentMeetingMode);
+            });
+        });
 
         document.querySelectorAll('[data-banmus-item-open]').forEach((button) => {
             button.addEventListener('click', openCreateDialog);
@@ -1621,7 +1624,7 @@
                 try {
                     openEditDialog(JSON.parse(button.dataset.item || '{}'));
                 } catch {
-                    // Payload edit invalid
+                    // Invalid edit payload
                 }
             });
         });
@@ -1631,7 +1634,7 @@
                 try {
                     openScheduleDialog(JSON.parse(button.dataset.item || '{}'));
                 } catch {
-                    // Payload schedule invalid
+                    // Invalid schedule payload
                 }
             });
         });
@@ -1641,7 +1644,6 @@
         });
 
         roomField.addEventListener('change', syncLocationDisclosure);
-        agendaTypeFields.forEach((radio) => radio.addEventListener('change', syncAgendaTypeFields));
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -1693,9 +1695,6 @@
             try {
                 const oldItem = JSON.parse(oldItemRaw);
                 populateItemForm(oldItem);
-                const hasSchedule = Boolean(oldItem.tanggal || oldItem.jam_mulai || oldItem.ruangan_id);
-                setWizardStep(2, hasSchedule ? 'pasti' : 'proyeksi');
-                btnBackToStep1?.classList.add('hidden');
                 showDialog();
 
                 const oldError = dialog.dataset.oldError;
