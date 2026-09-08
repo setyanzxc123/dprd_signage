@@ -90,7 +90,11 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                 </span>
             </a>
 
-            <form class="hidden sm:block" method="post" action="<?= base_url('admin/logout') ?>" data-confirm-message="Yakin ingin keluar?">
+            <form class="hidden sm:block" method="post" action="<?= base_url('admin/logout') ?>"
+                  data-confirm-title="Keluar dari Panel Admin"
+                  data-confirm-message="Yakin ingin keluar dari sesi admin ini?"
+                  data-confirm-button="Keluar"
+                  data-confirm-variant="danger">
                 <?= csrf_field() ?>
                 <button class="inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 shadow-xs transition" type="submit" title="Keluar" aria-label="Keluar">
                     <i data-lucide="log-out" class="size-4"></i>

@@ -2908,7 +2908,15 @@
                         if (window.lucide) window.lucide.createIcons();
                     }
                 } else {
-                    alert(data.message || 'Gagal menyimpan draf risalah.');
+                    if (lastSavedTime) {
+                        lastSavedTime.innerHTML = '<span class="text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1"><i data-lucide="alert-circle" class="size-3.5"></i> ' + (data.message || 'Gagal menyimpan draf risalah.') + '</span>';
+                    }
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i data-lucide="alert-circle" class="size-4 text-rose-500"></i> Gagal Simpan';
+                    }
+                    if (window.lucide && window.lucide.createIcons) {
+                        window.lucide.createIcons();
+                    }
                 }
             } catch (err) {
                 console.error('Quick save error:', err);

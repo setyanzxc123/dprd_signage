@@ -97,8 +97,8 @@ $flashError = session()->getFlashdata('error');
             <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
                 <div class="p-5 sm:p-6">
                     <div class="flex items-start gap-4">
-                        <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-                            <i data-lucide="triangle-alert" class="size-6"></i>
+                        <div id="admin-confirm-modal-icon-wrap" class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+                            <i id="admin-confirm-modal-icon" data-lucide="triangle-alert" class="size-6"></i>
                         </div>
                         <div class="min-w-0 flex-1">
                             <h3 id="admin-confirm-modal-label" class="text-base font-bold text-slate-900 dark:text-white">

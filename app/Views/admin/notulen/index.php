@@ -123,7 +123,11 @@
                                         Buka
                                     </a>
                                     <form method="post" action="<?= base_url('admin/notulen/destroy/' . $job['id']) ?>"
-                                         class="m-0 inline-flex" data-confirm-message="Hapus notulen ini beserta seluruh transkrip dan risalahnya?">
+                                          class="m-0 inline-flex"
+                                          data-confirm-title="Hapus Notulen Rapat"
+                                          data-confirm-message="Hapus notulen ini beserta seluruh transkrip dan risalahnya?"
+                                          data-confirm-button="Hapus Notulen"
+                                          data-confirm-variant="danger">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="p-1.5 inline-flex items-center justify-center rounded-lg border border-rose-200/80 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 shadow-2xs transition cursor-pointer" title="Hapus" aria-label="Hapus notulen <?= esc($judulRapat) ?>">
                                             <i data-lucide="trash-2" class="size-4"></i>

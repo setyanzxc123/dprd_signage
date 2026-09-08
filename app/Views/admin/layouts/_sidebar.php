@@ -107,7 +107,11 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
                     <i data-lucide="user-round" class="size-4.5 text-slate-500"></i>
                     <span>Profil Admin</span>
                 </a>
-                <form id="sidebar-logout-form" method="post" action="<?= base_url('admin/logout') ?>" data-confirm-message="Yakin ingin keluar?">
+                <form id="sidebar-logout-form" method="post" action="<?= base_url('admin/logout') ?>"
+                      data-confirm-title="Keluar dari Panel Admin"
+                      data-confirm-message="Yakin ingin keluar dari sesi admin ini?"
+                      data-confirm-button="Keluar"
+                      data-confirm-variant="danger">
                     <?= csrf_field() ?>
                 </form>
                 <button type="submit" form="sidebar-logout-form" class="w-full flex items-center gap-x-3 py-2 px-3 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-left mt-1">

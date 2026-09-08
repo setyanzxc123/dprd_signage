@@ -88,8 +88,11 @@
         document.documentElement.dataset.adminConfirmBound = '1';
 
         const confirmModal = document.getElementById('admin-confirm-modal');
+        const confirmTitle = document.getElementById('admin-confirm-modal-label');
         const confirmMessage = document.getElementById('admin-confirm-modal-message');
         const confirmSubmitBtn = document.getElementById('admin-confirm-modal-submit');
+        const confirmIconWrap = document.getElementById('admin-confirm-modal-icon-wrap');
+        const confirmIcon = document.getElementById('admin-confirm-modal-icon');
 
         if (confirmSubmitBtn) {
             confirmSubmitBtn.addEventListener('click', function () {
@@ -118,8 +121,43 @@
             pendingConfirmForm = form;
 
             const msg = form.dataset.confirmMessage || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+            const title = form.dataset.confirmTitle || 'Konfirmasi Tindakan';
+            const btnText = form.dataset.confirmButton || 'Lanjutkan';
+            const variant = form.dataset.confirmVariant || 'danger';
+
+            if (confirmTitle) {
+                confirmTitle.textContent = title;
+            }
             if (confirmMessage) {
                 confirmMessage.textContent = msg;
+            }
+            if (confirmSubmitBtn) {
+                confirmSubmitBtn.textContent = btnText;
+                confirmSubmitBtn.className = 'py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent shadow-xs transition cursor-pointer focus:outline-hidden';
+                if (variant === 'primary') {
+                    confirmSubmitBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'focus:bg-blue-700');
+                } else if (variant === 'warning') {
+                    confirmSubmitBtn.classList.add('bg-amber-600', 'text-white', 'hover:bg-amber-700', 'focus:bg-amber-700');
+                } else {
+                    confirmSubmitBtn.classList.add('bg-rose-600', 'text-white', 'hover:bg-rose-700', 'focus:bg-rose-700');
+                }
+            }
+
+            if (confirmIconWrap && confirmIcon) {
+                confirmIconWrap.className = 'flex size-11 shrink-0 items-center justify-center rounded-xl';
+                if (variant === 'primary') {
+                    confirmIconWrap.classList.add('bg-blue-50', 'text-blue-600', 'dark:bg-blue-950/40', 'dark:text-blue-400');
+                    confirmIcon.setAttribute('data-lucide', 'check-circle-2');
+                } else if (variant === 'warning') {
+                    confirmIconWrap.classList.add('bg-amber-50', 'text-amber-600', 'dark:bg-amber-950/40', 'dark:text-amber-400');
+                    confirmIcon.setAttribute('data-lucide', 'alert-triangle');
+                } else {
+                    confirmIconWrap.classList.add('bg-rose-50', 'text-rose-600', 'dark:bg-rose-950/40', 'dark:text-rose-400');
+                    confirmIcon.setAttribute('data-lucide', 'triangle-alert');
+                }
+                if (window.lucide && window.lucide.createIcons) {
+                    window.lucide.createIcons();
+                }
             }
 
             if (window.HSOverlay && confirmModal) {

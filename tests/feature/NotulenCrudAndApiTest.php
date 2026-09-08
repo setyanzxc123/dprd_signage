@@ -151,6 +151,8 @@ final class NotulenCrudAndApiTest extends CIUnitTestCase
         $response->assertDontSee('tab_panel_ringkasan');
         $response->assertDontSee('Ada Perubahan');
         $response->assertDontSee('Perlu peninjauan & verifikasi');
+        $response->assertDontSee('onsubmit=');
+        $response->assertSee('data-confirm-title="Sahkan Risalah Rapat"');
     }
 
     public function testStatusAjaxEndpointReturnsJobProgress(): void

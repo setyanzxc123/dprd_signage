@@ -93,7 +93,12 @@ if ($job['jadwal_type'] === 'banmus') {
                             Menghentikan...
                         </button>
                     <?php else: ?>
-                        <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>" data-confirm-message="Hentikan proses AI sekarang? Bagian transkrip yang telah selesai akan tetap tersimpan aman." class="m-0 inline-flex">
+                        <form method="post" action="<?= base_url('admin/notulen/cancel/' . $job['id']) ?>"
+                              data-confirm-title="Hentikan Proses AI"
+                              data-confirm-message="Hentikan proses AI sekarang? Bagian transkrip yang telah selesai akan tetap tersimpan aman."
+                              data-confirm-button="Hentikan Proses"
+                              data-confirm-variant="danger"
+                              class="m-0 inline-flex">
                             <?= csrf_field() ?>
                             <button type="submit" class="py-1 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 shadow-xs transition cursor-pointer" title="Hentikan sementara proses AI">
                                 <i data-lucide="square" class="size-3 fill-current"></i>
@@ -340,7 +345,12 @@ if ($job['jadwal_type'] === 'banmus') {
                                 <span id="btn_toggle_edit_text">Sunting Naskah</span>
                             </button>
 
-                            <form method="post" action="<?= base_url('admin/notulen/finalize/' . $minutes['id']) ?>" onsubmit="return confirm('Sahkan dan finalisasi naskah risalah rapat ini? Setelah difinalisasi, risalah berstatus resmi dan siap diakses anggota.');">
+                            <form method="post" action="<?= base_url('admin/notulen/finalize/' . $minutes['id']) ?>"
+                                  data-confirm-title="Sahkan Risalah Rapat"
+                                  data-confirm-message="Sahkan dan finalisasi naskah risalah rapat ini? Setelah difinalisasi, risalah berstatus resmi dan siap diakses anggota."
+                                  data-confirm-button="Sahkan &amp; Finalisasi"
+                                  data-confirm-variant="primary"
+                                  class="m-0 inline-flex">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer">
                                     <i data-lucide="check-check" class="size-3.5"></i>
@@ -348,7 +358,12 @@ if ($job['jadwal_type'] === 'banmus') {
                                 </button>
                             </form>
                         <?php else: ?>
-                            <form method="post" action="<?= base_url('admin/notulen/unfinalize/' . $minutes['id']) ?>" onsubmit="return confirm('Buka kunci naskah risalah untuk melakukan revisi atau penyuntingan ulang?');">
+                            <form method="post" action="<?= base_url('admin/notulen/unfinalize/' . $minutes['id']) ?>"
+                                  data-confirm-title="Buka Kunci Risalah"
+                                  data-confirm-message="Buka kunci naskah risalah untuk melakukan revisi atau penyuntingan ulang?"
+                                  data-confirm-button="Buka Kunci Revisi"
+                                  data-confirm-variant="warning"
+                                  class="m-0 inline-flex">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300 transition cursor-pointer">
                                     <i data-lucide="lock-open" class="size-3.5"></i>
