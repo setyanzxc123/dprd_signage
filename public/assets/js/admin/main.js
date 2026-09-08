@@ -297,8 +297,24 @@
         if (!wrapper) return;
 
         wrapper.querySelectorAll('.dt-paging .dt-paging-button').forEach(function (btn) {
-            btn.classList.toggle('current', btn.classList.contains('current'));
+            var isCurrent = btn.classList.contains('current');
+            btn.classList.toggle('current', isCurrent);
             btn.classList.toggle('disabled', Boolean(btn.disabled || btn.classList.contains('disabled')));
+            if (isCurrent) {
+                btn.setAttribute('aria-current', 'page');
+            } else {
+                btn.removeAttribute('aria-current');
+            }
+            if (btn.classList.contains('previous') && !btn.getAttribute('aria-label')) {
+                btn.setAttribute('aria-label', 'Halaman Sebelumnya');
+            } else if (btn.classList.contains('next') && !btn.getAttribute('aria-label')) {
+                btn.setAttribute('aria-label', 'Halaman Berikutnya');
+            } else if (!btn.getAttribute('aria-label')) {
+                var text = (btn.textContent || '').trim();
+                if (text && !isNaN(Number(text))) {
+                    btn.setAttribute('aria-label', 'Halaman ' + text);
+                }
+            }
         });
     }
 

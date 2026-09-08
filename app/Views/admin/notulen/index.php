@@ -113,7 +113,7 @@
                                         </span>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    <span class="text-xs text-slate-400 dark:text-slate-500">Belum Ada</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">Belum Ada</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Aksi">

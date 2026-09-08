@@ -1745,7 +1745,7 @@
     .form-actions-sticky {
         position: sticky;
         bottom: calc(88px + env(safe-area-inset-bottom));
-        z-index: 60;
+        z-index: 40;
         margin: 14px -4px 0;
         padding: 10px 4px;
         background: color-mix(in srgb, var(--od-bg) 92%, transparent);
@@ -1760,7 +1760,17 @@
         min-height: 42px;
     }
 
-    /* DataTables Mobile Control Layout */
+    @media (max-height: 540px) {
+        .form-actions-sticky,
+        .participant-form-actions {
+            position: static !important;
+            margin-top: 16px !important;
+            backdrop-filter: none !important;
+            bottom: auto !important;
+        }
+    }
+
+    /* DataTables mobile controls */
     .dt-container .dt-layout-row {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -1786,6 +1796,24 @@
     .dt-container .dt-search input {
         width: 100% !important;
         max-width: none !important;
+    }
+    .dt-container .dt-paging {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+    .dt-container .dt-paging .dt-paging-button:not(.previous):not(.next):not(.current) {
+        display: none !important;
+    }
+    .dt-container .dt-paging .dt-paging-button {
+        min-height: 38px !important;
+        min-width: 38px !important;
+        padding: 6px 12px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        border-radius: 0.5rem !important;
     }
     .dt-col-filter-bar {
         width: 100% !important;
@@ -1820,6 +1848,140 @@
     .banmus-item-card .dt-col-filter-bar .dt-col-filter-select {
         width: 100% !important;
         max-width: none !important;
+    }
+
+    /* DataTables mobile card transformation */
+    .admin-data-table,
+    .admin-data-table > thead,
+    .admin-data-table > tbody,
+    .admin-data-table > tbody > tr,
+    .admin-data-table > tbody > tr > td {
+        display: block !important;
+        width: 100% !important;
+    }
+    .admin-data-table > thead {
+        display: none !important;
+    }
+    .admin-data-table > tbody {
+        padding: 4px 0 !important;
+    }
+    .admin-data-table > tbody > tr {
+        position: relative;
+        margin-bottom: 14px !important;
+        padding: 14px 16px !important;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .dark .admin-data-table > tbody > tr {
+        background: #0f172a;
+        border-color: #1e293b;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+    }
+    .admin-data-table > tbody > tr > td {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        padding: 7px 0 !important;
+        border: none !important;
+        border-bottom: 1px dashed #f1f5f9 !important;
+        background: transparent !important;
+        text-align: right !important;
+        font-size: 0.8125rem;
+        min-height: 32px;
+    }
+    .dark .admin-data-table > tbody > tr > td {
+        border-bottom-color: #1e293b !important;
+    }
+    .admin-data-table > tbody > tr > td::before {
+        content: attr(data-label);
+        display: inline-block;
+        font-size: 0.6875rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #64748b !important;
+        text-align: left !important;
+        margin-right: 12px !important;
+        flex-shrink: 0 !important;
+        padding-top: 1px;
+    }
+    .dark .admin-data-table > tbody > tr > td::before {
+        color: #94a3b8 !important;
+    }
+    .admin-data-table > tbody > tr > td.dt-row-number {
+        display: none !important;
+    }
+    .admin-data-table > tbody > tr > td[data-label="Nama Anggota"],
+    .admin-data-table > tbody > tr > td[data-label="Judul & Acara"],
+    .admin-data-table > tbody > tr > td[data-label="Rapat & Rekaman"],
+    .admin-data-table > tbody > tr > td[data-label="Nama Ruangan"],
+    .admin-data-table > tbody > tr > td[data-label="Nama Kelompok"],
+    .admin-data-table > tbody > tr > td[data-label="Agenda & Pokok Pembahasan"] {
+        display: block !important;
+        text-align: left !important;
+        padding-top: 0 !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 4px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .dark .admin-data-table > tbody > tr > td[data-label="Nama Anggota"],
+    .dark .admin-data-table > tbody > tr > td[data-label="Judul & Acara"],
+    .dark .admin-data-table > tbody > tr > td[data-label="Rapat & Rekaman"],
+    .dark .admin-data-table > tbody > tr > td[data-label="Nama Ruangan"],
+    .dark .admin-data-table > tbody > tr > td[data-label="Nama Kelompok"],
+    .dark .admin-data-table > tbody > tr > td[data-label="Agenda & Pokok Pembahasan"] {
+        border-bottom-color: #1e293b !important;
+    }
+    .admin-data-table > tbody > tr > td[data-label="Nama Anggota"]::before,
+    .admin-data-table > tbody > tr > td[data-label="Judul & Acara"]::before,
+    .admin-data-table > tbody > tr > td[data-label="Rapat & Rekaman"]::before,
+    .admin-data-table > tbody > tr > td[data-label="Nama Ruangan"]::before,
+    .admin-data-table > tbody > tr > td[data-label="Nama Kelompok"]::before,
+    .admin-data-table > tbody > tr > td[data-label="Agenda & Pokok Pembahasan"]::before {
+        display: none !important;
+    }
+    .admin-data-table > tbody > tr > td[data-label="Aksi"] {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        padding-top: 10px !important;
+        padding-bottom: 0 !important;
+        margin-top: 4px !important;
+        border-bottom: none !important;
+    }
+    .admin-data-table > tbody > tr > td[data-label="Aksi"]::before {
+        display: none !important;
+    }
+    .admin-data-table > tbody > tr.dt-empty > td,
+    .admin-data-table > tbody > tr > td.dt-empty,
+    .admin-data-table > tbody > tr > td.dataTables_empty {
+        display: block !important;
+        text-align: center !important;
+        padding: 24px 12px !important;
+        border: none !important;
+        color: #64748b !important;
+    }
+    .admin-data-table > tbody > tr.dt-empty > td::before,
+    .admin-data-table > tbody > tr > td.dt-empty::before,
+    .admin-data-table > tbody > tr > td.dataTables_empty::before {
+        display: none !important;
+    }
+
+    /* Touch target hardening */
+    .admin-data-table .room-row-actions a,
+    .admin-data-table .room-row-actions button,
+    .admin-data-table .notulen-actions a,
+    .admin-data-table .notulen-actions button,
+    .admin-data-table td[data-label="Aksi"] a,
+    .admin-data-table td[data-label="Aksi"] button {
+        min-height: 38px !important;
+        min-width: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
     .mobile-hidden {
         display: none !important;

@@ -440,7 +440,7 @@ if ($job['jadwal_type'] === 'banmus') {
                                 <i data-lucide="file-edit" class="size-4 text-emerald-600 dark:text-emerald-400"></i>
                                 <span class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Editor Risalah (3 Seksi Terkunci)</span>
                             </div>
-                            <span class="text-[11px] text-slate-500 dark:text-slate-400">Shortcut: Tekan <kbd class="py-0.5 px-1.5 text-[10px] font-mono bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md">Ctrl + S</kbd> untuk simpan cepat</span>
+                            <span class="hidden sm:inline text-[11px] text-slate-500 dark:text-slate-400">Shortcut: Tekan <kbd class="py-0.5 px-1.5 text-[10px] font-mono bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md">Ctrl + S</kbd> untuk simpan cepat</span>
                         </div>
 
                         <!-- Seksi 1: Ringkasan Utama -->

@@ -82,7 +82,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                 <i class="theme-icon-moon size-4" data-lucide="moon"></i>
             </label>
 
-            <a href="<?= base_url('admin/profile') ?>" class="hidden sm:inline-flex items-center gap-x-2.5 py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Buka profil admin">
+            <a href="<?= base_url('admin/profile') ?>" class="inline-flex items-center gap-x-2.5 py-1.5 px-2 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition" title="Buka profil admin" aria-label="Profil <?= esc($userName) ?>">
                 <span class="grid size-7 place-items-center rounded-lg bg-blue-500/15 text-xs font-black text-blue-600 dark:text-blue-400"><?= esc($userInit) ?></span>
                 <span class="hidden text-left lg:block leading-tight">
                     <strong class="block max-w-32 truncate text-xs font-bold text-slate-800 dark:text-slate-200"><?= esc($userName) ?></strong>
