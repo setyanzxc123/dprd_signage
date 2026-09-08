@@ -518,7 +518,7 @@ export async function processJob(pool, job) {
  */
 async function main() {
   const args = process.argv.slice(2);
-  const isDaemon = args.includes('--daemon');
+  const isDaemon = args.includes('--daemon') || Boolean(process.env.pm_id);
   const jobIdArg = args.find((a) => a.startsWith('--job-id='));
 
   log('------------------------------------------------------------');
@@ -621,7 +621,10 @@ async function main() {
   log('[Worker] Worker telah berhenti.');
 }
 
-if (process.argv[1] && process.argv[1].endsWith('worker.js')) {
+const isCliEntry = Boolean(process.argv[1]) && process.argv[1].endsWith('worker.js');
+const isPm2Entry = Boolean(process.env.pm_id) || (Boolean(process.env.pm_exec_path) && process.env.pm_exec_path.endsWith('worker.js'));
+
+if (isCliEntry || isPm2Entry) {
   main().catch((err) => {
     error('[Worker] Fatal Error:', err);
     process.exit(1);
