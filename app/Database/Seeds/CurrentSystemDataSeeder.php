@@ -134,32 +134,38 @@ class CurrentSystemDataSeeder extends Seeder
     private function requiredFields(): array
     {
         return [
+            'users'          => ['id', 'username', 'name', 'active'],
+            'settings'       => ['key_name', 'value'],
+            'ruangan'        => ['name', 'kapasitas', 'tersedia'],
             'unit_rapat'     => ['nama', 'membership_type', 'urutan'],
-            'anggota'        => ['id', 'no_wa', 'aktif', 'last_login_at'],
+            'anggota'        => ['id', 'name', 'no_wa', 'aktif', 'user_id', 'last_login_at'],
             'member_otps'    => [
                 'anggota_id', 'code_hash', 'provider', 'provider_otp_id',
                 'provider_transaction_id', 'status', 'attempts', 'expires_at',
                 'used_at', 'created_by_admin_id',
                 'created_at', 'updated_at',
             ],
-            'dokumen_banmus' => ['nomor_sk', 'tahun', 'semester', 'dokumen_file', 'is_publik'],
-            'jadwal_banmus'  => [
+            'anggota_unit_rapat'       => ['anggota_id', 'unit_rapat_id'],
+            'dokumen_banmus'           => ['nomor_sk', 'tahun', 'semester', 'dokumen_file', 'is_publik'],
+            'jadwal_banmus'            => [
                 'dokumen_banmus_id', 'agenda', 'jenis_agenda', 'publikasi', 'status',
                 'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
                 'undangan_file', 'undangan_nama_asli',
             ],
-            'jadwal_umum'    => [
+            'jadwal_banmus_unit_rapat' => ['jadwal_banmus_id', 'unit_rapat_id'],
+            'jadwal_umum'              => [
                 'judul', 'jenis_agenda', 'tanggal', 'tanggal_mulai', 'tanggal_selesai',
                 'waktu_mulai', 'waktu_selesai', 'ruangan_id',
                 'lokasi_lainnya', 'pihak_eksternal', 'is_publik', 'status',
                 'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
                 'undangan_file', 'undangan_nama_asli',
             ],
+            'jadwal_umum_unit_rapat'   => ['jadwal_umum_id', 'unit_rapat_id'],
             'meeting_transcription_jobs' => [
-                'jadwal_type', 'audio_filename', 'status', 'progress_percent',
+                'jadwal_type', 'audio_filename', 'status', 'progress_percent', 'ai_model',
             ],
             'meeting_minutes' => [
-                'job_id', 'ringkasan_eksekutif', 'status_verifikasi',
+                'job_id', 'ringkasan_eksekutif', 'struktur_json', 'status_verifikasi',
             ],
         ];
     }
@@ -358,6 +364,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'komisi'  => $commission,
                 'no_wa'   => '08000001' . str_pad((string) $number, 4, '0', STR_PAD_LEFT),
                 'aktif'   => 1,
+                'user_id' => null,
                 'foto'    => null,
             ];
         }
@@ -369,6 +376,7 @@ class CurrentSystemDataSeeder extends Seeder
             'komisi'  => 'Komisi I',
             'no_wa'   => self::SAMPLE_MEMBER_PHONE,
             'aktif'   => 1,
+            'user_id' => null,
             'foto'    => null,
         ];
 
@@ -1617,14 +1625,16 @@ class CurrentSystemDataSeeder extends Seeder
             'materi_akses' => $type === 'non_rapat' ? 'publik' : $materialAccess,
             'stream_url' => $type === 'non_rapat' ? null : $streamUrl,
             'stream_akses' => $type === 'non_rapat' ? 'publik' : $streamAccess,
-            'status' => JadwalUmumModel::resolveLifecycleStatus(
-                $startDate,
-                $startTime,
-                $endTime,
-                null,
-                $type,
-                $statusOverride
-            ),
+            'status' => $type === 'non_rapat'
+                ? ($statusOverride ?? JadwalUmumModel::STATUS_NON_RAPAT)
+                : JadwalUmumModel::resolveLifecycleStatus(
+                    $startDate,
+                    $startTime,
+                    $endTime,
+                    null,
+                    $type,
+                    $statusOverride
+                ),
             'undangan_file' => null,
             'undangan_nama_asli' => null,
             'created_at' => date('Y-m-d H:i:s'),
@@ -1873,14 +1883,16 @@ class CurrentSystemDataSeeder extends Seeder
                 . 'Jadwal Umum dengan pihak eksternal. Sumber informasi: ' . $source,
             'is_publik' => $isPublic ? 1 : 0,
             'units' => $units,
-            'status' => JadwalUmumModel::resolveLifecycleStatus(
-                $startDate,
-                $startTime,
-                $endTime,
-                null,
-                $type,
-                $statusOverride
-            ),
+            'status' => $type === 'non_rapat'
+                ? ($statusOverride ?? JadwalUmumModel::STATUS_NON_RAPAT)
+                : JadwalUmumModel::resolveLifecycleStatus(
+                    $startDate,
+                    $startTime,
+                    $endTime,
+                    null,
+                    $type,
+                    $statusOverride
+                ),
             'created_at' => $now,
             'updated_at' => $now,
         ];

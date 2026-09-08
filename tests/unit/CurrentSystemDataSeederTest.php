@@ -118,7 +118,35 @@ final class CurrentSystemDataSeederTest extends CIUnitTestCase
         $this->assertSame('peserta', $schedule['materi_akses']);
         $this->assertSame('https://example.com/dummy/live/rapat-insidental', $schedule['stream_url']);
         $this->assertSame('publik', $schedule['stream_akses']);
+        $this->assertSame('rapat', $schedule['jenis_agenda']);
+        $this->assertSame('2027-08-20', $schedule['tanggal_mulai']);
+        $this->assertSame('2027-08-20', $schedule['tanggal_selesai']);
+        $this->assertSame('menunggu', $schedule['status']);
         $this->assertStringStartsWith('(Dummy) ', $schedule['judul']);
+
+        $nonMeeting = $method->invoke(
+            $this->subject,
+            'Pameran Arsip Pengujian',
+            new DateTimeImmutable('2027-08-20 09:00:00'),
+            new DateTimeImmutable('2027-08-23 18:00:00'),
+            null,
+            'Lobi Utama',
+            [],
+            'publik',
+            null,
+            'publik',
+            null,
+            'publik',
+            'non_rapat',
+            null,
+            new DateTimeImmutable('2027-08-23 18:00:00'),
+        );
+        $this->assertSame('non_rapat', $nonMeeting['jenis_agenda']);
+        $this->assertSame('non_rapat', $nonMeeting['status']);
+        $this->assertSame('2027-08-20', $nonMeeting['tanggal_mulai']);
+        $this->assertSame('2027-08-23', $nonMeeting['tanggal_selesai']);
+        $this->assertNull($nonMeeting['room']);
+        $this->assertSame('Lobi Utama', $nonMeeting['lokasi_lainnya']);
     }
 
     public function testDummyResourceLinksUseExampleDotComOnly(): void
@@ -173,8 +201,15 @@ final class CurrentSystemDataSeederTest extends CIUnitTestCase
         $this->assertContains('users', $requiredTables);
         $this->assertContains('member_otps', $requiredTables);
         $this->assertContains('last_login_at', $requiredFields['anggota']);
+        $this->assertContains('user_id', $requiredFields['anggota']);
         $this->assertContains('provider_transaction_id', $requiredFields['member_otps']);
         $this->assertContains('created_by_admin_id', $requiredFields['member_otps']);
+        $this->assertContains('ai_model', $requiredFields['meeting_transcription_jobs']);
+        $this->assertContains('struktur_json', $requiredFields['meeting_minutes']);
+        $this->assertContains('jenis_agenda', $requiredFields['jadwal_umum']);
+        $this->assertContains('tanggal_mulai', $requiredFields['jadwal_umum']);
+        $this->assertContains('tanggal_selesai', $requiredFields['jadwal_umum']);
+        $this->assertContains('status', $requiredFields['jadwal_umum']);
         $this->assertIsString($source);
         $this->assertStringNotContainsString("table('users')", $source);
         $this->assertStringNotContainsString('insertBatch($users', $source);
