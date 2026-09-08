@@ -747,7 +747,7 @@
                     stopWaPolling();
                     waQrLoading.hidden = true;
                     if (waQrError) {
-                        waQrError.textContent = qr?.error || gw.error || 'WhatsApp Gateway sedang offline.';
+                        waQrError.textContent = qr?.error || gw.error || 'Layanan WhatsApp sedang offline.';
                         waQrError.hidden = false;
                     }
                     return;
@@ -760,7 +760,7 @@
                 } else {
                     waQrLoading.hidden = true;
                     if (waQrError) {
-                        waQrError.textContent = qr?.error || gw.error || 'QR Code belum siap atau gateway sedang offline.';
+                        waQrError.textContent = qr?.error || gw.error || 'QR Code belum siap atau layanan WhatsApp sedang offline.';
                         waQrError.hidden = false;
                     }
                 }
@@ -768,7 +768,7 @@
                 stopWaPolling();
                 waQrLoading.hidden = true;
                 if (waQrError) {
-                    waQrError.textContent = 'Gagal terhubung ke service WhatsApp Gateway.';
+                    waQrError.textContent = 'Gagal terhubung ke layanan WhatsApp.';
                     waQrError.hidden = false;
                 }
             }
@@ -780,10 +780,10 @@
             waPrimaryStatus.innerHTML = `
                 <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
                     <i data-lucide="check-circle-2" class="size-5 shrink-0"></i>
-                    <span>WhatsApp Gateway Terhubung</span>
+                    <span>WhatsApp Terhubung</span>
                 </div>
                 <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                    No. Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
+                    Nomor Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
                 </p>
                 <div class="flex flex-wrap gap-2 pt-2">
                     <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
@@ -797,21 +797,36 @@
             }
         };
 
-        const renderDisconnectedStatus = (errorMsg) => {
+        const renderDisconnectedStatus = (errorMsg, canFallback = true) => {
             if (!waPrimaryStatus) return;
+            const displayError = errorMsg && !errorMsg.toLowerCase().includes('gateway')
+                ? errorMsg
+                : 'Nomor WhatsApp belum terhubung ke sistem. Silakan tautkan nomor dengan scan QR Code atau kode pairing.';
+
+            const fallbackHtml = canFallback ? `
+                <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs mt-2" id="wa-fallback-notice">
+                    <i data-lucide="info" class="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"></i>
+                    <div>
+                        <span class="font-semibold">Layanan Cadangan Aktif:</span>
+                        <span class="block mt-0.5 text-slate-600 dark:text-slate-400">Karena WhatsApp belum terhubung, pengiriman kode OTP otomatis dialihkan ke layanan cadangan (Fazpass) agar verifikasi login anggota tetap berjalan normal.</span>
+                    </div>
+                </div>
+            ` : '';
+
             waPrimaryStatus.innerHTML = `
                 <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold text-sm">
                     <i data-lucide="alert-triangle" class="size-5 shrink-0"></i>
                     <span>WhatsApp Belum Terhubung</span>
                 </div>
                 <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                    ${errorMsg}
+                    ${displayError}
                 </p>
+                ${fallbackHtml}
                 <div class="pt-2">
-                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-amber-500 text-white hover:bg-amber-600 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
                         data-hs-overlay="#modal_wa_pairing" onclick="window.switchWaTab('qr');">
                         <i data-lucide="qr-code" class="size-4"></i>
-                        <span>Buka Scan QR / Pairing Code</span>
+                        <span>Tautkan Nomor WhatsApp</span>
                     </button>
                 </div>
             `;
@@ -833,6 +848,7 @@
                 const result = await response.json();
                 const gw = result?.gateway || {};
                 const qr = result?.qr || {};
+                const canFallback = Boolean(result?.can_fallback ?? (result?.fallback && result?.provider === 'hybrid'));
 
                 if (gw.connected) {
                     if (isWaModalOpen()) closeWaPairingModal();
@@ -843,7 +859,7 @@
 
                 if (gw.status === 'offline') {
                     stopWaPolling();
-                    renderDisconnectedStatus(gw.error || 'WhatsApp Gateway sedang offline.');
+                    renderDisconnectedStatus(gw.error || 'Layanan WhatsApp sedang offline.', canFallback);
                     return;
                 }
 
@@ -873,16 +889,17 @@
                     });
                     const result = await response.json();
                     const gw = result?.gateway || {};
+                    const canFallback = Boolean(result?.can_fallback ?? (result?.fallback && result?.provider === 'hybrid'));
                     if (gw.connected) {
                         stopWaPolling();
                         renderConnectedStatus(gw);
                     } else {
                         stopWaPolling();
-                        renderDisconnectedStatus(gw.error || 'Gateway belum terhubung. Silakan scan QR Code.');
+                        renderDisconnectedStatus(gw.error || 'Nomor WhatsApp belum terhubung ke sistem.', canFallback);
                     }
                 } catch (e) {
                     stopWaPolling();
-                    renderDisconnectedStatus('Gagal terhubung ke service WhatsApp Gateway.');
+                    renderDisconnectedStatus('Gagal terhubung ke layanan WhatsApp.');
                 } finally {
                     refreshWaBtn.disabled = false;
                     if (refreshWaIcon) refreshWaIcon.classList.remove('animate-spin');
@@ -999,6 +1016,10 @@
             waPrimaryStatus.addEventListener('click', (event) => {
                 if ((event.target instanceof Element) && event.target.closest('#btn-wa-logout')) {
                     openWaLogoutModal();
+                }
+                if ((event.target instanceof Element) && event.target.closest('#wa-qr-btn')) {
+                    loadWaQrCode();
+                    startWaPolling(2500);
                 }
             });
         }

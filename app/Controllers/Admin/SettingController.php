@@ -387,12 +387,15 @@ class SettingController extends BaseController
             $qrData = $provider->getRawQr();
         }
 
+        $canFallback = ($otpConfig->provider === 'hybrid') && $otpConfig->fazpassFallbackEnabled;
+
         return $this->response->setJSON([
-            'status'     => 'success',
-            'provider'   => $otpConfig->provider,
-            'fallback'   => $otpConfig->fazpassFallbackEnabled,
-            'gateway'    => $status,
-            'qr'         => $qrData,
+            'status'       => 'success',
+            'provider'     => $otpConfig->provider,
+            'fallback'     => $otpConfig->fazpassFallbackEnabled,
+            'can_fallback' => $canFallback,
+            'gateway'      => $status,
+            'qr'           => $qrData,
         ]);
     }
 
@@ -441,7 +444,7 @@ class SettingController extends BaseController
 
         return $this->response->setJSON([
             'status'  => 'success',
-            'message' => $result['message'] ?? 'Sesi WhatsApp telah diputus. Lakukan pairing ulang untuk menghubungkan kembali.',
+            'message' => $result['message'] ?? 'Sesi WhatsApp telah diputus. Silakan tautkan ulang nomor untuk menghubungkan kembali.',
             'gateway' => $status,
         ]);
     }

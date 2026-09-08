@@ -59,6 +59,7 @@ final class AdminWhatsAppStatusTest extends CIUnitTestCase
         $this->assertSame('success', $payload['status'] ?? null);
         $this->assertArrayHasKey('provider', $payload);
         $this->assertArrayHasKey('fallback', $payload);
+        $this->assertArrayHasKey('can_fallback', $payload);
         $this->assertArrayHasKey('gateway', $payload);
 
         $gateway = $payload['gateway'] ?? [];
@@ -89,12 +90,38 @@ final class AdminWhatsAppStatusTest extends CIUnitTestCase
             ->get('/admin/pengaturan');
 
         $response->assertStatus(200);
-        $response->assertSee('Integrasi WhatsApp OTP Gateway');
-        $response->assertSee('Status Koneksi Gateway');
+        $response->assertSee('Layanan WhatsApp');
+        $response->assertSee('Status Koneksi WhatsApp');
         $response->assertSee('btn-refresh-wa-status');
         $response->assertSee('modal_wa_pairing');
         $response->assertSee('modal_wa_logout');
         $response->assertSee('btn-wa-logout');
+    }
+
+    public function testSettingsPageShowsFazpassFallbackInfoWhenDisconnected(): void
+    {
+        cache()->save(\App\Libraries\Otp\Providers\BaileysProvider::OFFLINE_CACHE_KEY, [
+            'configured' => true,
+            'connected'  => false,
+            'status'     => 'offline',
+            'phone'      => null,
+            'name'       => null,
+            'qr_url'     => 'http://127.0.0.1:3001/qr/raw',
+            'error'      => 'Nomor WhatsApp belum terhubung ke sistem.',
+        ], 60);
+
+        try {
+            $response = $this
+                ->withSession(['auth_user' => $this->adminSession()])
+                ->get('/admin/pengaturan');
+
+            $response->assertStatus(200);
+            $response->assertSee('WhatsApp Belum Terhubung');
+            $response->assertSee('Layanan Cadangan Aktif');
+            $response->assertSee('Fazpass');
+        } finally {
+            cache()->delete(\App\Libraries\Otp\Providers\BaileysProvider::OFFLINE_CACHE_KEY);
+        }
     }
 
     public function testWhatsAppLogoutRequiresAdminSession(): void

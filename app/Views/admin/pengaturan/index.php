@@ -116,11 +116,12 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <i data-lucide="message-square" class="size-5 text-blue-600 dark:text-blue-400"></i>
-                    Integrasi WhatsApp OTP Gateway
+                    Layanan WhatsApp
                 </h2>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-blue-600 dark:text-blue-400" id="wa-provider-badge">
-                        Provider: <?= esc(strtoupper($otpConfig->provider ?? 'HYBRID')) ?>
+                    <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800" id="wa-provider-badge">
+                        <i data-lucide="shield-check" class="size-3.5"></i>
+                        <span>Mode: <?= esc($otpConfig->provider === 'hybrid' ? 'Otomatis (Utama & Cadangan)' : ($otpConfig->provider === 'baileys' ? 'WhatsApp Langsung' : ($otpConfig->provider === 'fazpass' ? 'Layanan Cadangan' : strtoupper($otpConfig->provider ?? 'HYBRID')))) ?></span>
                     </span>
                     <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-2.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xs hover:bg-slate-50 focus:outline-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 transition" id="btn-refresh-wa-status" title="Periksa status koneksi WhatsApp">
                         <i data-lucide="refresh-cw" class="size-3.5" id="icon-refresh-wa"></i>
@@ -131,16 +132,16 @@
 
             <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3 dark:border-slate-800 dark:bg-slate-950/50" id="wa-primary-status-card">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Koneksi Gateway</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Koneksi WhatsApp</span>
                 </div>
                 <div id="wa-primary-status">
                     <?php if (! empty($whatsapp['connected'])): ?>
                         <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
                             <i data-lucide="check-circle-2" class="size-5 shrink-0"></i>
-                            <span>WhatsApp Gateway Terhubung</span>
+                            <span>WhatsApp Terhubung</span>
                         </div>
                         <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                            No. Pengirim: <strong>+<?= esc($whatsapp['phone'] ?? '-') ?></strong>
+                            Nomor Pengirim: <strong>+<?= esc($whatsapp['phone'] ?? '-') ?></strong>
                             <?php if (! empty($whatsapp['name'])): ?>
                                 (<?= esc($whatsapp['name']) ?>)
                             <?php endif; ?>
@@ -157,13 +158,24 @@
                             <span>WhatsApp Belum Terhubung</span>
                         </div>
                         <p class="text-xs text-slate-600 dark:text-slate-400 mt-1" id="wa-error-text">
-                            <?= esc($whatsapp['error'] ?? 'Gateway belum terhubung. Silakan scan QR Code untuk menghubungkan nomor pengirim.') ?>
+                            <?= esc(! empty($whatsapp['error']) && str_contains(strtolower($whatsapp['error']), 'gateway') ? 'Nomor WhatsApp belum terhubung ke sistem. Silakan tautkan nomor dengan scan QR Code atau kode pairing.' : ($whatsapp['error'] ?? 'Nomor WhatsApp belum terhubung ke sistem. Silakan tautkan nomor dengan scan QR Code atau kode pairing.')) ?>
                         </p>
+
+                        <?php if (($otpConfig->provider ?? '') === 'hybrid' && ! empty($otpConfig->fazpassFallbackEnabled)): ?>
+                            <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs mt-2" id="wa-fallback-notice">
+                                <i data-lucide="info" class="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"></i>
+                                <div>
+                                    <span class="font-semibold">Layanan Cadangan Aktif:</span>
+                                    <span class="block mt-0.5 text-slate-600 dark:text-slate-400">Karena WhatsApp belum terhubung, pengiriman kode OTP otomatis dialihkan ke layanan cadangan (Fazpass) agar verifikasi login anggota tetap berjalan normal.</span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="pt-2">
-                            <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-amber-500 text-white hover:bg-amber-600 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
+                            <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
                                 data-hs-overlay="#modal_wa_pairing" aria-haspopup="dialog" aria-expanded="false" aria-controls="modal_wa_pairing" onclick="window.switchWaTab('qr');">
                                 <i data-lucide="qr-code" class="size-4"></i>
-                                <span>Buka Scan QR / Pairing Code</span>
+                                <span>Tautkan Nomor WhatsApp</span>
                             </button>
                         </div>
                     <?php endif; ?>
@@ -197,14 +209,13 @@
     </div>
 </form>
 
-<!-- Modal Penautan WhatsApp Gateway (QR Code & Pairing Code) -->
 <div id="modal_wa_pairing" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="modal_wa_pairing_label">
     <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
         <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
             <div class="flex justify-between items-center py-3.5 px-4 sm:px-6 border-b border-slate-200 dark:border-slate-800">
                 <h3 id="modal_wa_pairing_label" class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <i data-lucide="smartphone" class="size-5 text-blue-600 dark:text-blue-400"></i>
-                    Tautkan WhatsApp Gateway
+                    Tautkan Nomor WhatsApp
                 </h3>
                 <button type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-slate-100 text-slate-800 hover:bg-slate-200 focus:outline-hidden focus:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400" data-hs-overlay="#modal_wa_pairing">
                     <span class="sr-only">Tutup</span>
@@ -224,13 +235,13 @@
 
                 <div id="panel-wa-qr" class="space-y-3" role="tabpanel" aria-labelledby="tab-btn-qr">
                     <p class="text-xs text-slate-600 dark:text-slate-400">
-                        Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan Perangkat</strong>, lalu scan kode berikut:
+                        Buka aplikasi WhatsApp di ponsel pengirim, pilih menu <strong>Perangkat Tertaut</strong> &gt; <strong>Tautkan Perangkat</strong>, lalu pindai kode QR berikut:
                     </p>
 
                     <div class="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-xl min-h-56 dark:bg-slate-950/50 dark:border-slate-800">
                         <div id="wa-qr-loading" class="flex flex-col items-center gap-2">
                             <span class="animate-spin inline-block size-6 border-2 border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-400"></span>
-                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Mengambil QR Code dari Gateway...</span>
+                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Menyiapkan QR Code...</span>
                         </div>
                         <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="max-w-48 max-h-48 rounded-lg shadow-xs bg-white p-2 border border-slate-200 dark:border-slate-700" hidden />
                         <div id="wa-qr-error" class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs mt-2 w-full dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300" hidden></div>
@@ -248,7 +259,7 @@
 
                 <div id="panel-wa-pair" class="space-y-3 hidden" role="tabpanel" aria-labelledby="tab-btn-pair">
                     <p class="text-xs text-slate-600 dark:text-slate-400">
-                        Masukkan nomor WhatsApp resmi DPRD (contoh: <code>08123456789</code> atau <code>628123456789</code>) untuk menerima 8 digit kode pairing:
+                        Masukkan nomor WhatsApp resmi DPRD (contoh: <code>081234567890</code>) untuk menerima 8 digit kode pairing:
                     </p>
 
                     <div class="space-y-2">
@@ -265,7 +276,7 @@
                         <div class="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">Kode Pairing Anda</div>
                         <div class="text-2xl font-black font-mono tracking-widest text-blue-800 dark:text-blue-300 select-all" id="text-pairing-code">-</div>
                         <p class="text-xs text-slate-600 dark:text-slate-300">
-                            Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan dengan nomor telepon</strong>, lalu masukkan kode di atas.
+                            Buka WhatsApp di HP, masuk ke <strong>Perangkat Tertaut</strong>, pilih <strong>Tautkan dengan nomor telepon</strong>, lalu masukkan 8 digit kode di atas.
                         </p>
                     </div>
 
@@ -282,7 +293,6 @@
     </div>
 </div>
 
-<!-- Modal Konfirmasi Pemutusan Perangkat WhatsApp -->
 <div id="modal_wa_logout" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="modal_wa_logout_label">
     <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-md sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
         <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
@@ -292,11 +302,11 @@
                         <i data-lucide="log-out" class="size-5"></i>
                     </div>
                     <h3 id="modal_wa_logout_label" class="text-base font-bold text-slate-800 dark:text-slate-200">
-                        Putuskan Perangkat WhatsApp?
+                        Putuskan Nomor WhatsApp?
                     </h3>
                 </div>
                 <p class="text-sm text-slate-600 dark:text-slate-400">
-                    Sesi WhatsApp yang aktif akan dihapus dari gateway dan nomor pengirim berhenti menerima OTP sampai pairing dilakukan ulang.
+                    Nomor WhatsApp pengirim akan diputuskan dari sistem. Pengiriman pesan melalui nomor ini akan dihentikan sampai nomor ditautkan kembali.
                 </p>
                 <p class="text-xs font-semibold text-rose-600 dark:text-rose-400" id="wa-logout-error" hidden></p>
                 <div class="flex justify-end gap-x-2 pt-2">
