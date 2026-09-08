@@ -211,6 +211,88 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
         $this->assertSame(0, $this->testDb->table('jadwal_umum')->countAllResults());
     }
 
+    public function testStoresNonRapatScheduleWithDateRangeAndNullMeetingFields(): void
+    {
+        $response = $this->adminPost('/admin/jadwal-umum/store', [
+            'judul'           => 'Pameran Pembangunan Daerah',
+            'jenis_agenda'    => 'non_rapat',
+            'tanggal_mulai'   => '2099-09-01',
+            'tanggal_selesai' => '2099-09-03',
+            'lokasi_lainnya'  => 'Halaman Kantor DPRD',
+            'is_publik'       => '1',
+            'waktu_mulai'     => '08:00',
+            'ruangan_id'      => '1',
+        ]);
+
+        $response->assertStatus(303);
+        $row = $this->testDb->table('jadwal_umum')->get()->getRowArray();
+        $this->assertNotNull($row);
+        $this->assertSame('non_rapat', $row['jenis_agenda']);
+        $this->assertSame('non_rapat', $row['status']);
+        $this->assertSame('2099-09-01', $row['tanggal']);
+        $this->assertSame('2099-09-01', $row['tanggal_mulai']);
+        $this->assertSame('2099-09-03', $row['tanggal_selesai']);
+        $this->assertNull($row['ruangan_id']);
+        $this->assertNull($row['waktu_mulai']);
+        $this->assertNull($row['waktu_selesai']);
+        $this->assertSame('Halaman Kantor DPRD', $row['lokasi_lainnya']);
+    }
+
+    public function testStoresMeetingWithManualStatusOverrideDitundaAndDibatalkan(): void
+    {
+        $response = $this->adminPost('/admin/jadwal-umum/store', [
+            'judul'           => 'Rapat Dengar Pendapat',
+            'jenis_agenda'    => 'rapat',
+            'tanggal'         => '2099-09-10',
+            'waktu_mulai'     => '09:00',
+            'waktu_selesai'   => '11:00',
+            'lokasi_mode'     => 'ruangan',
+            'ruangan_id'      => '1',
+            'status_override' => 'ditunda',
+        ]);
+
+        $response->assertStatus(303);
+        $row = $this->testDb->table('jadwal_umum')->get()->getRowArray();
+        $this->assertNotNull($row);
+        $this->assertSame('ditunda', $row['status']);
+
+        $updateResponse = $this->adminPost("/admin/jadwal-umum/{$row['id']}/update", [
+            'judul'           => 'Rapat Dengar Pendapat (Dibatalkan)',
+            'jenis_agenda'    => 'rapat',
+            'tanggal'         => '2099-09-10',
+            'waktu_mulai'     => '09:00',
+            'waktu_selesai'   => '11:00',
+            'lokasi_mode'     => 'ruangan',
+            'ruangan_id'      => '1',
+            'status_override' => 'dibatalkan',
+        ]);
+
+        $updateResponse->assertStatus(303);
+        $updatedRow = $this->testDb->table('jadwal_umum')->where('id', $row['id'])->get()->getRowArray();
+        $this->assertSame('dibatalkan', $updatedRow['status']);
+    }
+
+    public function testIndexDisplaysTypeBadgeAndNeutralStatusForNonRapat(): void
+    {
+        $this->testDb->table('jadwal_umum')->insert([
+            'judul'           => 'Bazar UMKM',
+            'jenis_agenda'    => 'non_rapat',
+            'tanggal'         => '2099-09-01',
+            'tanggal_mulai'   => '2099-09-01',
+            'tanggal_selesai' => '2099-09-05',
+            'status'          => 'non_rapat',
+            'is_publik'       => 1,
+        ]);
+
+        $response = $this->adminGet('/admin/jadwal-umum');
+        $response->assertOK();
+        $body = $response->response()->getBody();
+
+        $this->assertStringContainsString('Kegiatan', $body);
+        $this->assertStringContainsString('&mdash;', $body);
+        $this->assertStringContainsString('01/09/2099', $body);
+    }
+
     private function adminGet(string $path)
     {
         return $this->withSession(['auth_user' => $this->adminSession()])->get($path);
@@ -275,7 +357,10 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
         $this->forge->addField([
             'id'              => ['type' => 'INTEGER', 'auto_increment' => true],
             'judul'           => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda'    => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
             'tanggal'         => ['type' => 'DATE'],
+            'tanggal_mulai'   => ['type' => 'DATE', 'null' => true],
+            'tanggal_selesai' => ['type' => 'DATE', 'null' => true],
             'waktu_mulai'     => ['type' => 'TIME', 'null' => true],
             'waktu_selesai'   => ['type' => 'TIME', 'null' => true],
             'ruangan_id'      => ['type' => 'INTEGER', 'null' => true],
@@ -289,6 +374,7 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
             'stream_akses'    => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
             'undangan_file'   => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'undangan_nama_asli' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'status'          => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
             'created_at'      => ['type' => 'DATETIME', 'null' => true],
             'updated_at'      => ['type' => 'DATETIME', 'null' => true],
         ]);

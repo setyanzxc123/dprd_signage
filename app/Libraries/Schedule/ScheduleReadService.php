@@ -249,11 +249,17 @@ final class ScheduleReadService
     private function currentStatus(array $row): string
     {
         if (($row['source'] ?? '') === JadwalUmumModel::SOURCE) {
+            $jenisAgenda = (string) ($row['jenis'] ?? ($row['jenis_agenda'] ?? JadwalUmumModel::TYPE_MEETING));
+            $storedStatus = (string) ($row['status'] ?? '');
+            $manualStatus = in_array($storedStatus, ['ditunda', 'dibatalkan'], true) ? $storedStatus : null;
+
             return JadwalUmumModel::resolveLifecycleStatus(
                 (string) ($row['tanggal'] ?? ''),
                 $row['waktu_mulai'] ?? null,
                 $row['waktu_selesai'] ?? null,
                 ($this->clock)(),
+                $jenisAgenda,
+                $manualStatus,
             );
         }
 

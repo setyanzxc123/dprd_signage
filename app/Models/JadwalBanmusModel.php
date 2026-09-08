@@ -88,9 +88,14 @@ class JadwalBanmusModel extends Model
         ?string $endTime,
         ?int $now = null,
         string $agendaType = self::TYPE_MEETING,
+        ?string $manualStatus = null,
     ): string {
         if ($agendaType === self::TYPE_NON_MEETING) {
             return self::TYPE_NON_MEETING;
+        }
+
+        if ($manualStatus !== null && in_array($manualStatus, ['ditunda', 'dibatalkan'], true)) {
+            return $manualStatus;
         }
 
         if (! $isScheduleComplete) {

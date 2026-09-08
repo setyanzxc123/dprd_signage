@@ -3,6 +3,7 @@
 namespace App\Database\Seeds;
 
 use App\Models\JadwalBanmusModel;
+use App\Models\JadwalUmumModel;
 use CodeIgniter\Database\Seeder;
 use DateTimeImmutable;
 use RuntimeException;
@@ -148,8 +149,9 @@ class CurrentSystemDataSeeder extends Seeder
                 'undangan_file', 'undangan_nama_asli',
             ],
             'jadwal_umum'    => [
-                'judul', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'ruangan_id',
-                'lokasi_lainnya', 'pihak_eksternal', 'is_publik',
+                'judul', 'jenis_agenda', 'tanggal', 'tanggal_mulai', 'tanggal_selesai',
+                'waktu_mulai', 'waktu_selesai', 'ruangan_id',
+                'lokasi_lainnya', 'pihak_eksternal', 'is_publik', 'status',
                 'materi_url', 'materi_akses', 'stream_url', 'stream_akses',
                 'undangan_file', 'undangan_nama_asli',
             ],
@@ -591,7 +593,7 @@ class CurrentSystemDataSeeder extends Seeder
             ),
             $this->dummyBanmusItem(
                 $date,
-                'Rapat Gabungan Komisi Persiapan Agenda Banmus',
+                'Rapat Gabungan Komisi Persiapan Agenda Banmus (Ditunda)',
                 'rapat',
                 $date,
                 '17:30:00',
@@ -604,10 +606,11 @@ class CurrentSystemDataSeeder extends Seeder
                 'anggota',
                 'https://example.com/dummy/live/persiapan-agenda-banmus',
                 'anggota',
+                'ditunda',
             ),
             $this->dummyBanmusItem(
                 $tomorrow,
-                'Rapat Banmus Finalisasi Jadwal Hari Berikutnya',
+                'Rapat Banmus Finalisasi Jadwal Hari Berikutnya (Dibatalkan)',
                 'rapat',
                 $tomorrow,
                 '09:00:00',
@@ -620,6 +623,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'peserta',
                 'https://example.com/dummy/live/finalisasi-jadwal',
                 'anggota',
+                'dibatalkan',
             ),
         ];
 
@@ -1302,10 +1306,10 @@ class CurrentSystemDataSeeder extends Seeder
         string $materialAccess = 'publik',
         ?string $streamUrl = null,
         string $streamAccess = 'publik',
+        ?string $statusOverride = null,
     ): array {
         $isComplete = $date !== null
-            && $startTime !== null
-            && $endTime !== null
+            && ($type === 'non_rapat' || ($startTime !== null && $endTime !== null))
             && ($room !== null || $otherLocation !== null)
             && $units !== [];
 
@@ -1321,21 +1325,24 @@ class CurrentSystemDataSeeder extends Seeder
             'jumlah_pelaksanaan_rencana' => 1,
             'halaman_sumber' => null,
             'tanggal' => $date,
-            'jam_mulai' => $startTime,
-            'jam_selesai' => $endTime,
-            'room' => $room,
+            'jam_mulai' => $type === 'non_rapat' ? null : $startTime,
+            'jam_selesai' => $type === 'non_rapat' ? null : $endTime,
+            'room' => $type === 'non_rapat' ? null : $room,
             'lokasi_lainnya' => $otherLocation,
             'units' => $units,
             'publikasi' => $publication,
-            'materi_url' => $materialUrl,
-            'materi_akses' => $materialAccess,
-            'stream_url' => $streamUrl,
-            'stream_akses' => $streamAccess,
+            'materi_url' => $type === 'non_rapat' ? null : $materialUrl,
+            'materi_akses' => $type === 'non_rapat' ? 'publik' : $materialAccess,
+            'stream_url' => $type === 'non_rapat' ? null : $streamUrl,
+            'stream_akses' => $type === 'non_rapat' ? 'publik' : $streamAccess,
             'status' => JadwalBanmusModel::resolveLifecycleStatus(
                 $isComplete,
                 $date,
                 $startTime,
                 $endTime,
+                null,
+                $type,
+                $statusOverride
             ),
             'catatan' => self::DUMMY_PREFIX . 'Data simulasi item agenda Banmus.',
         ];
@@ -1402,6 +1409,75 @@ class CurrentSystemDataSeeder extends Seeder
                 'publik',
                 'https://example.com/dummy/live/rapat-insidental',
                 'publik',
+            ),
+            $this->generalSchedule(
+                'Rapat Koordinasi Badan Anggaran Insidental (Konflik Ruangan)',
+                $now->modify('+2 hours'),
+                $now->modify('+4 hours'),
+                'Ruang Komisi II',
+                null,
+                ['Badan Anggaran'],
+                'internal',
+            ),
+            $this->generalSchedule(
+                'Rapat Dengar Pendapat Penataan Ruang Wilayah (Ditunda)',
+                $now->modify('+3 hours'),
+                $now->modify('+5 hours'),
+                'Ruang Komisi III',
+                null,
+                ['Komisi III'],
+                'internal',
+                null,
+                'publik',
+                null,
+                'publik',
+                'rapat',
+                'ditunda',
+            ),
+            $this->generalSchedule(
+                'Rapat Pleno Bapemperda Masa Sidang (Dibatalkan)',
+                $now->modify('+2 hours'),
+                $now->modify('+4 hours'),
+                'Ruang Komisi II',
+                null,
+                ['Bapemperda'],
+                'publik',
+                null,
+                'publik',
+                null,
+                'publik',
+                'rapat',
+                'dibatalkan',
+            ),
+            $this->generalSchedule(
+                'Pameran Arsip & Dokumentasi Sejarah DPRD Sulawesi Tengah',
+                $now->modify('-1 day'),
+                $now->modify('+3 days'),
+                null,
+                'Lobi Utama dan Selasar Barat Gedung DPRD',
+                [],
+                'publik',
+                null,
+                'publik',
+                null,
+                'publik',
+                'non_rapat',
+                null,
+                $now->modify('+3 days'),
+            ),
+            $this->generalSchedule(
+                'Upacara Peringatan Hari Kesadaran Nasional',
+                $now->modify('+1 day')->setTime(7, 30),
+                $now->modify('+1 day')->setTime(9, 0),
+                null,
+                'Lapangan Upacara Kantor DPRD',
+                ['Seluruh Anggota'],
+                'publik',
+                null,
+                'publik',
+                null,
+                'publik',
+                'non_rapat',
             ),
             $this->generalSchedule(
                 'Rapat Koordinasi Persiapan Pelayanan Aspirasi',
@@ -1514,22 +1590,41 @@ class CurrentSystemDataSeeder extends Seeder
         string $materialAccess = 'publik',
         ?string $streamUrl = null,
         string $streamAccess = 'publik',
+        string $type = 'rapat',
+        ?string $statusOverride = null,
+        ?DateTimeImmutable $endDate = null,
     ): array {
+        $startDate = $start->format('Y-m-d');
+        $finalEndDate = ($endDate ?? ($type === 'non_rapat' ? $end : $start))->format('Y-m-d');
+        $startTime = $type === 'non_rapat' ? null : $start->format('H:i:s');
+        $endTime = $type === 'non_rapat' ? null : $end->format('H:i:s');
+
         return [
             'judul' => self::DUMMY_PREFIX . $title,
+            'jenis_agenda' => $type,
             'keterangan' => self::SEED_MARKER . ' ' . self::DUMMY_PREFIX . 'Jadwal Umum untuk demonstrasi lifecycle dan visibilitas.',
-            'tanggal' => $start->format('Y-m-d'),
-            'waktu_mulai' => $start->format('H:i:s'),
-            'waktu_selesai' => $end->format('H:i:s'),
-            'room' => $room,
+            'tanggal' => $startDate,
+            'tanggal_mulai' => $startDate,
+            'tanggal_selesai' => $finalEndDate,
+            'waktu_mulai' => $startTime,
+            'waktu_selesai' => $endTime,
+            'room' => $type === 'non_rapat' ? null : $room,
             'lokasi_lainnya' => $otherLocation,
             'pihak_eksternal' => null,
             'units' => $units,
             'is_publik' => $publication === 'publik' ? 1 : 0,
-            'materi_url' => $materialUrl,
-            'materi_akses' => $materialAccess,
-            'stream_url' => $streamUrl,
-            'stream_akses' => $streamAccess,
+            'materi_url' => $type === 'non_rapat' ? null : $materialUrl,
+            'materi_akses' => $type === 'non_rapat' ? 'publik' : $materialAccess,
+            'stream_url' => $type === 'non_rapat' ? null : $streamUrl,
+            'stream_akses' => $type === 'non_rapat' ? 'publik' : $streamAccess,
+            'status' => JadwalUmumModel::resolveLifecycleStatus(
+                $startDate,
+                $startTime,
+                $endTime,
+                null,
+                $type,
+                $statusOverride
+            ),
             'undangan_file' => null,
             'undangan_nama_asli' => null,
             'created_at' => date('Y-m-d H:i:s'),
@@ -1591,6 +1686,7 @@ class CurrentSystemDataSeeder extends Seeder
                 'Surat permohonan audiensi',
                 true,
                 ['Pimpinan DPRD', 'Komisi I'],
+                'rapat',
             ),
             $this->generalAgenda(
                 'Kunjungan Kerja DPRD Kabupaten Banggai',
@@ -1601,9 +1697,11 @@ class CurrentSystemDataSeeder extends Seeder
                 'Ruang Rapat Utama',
                 'Surat Sekretariat DPRD Kabupaten Banggai',
                 true,
+                [],
+                'rapat',
             ),
             $this->generalAgenda(
-                'Audiensi Aliansi Masyarakat Peduli Pangan',
+                'Audiensi Aliansi Masyarakat Peduli Pangan (Ditunda)',
                 'audiensi',
                 'Aliansi Masyarakat Peduli Pangan',
                 new DateTimeImmutable('2027-08-03 10:00:00'),
@@ -1611,6 +1709,9 @@ class CurrentSystemDataSeeder extends Seeder
                 'Ruang Aspirasi DPRD',
                 'Surat permohonan audiensi',
                 true,
+                [],
+                'rapat',
+                'ditunda',
             ),
             $this->generalAgenda(
                 'Undangan Forum Konsultasi Publik RKPD',
@@ -1621,9 +1722,11 @@ class CurrentSystemDataSeeder extends Seeder
                 'Hotel Santika Palu',
                 'Undangan Bappeda Provinsi Sulawesi Tengah',
                 false,
+                [],
+                'rapat',
             ),
             $this->generalAgenda(
-                'Kunjungan Edukasi Mahasiswa Fakultas Hukum',
+                'Kunjungan Edukasi Mahasiswa Fakultas Hukum (Dibatalkan)',
                 'kunjungan',
                 'Fakultas Hukum Universitas Tadulako',
                 new DateTimeImmutable('2027-08-05 09:30:00'),
@@ -1631,19 +1734,24 @@ class CurrentSystemDataSeeder extends Seeder
                 'Ruang Rapat Paripurna',
                 'Surat Fakultas Hukum Universitas Tadulako',
                 true,
+                [],
+                'rapat',
+                'dibatalkan',
             ),
             $this->generalAgenda(
                 'Aksi Penyampaian Aspirasi Kebijakan Pertanian',
                 'demonstrasi',
                 'Koalisi Petani Sulawesi Tengah',
                 new DateTimeImmutable('2027-08-06 10:00:00'),
-                null,
+                new DateTimeImmutable('2027-08-06 14:00:00'),
                 'Gerbang Utama Kantor DPRD',
                 'Pemberitahuan kepolisian',
                 false,
+                [],
+                'non_rapat',
             ),
             $this->generalAgenda(
-                'Bakti Sosial Donor Darah',
+                'Bakti Sosial Donor Darah HUT DPRD',
                 'kegiatan_sosial',
                 'Palang Merah Indonesia Provinsi Sulawesi Tengah',
                 new DateTimeImmutable('2027-08-09 08:30:00'),
@@ -1651,6 +1759,8 @@ class CurrentSystemDataSeeder extends Seeder
                 'Lobi Utama Kantor DPRD',
                 'Surat PMI Provinsi Sulawesi Tengah',
                 true,
+                [],
+                'non_rapat',
             ),
             $this->generalAgenda(
                 'Kunjungan Delegasi Forum Anak Daerah',
@@ -1661,6 +1771,8 @@ class CurrentSystemDataSeeder extends Seeder
                 'Ruang Rapat Utama',
                 'Surat Dinas Pemberdayaan Perempuan dan Perlindungan Anak',
                 true,
+                [],
+                'rapat',
             ),
             $this->generalAgenda(
                 'Undangan Pembukaan Festival Budaya Sulawesi Tengah',
@@ -1671,14 +1783,20 @@ class CurrentSystemDataSeeder extends Seeder
                 'Taman Budaya Sulawesi Tengah',
                 'Undangan Dinas Kebudayaan',
                 true,
+                [],
+                'non_rapat',
             ),
             [
                 'judul' => self::DUMMY_PREFIX . 'Kegiatan Orientasi Anggota Sepanjang Hari',
+                'jenis_agenda' => 'non_rapat',
                 'pihak_eksternal' => null,
                 'tanggal' => '2027-08-11',
+                'tanggal_mulai' => '2027-08-11',
+                'tanggal_selesai' => '2027-08-13',
                 'waktu_mulai' => null,
                 'waktu_selesai' => null,
                 'lokasi' => 'Ruang Rapat Utama',
+                'status' => 'non_rapat',
                 'keterangan' => self::SEED_MARKER . ' ' . self::DUMMY_PREFIX . 'Contoh Jadwal Umum sepanjang hari.',
                 'is_publik' => 0,
                 'units' => [],
@@ -1689,10 +1807,15 @@ class CurrentSystemDataSeeder extends Seeder
 
         foreach ($agendas as $agenda) {
             $unitNames = $agenda['units'] ?? [];
-            $location = trim((string) $agenda['lokasi']);
+            $location = trim((string) ($agenda['lokasi'] ?? ''));
             unset($agenda['units'], $agenda['lokasi']);
-            $agenda['ruangan_id'] = $roomIdsByName[$location] ?? null;
-            $agenda['lokasi_lainnya'] = $agenda['ruangan_id'] === null ? $location : null;
+            if (($agenda['jenis_agenda'] ?? 'rapat') === 'non_rapat') {
+                $agenda['ruangan_id'] = null;
+                $agenda['lokasi_lainnya'] = $location !== '' ? $location : null;
+            } else {
+                $agenda['ruangan_id'] = $roomIdsByName[$location] ?? null;
+                $agenda['lokasi_lainnya'] = $agenda['ruangan_id'] === null && $location !== '' ? $location : null;
+            }
 
             $this->db->table('jadwal_umum')
                 ->insert($this->onlyExistingFields('jadwal_umum', $agenda));
@@ -1713,6 +1836,7 @@ class CurrentSystemDataSeeder extends Seeder
     }
 
     /**
+     * @param list<string> $units
      * @return array<string, mixed>
      */
     private function generalAgenda(
@@ -1725,20 +1849,38 @@ class CurrentSystemDataSeeder extends Seeder
         string $source,
         bool $isPublic,
         array $units = [],
+        string $type = 'rapat',
+        ?string $statusOverride = null,
+        ?DateTimeImmutable $endDate = null,
     ): array {
         $now = date('Y-m-d H:i:s');
+        $startDate = $start->format('Y-m-d');
+        $finalEndDate = ($endDate ?? ($type === 'non_rapat' && $end !== null ? $end : $start))->format('Y-m-d');
+        $startTime = $type === 'non_rapat' ? null : $start->format('H:i:s');
+        $endTime = $type === 'non_rapat' || $end === null ? null : $end->format('H:i:s');
 
         return [
             'judul' => self::DUMMY_PREFIX . $title,
+            'jenis_agenda' => $type,
             'pihak_eksternal' => $externalParty,
-            'tanggal' => $start->format('Y-m-d'),
-            'waktu_mulai' => $start->format('H:i:s'),
-            'waktu_selesai' => $end?->format('H:i:s'),
+            'tanggal' => $startDate,
+            'tanggal_mulai' => $startDate,
+            'tanggal_selesai' => $finalEndDate,
+            'waktu_mulai' => $startTime,
+            'waktu_selesai' => $endTime,
             'lokasi' => $location,
             'keterangan' => self::SEED_MARKER . ' ' . self::DUMMY_PREFIX
                 . 'Jadwal Umum dengan pihak eksternal. Sumber informasi: ' . $source,
             'is_publik' => $isPublic ? 1 : 0,
             'units' => $units,
+            'status' => JadwalUmumModel::resolveLifecycleStatus(
+                $startDate,
+                $startTime,
+                $endTime,
+                null,
+                $type,
+                $statusOverride
+            ),
             'created_at' => $now,
             'updated_at' => $now,
         ];

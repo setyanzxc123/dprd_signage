@@ -559,6 +559,42 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->assertSame('2026-08-15', $updated['tanggal_selesai']);
     }
 
+    public function testStoresBanmusItemWithStatusOverrideDitundaAndDibatalkan(): void
+    {
+        $this->postItem([
+            'agenda'          => 'Rapat Kerja Komisi III',
+            'jenis_agenda'    => 'rapat',
+            'tanggal'         => $this->futureDate('+5 days'),
+            'jam_mulai'       => '09:00',
+            'jam_selesai'     => '11:00',
+            'ruangan_id'      => '1',
+            'unit_ids'        => ['1'],
+            'status_override' => 'ditunda',
+        ])->assertStatus(303);
+
+        $item = $this->banmusDb->table('jadwal_banmus')->get()->getRowArray();
+        $this->assertNotNull($item);
+        $this->assertSame('ditunda', $item['status']);
+
+        $response = $this
+            ->withSession(['auth_user' => $this->adminSession()])
+            ->post("/admin/jadwal-banmus/{$this->documentId}/item/{$item['id']}/update", [
+                csrf_token()      => csrf_hash(),
+                'agenda'          => 'Rapat Kerja Komisi III (Dibatalkan)',
+                'jenis_agenda'    => 'rapat',
+                'tanggal'         => $this->futureDate('+5 days'),
+                'jam_mulai'       => '09:00',
+                'jam_selesai'     => '11:00',
+                'ruangan_id'      => '1',
+                'unit_ids'        => ['1'],
+                'status_override' => 'dibatalkan',
+            ]);
+
+        $response->assertStatus(303);
+        $updated = $this->banmusDb->table('jadwal_banmus')->where('id', $item['id'])->get()->getRowArray();
+        $this->assertSame('dibatalkan', $updated['status']);
+    }
+
     public function testTableDisplaysNonRapatItemWithDashStatusAndWithoutScheduleOrNotulenActions(): void
     {
         $this->postItem([
@@ -730,8 +766,11 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->banmusForge->addField([
             'id'             => ['type' => 'INTEGER', 'auto_increment' => true],
             'judul'          => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
             'keterangan'     => ['type' => 'TEXT', 'null' => true],
             'tanggal'        => ['type' => 'DATE'],
+            'tanggal_mulai'  => ['type' => 'DATE', 'null' => true],
+            'tanggal_selesai'=> ['type' => 'DATE', 'null' => true],
             'waktu_mulai'    => ['type' => 'TIME'],
             'waktu_selesai'  => ['type' => 'TIME'],
             'ruangan_id'     => ['type' => 'INTEGER', 'null' => true],
@@ -743,7 +782,6 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
             'stream_akses'   => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
             'undangan_file'  => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'undangan_nama_asli' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
-            'jenis'          => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'insidental'],
             'is_publik'      => ['type' => 'INTEGER', 'default' => 0],
         ]);
         $this->banmusForge->addPrimaryKey('id');

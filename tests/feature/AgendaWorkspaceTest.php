@@ -184,7 +184,10 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
         $this->forge->addField([
             'id'              => ['type' => 'INTEGER', 'auto_increment' => true],
             'judul'           => ['type' => 'VARCHAR', 'constraint' => 255],
+            'jenis_agenda'    => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'rapat'],
             'tanggal'         => ['type' => 'DATE'],
+            'tanggal_mulai'   => ['type' => 'DATE', 'null' => true],
+            'tanggal_selesai' => ['type' => 'DATE', 'null' => true],
             'waktu_mulai'     => ['type' => 'TIME', 'null' => true],
             'waktu_selesai'   => ['type' => 'TIME', 'null' => true],
             'ruangan_id'      => ['type' => 'INTEGER', 'null' => true],
@@ -198,6 +201,7 @@ final class AgendaWorkspaceTest extends CIUnitTestCase
             'stream_akses'    => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'anggota'],
             'undangan_file'   => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'undangan_nama_asli' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
+            'status'          => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'menunggu'],
             'created_at'      => ['type' => 'DATETIME', 'null' => true],
             'updated_at'      => ['type' => 'DATETIME', 'null' => true],
         ]);

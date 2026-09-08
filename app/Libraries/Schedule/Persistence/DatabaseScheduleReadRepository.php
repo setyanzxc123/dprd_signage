@@ -157,14 +157,21 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
         ?int $unitId,
         ?array $allowedScheduleIds
     ): BaseBuilder {
+        $statusSelect = $this->db->fieldExists('status', 'jadwal_umum')
+            ? "COALESCE(ju.status, 'menunggu') AS status"
+            : "'menunggu' AS status";
+        $jenisSelect = $this->db->fieldExists('jenis_agenda', 'jadwal_umum')
+            ? "COALESCE(ju.jenis_agenda, 'rapat') AS jenis"
+            : "'jadwal_umum' AS jenis";
+
         $builder = $this->db->table('jadwal_umum ju')
             ->select(
                 "ju.id, ju.id AS source_id, 'jadwal_umum' AS source, NULL AS lingkup, "
                 . 'NULL AS dokumen_banmus_id, ju.judul, ju.keterangan, ju.tanggal, '
-                . "ju.waktu_mulai, ju.waktu_selesai, 'menunggu' AS status, "
+                . "ju.waktu_mulai, ju.waktu_selesai, {$statusSelect}, "
                 . 'ju.materi_url, ju.materi_akses, ju.stream_url, ju.stream_akses, '
                 . 'ju.undangan_file, ju.undangan_nama_asli, '
-                . "'jadwal_umum' AS jenis, ju.is_publik, ju.lokasi_lainnya, "
+                . "{$jenisSelect}, ju.is_publik, ju.lokasi_lainnya, "
                 . 'r.name AS nama_ruangan, ju.pihak_eksternal',
                 false,
             )

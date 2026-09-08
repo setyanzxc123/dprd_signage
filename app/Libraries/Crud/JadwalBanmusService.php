@@ -425,6 +425,11 @@ class JadwalBanmusService
             return ['error' => 'Ruangan sudah dipakai pada tanggal dan rentang waktu tersebut.'];
         }
 
+        $statusOverride = trim((string) ($input['status'] ?? $input['status_override'] ?? ''));
+        if (! in_array($statusOverride, ['ditunda', 'dibatalkan'], true)) {
+            $statusOverride = null;
+        }
+
         return [
             'payload' => [
                 'agenda'          => $agenda,
@@ -445,6 +450,7 @@ class JadwalBanmusService
             ],
             'unit_ids'             => $unitIds,
             'is_schedule_complete' => $isScheduleComplete,
+            'status_override'      => $statusOverride,
             'invitation_upload'    => $invitationCheck['file'] ?? null,
             'remove_invitation'    => ($input['hapus_undangan'] ?? null) === '1',
         ];
@@ -472,6 +478,7 @@ class JadwalBanmusService
                 $validated['payload']['jam_selesai'],
                 null,
                 $validated['payload']['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING,
+                $validated['status_override'] ?? null,
             ),
         ]);
 
@@ -516,6 +523,7 @@ class JadwalBanmusService
             $payload['jam_selesai'],
             null,
             $payload['jenis_agenda'] ?? JadwalBanmusModel::TYPE_MEETING,
+            $validated['status_override'] ?? null,
         );
 
         $storedInvitation = $this->storeInvitationUpload($validated);
