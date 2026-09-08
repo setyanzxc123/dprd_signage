@@ -479,12 +479,6 @@ if ($isMember) {
                                         <span v-else-if="item.status === 'ditunda'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-if="item.source === 'banmus'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                                            Banmus
-                                        </span>
-                                        <span v-else-if="item.source === 'jadwal_umum'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                                            Insidental / Komisi
-                                        </span>
                                         <template v-if="item.units && item.units.length > 0">
                                             <span
                                                 v-for="u in item.units"
@@ -523,6 +517,11 @@ if ($isMember) {
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Status</span>
                                         <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
                                         <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ statusLabel(item.status) }}</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Sumber</span>
+                                        <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
+                                        <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ item.source === 'banmus' ? 'Banmus' : (item.source === 'jadwal_umum' ? 'Insidental' : 'Insidental') }}</span>
                                     </div>
                                     <div v-if="item.keterangan" class="flex items-start gap-2">
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Pokok Bahasan</span>
@@ -660,12 +659,6 @@ if ($isMember) {
                                         <span v-else-if="item.status === 'ditunda'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-if="item.source === 'banmus'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
-                                            Banmus
-                                        </span>
-                                        <span v-else-if="item.source === 'jadwal_umum'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                                            Jadwal Umum
-                                        </span>
                                         <template v-if="item.units && item.units.length > 0">
                                             <span
                                                 v-for="u in item.units"
@@ -704,6 +697,11 @@ if ($isMember) {
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Status</span>
                                         <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
                                         <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ statusLabel(item.status) }}</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Sumber</span>
+                                        <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
+                                        <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ item.source === 'banmus' ? 'Banmus' : (item.source === 'jadwal_umum' ? 'Insidental' : 'Insidental') }}</span>
                                     </div>
                                     <div v-if="item.keterangan" class="flex items-start gap-2">
                                         <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Deskripsi</span>
