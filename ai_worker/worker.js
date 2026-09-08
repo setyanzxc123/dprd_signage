@@ -312,7 +312,17 @@ export async function processJob(pool, job) {
       audioDir,
       plan || config.audio.chunkDurationSeconds,
       isCancelled,
-      (msg) => log(`[Job #${jobId}] ${msg}`)
+      (msg) => log(`[Job #${jobId}] ${msg}`),
+      async (current, total, filename, durationMin) => {
+        try {
+          await pool.execute(
+            `UPDATE meeting_transcription_jobs
+             SET current_step = 'Memotong segmen ${current} dari ${total} (~${durationMin} menit)...', updated_at = NOW()
+             WHERE id = ?`,
+            [jobId]
+          );
+        } catch {}
+      }
     );
 
     // 2. Tahap Transkripsi Sekuensial per Chunk

@@ -79,7 +79,7 @@ function sliceSingleSegment(inputPath, outputPath, startTimeSeconds, durationSec
  * @param {Array|number} plan Rencana chunk atau durasi potongan tetap (detik)
  * @returns {Promise<Object>} Metadata pemotongan ({ totalDuration, totalChunks, chunkFiles })
  */
-export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = null, onLog = () => {}) {
+export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = null, onLog = () => {}, onProgress = null) {
   if (!fs.existsSync(inputPath)) {
     throw new Error(`File input rekaman tidak ditemukan: ${inputPath}`);
   }
@@ -109,6 +109,7 @@ export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = nul
     const partFilePath = path.join(outputDir, `${chunkFileName}.part`);
     const startTime = entry.start;
     const duration = Math.min(entry.duration, totalDuration - startTime);
+    const durationMin = Math.round(duration / 60);
 
     if (fs.existsSync(chunkFilePath)) {
       const isUsable = await verifyChunkDuration(chunkFilePath, duration);
@@ -121,11 +122,20 @@ export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = nul
       fs.unlinkSync(chunkFilePath);
     }
 
+    onLog(`[Slice] Memproses chunk ${entry.index} dari ${chunkPlan.length}: ${chunkFileName} (durasi ~${durationMin} menit)...`);
+    if (typeof onProgress === 'function') {
+      try {
+        await onProgress(entry.index, chunkPlan.length, chunkFileName, durationMin);
+      } catch {}
+    }
+
     if (fs.existsSync(partFilePath)) {
       fs.unlinkSync(partFilePath);
     }
     await sliceSingleSegment(inputPath, partFilePath, startTime, duration);
     fs.renameSync(partFilePath, chunkFilePath);
+
+    onLog(`[Slice] Chunk ${chunkFileName} (${entry.index} dari ${chunkPlan.length}) selesai dipotong.`);
 
     chunkFiles.push(buildChunkEntry(entry.index, chunkFileName, chunkFilePath, startTime, duration));
   }
