@@ -255,17 +255,26 @@ class NotulenService
             $audioDir = $jobDir . DIRECTORY_SEPARATOR . 'audio';
             $transcriptsDir = $jobDir . DIRECTORY_SEPARATOR . 'transcripts';
 
+            $oldUmask = umask(0);
+            if (! is_dir($jobDir)) {
+                @mkdir($jobDir, 0777, true);
+            }
             if (! is_dir($audioDir)) {
-                mkdir($audioDir, 0777, true);
+                @mkdir($audioDir, 0777, true);
             }
             if (! is_dir($transcriptsDir)) {
-                mkdir($transcriptsDir, 0777, true);
+                @mkdir($transcriptsDir, 0777, true);
             }
+            @chmod($jobDir, 0777);
+            @chmod($audioDir, 0777);
+            @chmod($transcriptsDir, 0777);
+            umask($oldUmask);
 
             // Simpan file asli sebagai original.mp3 / original.{ext}
             $targetExt = $validated['extension'] ?: 'mp3';
             $targetFilename = 'original.' . $targetExt;
             $file->move($audioDir, $targetFilename, true);
+            @chmod($audioDir . DIRECTORY_SEPARATOR . $targetFilename, 0666);
 
             $relativeAudioPath = 'writable/uploads/recordings/job_' . $jobId . '/audio/' . $targetFilename;
 
@@ -378,12 +387,20 @@ class NotulenService
             $audioDir      = $jobDir . DIRECTORY_SEPARATOR . 'audio';
             $transcriptsDir = $jobDir . DIRECTORY_SEPARATOR . 'transcripts';
 
+            $oldUmask = umask(0);
+            if (! is_dir($jobDir)) {
+                @mkdir($jobDir, 0777, true);
+            }
             if (! is_dir($audioDir)) {
-                mkdir($audioDir, 0777, true);
+                @mkdir($audioDir, 0777, true);
             }
             if (! is_dir($transcriptsDir)) {
-                mkdir($transcriptsDir, 0777, true);
+                @mkdir($transcriptsDir, 0777, true);
             }
+            @chmod($jobDir, 0777);
+            @chmod($audioDir, 0777);
+            @chmod($transcriptsDir, 0777);
+            umask($oldUmask);
 
             // Pindahkan file chunk ke folder audio job
             // Nama file sementara untuk consume, akan kita rename sesuai ekstensi asli
@@ -412,6 +429,7 @@ class NotulenService
             $finalDest = $audioDir . DIRECTORY_SEPARATOR . $filename;
 
             rename($tempDest, $finalDest);
+            @chmod($finalDest, 0666);
 
             $fileSize            = filesize($finalDest) ?: 0;
             $relativeAudioPath   = 'writable/uploads/recordings/job_' . $jobId . '/audio/' . $filename;
