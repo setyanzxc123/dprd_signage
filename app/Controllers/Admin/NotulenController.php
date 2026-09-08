@@ -219,7 +219,10 @@ class NotulenController extends BaseController
         }
 
         return view('admin/notulen/show', [
-            'pageTitle'    => 'Review Risalah — ' . ($detail['schedule']['judul'] ?? $detail['job']['audio_filename']),
+            'pageTitle'    => 'Review Risalah',
+            'breadcrumbs'  => [
+                ['label' => 'Notulensi & Risalah AI', 'url' => 'admin/notulen'],
+            ],
             'job'          => $detail['job'],
             'minutes'      => $detail['minutes'],
             'schedule'     => $detail['schedule'],

@@ -5,7 +5,6 @@
 <div class="page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
         <h1 class="page-title">Notulensi & Risalah AI</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Transkripsi rekaman rapat otomatis dan penyusunan risalah resmi menggunakan Google Gemini AI.</p>
     </div>
     <button type="button" id="btn_open_upload_modal" data-hs-overlay="#modal_upload_notulen" class="py-2.5 px-4 inline-flex items-center justify-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer w-full sm:w-auto">
         <i data-lucide="upload" class="size-4"></i>
@@ -84,11 +83,6 @@
                                 <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                     <span><?= esc(date('d/m/Y', strtotime($tanggalRapat))) ?></span>
                                     <span>&bull;</span>
-                                    <span class="font-mono"><?= esc($job['audio_filename']) ?></span>
-                                    <?php if ($job['audio_size'] > 0): ?>
-                                        <span>&bull;</span>
-                                        <span><?= round($job['audio_size'] / (1024 * 1024), 1) ?> MB</span>
-                                    <?php endif; ?>
                                     <?php if ($job['jadwal_type'] === 'banmus'): ?>
                                         <span class="font-semibold text-purple-600 dark:text-purple-400">Banmus</span>
                                     <?php else: ?>
@@ -116,9 +110,9 @@
                                     <span class="text-xs text-slate-500 dark:text-slate-400">Belum Ada</span>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="Aksi">
-                                <div class="notulen-actions flex flex-wrap items-center justify-end gap-1.5">
-                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-indigo-200/80 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 hover:border-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 shadow-2xs transition" title="Buka Detail" aria-label="Buka notulen <?= esc($judulRapat) ?>">
+                            <td class="whitespace-nowrap text-end" data-label="Aksi">
+                                <div class="notulen-actions flex items-center justify-end gap-1.5">
+                                    <a href="<?= base_url('admin/notulen/' . $job['id']) ?>" class="py-1.5 px-2.5 inline-flex items-center gap-x-1.5 text-xs font-semibold rounded-lg border border-blue-200/80 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 shadow-2xs transition" title="Buka Detail" aria-label="Buka notulen <?= esc($judulRapat) ?>">
                                         <i data-lucide="eye" class="size-3.5"></i>
                                         Buka
                                     </a>

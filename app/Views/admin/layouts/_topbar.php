@@ -20,6 +20,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
         '/admin/unit-rapat'    => ['label' => 'Kelompok Peserta', 'url' => 'admin/unit-rapat'],
         '/admin/ruangan'       => ['label' => 'Ruangan Rapat', 'url' => 'admin/ruangan'],
         '/admin/kalender'      => ['label' => 'Kalender Agenda', 'url' => 'admin/kalender'],
+        '/admin/notulen'       => ['label' => 'Notulensi & Risalah AI', 'url' => 'admin/notulen'],
     ];
 
     foreach ($parentMap as $parentPath => $crumb) {
