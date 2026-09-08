@@ -3257,21 +3257,6 @@
                     if (!json || json.status !== 'success' || !json.data) return;
                     const d = json.data;
 
-                    const pct = document.getElementById('live_progress_percent');
-                    const bar = document.getElementById('live_progress_bar');
-                    const step = document.getElementById('live_current_step');
-                    const chunks = document.getElementById('live_chunk_info');
-                    const title = document.getElementById('live_status_title');
-
-                    if (pct) pct.textContent = d.progress_percent + '%';
-                    if (bar) {
-                        bar.style.width = d.progress_percent + '%';
-                        bar.setAttribute('aria-valuenow', d.progress_percent);
-                    }
-                    if (step) step.textContent = d.current_step || '-';
-                    if (chunks) chunks.textContent = d.completed_chunks + ' / ' + d.total_chunks + ' segmen';
-                    if (title && d.current_step) title.textContent = d.current_step;
-
                     if (d.ai_model_label) {
                         const modelLabelEl = document.getElementById('ai_model_label_text');
                         if (modelLabelEl) modelLabelEl.textContent = d.ai_model_label;
@@ -3290,7 +3275,7 @@
                         }
                     };
 
-                    const prelineSpinnerHtml = '<span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-emerald-600 dark:text-emerald-400 rounded-full" role="status" aria-label="loading"></span>';
+                    const prelineSpinnerHtml = '<span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-blue-600 dark:text-blue-400 rounded-full" role="status" aria-label="loading"></span>';
 
                     // Stepper progress indicator
                     const chunkCircle = document.getElementById('step_chunking_circle');
@@ -3329,13 +3314,6 @@
                         if (compCircle) compCircle.className = 'notulen-step-circle done';
                         if (compStatus) compStatus.innerHTML = '<i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i> Siap Ditinjau';
                         updateActivePill(null);
-
-                        if (bar) {
-                            bar.style.width = '100%';
-                            bar.setAttribute('aria-valuenow', 100);
-                        }
-                        if (pct) pct.textContent = '100%';
-                        if (title) title.textContent = 'Pemrosesan selesai! Memuat naskah risalah...';
                     } else if (d.status === 'summarizing') {
                         if (summCircle) summCircle.className = 'notulen-step-circle active';
                         if (summStatus) summStatus.innerHTML = prelineSpinnerHtml + ' Menyusun risalah...';

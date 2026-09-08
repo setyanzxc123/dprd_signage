@@ -110,27 +110,6 @@ if ($job['jadwal_type'] === 'banmus') {
             </div>
         </div>
 
-        <!-- Live Progress Bar Section -->
-        <div id="live_progress_panel" class="<?= ($isInProgress || $job['status'] === 'queued') ? '' : 'hidden ' ?>rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-blue-200 dark:border-blue-800/60 p-3.5 space-y-2">
-            <div class="flex items-center justify-between text-xs font-semibold">
-                <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                    <span class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent rounded-full" role="status" aria-label="loading"></span>
-                    <span id="live_status_title"><?= esc($job['current_step'] ?? 'Memproses rekaman audio...') ?></span>
-                </div>
-                <span id="live_progress_percent" class="font-mono text-blue-600 dark:text-blue-400"><?= (int) ($job['progress_percent'] ?? 0) ?>%</span>
-            </div>
-            <div class="flex w-full h-2 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-700"
-                role="progressbar" aria-valuenow="<?= (int) ($job['progress_percent'] ?? 0) ?>" aria-valuemin="0" aria-valuemax="100" aria-label="Kemajuan pemrosesan AI">
-                <div id="live_progress_bar" class="flex flex-col justify-center overflow-hidden bg-blue-600 text-xs text-white text-center whitespace-nowrap transition-all duration-500" style="width: <?= (int) ($job['progress_percent'] ?? 0) ?>%"></div>
-            </div>
-            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
-                <div class="flex items-center gap-2">
-                    <span id="live_current_step"><?= esc($job['current_step'] ?? 'Menyiapkan audio') ?></span>
-                </div>
-                <span id="live_chunk_info"><?= (int) ($job['completed_chunks'] ?? 0) ?> / <?= (int) ($job['total_chunks'] ?? 0) ?> segmen</span>
-            </div>
-        </div>
-
         <!-- Stepper Ringkas 5 Langkah -->
         <div class="overflow-x-auto py-2.5 px-1">
             <div class="notulen-stepper-track min-w-[600px]">
@@ -164,7 +143,7 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i>
                             Selesai
                         <?php elseif ($isStep2Active): ?>
-                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-emerald-600 dark:text-emerald-400 rounded-full" role="status" aria-label="loading"></span>
+                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-blue-600 dark:text-blue-400 rounded-full" role="status" aria-label="loading"></span>
                             Menyiapkan audio...
                         <?php else: ?>
                             Menunggu
@@ -189,7 +168,7 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i>
                             Selesai
                         <?php elseif ($isStep3Active): ?>
-                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-emerald-600 dark:text-emerald-400 rounded-full" role="status" aria-label="loading"></span>
+                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-blue-600 dark:text-blue-400 rounded-full" role="status" aria-label="loading"></span>
                             Mentranskripsi (<?= (int) $job['progress_percent'] ?>%)
                         <?php else: ?>
                             Menunggu
@@ -214,7 +193,7 @@ if ($job['jadwal_type'] === 'banmus') {
                             <i data-lucide="check-circle-2" class="size-3 text-emerald-600 dark:text-emerald-400"></i>
                             Selesai
                         <?php elseif ($isStep4Active): ?>
-                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-emerald-600 dark:text-emerald-400 rounded-full" role="status" aria-label="loading"></span>
+                            <span class="animate-spin inline-block size-3 border-2 border-current border-t-transparent text-blue-600 dark:text-blue-400 rounded-full" role="status" aria-label="loading"></span>
                             Menyusun risalah...
                         <?php else: ?>
                             Menunggu
@@ -506,26 +485,6 @@ if ($job['jadwal_type'] === 'banmus') {
                             </div>
                         </div>
                     </form>
-                </div>
-            <?php elseif ($isInProgress || $job['status'] === 'queued'): ?>
-                <!-- Preline Skeleton Loader saat AI sedang menyusun risalah -->
-                <div class="space-y-4 animate-pulse">
-                    <div class="text-center border-b border-slate-200 dark:border-slate-800 pb-5 space-y-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-64 mx-auto"></div>
-                        <div class="h-5 bg-slate-300 dark:bg-slate-600 rounded w-48 mx-auto"></div>
-                        <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded w-72 mx-auto"></div>
-                    </div>
-                    <div class="space-y-2.5 pt-2">
-                        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
-                        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-11/12"></div>
-                        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-5/6"></div>
-                        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
-                        <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                    </div>
-                    <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium pt-2 flex items-center justify-center gap-2">
-                        <span class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent rounded-full" role="status" aria-label="loading"></span>
-                        AI sedang memformat naskah dinas resmi DPRD Provinsi Sulawesi Tengah...
-                    </p>
                 </div>
             <?php else: ?>
                 <div class="py-14 text-center text-slate-500 dark:text-slate-400 space-y-1">
