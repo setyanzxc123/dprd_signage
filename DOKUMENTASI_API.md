@@ -42,6 +42,9 @@ Authorization: Bearer <access_token>
 | `GET`  | `/notulen/risalah/{id}` | Bearer Admin | Ambil naskah risalah |
 | `PUT`  | `/notulen/risalah/{id}` | Bearer Admin | Simpan perubahan draf risalah |
 | `POST` | `/notulen/risalah/{id}/finalisasi` | Bearer Admin | Finalisasi risalah rapat |
+| `GET`  | `/admin/pengaturan/whatsapp/status` | Bearer Admin | Status koneksi WhatsApp Gateway Baileys & kesiapan fallback |
+| `POST` | `/admin/pengaturan/whatsapp/pair-code` | Bearer Admin | Minta kode pairing WhatsApp perangkat dinas |
+| `POST` | `/admin/pengaturan/whatsapp/logout` | Bearer Admin | Putus sesi WhatsApp perangkat dinas |
 | `GET`  | `/api/signage/jadwal` | Publik | Data jadwal TV signage |
 | `GET`  | `/api/signage/cuaca` | Publik | Data cuaca BMKG |
 
@@ -50,6 +53,10 @@ Authorization: Bearer <access_token>
 ## 3. Autentikasi (`/auth`)
 
 ### `POST /auth/otp/request`
+* **Deskripsi**: Mengirimkan kode OTP 6 digit ke nomor WhatsApp anggota dewan. Sistem beroperasi dengan arsitektur Hybrid OTP:
+  * **Jalur Primer (Baileys v7)**: Memastikan pesan terkirim dengan jaminan *Synchronous Server ACK* (Centang 1).
+  * **Jalur Cadangan (Fazpass Cloud)**: Jika gateway utama mengalami penolakan server (HTTP 502), timeout ACK (HTTP 504), gateway offline (HTTP 503), nomor tidak terdaftar (HTTP 422), rate limit (HTTP 429), atau network timeout, backend otomatis melakukan failover instan ke Fazpass dalam alur sinkron yang sama tanpa memerlukan webhook klien.
+
 Request body:
 ```json
 {
@@ -575,7 +582,121 @@ Response `200 OK`:
 
 ---
 
-## 8. Format Error Response
+## 8. Pengaturan & Monitoring WhatsApp Gateway (`/admin/pengaturan/whatsapp`)
+
+Endpoint pada modul ini memerlukan token Bearer dengan hak akses `admin` atau `superadmin`.
+
+### `GET /admin/pengaturan/whatsapp/status`
+* **Alias**: `GET /admin/whatsapp/status`
+* **Deskripsi**: Mengambil status koneksi WhatsApp Gateway (Baileys), kesiapan fallback OTP (Fazpass), dan QR code jika perangkat belum tertaut.
+* **Query Params**:
+  * `refresh`: `1` | `0` (opsional, jika `1` maka bypass cache offline gateway).
+
+Response `200 OK`:
+```json
+{
+  "status": "success",
+  "data": {
+    "provider": "hybrid",
+    "fallback": {
+      "enabled": true,
+      "provider": "fazpass",
+      "configured": true,
+      "can_fallback": true
+    },
+    "gateway": {
+      "configured": true,
+      "connected": true,
+      "status": "connected",
+      "phone": "6281234567890",
+      "name": "Humas DPRD Sulteng",
+      "error": null
+    },
+    "qr": {
+      "available": false,
+      "qr_data_url": null
+    }
+  }
+}
+```
+
+Status Code:
+* `200 OK`: Sukses mengambil status gateway dan fallback.
+* `401 Unauthorized`: Token Bearer tidak valid atau belum disertakan.
+* `403 Forbidden`: Token bukan milik akun dengan grup `admin` / `superadmin`.
+
+### `POST /admin/pengaturan/whatsapp/pair-code`
+* **Alias**: `POST /admin/whatsapp/pair-code`
+* **Deskripsi**: Meminta 8 digit kode pairing WhatsApp untuk menautkan nomor telepon dinas ke Baileys tanpa perlu scan QR code fisik.
+* **Request Body**:
+```json
+{
+  "phone": "081234567890"
+}
+```
+
+Response `200 OK`:
+```json
+{
+  "status": "success",
+  "message": "Kode pairing WhatsApp berhasil dibuat.",
+  "data": {
+    "pairing_code": "ABCD-1234",
+    "phone": "6281234567890"
+  }
+}
+```
+
+Response `422 Unprocessable Entity`:
+```json
+{
+  "status": "error",
+  "message": "Nomor WhatsApp wajib diisi / Format nomor WhatsApp tidak valid."
+}
+```
+
+Status Code:
+* `200 OK`: Kode pairing berhasil diterbitkan dari gateway.
+* `401 Unauthorized`: Token Bearer tidak valid atau belum disertakan.
+* `403 Forbidden`: Token bukan milik akun dengan grup `admin` / `superadmin`.
+* `422 Unprocessable Entity`: Validasi nomor gagal atau gateway sedang offline/gagal membuat kode pairing.
+
+### `POST /admin/pengaturan/whatsapp/logout`
+* **Alias**: `POST /admin/whatsapp/logout`
+* **Deskripsi**: Memutuskan sesi WhatsApp perangkat dinas yang saat ini sedang tertaut.
+
+Response `200 OK`:
+```json
+{
+  "status": "success",
+  "message": "Sesi WhatsApp telah diputus. Silakan tautkan ulang nomor untuk menghubungkan kembali.",
+  "data": {
+    "gateway": {
+      "configured": true,
+      "connected": false,
+      "status": "disconnected"
+    }
+  }
+}
+```
+
+Response `422 Unprocessable Entity`:
+```json
+{
+  "status": "error",
+  "message": "Gagal memutus sesi WhatsApp."
+}
+```
+
+Status Code:
+* `200 OK`: Sesi perangkat dinas berhasil diputuskan.
+* `401 Unauthorized`: Token Bearer tidak valid atau belum disertakan.
+* `403 Forbidden`: Token bukan milik akun dengan grup `admin` / `superadmin`.
+* `422 Unprocessable Entity`: Gateway gagal memproses pemutusan sesi.
+
+---
+
+## 9. Format Error Response
 
 Format respons saat terjadi kesalahan:
 ```json

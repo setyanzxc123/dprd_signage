@@ -191,6 +191,14 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->put('admin/profil', 'AdminProfileController::update');
     $routes->patch('admin/profil', 'AdminProfileController::update');
 
+    // Pengaturan WhatsApp Gateway & Device (Bearer Admin)
+    $routes->get('admin/pengaturan/whatsapp/status',     'AdminWhatsAppController::status');
+    $routes->get('admin/whatsapp/status',                'AdminWhatsAppController::status');
+    $routes->post('admin/pengaturan/whatsapp/pair-code', 'AdminWhatsAppController::pairCode');
+    $routes->post('admin/whatsapp/pair-code',            'AdminWhatsAppController::pairCode');
+    $routes->post('admin/pengaturan/whatsapp/logout',    'AdminWhatsAppController::logout');
+    $routes->post('admin/whatsapp/logout',               'AdminWhatsAppController::logout');
+
     $routes->get('notulen/jobs',                  'NotulenController::index');
     $routes->get('notulen/jobs/(:num)',           'NotulenController::show/$1');
     $routes->get('notulen/jobs/(:num)/transkrip', 'NotulenController::transkrip/$1');
