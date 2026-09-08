@@ -344,26 +344,28 @@ if ($isMember) {
             </div>
         </div>
 
-        <div v-if="todayAgendas.length > 0" class="bg-white dark:bg-slate-900 mt-2 overflow-hidden">
+        <div v-if="todayAgendas.length > 0" class="mt-2 overflow-hidden border-b border-slate-200/80 dark:border-slate-800/80">
             <ol>
-                <li v-for="item in [...activeLiveAgendas, ...upcomingTodayAgendas]" :key="'today-card-' + item.key" class="group mx-4 sm:mx-6 border-b border-slate-400 dark:border-slate-600 last:border-b-0 py-3 flex items-center justify-between gap-3" :class="item.status === 'berlangsung' ? 'bg-rose-50/40 dark:bg-rose-950/20' : ''">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">{{ executionTime(item) }}</span>
-                        <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center shrink-0">
-                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
-                            <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500"></span>
-                        </span>
-                        <span class="text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{{ item.judul }}</span>
+                <li v-for="item in [...activeLiveAgendas, ...upcomingTodayAgendas]" :key="'today-card-' + item.key" class="group px-3.5 sm:px-6 border-b border-slate-200 dark:border-slate-800 last:border-b-0 py-2.5 sm:py-3 flex items-center justify-between gap-3 transition-colors" :class="item.status === 'berlangsung' ? 'bg-rose-50/70 dark:bg-rose-950/30' : 'bg-white dark:bg-slate-900'">
+                    <div class="min-w-0 flex-1 space-y-0.5">
+                        <div class="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
+                            <span v-if="item.status === 'berlangsung'" class="relative flex h-2 w-2 items-center justify-center shrink-0">
+                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                            </span>
+                            <span class="tabular-nums whitespace-nowrap">{{ executionTime(item) }}</span>
+                            <span v-if="item.status === 'berlangsung'" class="text-rose-600 dark:text-rose-400 font-semibold truncate">· Sedang Berlangsung</span>
+                        </div>
+                        <p class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 sm:line-clamp-2 leading-snug [text-wrap:pretty]">{{ item.judul }}</p>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <span v-if="item.status === 'berlangsung'" class="hidden sm:inline-flex items-center py-0.5 px-2 text-[11px] font-bold bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30">Berlangsung</span>
-                        <a v-if="item.has_stream" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 min-h-9 sm:min-h-8 py-1.5 px-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition">
-                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        <a v-if="item.has_stream" :href="streamUrl(item)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 min-h-[30px] sm:min-h-8 py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-bold shadow-xs transition whitespace-nowrap">
+                            <svg viewBox="0 0 24 24" class="size-3 sm:size-3.5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                             <span>Tonton Live</span>
                         </a>
-                        <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 min-h-9 sm:min-h-8 py-1.5 px-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition cursor-pointer">
+                        <button type="button" @click="focusAgenda(item)" class="inline-flex items-center gap-1 min-h-[30px] sm:min-h-8 py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition cursor-pointer whitespace-nowrap">
                             <span>Buka</span>
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                            <svg viewBox="0 0 24 24" class="size-3 sm:size-3" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
                     </div>
                 </li>
@@ -455,9 +457,6 @@ if ($isMember) {
                             :id="'agenda-card-' + item.key"
                             name="agenda-banmus-accordion"
                             class="group agenda-collapse mx-4 sm:mx-6 border-b border-slate-400 dark:border-slate-600 last:border-b-0"
-                            :class="{
-                                'bg-rose-50/40 dark:bg-rose-950/20': item.status === 'berlangsung'
-                            }"
                             :open="expandedAgendaKey === item.key"
                             @toggle="handleAgendaToggle($event, item.key)"
                         >
@@ -627,9 +626,6 @@ if ($isMember) {
                             :id="'agenda-card-' + item.key"
                             name="agenda-general-accordion"
                             class="group agenda-collapse mx-4 sm:mx-6 border-b border-slate-400 dark:border-slate-600 last:border-b-0"
-                            :class="{
-                                'bg-rose-50/40 dark:bg-rose-950/20': item.status === 'berlangsung'
-                            }"
                             :open="expandedGeneralKey === item.key"
                             @toggle="handleGeneralToggle($event, item.key)"
                         >

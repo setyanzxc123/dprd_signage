@@ -12,6 +12,9 @@
     --color-base-content: var(--sig-base-content);
     --color-neutral: var(--sig-neutral);
     --color-primary: var(--sig-primary);
+    --color-parliament-navy: #0f172a;
+    --color-parliament-blue: #2563eb;
+    --color-parliament-gold: #f59e0b;
 }
 
 :root,
@@ -22,7 +25,7 @@
     --sig-base-300: #e2e8f0;
     --sig-base-content: #0f172a;
     --sig-neutral: #0f172a;
-    --sig-primary: #0d9488;
+    --sig-primary: #2563eb;
 }
 
 [data-theme="dark"] {
@@ -32,7 +35,7 @@
     --sig-base-300: #334155;
     --sig-base-content: #f8fafc;
     --sig-neutral: #020617;
-    --sig-primary: #2dd4bf;
+    --sig-primary: #3b82f6;
 }
 
 [v-cloak] {
@@ -55,6 +58,11 @@ body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--color-base-content);
     background-color: var(--color-base-200);
+}
+
+::selection {
+    background-color: #2563eb;
+    color: #ffffff;
 }
 
 [data-theme="dark"] body {
@@ -114,7 +122,8 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background-color: rgb(16 185 129 / 0.2);
+    background: linear-gradient(90deg, #fde047, #facc15, #fde047);
+    opacity: 0.4;
     mask-image: url('../images/motif_batik_palu_band.png');
     mask-repeat: repeat-x;
     mask-size: auto clamp(165px, 18vh, 230px);
@@ -133,7 +142,8 @@ body {
 
 [data-theme="dark"] .signage-header-motif::before,
 .dark .signage-header-motif::before {
-    background-color: rgb(52 211 153 / 0.15);
+    background: linear-gradient(90deg, #fef08a, #fde047, #fef08a);
+    opacity: 0.18;
 }
 
 #panel-media {
@@ -143,20 +153,20 @@ body {
     overflow: hidden;
     border-right: 1px solid var(--color-base-300);
     background:
-        radial-gradient(ellipse 90% 65% at 50% 25%, rgba(16, 185, 129, 0.14) 0%, transparent 65%),
+        radial-gradient(ellipse 90% 65% at 50% 25%, rgba(37, 99, 235, 0.14) 0%, transparent 65%),
         linear-gradient(180deg, #0b1329 0%, #060c18 50%, #020617 100%);
 }
 
 [data-theme="dark"] #panel-media {
     background:
-        radial-gradient(ellipse 90% 65% at 50% 25%, rgba(16, 185, 129, 0.14) 0%, transparent 65%),
+        radial-gradient(ellipse 90% 65% at 50% 25%, rgba(37, 99, 235, 0.14) 0%, transparent 65%),
         linear-gradient(180deg, #0b1329 0%, #060c18 50%, #020617 100%);
     border-right-color: rgba(51, 65, 85, 0.6);
 }
 
 [data-theme="light"] #panel-media {
     background:
-        radial-gradient(ellipse 90% 65% at 50% 25%, rgba(13, 148, 136, 0.09) 0%, transparent 65%),
+        radial-gradient(ellipse 90% 65% at 50% 25%, rgba(37, 99, 235, 0.08) 0%, transparent 65%),
         linear-gradient(180deg, #ffffff 0%, #f8fafc 40%, #edf2f7 100%);
     border-right-color: rgba(226, 232, 240, 0.9);
 }
@@ -354,39 +364,39 @@ body {
 }
 
 [data-theme="light"] .parallaxonde > use:nth-child(1) {
-    fill: rgba(16, 185, 129, 0.18);
+    fill: rgba(37, 99, 235, 0.14);
 }
 
 [data-theme="light"] .parallaxonde > use:nth-child(2) {
-    fill: rgba(20, 184, 166, 0.30);
+    fill: rgba(59, 130, 246, 0.25);
 }
 
 [data-theme="light"] .parallaxonde > use:nth-child(3) {
-    fill: rgba(16, 185, 129, 0.45);
+    fill: rgba(37, 99, 235, 0.38);
 }
 
 [data-theme="light"] .parallaxonde > use:nth-child(4) {
-    fill: rgba(13, 148, 136, 0.75);
+    fill: rgba(29, 78, 216, 0.65);
 }
 
 [data-theme="dark"] .parallaxonde > use:nth-child(1),
 .dark .parallaxonde > use:nth-child(1) {
-    fill: rgba(52, 211, 153, 0.12);
+    fill: rgba(59, 130, 246, 0.12);
 }
 
 [data-theme="dark"] .parallaxonde > use:nth-child(2),
 .dark .parallaxonde > use:nth-child(2) {
-    fill: rgba(45, 212, 191, 0.22);
+    fill: rgba(96, 165, 250, 0.20);
 }
 
 [data-theme="dark"] .parallaxonde > use:nth-child(3),
 .dark .parallaxonde > use:nth-child(3) {
-    fill: rgba(16, 185, 129, 0.38);
+    fill: rgba(37, 99, 235, 0.32);
 }
 
 [data-theme="dark"] .parallaxonde > use:nth-child(4),
 .dark .parallaxonde > use:nth-child(4) {
-    fill: rgba(13, 148, 136, 0.70);
+    fill: rgba(29, 78, 216, 0.60);
 }
 
 .parallaxonde > use {

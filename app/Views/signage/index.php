@@ -83,7 +83,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                                 {{ clock }}
                             </span>
                             <div class="flex items-center gap-1.5 mt-0.5">
-                                <span class="block text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                <span class="block text-[clamp(10px,0.65vw,13px)] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
                                     WITA
                                 </span>
                                 <span v-if="connectionStatus === 'offline'"
