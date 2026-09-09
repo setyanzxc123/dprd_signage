@@ -510,7 +510,7 @@ if ($isMember) {
                             <div class="min-w-0 pt-2 pb-4 sm:pb-5 space-y-3">
                                 <div class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                                     <div class="flex items-start gap-2">
-                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Waktu</span>
+                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">{{ item.waktu_mulai ? 'Waktu' : 'Pelaksanaan' }}</span>
                                         <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
                                         <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ executionTime(item) }}</span>
                                     </div>
@@ -691,7 +691,7 @@ if ($isMember) {
                             <div class="min-w-0 pt-2 pb-4 sm:pb-5 space-y-3">
                                 <div class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                                     <div class="flex items-start gap-2">
-                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">Waktu</span>
+                                        <span class="w-28 sm:w-32 shrink-0 text-slate-500 dark:text-slate-400">{{ item.waktu_mulai ? 'Waktu' : 'Pelaksanaan' }}</span>
                                         <span class="text-slate-400 dark:text-slate-500 shrink-0">:</span>
                                         <span class="min-w-0 flex-1 text-slate-700 dark:text-slate-200">{{ executionTime(item) }}</span>
                                     </div>
@@ -1830,7 +1830,20 @@ if ($isMember) {
 
             function executionTime(item) {
                 if (!item.waktu_mulai) {
-                    return 'Sepanjang hari';
+                    const start = item.tanggal_mulai || item.tanggal;
+                    const end = item.tanggal_selesai;
+                    if (end && end !== start) {
+                        const d1 = parseDate(start);
+                        const d2 = parseDate(end);
+                        if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+                            return `${d1.getDate()} ${shortMonths[d1.getMonth()]} – ${d2.getDate()} ${shortMonths[d2.getMonth()]}`;
+                        }
+                    }
+                    const d = parseDate(item.tanggal);
+                    if (!isNaN(d.getTime())) {
+                        return `${d.getDate()} ${shortMonths[d.getMonth()]} ${d.getFullYear()}`;
+                    }
+                    return item.tanggal || '-';
                 }
                 if (!item.waktu_selesai) {
                     return `${item.waktu_mulai} WITA`;

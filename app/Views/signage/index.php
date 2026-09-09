@@ -223,7 +223,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         :class="['grid grid-cols-[9.5vw_minmax(0,1fr)_auto] items-center gap-[1.1vw] meeting-card border px-[1.1vw] py-[0.8vh]', scheduleItemClasses(item.status)]">
                         <div>
                             <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
-                                {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
+                                {{ scheduleTimeOrDate(item) }}
                             </div>
                             <div class="mt-0.5 flex items-center gap-1 text-[clamp(11px,0.72vw,14px)] font-semibold text-slate-800 dark:text-slate-200">
                                 <svg class="h-3 w-3 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,8 +266,11 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                                 <div class="text-[clamp(10.5px,0.7vw,13.5px)] font-bold uppercase tracking-[0.1em] text-base-content/85">
                                     {{ upcomingDateLabel(item.tanggal) }}
                                 </div>
-                                <div class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
-                                    {{ item.waktu_mulai ? item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') : 'Sepanjang hari' }}
+                                <div v-if="item.waktu_mulai" class="text-[clamp(13.5px,0.9vw,17.5px)] font-bold tabular-nums text-primary leading-tight">
+                                    {{ item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '') }}
+                                </div>
+                                <div v-else-if="item.tanggal_selesai && item.tanggal_selesai !== (item.tanggal_mulai || item.tanggal)" class="text-[clamp(11px,0.72vw,14px)] font-semibold text-primary/90 leading-tight">
+                                    {{ scheduleTimeOrDate(item) }}
                                 </div>
                                 <div class="mt-0.5 flex items-center gap-1 text-[clamp(11px,0.72vw,14px)] font-semibold text-slate-800 dark:text-slate-200">
                                     <svg class="h-3 w-3 shrink-0 text-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -953,6 +956,35 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         day: 'numeric',
                         month: 'short',
                     }).format(date);
+                }
+
+                function scheduleTimeOrDate(item) {
+                    if (item.waktu_mulai) {
+                        return item.waktu_mulai + (item.waktu_selesai ? ' - ' + item.waktu_selesai : '');
+                    }
+
+                    const start = item.tanggal_mulai || item.tanggal;
+                    const end = item.tanggal_selesai;
+                    if (end && end !== start) {
+                        const d1 = parseDateOnly(start);
+                        const d2 = parseDateOnly(end);
+                        if (d1 && d2) {
+                            const f1 = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(d1);
+                            const f2 = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(d2);
+                            return `${f1} - ${f2}`;
+                        }
+                    }
+
+                    const d = parseDateOnly(item.tanggal);
+                    if (d) {
+                        return new Intl.DateTimeFormat('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                        }).format(d);
+                    }
+
+                    return item.tanggal || '';
                 }
 
                 let lastRenderedBerkasUrl = '';
@@ -1828,7 +1860,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     mediaVideo, mediaBackdropVideo, mediaError,
                     ensureMediaPlayback, handleMediaProgress, handleMediaPlaying,
                     handleMediaWaiting, handleMediaEnded, handleMediaImageLoaded, handleMediaError,
-                    statusLabel, statusClasses, statusDotClasses, scheduleItemClasses, upcomingDateLabel
+                    statusLabel, statusClasses, statusDotClasses, scheduleItemClasses, upcomingDateLabel, scheduleTimeOrDate
                 };
             }
         }).mount('#app');
