@@ -211,7 +211,7 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
         $this->assertSame(0, $this->testDb->table('jadwal_umum')->countAllResults());
     }
 
-    public function testStoresNonRapatScheduleWithDateRangeAndNullMeetingFields(): void
+    public function testStoresNonRapatScheduleWithDateRangeAndOptionalTimes(): void
     {
         $response = $this->adminPost('/admin/jadwal-umum/store', [
             'judul'           => 'Pameran Pembangunan Daerah',
@@ -221,21 +221,39 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
             'lokasi_lainnya'  => 'Halaman Kantor DPRD',
             'is_publik'       => '1',
             'waktu_mulai'     => '08:00',
+            'waktu_selesai'   => '10:00',
             'ruangan_id'      => '1',
         ]);
 
         $response->assertStatus(303);
-        $row = $this->testDb->table('jadwal_umum')->get()->getRowArray();
+        $row = $this->testDb->table('jadwal_umum')->where('judul', 'Pameran Pembangunan Daerah')->get()->getRowArray();
         $this->assertNotNull($row);
         $this->assertSame('non_rapat', $row['jenis_agenda']);
-        $this->assertSame('non_rapat', $row['status']);
+        $this->assertSame('menunggu', $row['status']);
         $this->assertSame('2099-09-01', $row['tanggal']);
         $this->assertSame('2099-09-01', $row['tanggal_mulai']);
         $this->assertSame('2099-09-03', $row['tanggal_selesai']);
         $this->assertNull($row['ruangan_id']);
-        $this->assertNull($row['waktu_mulai']);
-        $this->assertNull($row['waktu_selesai']);
+        $this->assertSame('08:00:00', $row['waktu_mulai']);
+        $this->assertSame('10:00:00', $row['waktu_selesai']);
         $this->assertSame('Halaman Kantor DPRD', $row['lokasi_lainnya']);
+
+        $this->adminPost('/admin/jadwal-umum/store', [
+            'judul'           => 'Kegiatan Seharian Tanpa Jam',
+            'jenis_agenda'    => 'non_rapat',
+            'tanggal_mulai'   => '2099-09-05',
+            'tanggal_selesai' => '2099-09-05',
+            'lokasi_lainnya'  => 'Aula Terbuka',
+            'is_publik'       => '1',
+            'waktu_mulai'     => '',
+            'waktu_selesai'   => '',
+        ])->assertStatus(303);
+
+        $rowAllDay = $this->testDb->table('jadwal_umum')->where('judul', 'Kegiatan Seharian Tanpa Jam')->get()->getRowArray();
+        $this->assertNotNull($rowAllDay);
+        $this->assertSame('non_rapat', $rowAllDay['status']);
+        $this->assertNull($rowAllDay['waktu_mulai']);
+        $this->assertNull($rowAllDay['waktu_selesai']);
     }
 
     public function testStoresMeetingWithManualStatusOverrideDitundaAndDibatalkan(): void

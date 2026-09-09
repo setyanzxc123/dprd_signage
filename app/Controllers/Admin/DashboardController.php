@@ -54,11 +54,13 @@ class DashboardController extends BaseController
 
             $startStr  = empty($j['waktu_mulai']) ? null : substr((string) $j['waktu_mulai'], 0, 5);
             $endStr    = empty($j['waktu_selesai']) ? null : substr((string) $j['waktu_selesai'], 0, 5);
-            $timeRange = 'Sepanjang hari';
+            $timeRange = 'Kegiatan harian';
             if ($startStr && $endStr) {
                 $timeRange = "{$startStr}–{$endStr} WITA";
             } elseif ($startStr) {
                 $timeRange = "{$startStr} WITA";
+            } elseif (!empty($j['tanggal_selesai']) && $j['tanggal_selesai'] !== $j['tanggal']) {
+                $timeRange = 'Rentang hari';
             }
 
             $badge = status_badge($j['status']);

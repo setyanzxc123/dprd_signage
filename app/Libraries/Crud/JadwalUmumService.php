@@ -76,7 +76,10 @@ class JadwalUmumService
             }
 
             $tanggal = $tanggalMulai;
-            $times = ['waktu_mulai' => null, 'waktu_selesai' => null];
+            $times = $this->validatedTimes($input);
+            if (isset($times['error'])) {
+                return $times;
+            }
             $location = [
                 'ruangan_id'     => null,
                 'lokasi_lainnya' => trim((string) ($input['lokasi_lainnya'] ?? '')) ?: null,
@@ -86,7 +89,16 @@ class JadwalUmumService
             $streamUrl = ['url' => null];
             $invitationCheck = ['file' => null];
             $removeInvitation = true;
-            $status = JadwalUmumModel::STATUS_NON_RAPAT;
+            $status = $statusOverride ?? ($times['waktu_mulai'] !== null
+                ? JadwalUmumModel::resolveLifecycleStatus(
+                    $tanggal,
+                    $times['waktu_mulai'],
+                    $times['waktu_selesai'],
+                    null,
+                    JadwalUmumModel::TYPE_NON_MEETING,
+                    $statusOverride,
+                )
+                : JadwalUmumModel::STATUS_NON_RAPAT);
         } else {
             if (! $this->validDate($tanggal)) {
                 return ['error' => 'Tanggal wajib diisi dengan format yang valid.'];

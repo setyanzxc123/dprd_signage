@@ -60,7 +60,10 @@ class JadwalUmumModel extends Model
             ->select('id, tanggal, waktu_mulai, waktu_selesai, status, jenis_agenda')
             ->whereIn('status', self::SCHEDULED_STATUSES);
         if ($this->db->fieldExists('jenis_agenda', $this->table)) {
-            $builder->where('jenis_agenda', self::TYPE_MEETING);
+            $builder->groupStart()
+                ->where('jenis_agenda', self::TYPE_MEETING)
+                ->orWhere('waktu_mulai IS NOT NULL', null, false)
+                ->groupEnd();
         }
 
         foreach ($builder->get()->getResultArray() as $item) {
@@ -87,17 +90,6 @@ class JadwalUmumModel extends Model
     ): string {
         if ($manualStatus !== null && in_array($manualStatus, self::MANUAL_STATUSES, true)) {
             return $manualStatus;
-        }
-
-        if ($jenisAgenda === self::TYPE_NON_MEETING) {
-            $now ??= time();
-            $today = date('Y-m-d', $now);
-
-            return match (true) {
-                $tanggal < $today => self::STATUS_SELESAI,
-                $tanggal > $today => self::STATUS_MENUNGGU,
-                default           => self::STATUS_BERLANGSUNG,
-            };
         }
 
         $now ??= time();

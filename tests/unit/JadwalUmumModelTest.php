@@ -56,4 +56,40 @@ final class JadwalUmumModelTest extends CIUnitTestCase
             JadwalUmumModel::resolveLifecycleStatus('2099-08-11', '09:00:00', null, strtotime($date . ' 10:00:00')),
         );
     }
+
+    public function testResolvesLifecycleForNonRapatWithOptionalTimes(): void
+    {
+        $date = '2099-08-12';
+        $now = strtotime($date . ' 10:00:00');
+
+        $this->assertSame(
+            'berlangsung',
+            JadwalUmumModel::resolveLifecycleStatus($date, null, null, $now, JadwalUmumModel::TYPE_NON_MEETING),
+        );
+        $this->assertSame(
+            'menunggu',
+            JadwalUmumModel::resolveLifecycleStatus('2099-08-13', null, null, $now, JadwalUmumModel::TYPE_NON_MEETING),
+        );
+        $this->assertSame(
+            'selesai',
+            JadwalUmumModel::resolveLifecycleStatus('2099-08-11', null, null, $now, JadwalUmumModel::TYPE_NON_MEETING),
+        );
+
+        $this->assertSame(
+            'menunggu',
+            JadwalUmumModel::resolveLifecycleStatus($date, '11:00:00', '12:00:00', $now, JadwalUmumModel::TYPE_NON_MEETING),
+        );
+        $this->assertSame(
+            'persiapan',
+            JadwalUmumModel::resolveLifecycleStatus($date, '10:15:00', '11:00:00', $now, JadwalUmumModel::TYPE_NON_MEETING),
+        );
+        $this->assertSame(
+            'berlangsung',
+            JadwalUmumModel::resolveLifecycleStatus($date, '09:00:00', '11:00:00', $now, JadwalUmumModel::TYPE_NON_MEETING),
+        );
+        $this->assertSame(
+            'selesai',
+            JadwalUmumModel::resolveLifecycleStatus($date, '08:00:00', '09:30:00', $now, JadwalUmumModel::TYPE_NON_MEETING),
+        );
+    }
 }

@@ -81,31 +81,15 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Pelaksanaan</h2>
             </div>
 
-            <div id="rapat-waktu-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tanggal">
-                        Tanggal <span class="text-rose-500">*</span>
-                    </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-medium" id="tanggal" name="tanggal" type="date"
-                        value="<?= esc($schedule['tanggal'] ?? date('Y-m-d')) ?>" />
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="waktu_mulai">
-                        Mulai (WITA)
-                    </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_mulai" name="waktu_mulai" type="time" step="60"
-                        value="<?= esc(substr((string) ($schedule['waktu_mulai'] ?? ''), 0, 5)) ?>" />
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="waktu_selesai">
-                        Selesai (WITA)
-                    </label>
-                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_selesai" name="waktu_selesai" type="time" step="60"
-                        value="<?= esc(substr((string) ($schedule['waktu_selesai'] ?? ''), 0, 5)) ?>" />
-                </div>
+            <div id="rapat-tanggal-container">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tanggal">
+                    Tanggal <span class="text-rose-500">*</span>
+                </label>
+                <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 font-medium" id="tanggal" name="tanggal" type="date"
+                    value="<?= esc($schedule['tanggal'] ?? date('Y-m-d')) ?>" />
             </div>
 
-            <div id="non-rapat-waktu-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div id="non-rapat-tanggal-container" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="tanggal_mulai">
                         Tanggal Mulai <span class="text-rose-500">*</span>
@@ -122,8 +106,25 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="waktu_mulai">
+                        Mulai (WITA) <span class="text-[10px] font-normal text-slate-400 dark:text-slate-500" id="waktu-mulai-hint">(opsional)</span>
+                    </label>
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_mulai" name="waktu_mulai" type="time" step="60"
+                        value="<?= esc(substr((string) ($schedule['waktu_mulai'] ?? ''), 0, 5)) ?>" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="waktu_selesai">
+                        Selesai (WITA) <span class="text-[10px] font-normal text-slate-400 dark:text-slate-500" id="waktu-selesai-hint">(opsional)</span>
+                    </label>
+                    <input class="py-2.5 px-3.5 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="waktu_selesai" name="waktu_selesai" type="time" step="60"
+                        value="<?= esc(substr((string) ($schedule['waktu_selesai'] ?? ''), 0, 5)) ?>" />
+                </div>
+            </div>
+
             <p class="hidden text-xs font-semibold text-rose-600 dark:text-rose-400" id="waktu-rapat-error" role="alert" aria-live="polite">Jam selesai harus setelah jam mulai pada tanggal yang sama.</p>
-            <p id="rapat-waktu-desc" class="hidden"></p>
+            <p id="rapat-waktu-desc" class="text-[11px] text-slate-500 dark:text-slate-400">Kosongkan jam jika kegiatan berlangsung seharian penuh.</p>
         </div>
 
         <div class="space-y-3 pt-1" id="lokasi-section">

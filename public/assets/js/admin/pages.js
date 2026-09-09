@@ -151,8 +151,10 @@
         }
 
         const agendaTypeRadios = Array.from(document.querySelectorAll('input[name="jenis_agenda"]'));
-        const rapatWaktuGrid = document.getElementById('rapat-waktu-grid');
-        const nonRapatWaktuGrid = document.getElementById('non-rapat-waktu-grid');
+        const rapatTanggalContainer = document.getElementById('rapat-tanggal-container');
+        const nonRapatTanggalContainer = document.getElementById('non-rapat-tanggal-container');
+        const waktuMulaiHint = document.getElementById('waktu-mulai-hint');
+        const waktuSelesaiHint = document.getElementById('waktu-selesai-hint');
         const rapatWaktuDesc = document.getElementById('rapat-waktu-desc');
         const lokasiModeWrapper = document.getElementById('lokasi-mode-wrapper');
         const kelompokPesertaSection = document.getElementById('kelompok-peserta-section');
@@ -204,9 +206,15 @@
         const syncAgendaType = function() {
             const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
 
-            if (rapatWaktuGrid) rapatWaktuGrid.classList.toggle('hidden', isNonRapat);
-            if (nonRapatWaktuGrid) nonRapatWaktuGrid.classList.toggle('hidden', !isNonRapat);
-            if (rapatWaktuDesc) rapatWaktuDesc.classList.toggle('hidden', isNonRapat);
+            if (rapatTanggalContainer) rapatTanggalContainer.classList.toggle('hidden', isNonRapat);
+            if (nonRapatTanggalContainer) nonRapatTanggalContainer.classList.toggle('hidden', !isNonRapat);
+            if (waktuMulaiHint) waktuMulaiHint.textContent = isNonRapat ? '(opsional)' : '(opsional, wajib jika ruangan DPRD)';
+            if (waktuSelesaiHint) waktuSelesaiHint.textContent = isNonRapat ? '(opsional)' : '(opsional, wajib jika ruangan DPRD)';
+            if (rapatWaktuDesc) {
+                rapatWaktuDesc.textContent = isNonRapat
+                    ? 'Kosongkan jam jika kegiatan berlangsung seharian penuh tanpa jam spesifik.'
+                    : 'Wajib diisi jika menggunakan ruangan rapat DPRD.';
+            }
             if (lokasiModeWrapper) lokasiModeWrapper.classList.toggle('hidden', isNonRapat);
             if (kelompokPesertaSection) kelompokPesertaSection.classList.toggle('hidden', isNonRapat);
             if (bahanStreamSection) bahanStreamSection.classList.toggle('hidden', isNonRapat);
@@ -240,33 +248,15 @@
         });
 
         const syncTimeValidity = function() {
-            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
-            if (isNonRapat) {
-                if (waktuMulaiInput) {
-                    waktuMulaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
-                }
-                if (waktuSelesaiInput) {
-                    waktuSelesaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
-                    waktuSelesaiInput.setCustomValidity('');
-                }
-                if (waktuError) waktuError.classList.add('hidden');
-                return true;
-            }
-
             if (!waktuMulaiInput || !waktuSelesaiInput) return true;
 
-            const hasSeparateDate = tanggalInput?.value
-                && waktuMulaiInput.type === 'time'
-                && waktuSelesaiInput.type === 'time';
-            const startValue = hasSeparateDate
-                ? `${tanggalInput.value}T${waktuMulaiInput.value}`
-                : waktuMulaiInput.value;
-            const endValue = hasSeparateDate
-                ? `${tanggalInput.value}T${waktuSelesaiInput.value}`
-                : waktuSelesaiInput.value;
-            const start = startValue ? new Date(startValue) : null;
-            const end = endValue ? new Date(endValue) : null;
-            if (!start || !end) {
+            const isNonRapat = agendaTypeRadios.find(function(r) { return r.checked; })?.value === 'non_rapat';
+            const baseDate = isNonRapat ? (tanggalMulaiInput?.value || tanggalInput?.value) : tanggalInput?.value;
+
+            const startTime = waktuMulaiInput.value;
+            const endTime = waktuSelesaiInput.value;
+
+            if (!startTime && !endTime) {
                 waktuMulaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                 waktuSelesaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                 waktuSelesaiInput.setCustomValidity('');
@@ -274,26 +264,50 @@
                 return true;
             }
 
-            const sameDate = hasSeparateDate
-                || waktuMulaiInput.value.slice(0, 10) === waktuSelesaiInput.value.slice(0, 10);
-            const valid = !!(start && end && end > start && sameDate);
+            if (!startTime && endTime) {
+                waktuMulaiInput.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                if (waktuError) {
+                    waktuError.textContent = 'Jam selesai tidak boleh diisi tanpa jam mulai.';
+                    waktuError.classList.remove('hidden');
+                }
+                waktuSelesaiInput.setCustomValidity('Jam selesai tidak boleh diisi tanpa jam mulai.');
+                return false;
+            }
 
-            waktuMulaiInput.classList.toggle('border-rose-500', !valid && !!waktuMulaiInput.value);
-            waktuMulaiInput.classList.toggle('focus:border-rose-500', !valid && !!waktuMulaiInput.value);
-            waktuMulaiInput.classList.toggle('focus:ring-rose-500', !valid && !!waktuMulaiInput.value);
+            if (startTime && !endTime) {
+                waktuMulaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                waktuSelesaiInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                waktuSelesaiInput.setCustomValidity('');
+                if (waktuError) waktuError.classList.add('hidden');
+                return true;
+            }
 
-            waktuSelesaiInput.classList.toggle('border-rose-500', !valid && !!waktuSelesaiInput.value);
-            waktuSelesaiInput.classList.toggle('focus:border-rose-500', !valid && !!waktuSelesaiInput.value);
-            waktuSelesaiInput.classList.toggle('focus:ring-rose-500', !valid && !!waktuSelesaiInput.value);
+            const startValue = baseDate ? `${baseDate}T${startTime}` : startTime;
+            const endValue = baseDate ? `${baseDate}T${endTime}` : endTime;
+            const start = new Date(startValue);
+            const end = new Date(endValue);
+            const valid = !!(start && end && end > start);
 
-            if (waktuError) waktuError.classList.toggle('hidden', valid || !waktuMulaiInput.value || !waktuSelesaiInput.value);
+            waktuMulaiInput.classList.toggle('border-rose-500', !valid);
+            waktuMulaiInput.classList.toggle('focus:border-rose-500', !valid);
+            waktuMulaiInput.classList.toggle('focus:ring-rose-500', !valid);
 
-            waktuSelesaiInput.setCustomValidity(valid ? '' : 'Waktu selesai harus setelah waktu mulai pada tanggal yang sama.');
+            waktuSelesaiInput.classList.toggle('border-rose-500', !valid);
+            waktuSelesaiInput.classList.toggle('focus:border-rose-500', !valid);
+            waktuSelesaiInput.classList.toggle('focus:ring-rose-500', !valid);
+
+            if (waktuError) {
+                waktuError.textContent = 'Jam selesai harus setelah jam mulai pada tanggal yang sama.';
+                waktuError.classList.toggle('hidden', valid);
+            }
+
+            waktuSelesaiInput.setCustomValidity(valid ? '' : 'Jam selesai harus setelah jam mulai pada tanggal yang sama.');
 
             return valid;
         };
 
         tanggalInput?.addEventListener('change', syncTimeValidity);
+        tanggalMulaiInput?.addEventListener('change', syncTimeValidity);
         waktuMulaiInput?.addEventListener('change', syncTimeValidity);
         waktuSelesaiInput?.addEventListener('change', syncTimeValidity);
 

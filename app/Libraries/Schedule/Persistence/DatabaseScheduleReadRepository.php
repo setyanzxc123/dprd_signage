@@ -167,11 +167,18 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
         $jenisSelect = $this->db->fieldExists('jenis_agenda', 'jadwal_umum')
             ? "COALESCE(ju.jenis_agenda, 'rapat') AS jenis"
             : "'jadwal_umum' AS jenis";
+        $tglMulaiCol = $this->db->fieldExists('tanggal_mulai', 'jadwal_umum')
+            ? 'ju.tanggal_mulai'
+            : 'ju.tanggal AS tanggal_mulai';
+        $tglSelesaiCol = $this->db->fieldExists('tanggal_selesai', 'jadwal_umum')
+            ? 'ju.tanggal_selesai'
+            : 'ju.tanggal AS tanggal_selesai';
 
         $builder = $this->db->table('jadwal_umum ju')
             ->select(
                 "ju.id, ju.id AS source_id, 'jadwal_umum' AS source, NULL AS lingkup, "
                 . 'NULL AS dokumen_banmus_id, ju.judul, ju.keterangan, ju.tanggal, '
+                . "{$tglMulaiCol}, {$tglSelesaiCol}, "
                 . "ju.waktu_mulai, ju.waktu_selesai, {$statusSelect}, "
                 . 'ju.materi_url, ju.materi_akses, ju.stream_url, ju.stream_akses, '
                 . 'ju.undangan_file, ju.undangan_nama_asli, '
@@ -205,11 +212,20 @@ class DatabaseScheduleReadRepository implements ScheduleReadRepositoryInterface
         ?int $unitId,
         ?array $allowedScheduleIds
     ): BaseBuilder {
+        $tglMulaiBanmus = $this->db->fieldExists('tanggal_mulai', 'jadwal_banmus')
+            ? 'jb.tanggal_mulai'
+            : 'jb.tanggal AS tanggal_mulai';
+        $tglSelesaiBanmus = $this->db->fieldExists('tanggal_selesai', 'jadwal_banmus')
+            ? 'jb.tanggal_selesai'
+            : 'jb.tanggal AS tanggal_selesai';
+
         $builder = $this->db->table('jadwal_banmus jb')
             ->select(
                 "-jb.id AS id, jb.id AS source_id, 'banmus' AS source, NULL AS lingkup, "
                 . 'jb.dokumen_banmus_id, jb.agenda AS judul, jb.catatan AS keterangan, '
-                . 'jb.tanggal, jb.jam_mulai AS waktu_mulai, jb.jam_selesai AS waktu_selesai, jb.status, '
+                . 'jb.tanggal, '
+                . "{$tglMulaiBanmus}, {$tglSelesaiBanmus}, "
+                . 'jb.jam_mulai AS waktu_mulai, jb.jam_selesai AS waktu_selesai, jb.status, '
                 . 'jb.materi_url, jb.materi_akses, jb.stream_url, jb.stream_akses, '
                 . 'jb.undangan_file, jb.undangan_nama_asli, '
                 . "COALESCE(jb.jenis_agenda, 'rapat') AS jenis, CASE WHEN jb.publikasi = 'publik' AND db.is_publik = 1 THEN 1 ELSE 0 END AS is_publik, "

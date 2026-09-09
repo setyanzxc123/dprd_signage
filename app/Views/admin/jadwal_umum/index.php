@@ -62,14 +62,14 @@
                                         <?php endif; ?>
                                     </div>
                                     <div class="mt-0.5 whitespace-nowrap font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                                        <?php if ($isNonMeeting): ?>
-                                            Rentang hari
-                                        <?php elseif (empty($schedule['waktu_mulai'])): ?>
-                                            Sepanjang hari
-                                        <?php else: ?>
+                                        <?php if (! empty($schedule['waktu_mulai'])): ?>
                                             <?= esc(substr($schedule['waktu_mulai'], 0, 5)) ?>
                                             <?= ! empty($schedule['waktu_selesai']) ? '&ndash;' . esc(substr($schedule['waktu_selesai'], 0, 5)) : '' ?>
                                             WITA
+                                        <?php elseif ($hasDateRange): ?>
+                                            Rentang hari
+                                        <?php else: ?>
+                                            Kegiatan harian
                                         <?php endif; ?>
                                     </div>
                                 </div>

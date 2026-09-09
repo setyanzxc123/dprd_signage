@@ -273,7 +273,7 @@ if (! empty($filters['publikasi'])) $activeFilterCount++;
                                     </div>
                                     <div class="mt-0.5 whitespace-nowrap font-mono text-[11px] text-slate-500 dark:text-slate-400">
                                         <?php if ($agenda['waktu_mulai'] === null): ?>
-                                            Sepanjang hari
+                                            Kegiatan harian
                                         <?php else: ?>
                                             <?= esc($agenda['waktu_mulai']) ?>
                                         <?php endif; ?>
