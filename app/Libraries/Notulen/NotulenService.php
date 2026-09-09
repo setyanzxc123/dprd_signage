@@ -1184,6 +1184,8 @@ class NotulenService
                 'waktu_mulai'  => '-',
                 'lokasi'       => '-',
                 'ruangan'      => 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah',
+                'unit'         => '-',
+                'unit_list'    => [],
             ];
         }
 
@@ -1197,12 +1199,24 @@ class NotulenService
                         $ruanganName = $room['nama'] ?? null;
                     }
                     $lokasi = (string) ($item['lokasi_lainnya'] ?? '');
+                    $unitList = [];
+                    if ($this->db->tableExists('jadwal_umum_unit_rapat') && $this->db->tableExists('unit_rapat')) {
+                        $unitRows = $this->db->table('jadwal_umum_unit_rapat jur')
+                            ->select('ur.nama')
+                            ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
+                            ->where('jur.jadwal_umum_id', $id)
+                            ->orderBy('ur.urutan', 'ASC')->orderBy('ur.nama', 'ASC')
+                            ->get()->getResultArray();
+                        $unitList = array_column($unitRows, 'nama');
+                    }
                     return [
                         'judul'        => (string) ($item['judul'] ?? 'Rapat Umum DPRD'),
                         'tanggal'      => (string) ($item['tanggal'] ?? date('Y-m-d')),
                         'waktu_mulai'  => (string) ($item['waktu_mulai'] ?? '-'),
                         'lokasi'       => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
                         'ruangan'      => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
+                        'unit'         => $unitList !== [] ? implode(', ', $unitList) : '-',
+                        'unit_list'    => $unitList,
                     ];
                 }
             }
@@ -1222,6 +1236,8 @@ class NotulenService
                         'waktu_mulai'  => (string) ($item['jam_mulai'] ?? '-'),
                         'lokasi'       => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
                         'ruangan'      => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
+                        'unit'         => 'Badan Musyawarah',
+                        'unit_list'    => ['Badan Musyawarah'],
                     ];
                 }
             }
@@ -1235,6 +1251,8 @@ class NotulenService
             'waktu_mulai'  => '-',
             'lokasi'       => '-',
             'ruangan'      => 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah',
+            'unit'         => '-',
+            'unit_list'    => [],
         ];
     }
 
