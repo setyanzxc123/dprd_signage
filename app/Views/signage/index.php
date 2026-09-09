@@ -234,7 +234,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                             </div>
                         </div>
                         <div class="min-w-0">
-                            <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2" :class="{ 'line-through opacity-75': item.status === 'dibatalkan' }">
+                            <div class="text-[clamp(14px,0.95vw,18.5px)] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
                                 {{ item.judul }}
                             </div>
                             <div class="mt-0.5 text-[clamp(10.5px,0.7vw,13.5px)] text-base-content/85 font-medium truncate">{{ item.komisi }}</div>
