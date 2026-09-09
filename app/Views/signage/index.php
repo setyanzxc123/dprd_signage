@@ -605,7 +605,11 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
 
                     const bgVideo = mediaBackdropVideo.value;
                     if (bgVideo && Math.abs(bgVideo.currentTime - currentTime) > 0.3) {
-                        bgVideo.currentTime = currentTime;
+                        const isLoopDiscrepancy = (currentTime < 1 && bgVideo.currentTime > 3)
+                            || (bgVideo.currentTime < 1 && currentTime > 3);
+                        if (!isLoopDiscrepancy) {
+                            bgVideo.currentTime = currentTime;
+                        }
                     }
                 }
 
@@ -700,6 +704,11 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 }
 
                 function handleMediaWaiting() {
+                    const video = mediaVideo.value;
+                    if (video && (video.currentTime < 1 || (video.duration > 0 && video.duration - video.currentTime < 1))) {
+                        return;
+                    }
+
                     const bgVideo = mediaBackdropVideo.value;
                     if (bgVideo && !bgVideo.paused) bgVideo.pause();
                     mediaStableSince = 0;
@@ -1297,10 +1306,17 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     document.documentElement.dataset.mediaActivationStatus = 'waiting-boundary';
                     if (data.fallback_url) useCachedMediaFallback();
 
+                    const currentMediaIsSame = canonicalClientMediaUrl(media.value.url) === canonicalClientMediaUrl(data.url);
+                    if (currentMediaIsSame) {
+                        activateStagedMedia('media aktif cocok');
+                        persistSignageDiagnostics();
+                        return;
+                    }
+
                     if (media.value.mode === 'video' && media.value.url) {
                         nextTick(() => {
                             const video = mediaVideo.value;
-                            if (video) video.loop = false;
+                            if (video) video.loop = true;
                             else activateStagedMedia('video aktif tidak tersedia');
                         });
                     } else {
@@ -1373,6 +1389,17 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                     persistSignageDiagnostics();
 
                     const video = mediaVideo.value;
+                    const isAlreadyPlayingUrl = video
+                        && canonicalClientMediaUrl(media.value.url) === canonicalClientMediaUrl(data.url);
+
+                    if (isAlreadyPlayingUrl) {
+                        video.loop = true;
+                        const bgVideo = mediaBackdropVideo.value;
+                        if (bgVideo) bgVideo.loop = true;
+                        ensureMediaPlayback();
+                        return;
+                    }
+
                     if (!isConfiguredMediaUrl(media.value.url)) {
                         showMedia(configuredMediaMode, configuredMediaUrl);
                         nextTick(() => {
@@ -1380,10 +1407,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         });
                     } else if (video && configuredMediaMode === 'video') {
                         video.loop = true;
-                        const separator = configuredMediaUrl.includes('?') ? '&' : '?';
-                        video.src = `${configuredMediaUrl}${separator}media_retry=${Date.now()}`;
-                        video.load();
-                        ensureMediaPlayback();
+                        showMedia('video', data.url);
                     }
                 }
 
