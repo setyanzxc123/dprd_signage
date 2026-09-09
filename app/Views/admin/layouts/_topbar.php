@@ -77,6 +77,73 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
+            <!-- Background Task Monitor AI Dropdown -->
+            <div class="hs-dropdown relative inline-flex [--placement:bottom-right] [--strategy:fixed] sm:[--strategy:absolute]">
+                <button id="hs-dropdown-task-monitor" type="button" class="hs-dropdown-toggle relative inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" aria-haspopup="dialog" aria-expanded="false" aria-label="Antrean Proses AI" title="Antrean Proses AI">
+                    <i data-lucide="layers" class="size-4" id="task_monitor_icon"></i>
+                    <!-- Badge Counter / Indicator Dot -->
+                    <span id="task_monitor_badge" class="hidden absolute -top-1 -end-1 flex min-w-4 h-4 px-1 items-center justify-center rounded-full bg-rose-600 dark:bg-rose-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-pulse leading-none">
+                        0
+                    </span>
+                </button>
+
+                <span id="csrf_global_token" class="hidden"><?= csrf_field() ?></span>
+
+                <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-md bg-white dark:bg-slate-900 shadow-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 z-50 mt-2 overflow-hidden" role="dialog" aria-label="Antrean Proses AI" aria-modal="false" aria-labelledby="hs-dropdown-task-monitor">
+                    <!-- Header Dropdown -->
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="activity" class="size-4 text-blue-600 dark:text-blue-400"></i>
+                            <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Antrean Proses AI</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span id="task_monitor_header_count" class="py-0.5 px-2 rounded-full text-[10px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                0 Aktif
+                            </span>
+                            <button type="button" id="btn_task_monitor_refresh" class="size-7 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" title="Perbarui Status" aria-label="Perbarui status antrean">
+                                <i data-lucide="rotate-cw" class="size-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body List: Active Tasks & Recent History -->
+                    <div id="task_monitor_body" class="max-h-[65vh] sm:max-h-80 overflow-y-auto p-3 space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60">
+                        <!-- Active Tasks Section -->
+                        <div id="task_monitor_active_container" class="space-y-2 hidden">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                                Sedang Berjalan
+                            </div>
+                            <div id="task_monitor_active_list" class="space-y-2"></div>
+                        </div>
+
+                        <!-- Recent Finished Section -->
+                        <div id="task_monitor_recent_container" class="space-y-2 pt-2 hidden">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                                Baru Selesai
+                            </div>
+                            <div id="task_monitor_recent_list" class="space-y-1.5"></div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="task_monitor_empty" class="py-6 text-center text-slate-500 dark:text-slate-400 space-y-1.5">
+                            <div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+                                <i data-lucide="check-circle" class="size-4"></i>
+                            </div>
+                            <p class="text-xs font-medium text-slate-700 dark:text-slate-300">Tidak ada proses AI yang berjalan</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Antrean pemrosesan notulensi sedang kosong.</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer Dropdown -->
+                    <div class="px-3 py-2.5 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 text-center">
+                        <a href="<?= base_url('admin/notulen') ?>" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden rounded-md px-2 py-1">
+                            <span>Buka Notulensi &amp; Risalah AI</span>
+                            <i data-lucide="chevron-right" class="size-3.5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <label class="inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition" title="Gunakan tema gelap" aria-label="Gunakan tema gelap" data-theme-toggle>
                 <input type="checkbox" value="dark" class="hidden" data-theme-toggle-input />
                 <i class="theme-icon-sun size-4" data-lucide="sun"></i>

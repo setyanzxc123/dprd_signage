@@ -397,6 +397,18 @@ class NotulenController extends BaseController
     }
 
     /**
+     * GET api/v1/notulen/active-tasks
+     * GET api/v1/notulen/tasks/active
+     * Ringkasan antrean tugas latar belakang AI untuk aplikasi mobile.
+     */
+    public function activeTasks(): ResponseInterface
+    {
+        $data = $this->service->getActiveTasksSummary();
+
+        return $this->apiSuccess(['data' => $data]);
+    }
+
+    /**
      * POST api/v1/notulen/upload/start - mulai/resume sesi chunked upload.
      * Owner sesi diturunkan dari identitas bearer sehingga resume otomatis
      * bekerja lintas restart aplikasi selama token yang sama dipakai.

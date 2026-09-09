@@ -1462,4 +1462,85 @@ class NotulenService
 
         @rmdir($dir);
     }
+
+    /**
+     * Mengambil ringkasan tugas latar belakang AI (antrean aktif dan riwayat terkini).
+     */
+    public function getActiveTasksSummary(): array
+    {
+        $jobModel = new MeetingTranscriptionJobModel();
+
+        $activeStatuses = [
+            MeetingTranscriptionJobModel::STATUS_QUEUED,
+            MeetingTranscriptionJobModel::STATUS_CHUNKING,
+            MeetingTranscriptionJobModel::STATUS_TRANSCRIBING,
+            MeetingTranscriptionJobModel::STATUS_SUMMARIZING,
+        ];
+
+        $activeJobs = $jobModel->whereIn('status', $activeStatuses)
+            ->orderBy('id', 'DESC')
+            ->findAll(20);
+
+        $recentJobs = $jobModel->whereIn('status', [
+            MeetingTranscriptionJobModel::STATUS_COMPLETED,
+            MeetingTranscriptionJobModel::STATUS_FAILED,
+        ])
+            ->orderBy('updated_at', 'DESC')
+            ->findAll(3);
+
+        $formatJob = function (array $job): array {
+            $schedule = $this->resolveScheduleInfo((string) ($job['jadwal_type'] ?? 'umum'), (int) ($job['jadwal_id'] ?? 0));
+            $status   = (string) ($job['status'] ?? 'queued');
+
+            $statusLabel = match ($status) {
+                MeetingTranscriptionJobModel::STATUS_QUEUED       => 'Dalam Antrean',
+                MeetingTranscriptionJobModel::STATUS_CHUNKING     => 'Menyiapkan Audio',
+                MeetingTranscriptionJobModel::STATUS_TRANSCRIBING => 'Mentranskripsi',
+                MeetingTranscriptionJobModel::STATUS_SUMMARIZING  => 'Menyusun Risalah',
+                MeetingTranscriptionJobModel::STATUS_COMPLETED    => 'Selesai',
+                MeetingTranscriptionJobModel::STATUS_FAILED       => 'Gagal',
+                MeetingTranscriptionJobModel::STATUS_CANCELLED    => 'Dibatalkan',
+                default                                           => ucfirst($status),
+            };
+
+            return [
+                'id'               => (int) $job['id'],
+                'jadwal_type'      => (string) ($job['jadwal_type'] ?? 'umum'),
+                'jadwal_id'        => (int) ($job['jadwal_id'] ?? 0),
+                'judul'            => $schedule['judul'] ?? 'Rapat DPRD',
+                'tanggal'          => $schedule['tanggal'] ?? '-',
+                'ruangan'          => $schedule['ruangan'] ?? '-',
+                'unit'             => $schedule['unit'] ?? '-',
+                'status'           => $status,
+                'status_label'     => $statusLabel,
+                'progress_percent' => (int) ($job['progress_percent'] ?? 0),
+                'current_step'     => (string) ($job['current_step'] ?? ''),
+                'cancel_requested' => (bool) ($job['cancel_requested'] ?? false),
+                'total_chunks'     => (int) ($job['total_chunks'] ?? 0),
+                'completed_chunks' => (int) ($job['completed_chunks'] ?? 0),
+                'audio_filename'   => (string) ($job['audio_filename'] ?? ''),
+                'created_at'       => (string) ($job['created_at'] ?? ''),
+                'updated_at'       => (string) ($job['updated_at'] ?? ''),
+                'url'              => base_url('admin/notulen/' . (int) $job['id']),
+            ];
+        };
+
+        $formattedActive = array_map($formatJob, $activeJobs);
+        $formattedRecent = array_map($formatJob, $recentJobs);
+
+        $counts = $jobModel->getStatusCounts();
+
+        return [
+            'active'       => $formattedActive,
+            'recent'       => $formattedRecent,
+            'active_count' => count($formattedActive),
+            'has_active'   => count($formattedActive) > 0,
+            'counts'       => [
+                'queued'      => (int) ($counts[MeetingTranscriptionJobModel::STATUS_QUEUED] ?? 0),
+                'in_progress' => (int) ($counts['in_progress'] ?? 0),
+                'completed'   => (int) ($counts[MeetingTranscriptionJobModel::STATUS_COMPLETED] ?? 0),
+                'failed'      => (int) ($counts[MeetingTranscriptionJobModel::STATUS_FAILED] ?? 0),
+            ],
+        ];
+    }
 }

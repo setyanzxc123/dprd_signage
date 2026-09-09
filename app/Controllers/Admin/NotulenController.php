@@ -384,6 +384,19 @@ class NotulenController extends BaseController
     }
 
     /**
+     * Endpoint ringkas polling task aktif dan antrean AI global.
+     */
+    public function activeTasks(): ResponseInterface
+    {
+        $data = $this->service->getActiveTasksSummary();
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => $data,
+        ]);
+    }
+
+    /**
      * Endpoint streaming audio rekaman rapat untuk audio player di web admin.
      * Logika Range/206/streaming dibagikan dengan API mobile via AudioStreamResponder.
      */
@@ -411,9 +424,23 @@ class NotulenController extends BaseController
     /**
      * Handler batalkan job (langsung untuk queued, kooperatif untuk in-progress).
      */
-    public function cancel(int $jobId): RedirectResponse
+    public function cancel(int $jobId): ResponseInterface|RedirectResponse
     {
         $result = $this->service->requestCancel($jobId);
+
+        if ($this->request->isAJAX() || str_contains((string) $this->request->header('Accept')?->getValue(), 'application/json')) {
+            if (isset($result['error'])) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'status'  => 'error',
+                    'message' => $result['error'],
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => $result['message'],
+            ]);
+        }
 
         if (isset($result['error'])) {
             session()->setFlashdata('error', $result['error']);

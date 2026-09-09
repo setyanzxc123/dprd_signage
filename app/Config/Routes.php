@@ -114,6 +114,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 
     // Modul Notulensi & Risalah AI
     $routes->get( 'notulen',                            'Admin\NotulenController::index');
+    $routes->get( 'notulen/active-tasks',               'Admin\NotulenController::activeTasks');
     $routes->get( 'notulen/(:num)',                     'Admin\NotulenController::show/$1');
     $routes->post('notulen/upload',                     'Admin\NotulenController::upload');
     $routes->post('notulen/audio-upload/start',         'Admin\NotulenController::startAudioUpload');
@@ -200,6 +201,8 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => [
     $routes->post('admin/whatsapp/logout',               'AdminWhatsAppController::logout');
 
     $routes->get('notulen/jobs',                  'NotulenController::index');
+    $routes->get('notulen/active-tasks',          'NotulenController::activeTasks');
+    $routes->get('notulen/tasks/active',          'NotulenController::activeTasks');
     $routes->get('notulen/jobs/(:num)',           'NotulenController::show/$1');
     $routes->get('notulen/jobs/(:num)/transkrip', 'NotulenController::transkrip/$1');
     $routes->get('notulen/jobs/(:num)/transkrip/unduh', 'NotulenController::downloadTranscript/$1');

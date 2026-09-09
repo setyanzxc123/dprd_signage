@@ -3394,3 +3394,312 @@
         }
     });
 })();
+
+// Global Background Task Monitor AI for Admin Topbar
+(() => {
+    const dropdownToggle = document.getElementById('hs-dropdown-task-monitor');
+    if (!dropdownToggle) return;
+
+    const badgeEl = document.getElementById('task_monitor_badge');
+    const iconEl = document.getElementById('task_monitor_icon');
+    const headerCountEl = document.getElementById('task_monitor_header_count');
+    const refreshBtn = document.getElementById('btn_task_monitor_refresh');
+    const activeContainer = document.getElementById('task_monitor_active_container');
+    const activeListEl = document.getElementById('task_monitor_active_list');
+    const recentContainer = document.getElementById('task_monitor_recent_container');
+    const recentListEl = document.getElementById('task_monitor_recent_list');
+    const emptyEl = document.getElementById('task_monitor_empty');
+
+    let pollTimer = null;
+    let pollInterval = 45000;
+    let isFetching = false;
+    let abortController = null;
+    let lastRenderedSignature = null;
+
+    const baseUrl = window.location.origin;
+
+    const escapeHtml = (str) => {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
+    const getCsrfFieldHtml = () => {
+        const holder = document.getElementById('csrf_global_token');
+        if (holder && holder.innerHTML) {
+            return holder.innerHTML;
+        }
+        const existingCsrf = document.querySelector('input[name="csrf_token_name"]') ||
+                             document.querySelector('input[name^="csrf_"]');
+        if (existingCsrf) {
+            return `<input type="hidden" name="${escapeHtml(existingCsrf.name)}" value="${escapeHtml(existingCsrf.value)}">`;
+        }
+        return '';
+    };
+
+    const getCsrfHeaders = () => {
+        const headers = {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        const csrfInput = document.querySelector('input[name="csrf_token_name"]') ||
+                          document.querySelector('meta[name="csrf-token"]') ||
+                          document.querySelector('input[name^="csrf_"]');
+        if (csrfInput) {
+            const tokenName = csrfInput.getAttribute('name') || 'X-CSRF-TOKEN';
+            const tokenValue = csrfInput.value || csrfInput.getAttribute('content');
+            if (tokenValue) {
+                headers[tokenName] = tokenValue;
+            }
+        }
+        return headers;
+    };
+
+    const renderTasks = (data) => {
+        const activeTasks = data.active || [];
+        const recentTasks = data.recent || [];
+        const activeCount = data.active_count || activeTasks.length;
+        const hasActive = activeCount > 0;
+
+        // Skip redundant DOM rebuilds when task state has not changed
+        const currentSignature = JSON.stringify({
+            activeCount,
+            active: activeTasks.map((t) => [t.id, t.status, t.progress_percent, t.current_step, t.cancel_requested]),
+            recent: recentTasks.map((t) => [t.id, t.status])
+        });
+
+        if (currentSignature === lastRenderedSignature) {
+            const nextInterval = hasActive ? 4500 : 45000;
+            if (pollInterval !== nextInterval) {
+                pollInterval = nextInterval;
+                restartPolling();
+            }
+            return;
+        }
+        lastRenderedSignature = currentSignature;
+
+        if (dropdownToggle) {
+            dropdownToggle.setAttribute('aria-label', hasActive
+                ? `Antrean Proses AI (${activeCount} proses aktif)`
+                : 'Antrean Proses AI');
+            dropdownToggle.setAttribute('title', hasActive
+                ? `Antrean Proses AI (${activeCount} proses aktif)`
+                : 'Antrean Proses AI');
+        }
+
+        if (badgeEl) {
+            if (hasActive) {
+                badgeEl.textContent = activeCount > 9 ? '9+' : String(activeCount);
+                badgeEl.classList.remove('hidden');
+                badgeEl.classList.add('flex');
+            } else {
+                badgeEl.classList.add('hidden');
+                badgeEl.classList.remove('flex');
+            }
+        }
+
+        if (iconEl) {
+            if (hasActive) {
+                iconEl.classList.add('text-blue-600', 'dark:text-blue-400');
+            } else {
+                iconEl.classList.remove('text-blue-600', 'dark:text-blue-400');
+            }
+        }
+
+        if (headerCountEl) {
+            headerCountEl.textContent = hasActive ? `${activeCount} Aktif` : '0 Aktif';
+            if (hasActive) {
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300';
+            } else {
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+            }
+        }
+
+        if (hasActive && activeListEl && activeContainer) {
+            activeContainer.classList.remove('hidden');
+            emptyEl?.classList.add('hidden');
+
+            activeListEl.innerHTML = activeTasks.map((task) => {
+                const percent = Math.max(0, Math.min(100, task.progress_percent || 0));
+                const isCancelling = Boolean(task.cancel_requested);
+
+                return `
+                    <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <a href="${escapeHtml(task.url)}" class="font-bold text-xs text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-1 flex-1 leading-snug focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden rounded">
+                                ${escapeHtml(task.judul)}
+                            </a>
+                            <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shrink-0">
+                                <span class="motion-safe:animate-spin inline-block size-2.5 border-2 border-current border-t-transparent rounded-full"></span>
+                                <span>${escapeHtml(task.status_label)}</span>
+                            </span>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                <span class="truncate max-w-[200px]">${escapeHtml(task.current_step || task.status_label)}</span>
+                                <span>${percent}%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden" role="progressbar" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100" aria-label="Progres proses AI: ${escapeHtml(task.judul)}">
+                                <div class="bg-blue-600 dark:bg-blue-500 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-1 text-[11px] gap-2">
+                            <span class="text-slate-500 dark:text-slate-400 truncate">${escapeHtml(task.tanggal)}</span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                ${isCancelling ? `
+                                    <span class="inline-flex items-center min-h-[28px] px-2 text-[10px] text-amber-600 dark:text-amber-400 font-medium">Menghentikan...</span>
+                                ` : `
+                                    <form method="post" action="${baseUrl}/admin/notulen/cancel/${task.id}"
+                                          data-confirm-title="Hentikan Proses AI"
+                                          data-confirm-message="Hentikan proses AI untuk rapat &quot;${escapeHtml(task.judul)}&quot;? Bagian yang telah selesai akan tetap tersimpan aman."
+                                          data-confirm-button="Hentikan Proses"
+                                          data-confirm-variant="danger"
+                                          class="m-0 inline-flex">
+                                        ${getCsrfFieldHtml()}
+                                        <button type="submit" class="inline-flex items-center justify-center min-h-[28px] px-2.5 py-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-lg transition cursor-pointer focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-hidden">
+                                            Batalkan
+                                        </button>
+                                    </form>
+                                `}
+                                <a href="${escapeHtml(task.url)}" class="inline-flex items-center justify-center min-h-[28px] px-2.5 py-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden">
+                                    Detail &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else if (activeContainer) {
+            activeContainer.classList.add('hidden');
+            if (activeListEl) activeListEl.innerHTML = '';
+        }
+
+        if (recentTasks.length > 0 && recentListEl && recentContainer) {
+            recentContainer.classList.remove('hidden');
+            emptyEl?.classList.add('hidden');
+
+            recentListEl.innerHTML = recentTasks.map((task) => {
+                const isSuccess = task.status === 'completed';
+                const badgeClass = isSuccess
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/60'
+                    : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200/60';
+                const iconName = isSuccess ? 'check' : 'alert-circle';
+
+                return `
+                    <a href="${escapeHtml(task.url)}" class="block p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/60 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-medium text-xs text-slate-800 dark:text-slate-200 truncate flex-1">
+                                ${escapeHtml(task.judul)}
+                            </span>
+                            <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[10px] font-semibold border ${badgeClass} shrink-0">
+                                <i data-lucide="${iconName}" class="size-2.5"></i>
+                                <span>${escapeHtml(task.status_label)}</span>
+                            </span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        } else if (recentContainer) {
+            recentContainer.classList.add('hidden');
+            if (recentListEl) recentListEl.innerHTML = '';
+        }
+
+        if (!hasActive && recentTasks.length === 0 && emptyEl) {
+            emptyEl.classList.remove('hidden');
+        }
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+
+        const nextInterval = hasActive ? 4500 : 45000;
+        if (pollInterval !== nextInterval) {
+            pollInterval = nextInterval;
+            restartPolling();
+        }
+    };
+
+    const fetchTasks = async () => {
+        if (isFetching || document.hidden) return;
+        isFetching = true;
+
+        if (abortController) {
+            abortController.abort();
+        }
+        abortController = new AbortController();
+
+        try {
+            const currentOrigin = window.location.origin;
+            const res = await fetch(`${currentOrigin}/admin/notulen/active-tasks`, {
+                signal: abortController.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            if (json && json.status === 'success' && json.data) {
+                renderTasks(json.data);
+            }
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                // Silently handle polling failure
+            }
+        } finally {
+            isFetching = false;
+        }
+    };
+
+    const restartPolling = () => {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+        }
+        pollTimer = setInterval(fetchTasks, pollInterval);
+    };
+
+    // Close task monitor dropdown when confirmation modal is opened
+    document.addEventListener('submit', (e) => {
+        const form = e.target.closest('#task_monitor_active_list form[data-confirm-message]');
+        if (!form) return;
+        const dropdownToggleEl = document.getElementById('hs-dropdown-task-monitor');
+        if (dropdownToggleEl && window.HSDropdown && typeof window.HSDropdown.close === 'function') {
+            window.HSDropdown.close(dropdownToggleEl);
+        }
+    });
+
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            refreshBtn.classList.add('motion-safe:animate-spin');
+            lastRenderedSignature = null;
+            fetchTasks().finally(() => {
+                setTimeout(() => refreshBtn.classList.remove('motion-safe:animate-spin'), 600);
+            });
+        });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            fetchTasks();
+        }
+    });
+
+    fetchTasks();
+    restartPolling();
+
+    window.addEventListener('pagehide', () => {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+        if (abortController) {
+            abortController.abort();
+            abortController = null;
+        }
+    });
+})();
