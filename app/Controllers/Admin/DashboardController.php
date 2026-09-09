@@ -15,105 +15,168 @@ class DashboardController extends BaseController
         $monthParam  = (string) $this->request->getGet('month');
         $activeMonth = preg_match('/^\d{4}-\d{2}$/', $monthParam) ? $monthParam : date('Y-m');
         $monthStart  = date('Y-m-01', strtotime($activeMonth . '-01'));
-        $monthEnd    = date('Y-m-t', strtotime($monthStart));
-        $gridStart   = date('Y-m-d', strtotime($monthStart . ' -' . ((int) date('N', strtotime($monthStart)) - 1) . ' days'));
-        $gridEnd     = date('Y-m-d', strtotime($monthEnd . ' +' . (7 - (int) date('N', strtotime($monthEnd))) . ' days'));
-        $selectedDate = str_starts_with($today, $activeMonth) ? $today : $monthStart;
-        $prevMonth    = date('Y-m', strtotime($monthStart . ' -1 month'));
-        $nextMonth    = date('Y-m', strtotime($monthStart . ' +1 month'));
+        $prevMonth   = date('Y-m', strtotime($monthStart . ' -1 month'));
+        $nextMonth   = date('Y-m', strtotime($monthStart . ' +1 month'));
 
-        $repository = new DatabaseScheduleReadRepository();
+        $repository   = new DatabaseScheduleReadRepository();
         $rapatHariIni = count($repository->findSchedules(false, $today, null, null));
-        $jadwals = $repository->findSchedules(false, null, $activeMonth, null);
+        $jadwals      = $repository->findSchedules(false, null, $activeMonth, null);
+
         foreach ($jadwals as &$jadwal) {
             $jadwal['status'] = $this->resolveStatus($jadwal);
         }
         unset($jadwal);
+
         $unitMap = $repository->findUnitsByScheduleIds(array_column($jadwals, 'id'));
         $sedangBerlangsung = count(array_filter(
             $jadwals,
-            static fn (array $jadwal): bool => ($jadwal['status'] ?? '') === 'berlangsung'
+            static fn (array $j): bool => ($j['status'] ?? '') === 'berlangsung'
         ));
         $agendaMendatang = count(array_filter(
             $jadwals,
-            static fn (array $jadwal): bool => in_array(
-                $jadwal['status'] ?? '',
+            static fn (array $j): bool => in_array(
+                $j['status'] ?? '',
                 ['menunggu', 'persiapan'],
                 true
             )
         ));
 
-        $meetingsByDate = [];
+        $enrichedJadwals = [];
+        $meetingsByDate  = [];
+
         foreach ($jadwals as $j) {
-            $date = $j['tanggal'];
-            $sourceId = (int) ($j['source_id'] ?? $j['id']);
-            $isBanmus = ($j['source'] ?? '') === 'banmus';
+            $date      = $j['tanggal'];
+            $sourceId  = (int) ($j['source_id'] ?? $j['id']);
+            $isBanmus  = ($j['source'] ?? '') === 'banmus';
             $detailUrl = $isBanmus
-                ? base_url('admin/jadwal-banmus/' . (int) $j['dokumen_banmus_id'])
+                ? base_url('admin/jadwal-banmus/' . (int) ($j['dokumen_banmus_id'] ?? 0))
                 : base_url("admin/jadwal-umum/{$sourceId}/edit");
-            $meetingsByDate[$date][] = [
-                'id'         => $j['id'],
-                'date'       => $date,
-                'start'      => empty($j['waktu_mulai']) ? null : substr((string) $j['waktu_mulai'], 0, 5),
-                'end'        => empty($j['waktu_selesai']) ? null : substr((string) $j['waktu_selesai'], 0, 5),
-                'title'      => $j['judul'],
-                'subtitle'   => $j['keterangan'] ?? '',
-                'room'       => $this->displayLocation($j),
-                'group'      => isset($unitMap[(int) $j['id']])
+
+            $startStr  = empty($j['waktu_mulai']) ? null : substr((string) $j['waktu_mulai'], 0, 5);
+            $endStr    = empty($j['waktu_selesai']) ? null : substr((string) $j['waktu_selesai'], 0, 5);
+            $timeRange = 'Sepanjang hari';
+            if ($startStr && $endStr) {
+                $timeRange = "{$startStr}–{$endStr} WITA";
+            } elseif ($startStr) {
+                $timeRange = "{$startStr} WITA";
+            }
+
+            $badge = status_badge($j['status']);
+            $badgeClass = match ($j['status']) {
+                'berlangsung' => 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30',
+                'persiapan'   => 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30',
+                'menunggu'    => 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20',
+                'selesai'     => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
+                'dibatalkan'  => 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 line-through',
+                'ditunda'     => 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 italic',
+                default       => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
+            };
+            $statusTextClass = match ($j['status']) {
+                'berlangsung' => 'text-red-600 dark:text-red-400',
+                'persiapan'   => 'text-amber-600 dark:text-amber-400',
+                'menunggu'    => 'text-indigo-600 dark:text-indigo-400',
+                'selesai'     => 'text-sky-600 dark:text-sky-400',
+                default       => 'text-slate-600 dark:text-slate-400',
+            };
+
+            $meetingItem = [
+                'id'                => $j['id'],
+                'tanggal'           => $date,
+                'formatted_date'    => $this->dayName($date) . ', ' . (int) date('d', strtotime($date)) . ' ' . $this->monthName($date) . ' ' . date('Y', strtotime($date)),
+                'start'             => $startStr,
+                'end'               => $endStr,
+                'time_range'        => $timeRange,
+                'judul'             => $j['judul'],
+                'keterangan'        => $j['keterangan'] ?? '',
+                'room'              => $this->displayLocation($j),
+                'group'             => isset($unitMap[(int) $j['id']])
                     ? implode(', ', array_column($unitMap[(int) $j['id']], 'nama'))
                     : '-',
-                'status'     => $j['status'],
-                'status_key' => $this->statusKey((string) $j['status']),
-                'detail_url' => $detailUrl,
-                'edit_url'   => $detailUrl,
+                'status'            => $j['status'],
+                'status_badge'      => [
+                    'label'       => $badge['label'] ?? ucfirst((string) $j['status']),
+                    'short_label' => ($j['status'] === 'berlangsung') ? 'Berlangsung' : ($badge['label'] ?? ucfirst((string) $j['status'])),
+                    'class'       => $badgeClass,
+                ],
+                'status_text_class' => $statusTextClass,
+                'source'         => $j['source'] ?? 'umum',
+                'source_label'   => $isBanmus ? 'SK Banmus' : 'Jadwal Umum',
+                'is_banmus'      => $isBanmus,
+                'detail_url'     => $detailUrl,
             ];
+
+            $enrichedJadwals[]       = $meetingItem;
+            $meetingsByDate[$date][] = $meetingItem;
+        }
+
+        $daysInMonth     = (int) date('t', strtotime($monthStart));
+        $startWeekday    = (int) date('N', strtotime($monthStart));
+        $prevDaysCount   = $startWeekday - 1;
+        $daysInPrevMonth = (int) date('t', strtotime($monthStart . ' -1 month'));
+
+        $calendarPrevDays = [];
+        for ($i = 0; $i < $prevDaysCount; $i++) {
+            $calendarPrevDays[] = $daysInPrevMonth - $prevDaysCount + 1 + $i;
         }
 
         $calendarDays = [];
-        $cursor = $gridStart;
-        while ($cursor <= $gridEnd) {
-            $dayMeetings = $meetingsByDate[$cursor] ?? [];
-            $statusCounts = $this->statusCounts($dayMeetings);
-
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $dateKey   = sprintf('%s-%02d', $activeMonth, $d);
+            $hasAgenda = ! empty($meetingsByDate[$dateKey]);
             $calendarDays[] = [
-                'date'             => $cursor,
-                'day_name'         => $this->dayName($cursor),
-                'day_short'        => $this->dayName($cursor, true),
-                'date_num'         => date('d', strtotime($cursor)),
-                'month'            => $this->monthName($cursor, true),
-                'is_today'         => $cursor === $today,
-                'is_current_month' => $cursor >= $monthStart && $cursor <= $monthEnd,
-                'count'            => count($dayMeetings),
-                'meetings'         => $dayMeetings,
-                'status_counts'    => $statusCounts,
-                'summary'          => $this->summaryText($statusCounts),
-                'title'            => $this->dayName($cursor) . ', ' . date('d', strtotime($cursor)) . ' ' . $this->monthName($cursor),
+                'date'           => $dateKey,
+                'day'            => $d,
+                'has_agenda'     => $hasAgenda,
+                'is_today'       => ($dateKey === $today),
+                'formatted_date' => $this->dayName($dateKey) . ', ' . $d . ' ' . $this->monthName($dateKey) . ' ' . date('Y', strtotime($dateKey)),
             ];
-
-            $cursor = date('Y-m-d', strtotime($cursor . ' +1 day'));
         }
 
-        $calendarWeeks = array_chunk($calendarDays, 7);
-        $weekdayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+        $totalCells       = $prevDaysCount + $daysInMonth;
+        $trailingCells    = (7 - ($totalCells % 7)) % 7;
+        $calendarNextDays = [];
+        for ($i = 1; $i <= $trailingCells; $i++) {
+            $calendarNextDays[] = $i;
+        }
+
+        $selectedDate = str_starts_with($today, $activeMonth) ? $today : null;
+        if ($selectedDate === null && ! empty($calendarDays)) {
+            foreach ($calendarDays as $cd) {
+                if ($cd['has_agenda']) {
+                    $selectedDate = $cd['date'];
+                    break;
+                }
+            }
+        }
+        if ($selectedDate === null) {
+            $selectedDate = $monthStart;
+        }
+
+        $selectedDateIndex = array_search($selectedDate, array_column($calendarDays, 'date'), true);
+        $selectedDateHeading = $selectedDateIndex !== false
+            ? $calendarDays[$selectedDateIndex]['formatted_date']
+            : ($this->dayName($selectedDate) . ', ' . date('d', strtotime($selectedDate)) . ' ' . $this->monthName($selectedDate));
 
         return view('admin/dashboard/index', [
-            'pageTitle'     => 'Dashboard',
-            'breadcrumbs'   => [],
-            'stats'         => [
-                'rapat_hari_ini'    => $rapatHariIni,
-                'agenda_bulan_ini'  => count($jadwals),
-                'berlangsung'       => $sedangBerlangsung,
-                'mendatang'         => $agendaMendatang,
+            'pageTitle'           => 'Dashboard',
+            'breadcrumbs'         => [],
+            'stats'               => [
+                'rapat_hari_ini'   => $rapatHariIni,
+                'agenda_bulan_ini' => count($jadwals),
+                'berlangsung'      => $sedangBerlangsung,
+                'mendatang'        => $agendaMendatang,
             ],
-            'meetings'      => $meetingsByDate[$selectedDate] ?? [],
-            'calendarDays'  => $calendarDays,
-            'calendarWeeks' => $calendarWeeks,
-            'weekdayLabels' => $weekdayLabels,
-            'selectedDate'  => $selectedDate,
-            'monthLabel'    => $this->monthName($monthStart) . ' ' . date('Y', strtotime($monthStart)),
-            'prevMonthUrl'  => base_url('admin/dashboard?month=' . $prevMonth),
-            'nextMonthUrl'  => base_url('admin/dashboard?month=' . $nextMonth),
-            'todayMonthUrl' => base_url('admin/dashboard'),
+            'jadwals'             => $enrichedJadwals,
+            'meetingsByDate'      => $meetingsByDate,
+            'calendarPrevDays'    => $calendarPrevDays,
+            'calendarDays'        => $calendarDays,
+            'calendarNextDays'    => $calendarNextDays,
+            'selectedDate'        => $selectedDate,
+            'selectedDateHeading' => $selectedDateHeading,
+            'monthLabel'          => $this->monthName($monthStart) . ' ' . date('Y', strtotime($monthStart)),
+            'prevMonthUrl'        => base_url('admin/dashboard?month=' . $prevMonth),
+            'nextMonthUrl'        => base_url('admin/dashboard?month=' . $nextMonth),
+            'todayMonthUrl'       => base_url('admin/dashboard'),
         ]);
     }
 
@@ -143,49 +206,6 @@ class DashboardController extends BaseController
             $row['waktu_mulai'] ?? null,
             $row['waktu_selesai'] ?? null,
         );
-    }
-
-    private function statusKey(string $status): string
-    {
-        return match ($status) {
-            'selesai'     => 'done',
-            'berlangsung' => 'live',
-            default       => 'next',
-        };
-    }
-
-    private function statusCounts(array $meetings): array
-    {
-        $counts = ['all' => count($meetings), 'done' => 0, 'live' => 0, 'next' => 0];
-
-        foreach ($meetings as $meeting) {
-            $key = $meeting['status_key'] ?? 'next';
-            if (isset($counts[$key])) {
-                $counts[$key]++;
-            }
-        }
-
-        return $counts;
-    }
-
-    private function summaryText(array $counts): string
-    {
-        if (($counts['all'] ?? 0) === 0) {
-            return 'Tidak ada agenda pada tanggal ini.';
-        }
-
-        $parts = [];
-        if (($counts['done'] ?? 0) > 0) {
-            $parts[] = $counts['done'] . ' agenda selesai';
-        }
-        if (($counts['live'] ?? 0) > 0) {
-            $parts[] = $counts['live'] . ' berlangsung';
-        }
-        if (($counts['next'] ?? 0) > 0) {
-            $parts[] = $counts['next'] . ' mendatang';
-        }
-
-        return implode(', ', $parts) . '.';
     }
 
     private function dayName(string $date, bool $short = false): string

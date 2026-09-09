@@ -11,121 +11,119 @@
     }
 
     function initDashboardCalendar(signal) {
-        if (!document.querySelector('[data-dashboard-day]')) return;
+        const dayButtons = Array.from(document.querySelectorAll('[data-dashboard-day]'));
+        if (!dayButtons.length) return;
 
-        const buttons = document.querySelectorAll('[data-dashboard-day]');
-        const panels = document.querySelectorAll('[data-dashboard-panel]');
-        const summaries = document.querySelectorAll('[data-dashboard-summary]');
-        const mobileAgendaQuery = window.matchMedia('(max-width: 520px)');
-        const openAgendaButtons = document.querySelectorAll('[data-mobile-agenda-open]');
-        const closeAgendaButtons = document.querySelectorAll('[data-mobile-agenda-close]');
-        const agendaSheet = document.getElementById('dashboard-agenda-sheet');
-        const agendaLabel = document.querySelector('[data-mobile-agenda-label]');
-        let lastAgendaTrigger = null;
+        const dateHeadingLabel = document.getElementById('date_heading_label');
+        const totalCountEl = document.getElementById('total_agenda_count');
+        const emptyState = document.getElementById('agenda_empty_state');
+        const items = Array.from(document.querySelectorAll('[data-agenda-item]'));
+        const grid = document.querySelector('[role="grid"][aria-label*="Kalender"]');
 
-        function setAgendaSheetMode(isOpen) {
-            if (!agendaSheet) return;
+        const allDates = dayButtons.map(b => b.dataset.dashboardDay);
 
-            if (mobileAgendaQuery.matches) {
-                agendaSheet.setAttribute('role', 'dialog');
-                agendaSheet.setAttribute('aria-modal', 'true');
-                agendaSheet.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-                return;
+        let selectedDate = null;
+        const initialActive = dayButtons.find(b => b.getAttribute('aria-selected') === 'true');
+        if (initialActive) {
+            selectedDate = initialActive.dataset.dashboardDay;
+        } else if (dayButtons.length) {
+            selectedDate = dayButtons[0].dataset.dashboardDay;
+        }
+
+        function render(date, focusTarget = false) {
+            if (!date) return;
+            selectedDate = date;
+
+            let visibleCount = 0;
+            items.forEach(item => {
+                const match = item.dataset.date === selectedDate;
+                item.classList.toggle('hidden', !match);
+                if (match) visibleCount++;
+            });
+
+            if (totalCountEl) {
+                totalCountEl.textContent = visibleCount;
             }
 
-            agendaSheet.setAttribute('role', 'region');
-            agendaSheet.removeAttribute('aria-modal');
-            agendaSheet.removeAttribute('aria-hidden');
-        }
-
-        function updateMobileAgendaLabel(date) {
-            if (!agendaLabel) return;
-
-            const activeSummary = document.querySelector(`[data-dashboard-summary="${date}"]`);
-            agendaLabel.textContent = activeSummary
-                ? activeSummary.textContent.trim()
-                : 'Lihat agenda terpilih';
-        }
-
-        function openMobileAgenda(trigger) {
-            if (mobileAgendaQuery.matches) {
-                lastAgendaTrigger = trigger || document.activeElement;
-                document.body.classList.add('mobile-agenda-open');
-                setAgendaSheetMode(true);
-
-                const closeButton = agendaSheet ? agendaSheet.querySelector('[data-mobile-agenda-close]') : null;
-                if (closeButton) {
-                    closeButton.focus({ preventScroll: true });
-                }
+            if (emptyState) {
+                emptyState.classList.toggle('hidden', visibleCount > 0);
             }
-        }
 
-        function closeMobileAgenda() {
-            document.body.classList.remove('mobile-agenda-open');
-            setAgendaSheetMode(false);
-
-            if (lastAgendaTrigger && typeof lastAgendaTrigger.focus === 'function') {
-                lastAgendaTrigger.focus({ preventScroll: true });
+            if (dateHeadingLabel) {
+                const matchedBtn = dayButtons.find(b => b.dataset.dashboardDay === selectedDate);
+                dateHeadingLabel.textContent = matchedBtn?.dataset.formattedDate || selectedDate;
             }
-        }
 
-        const activeButton = document.querySelector('[data-dashboard-day][aria-selected="true"]');
-        if (activeButton) {
-            updateMobileAgendaLabel(activeButton.dataset.dashboardDay);
-        }
-        setAgendaSheetMode(false);
+            dayButtons.forEach(btn => {
+                const isSelected = btn.dataset.dashboardDay === selectedDate;
+                const isToday = btn.dataset.dashboardToday === 'true';
+                const dot = btn.querySelector('[data-agenda-dot]');
 
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                const date = button.dataset.dashboardDay;
+                btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                btn.tabIndex = isSelected ? 0 : -1;
 
-                buttons.forEach(item => {
-                    const active = item === button;
-                    item.classList.toggle('active', active);
-                    item.setAttribute('aria-selected', active ? 'true' : 'false');
-                });
-
-                panels.forEach(panel => {
-                    const active = panel.dataset.dashboardPanel === date;
-                    panel.hidden = !active;
-                    panel.classList.toggle('active', active);
-                });
-
-                summaries.forEach(summary => {
-                    summary.hidden = summary.dataset.dashboardSummary !== date;
-                });
-
-                updateMobileAgendaLabel(date);
-
-                if (window.lucide) {
-                    window.lucide.createIcons();
+                let btnClass = 'h-10 sm:h-14 lg:h-16 flex flex-col items-center justify-center rounded-xl text-[11px] sm:text-xs font-semibold relative transition cursor-pointer ';
+                if (isSelected) {
+                    btnClass += 'bg-blue-600 text-white font-bold shadow-xs hover:bg-blue-700';
+                    if (dot) dot.className = 'size-1.5 rounded-full absolute bottom-1.5 bg-white';
+                } else if (isToday) {
+                    btnClass += 'border-2 border-blue-500 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800';
+                    if (dot) dot.className = 'size-1.5 rounded-full absolute bottom-1.5 bg-amber-500';
+                } else {
+                    btnClass += 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800';
+                    if (dot) dot.className = 'size-1.5 rounded-full absolute bottom-1.5 bg-amber-500';
                 }
 
-                openMobileAgenda(button);
+                btn.className = btnClass;
+
+                if (isSelected && focusTarget) {
+                    btn.focus();
+                }
+            });
+        }
+
+        dayButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                render(btn.dataset.dashboardDay);
             });
         });
 
-        openAgendaButtons.forEach(button => {
-            button.addEventListener('click', () => openMobileAgenda(button));
+        items.forEach(item => {
+            item.addEventListener('toggle', () => {
+                if (item.open) {
+                    items.forEach(other => {
+                        if (other !== item && other.open) {
+                            other.open = false;
+                        }
+                    });
+                }
+            });
         });
 
-        closeAgendaButtons.forEach(button => {
-            button.addEventListener('click', closeMobileAgenda);
-        });
+        if (grid) {
+            grid.addEventListener('keydown', event => {
+                let currentIdx = selectedDate ? allDates.indexOf(selectedDate) : 0;
+                if (currentIdx === -1) currentIdx = 0;
+                let nextIdx = null;
 
-        document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && document.body.classList.contains('mobile-agenda-open')) {
-                closeMobileAgenda();
-            }
-        }, { signal });
+                if (event.key === 'ArrowLeft') {
+                    nextIdx = currentIdx - 1;
+                } else if (event.key === 'ArrowRight') {
+                    nextIdx = currentIdx + 1;
+                } else if (event.key === 'ArrowUp') {
+                    nextIdx = currentIdx - 7;
+                } else if (event.key === 'ArrowDown') {
+                    nextIdx = currentIdx + 7;
+                }
 
-        mobileAgendaQuery.addEventListener('change', event => {
-            if (!event.matches) {
-                closeMobileAgenda();
-            } else {
-                setAgendaSheetMode(document.body.classList.contains('mobile-agenda-open'));
-            }
-        }, { signal });
+                if (nextIdx !== null && nextIdx >= 0 && nextIdx < allDates.length) {
+                    event.preventDefault();
+                    render(allDates[nextIdx], true);
+                }
+            });
+        }
+
+        render(selectedDate);
     }
 
     let dashboardController = null;
