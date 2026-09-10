@@ -289,7 +289,7 @@ export async function transcribeChunkWithFallback({
     throw new Error(`Gagal menyiapkan chunk_${chunkNum} di Files API: ${uploadErr.message}`);
   }
 
-  const promptText = `Transkripsikan seluruh isi percakapan rekaman audio rapat DPRD Provinsi Sulawesi Tengah ini dalam Bahasa Indonesia secara verbatim, rapi, dan terstruktur.
+  const promptText = `Transkripsikan seluruh isi percakapan rekaman audio rapat DPRD Provinsi Sulawesi Tengah ini dalam Bahasa Indonesia secara verbatim, rapi, dan terstruktur dengan timestamp.
 Gunakan label speaker diarization per pembicara (misalnya: [Pimpinan Sidang], [Anggota Fraksi/Komisi], [Narasumber], dll.), pisahkan setiap pergantian pembicara dengan baris baru, serta gunakan tanda baca yang tepat dan ejaan resmi istilah pemerintahan.
 Perhatikan dengan cermat perkenalan diri pembicara, penyebutan nama tokoh/pejabat, nama dinas/OPD, dan nama tempat/daerah di Sulawesi Tengah agar tertranskripsi secara jelas dan tepat.
 Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup tambahan.`;
