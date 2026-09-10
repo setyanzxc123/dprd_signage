@@ -142,7 +142,7 @@ test('vad.json memuat rencana chunk yang durasinya menjumlah durasi total', asyn
   });
 
   const logs = [];
-  const analysis = await runVadAnalysis(input, dir, { onLog: (m) => logs.push(m) });
+  const analysis = await runVadAnalysis(input, dir, { onLog: (m) => logs.push(m), forceSilenceDetect: true });
 
   assert.equal(analysis.duration, 60);
   assert.ok(analysis.speech_ratio > 0.3 && analysis.speech_ratio < 0.75, `rasio bicara ${analysis.speech_ratio}`);
@@ -158,8 +158,35 @@ test('vad.json memuat rencana chunk yang durasinya menjumlah durasi total', asyn
   assert.ok(Math.abs(planTotal - 60) <= 1, `rencana menjumlah ~60s: ${planTotal}`);
 
   // loadOrAnalyze memakai ulang file yang sama tanpa analisis ulang
-  const reused = await loadOrAnalyze(input, dir, { onLog: () => {} });
+  const reused = await loadOrAnalyze(input, dir, { onLog: () => {}, forceSilenceDetect: true });
   assert.equal(reused.generated_at, saved.generated_at, 'analisis tidak diulang saat parameter sama');
+
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('vad.json langsung menggunakan single chunk plan saat durasi tidak melebihi chunkDurationSeconds', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vad-fast-'));
+  const input = path.join(dir, 'input.mp3');
+  await new Promise((resolve, reject) => {
+    ffmpeg()
+      .input('sine=440:d=10').inputFormat('lavfi')
+      .audioChannels(1)
+      .audioFrequency(16000)
+      .format('mp3')
+      .output(input)
+      .on('end', resolve)
+      .on('error', reject)
+      .run();
+  });
+
+  const logs = [];
+  const analysis = await runVadAnalysis(input, dir, { onLog: (m) => logs.push(m) });
+
+  assert.equal(analysis.duration, 10);
+  assert.equal(analysis.speech_ratio, 1);
+  assert.equal(analysis.plan.length, 1);
+  assert.equal(analysis.plan[0].duration, 10);
+  assert.ok(logs.some((m) => m.includes('memotong deteksi hening')));
 
   fs.rmSync(dir, { recursive: true, force: true });
 });

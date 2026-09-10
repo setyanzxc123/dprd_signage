@@ -77,8 +77,8 @@ export const config = {
     thinkingLevel: geminiThinkingLevel,
   },
   audio: {
-    chunkDurationSeconds: parseInt(getEnv('CHUNK_DURATION_SECONDS', '1800'), 10), // 30 menit
-    safetyDelayMs: parseInt(getEnv('SAFETY_DELAY_MS', '8000'), 10), // 8 detik
+    chunkDurationSeconds: parseInt(getEnv('CHUNK_DURATION_SECONDS', '1800'), 10),
+    safetyDelayMs: parseInt(getEnv('SAFETY_DELAY_MS', '0'), 10),
   },
   vad: {
     // Ambang kebisingan (dB) dan durasi minimum hening (detik) untuk silencedetect

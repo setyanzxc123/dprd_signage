@@ -393,8 +393,8 @@ export async function processJob(pool, job) {
         [chunk.index, chunkProgressDone, jobId]
       );
 
-      // Jeda keamanan antar chunk (Safety Delay 8 detik) jika bukan chunk terakhir
-      if (i < chunkFiles.length - 1) {
+      // Jeda keamanan antar chunk jika diaktifkan dan bukan chunk terakhir
+      if (config.audio.safetyDelayMs > 0 && i < chunkFiles.length - 1) {
         log(`[Job #${jobId}] Jeda keamanan ${config.audio.safetyDelayMs / 1000}s sebelum memproses chunk berikutnya...`);
         await interruptibleSleep(config.audio.safetyDelayMs, isCancelled);
       }

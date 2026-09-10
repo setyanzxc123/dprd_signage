@@ -104,12 +104,48 @@ export function parseApiError(error) {
 }
 
 /**
- * True bila error 429 menyatakan kuota harian (PerDay) habis - retry
- * kapan pun tidak akan menyelamatkan panggilan ini sampai reset besok.
+ * True bila error 429 menyatakan kuota harian (PerDay) habis.
  */
 export function isDailyQuotaExhausted(error) {
   const parsed = parseApiError(error);
   return Boolean(parsed && parsed.quotaId && /perday/i.test(parsed.quotaId));
+}
+
+/**
+ * True bila error 429 merupakan rate limit per-menit (TPM/RPM), bukan kuota harian.
+ */
+export function isTpmRateLimit(error) {
+  if (!error || isDailyQuotaExhausted(error)) return false;
+  const parsed = parseApiError(error);
+  const status = parsed?.status || error.status || error.code || error.statusCode;
+  const message = String(parsed?.message || error.message || error).toLowerCase();
+  return (
+    status === 429 ||
+    status === 'RESOURCE_EXHAUSTED' ||
+    message.includes('429') ||
+    message.includes('resource_exhausted') ||
+    message.includes('rate limit') ||
+    message.includes('quota')
+  );
+}
+
+/**
+ * True bila server Google mengalami lonjakan beban atau unavailable (503/500).
+ */
+export function isServerOverloaded(error) {
+  if (!error) return false;
+  const parsed = parseApiError(error);
+  const status = parsed?.status || error.status || error.code || error.statusCode;
+  const message = String(parsed?.message || error.message || error).toLowerCase();
+  return (
+    status === 503 ||
+    status === 500 ||
+    status === 'UNAVAILABLE' ||
+    message.includes('503') ||
+    message.includes('unavailable') ||
+    message.includes('high demand') ||
+    message.includes('overloaded')
+  );
 }
 
 /**
@@ -202,15 +238,19 @@ export async function interruptibleSleep(ms, cancelChecker = null, checkInterval
  */
 export async function callWithRetry(fn, options = {}) {
   const maxRetries = options.maxRetries ?? 4;
-  const initialDelayMs = options.initialDelayMs ?? 10000;
-  const backoffFactor = options.backoffFactor ?? 2.5;
+  const initialDelayMs = options.initialDelayMs ?? 3000;
+  const backoffFactor = options.backoffFactor ?? 2.0;
+  const tpmResetWaitMs = options.tpmResetWaitMs !== undefined
+    ? options.tpmResetWaitMs
+    : (options.initialDelayMs !== undefined && options.initialDelayMs <= 100 ? options.initialDelayMs : 60000);
+  const failoverOn503 = options.failoverOn503 ?? false;
   const cancelChecker = options.cancelChecker ?? null;
   const onRetry = options.onRetry ?? null;
+  const sleepFn = options.sleepFn ?? interruptibleSleep;
 
   let currentDelay = initialDelayMs;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    // Periksa pembatalan sebelum menjalankan aksi
     if (cancelChecker && typeof cancelChecker === 'function') {
       const isCancelled = await cancelChecker();
       if (isCancelled) {
@@ -225,8 +265,11 @@ export async function callWithRetry(fn, options = {}) {
         throw err;
       }
 
-      // Kuota harian habis: percobaan ulang tidak akan berhasil, lempar segera
       if (isDailyQuotaExhausted(err)) {
+        throw err;
+      }
+
+      if (failoverOn503 && isServerOverloaded(err)) {
         throw err;
       }
 
@@ -237,9 +280,10 @@ export async function callWithRetry(fn, options = {}) {
         throw err;
       }
 
-      // Hormati delay yang disarankan server (RetryInfo) bila lebih panjang
+      const isTpm = isTpmRateLimit(err);
+      const waitBase = isTpm ? tpmResetWaitMs : currentDelay;
       const jitter = Math.floor(Math.random() * 1000);
-      const waitTime = Math.round(Math.max(currentDelay, getRetryDelayMs(err)) + jitter);
+      const waitTime = Math.round(Math.max(waitBase, getRetryDelayMs(err)) + jitter);
 
       if (onRetry && typeof onRetry === 'function') {
         onRetry({
@@ -247,11 +291,15 @@ export async function callWithRetry(fn, options = {}) {
           maxRetries,
           waitTimeMs: waitTime,
           error: err,
+          isTpm,
         });
       }
 
-      await interruptibleSleep(waitTime, cancelChecker);
-      currentDelay *= backoffFactor;
+      await sleepFn(waitTime, cancelChecker);
+      if (!isTpm) {
+        currentDelay *= backoffFactor;
+      }
     }
   }
 }
+

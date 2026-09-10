@@ -198,8 +198,46 @@ function nearestSilencePoint(target, silences, toleranceSeconds) {
 /**
  * Analisis lengkap + rencana chunk + penulisan vad.json.
  */
-export async function runVadAnalysis(inputPath, outputDir, { onLog = () => {} } = {}) {
+export async function runVadAnalysis(inputPath, outputDir, { onLog = () => {}, forceSilenceDetect = false } = {}) {
   const totalDuration = await probeDuration(inputPath);
+
+  if (!forceSilenceDetect && totalDuration <= config.audio.chunkDurationSeconds) {
+    onLog(`[VAD] Durasi rekaman (${totalDuration.toFixed(1)}s) tidak melebihi target chunk (${config.audio.chunkDurationSeconds}s), memotong deteksi hening.`);
+    const singlePlan = [
+      {
+        index: 1,
+        start: 0,
+        duration: totalDuration,
+        speech_seconds: Math.round(totalDuration * 100) / 100,
+        ratio: 1,
+      },
+    ];
+
+    const analysis = {
+      generated_at: new Date().toISOString(),
+      duration: totalDuration,
+      params: {
+        silence_db: config.vad.silenceDb,
+        min_silence_seconds: config.vad.minSilenceSeconds,
+        chunk_duration_seconds: config.audio.chunkDurationSeconds,
+        tolerance_seconds: config.vad.toleranceSeconds,
+        skip_speech_ratio: config.vad.skipSpeechRatio,
+      },
+      speech_ratio: 1,
+      silences: [],
+      speech: [{ start: 0, end: totalDuration }],
+      plan: singlePlan,
+      chunks: singlePlan,
+    };
+
+    fs.mkdirSync(outputDir, { recursive: true });
+    const vadPath = path.join(outputDir, 'vad.json');
+    fs.writeFileSync(vadPath + '.part', JSON.stringify(analysis));
+    fs.renameSync(vadPath + '.part', vadPath);
+
+    return analysis;
+  }
+
   const silences = await detectSilences(inputPath, totalDuration, { onLog });
   const speech = buildSpeechSegments(silences, totalDuration);
   const chunkReports = analyzeChunks(speech, totalDuration, config.audio.chunkDurationSeconds);
@@ -239,10 +277,9 @@ export async function runVadAnalysis(inputPath, outputDir, { onLog = () => {} } 
 
 /**
  * Muat vad.json bila masih valid untuk file dan parameter saat ini;
- * jika tidak, jalankan analisis ulang. Memastikan resume reproduksi
- * batas chunk yang sama persis.
+ * jika tidak, jalankan analisis ulang.
  */
-export async function loadOrAnalyze(inputPath, outputDir, { onLog = () => {} } = {}) {
+export async function loadOrAnalyze(inputPath, outputDir, { onLog = () => {}, forceSilenceDetect = false } = {}) {
   const vadPath = path.join(outputDir, 'vad.json');
   const totalDuration = await probeDuration(inputPath);
   const currentParams = {
@@ -266,5 +303,5 @@ export async function loadOrAnalyze(inputPath, outputDir, { onLog = () => {} } =
     }
   }
 
-  return runVadAnalysis(inputPath, outputDir, { onLog });
+  return runVadAnalysis(inputPath, outputDir, { onLog, forceSilenceDetect });
 }

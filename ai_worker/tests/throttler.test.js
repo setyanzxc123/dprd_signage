@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   parseApiError,
   isDailyQuotaExhausted,
+  isTpmRateLimit,
+  isServerOverloaded,
   isRetryableError,
   getRetryDelayMs,
   describeError,
@@ -165,6 +167,7 @@ test('callWithRetry menghormati delay minimum RetryInfo server', async () => {
     }, {
       maxRetries: 3,
       initialDelayMs: 10,
+      sleepFn: async () => {},
       onRetry: ({ waitTimeMs }) => { observedWait = waitTimeMs; },
     })
   );
@@ -219,4 +222,92 @@ test('interruptibleSleep melempar JobCancelledError saat cancel', async () => {
 
 test('interruptibleSleep selesai normal tanpa cancel', async () => {
   await assert.doesNotReject(interruptibleSleep(50, async () => false, 20));
+});
+
+test('isTpmRateLimit membedakan TPM per-menit dari kuota harian', () => {
+  const dailyErr = new Error(FIXTURE_429_DAILY);
+  const tpmErr = new Error(FIXTURE_429_PERMINUTE);
+  const generic429 = new Error('Resource exhausted 429');
+  const generic500 = new Error('Internal error 500');
+
+  assert.equal(isTpmRateLimit(dailyErr), false);
+  assert.equal(isTpmRateLimit(tpmErr), true);
+  assert.equal(isTpmRateLimit(generic429), true);
+  assert.equal(isTpmRateLimit(generic500), false);
+});
+
+test('isServerOverloaded mendeteksi 503 UNAVAILABLE dan overload', () => {
+  const err503 = new Error('503 Service Unavailable');
+  const errUnavailable = new Error('Model is overloaded. Please try again later.');
+  const err429 = new Error('429 Resource Exhausted');
+
+  assert.equal(isServerOverloaded(err503), true);
+  assert.equal(isServerOverloaded(errUnavailable), true);
+  assert.equal(isServerOverloaded(err429), false);
+});
+
+test('callWithRetry melempar segera pada 503 jika failoverOn503 aktif', async () => {
+  let attempts = 0;
+  await assert.rejects(
+    callWithRetry(
+      async () => {
+        attempts++;
+        throw new Error('503 UNAVAILABLE');
+      },
+      {
+        maxRetries: 3,
+        initialDelayMs: 10,
+        failoverOn503: true,
+        sleepFn: async () => {},
+      }
+    )
+  );
+  assert.equal(attempts, 1);
+});
+
+test('callWithRetry melakukan retry pada 503 jika failoverOn503 tidak aktif', async () => {
+  let attempts = 0;
+  await assert.rejects(
+    callWithRetry(
+      async () => {
+        attempts++;
+        throw new Error('503 UNAVAILABLE');
+      },
+      {
+        maxRetries: 3,
+        initialDelayMs: 10,
+        failoverOn503: false,
+        sleepFn: async () => {},
+      }
+    )
+  );
+  assert.equal(attempts, 3);
+});
+
+test('callWithRetry menggunakan tpmResetWaitMs untuk error TPM', async () => {
+  let observedWait = 0;
+  let attempts = 0;
+  await assert.rejects(
+    callWithRetry(
+      async () => {
+        attempts++;
+        if (attempts === 1) {
+          throw new Error('429 Resource Exhausted');
+        }
+        throw new Error('stop');
+      },
+      {
+        maxRetries: 2,
+        initialDelayMs: 10,
+        tpmResetWaitMs: 60000,
+        sleepFn: async () => {},
+        onRetry: ({ waitTimeMs, isTpm }) => {
+          observedWait = waitTimeMs;
+          assert.equal(isTpm, true);
+        },
+      }
+    )
+  );
+  assert.ok(observedWait >= 60000 && observedWait <= 61000);
+  assert.equal(attempts, 2);
 });

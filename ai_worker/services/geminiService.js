@@ -105,14 +105,17 @@ export async function deleteFromFilesApi(fileResource) {
 
 /**
  * Menunggu file Files API mencapai state ACTIVE sebelum direferensikan
- * generateContent. FAILED mengembalikan error ingest (bukan kegagalan model,
- * jadi tidak boleh memicu fallback rantai model).
+ * generateContent. FAILED mengembalikan error ingest.
  */
-export async function waitForFileActive(getFile, name, {
+export async function waitForFileActive(getFile, nameOrFile, {
   intervalMs = 2000,
   timeoutMs = 120000,
   onLog = workerLog,
 } = {}) {
+  if (nameOrFile && typeof nameOrFile === 'object' && nameOrFile.state === 'ACTIVE') {
+    return nameOrFile;
+  }
+  const name = typeof nameOrFile === 'string' ? nameOrFile : (nameOrFile?.name || nameOrFile?.uri);
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const file = await getFile(name);
@@ -274,11 +277,13 @@ export async function transcribeChunkWithFallback({
   try {
     uploadedFile = await uploadToFilesApi(chunkPath, 'audio/mp3');
     onLog(`[Files API] File chunk_${chunkNum} berhasil diunggah ke Google Cloud (URI: ${uploadedFile.uri})`);
-    await waitForFileActive(
-      (name) => getAiClient().files.get({ name }),
-      uploadedFile.name || uploadedFile.uri,
-      { onLog }
-    );
+    if (uploadedFile.state !== 'ACTIVE') {
+      uploadedFile = await waitForFileActive(
+        (name) => getAiClient().files.get({ name }),
+        uploadedFile,
+        { onLog }
+      );
+    }
   } catch (uploadErr) {
     if (uploadErr instanceof JobCancelledError) throw uploadErr;
     throw new Error(`Gagal menyiapkan chunk_${chunkNum} di Files API: ${uploadErr.message}`);
@@ -357,19 +362,14 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
               for await (const chunk of stream) {
                 watchdog.touch();
 
-                const textChunk = chunk.text ?? '';
-                accumulated += textChunk;
-
-                // Hitung kata secara efisien: tambah jumlah kata dari chunk baru
-                if (textChunk.trim()) {
-                  wordCount += textChunk.trim().split(/\s+/).length;
-                }
+                accumulated += chunk.text ?? '';
+                wordCount = accumulated.split(/\s+/).filter(Boolean).length;
 
                 // Log progress tiap LOG_INTERVAL_MS agar tidak spam
                 const now = Date.now();
                 if (now - lastLogTime >= LOG_INTERVAL_MS) {
                   const elapsedSec = Math.round((now - startTime) / 1000);
-                  onLog(`[Transcribe] chunk_${chunkNum} streaming... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata | ${accumulated.length.toLocaleString('id-ID')} karakter]`);
+                  onLog(`[Transcribe] Menerima output chunk_${chunkNum}... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata]`);
                   lastLogTime = now;
                 }
               }
@@ -389,7 +389,7 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
 
             const trimmed = accumulated.trim();
 
-            // Validasi kualitas transkrip — melempar Error jika tidak memenuhi syarat
+            // Validasi kualitas transkrip
             validateTranscriptQuality(trimmed, chunkNum, minExpectedWords, onLog);
 
             onLog(`[Transcribe] Stream selesai: chunk_${chunkNum} via ${modelName} [${elapsedTotal}s | ~${wordCount.toLocaleString('id-ID')} kata | ${trimmed.length.toLocaleString('id-ID')} karakter]`);
@@ -399,9 +399,11 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
             maxRetries: config.worker.maxRetriesPerModel,
             initialDelayMs: 10000,
             backoffFactor: 2.5,
+            failoverOn503: true,
             cancelChecker,
-            onRetry: ({ attempt, waitTimeMs, error }) => {
-              onLog(`[Throttler] Error saat transkripsi chunk_${chunkNum} (${describeError(error)}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+            onRetry: ({ attempt, waitTimeMs, error, isTpm }) => {
+              const reason = isTpm ? 'Rate limit TPM' : describeError(error);
+              onLog(`[Throttler] ${reason} saat transkripsi chunk_${chunkNum}. Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
             },
           }
         );
@@ -418,7 +420,7 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
           markDeadToday(modelName);
           onLog(`[Transcribe] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
         } else {
-          onLog(`[Transcribe] Model ${modelName} gagal setelah seluruh retry: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+          onLog(`[Transcribe] Model ${modelName} dialihkan: ${describeError(err)}. Mencoba model fallback berikutnya...`);
         }
       }
     }
@@ -663,9 +665,11 @@ Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
           maxRetries: config.worker.maxRetriesPerModel,
           initialDelayMs: 10000,
           backoffFactor: 2.5,
+          failoverOn503: true,
           cancelChecker,
-          onRetry: ({ attempt, waitTimeMs, error }) => {
-            onLog(`[Throttler] Error saat generate risalah (${describeError(error)}). Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+          onRetry: ({ attempt, waitTimeMs, error, isTpm }) => {
+            const reason = isTpm ? 'Rate limit TPM' : describeError(error);
+            onLog(`[Throttler] ${reason} saat generate risalah. Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
           },
         }
       );
@@ -696,7 +700,7 @@ Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
         markDeadToday(modelName);
         onLog(`[Minutes] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
       } else {
-        onLog(`[Minutes] Model ${modelName} gagal menyusun risalah: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+        onLog(`[Minutes] Model ${modelName} dialihkan: ${describeError(err)}. Mencoba model fallback berikutnya...`);
       }
     }
   }
