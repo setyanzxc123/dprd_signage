@@ -409,6 +409,11 @@ export async function processJob(pool, job) {
       return;
     }
 
+    if (config.audio.safetyDelayMs > 0 && chunkFiles.length > 0) {
+      log(`[Job #${jobId}] Jeda keamanan ${config.audio.safetyDelayMs / 1000}s sebelum menyusun risalah...`);
+      await interruptibleSleep(config.audio.safetyDelayMs, isCancelled);
+    }
+
     await pool.execute(
       `UPDATE meeting_transcription_jobs
        SET status = 'summarizing', progress_percent = 80, current_step = 'Membaca transkrip lengkap dan menyusun Risalah Rapat resmi via AI...', updated_at = NOW()
