@@ -351,13 +351,13 @@ export async function processJob(pool, job) {
         return;
       }
 
-      // Chunk hening (rasio bicara di bawah ambang) dilewati tanpa panggil model
-      if (stats && isChunkSilent(stats, config.vad.skipSpeechRatio)) {
-        log(`[Job #${jobId}] [VAD] Bagian ${chunk.index} hening (${(stats.ratio * 100).toFixed(1)}% bicara) - dilewati tanpa transkripsi.`);
+      // Chunk hening dilewati hanya bila VAD_SKIP_SILENT_CHUNKS diaktifkan
+      if (config.vad.skipSilentChunks && stats && isChunkSilent(stats, config.vad.skipSpeechRatio)) {
+        log(`[Job #${jobId}] [VAD] Bagian ${chunk.index} hening (${(stats.ratio * 100).toFixed(1)}% bicara), dilewati atas konfigurasi VAD_SKIP_SILENT_CHUNKS.`);
         const progressSkipped = Math.round((chunk.index / totalChunks) * 75);
         await pool.execute(
           `UPDATE meeting_transcription_jobs
-           SET completed_chunks = ?, progress_percent = ?, current_step = 'Bagian ${chunk.index} dari ${totalChunks} hening - dilewati.', updated_at = NOW()
+           SET completed_chunks = ?, progress_percent = ?, current_step = 'Bagian ${chunk.index} dari ${totalChunks} hening, dilewati.', updated_at = NOW()
            WHERE id = ?`,
           [chunk.index, progressSkipped, jobId]
         );

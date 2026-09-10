@@ -86,7 +86,9 @@ export const config = {
     minSilenceSeconds: parseInt(getEnv('VAD_MIN_SILENCE_S', '2'), 10),
     // Batas pergeseran titik potong chunk mencari titik hening (detik)
     toleranceSeconds: parseInt(getEnv('VAD_TOLERANCE_S', '180'), 10),
-    // Chunk dengan rasio bicara di bawah nilai ini dilewati tanpa panggil model
+    // Pengabaian chunk hening
+    skipSilentChunks: ['true', '1', 'yes'].includes(String(getEnv('VAD_SKIP_SILENT_CHUNKS', 'false')).toLowerCase().trim()),
+    // Chunk dengan rasio bicara di bawah nilai ini dilewati jika skipSilentChunks aktif
     skipSpeechRatio: parseFloat(getEnv('VAD_SKIP_SPEECH_RATIO', '0.05')),
   },
   worker: {

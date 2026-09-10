@@ -179,20 +179,20 @@ export function planChunks(duration, silences, chunkDurationSeconds, toleranceSe
   return plan;
 }
 
-function nearestSilencePoint(target, silences, toleranceSeconds) {
-  let best = target;
+export function nearestSilencePoint(target, silences, toleranceSeconds) {
+  let bestCut = target;
   let bestDist = Infinity;
 
   for (const silence of silences) {
     const clamped = Math.min(Math.max(target, silence.start), silence.end);
     const dist = Math.abs(clamped - target);
-    if (dist < bestDist) {
+    if (dist <= toleranceSeconds && dist < bestDist) {
       bestDist = dist;
-      best = clamped;
+      bestCut = (silence.start + silence.end) / 2;
     }
   }
 
-  return bestDist <= toleranceSeconds ? best : target;
+  return bestCut;
 }
 
 /**

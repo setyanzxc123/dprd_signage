@@ -5,7 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-import { parseSilencedetectOutput, buildSpeechSegments, analyzeChunks, planChunks, attachSpeechStats, isChunkSilent, runVadAnalysis, loadOrAnalyze } from '../services/vad.js';
+import { parseSilencedetectOutput, buildSpeechSegments, analyzeChunks, planChunks, nearestSilencePoint, attachSpeechStats, isChunkSilent, runVadAnalysis, loadOrAnalyze } from '../services/vad.js';
+import { config } from '../config.js';
 
 test.beforeEach(() => {
   if (ffmpegInstaller && ffmpegInstaller.path) {
@@ -57,18 +58,18 @@ test('analisis per chunk menghitung rasio bicara proporsional', () => {
   assert.equal(reports[3].duration, 1800);
 });
 
-test('planChunks menggeser batas ke titik hening dalam toleransi', () => {
+test('planChunks menggeser batas ke titik tengah hening dalam toleransi', () => {
   const plan = planChunks(190, [{ start: 88, end: 92 }], 100, 30);
   assert.equal(plan.length, 2);
   assert.equal(plan[0].start, 0);
-  assert.equal(plan[0].duration, 92, 'batas bergeser ke akhir hening (92s)');
-  assert.equal(plan[1].start, 92);
-  assert.equal(plan[1].duration, 98);
+  assert.equal(plan[0].duration, 90, 'batas bergeser ke titik tengah hening (90s)');
+  assert.equal(plan[1].start, 90);
+  assert.equal(plan[1].duration, 100);
 });
 
 test('planChunks memotong tepat di tengah hening yang membentang target', () => {
   const plan = planChunks(190, [{ start: 88, end: 112 }], 100, 30);
-  assert.equal(plan[0].duration, 95, 'target merata 95 ada di dalam hening, tidak digeser');
+  assert.equal(plan[0].duration, 100, 'titik potong berada di titik tengah hening (100s)');
 });
 
 test('planChunks mengabaikan hening di luar toleransi', () => {
@@ -189,4 +190,29 @@ test('vad.json langsung menggunakan single chunk plan saat durasi tidak melebihi
   assert.ok(logs.some((m) => m.includes('memotong deteksi hening')));
 
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('nearestSilencePoint memotong tepat di titik tengah hening dengan buffer aman', () => {
+  const silences = [{ start: 100, end: 106 }]; // 6 detik hening, midpoint = 103
+
+  // Target setelah hening, dalam toleransi
+  const cut1 = nearestSilencePoint(110, silences, 20);
+  assert.equal(cut1, 103);
+
+  // Target sebelum hening, dalam toleransi
+  const cut2 = nearestSilencePoint(95, silences, 20);
+  assert.equal(cut2, 103);
+
+  // Target di dalam hening
+  const cut3 = nearestSilencePoint(101, silences, 20);
+  assert.equal(cut3, 103);
+
+  // Target di luar toleransi
+  const cut4 = nearestSilencePoint(140, silences, 20);
+  assert.equal(cut4, 140);
+});
+
+test('config.vad.skipSilentChunks default ke false untuk mencegah chunk terabaikan', () => {
+  assert.equal(typeof config.vad.skipSilentChunks, 'boolean');
+  assert.equal(config.vad.skipSilentChunks, false);
 });
