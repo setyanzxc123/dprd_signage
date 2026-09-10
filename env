@@ -55,7 +55,9 @@
 # database.tests.DBCollat = utf8mb4_general_ci
 # database.tests.port = 3306
 
-#--------------------------------------------------------------------
+# BMKG WEATHER
+# BMKG_ADM4 = 72.71.01.1004
+
 # ENCRYPTION
 #--------------------------------------------------------------------
 
@@ -68,45 +70,68 @@
 # session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
 # session.savePath = null
 
-#--------------------------------------------------------------------
 # LOGGER
-#--------------------------------------------------------------------
-
 # logger.threshold = 4
 
-#--------------------------------------------------------------------
-# OTP provider: internal or fazpass. Set fazpass only after gateway is tested.
-# OTP_PROVIDER = internal
+# ADMIN LOGIN SECURITY RATE LIMITER
+# ADMIN_LOGIN_MAX_ATTEMPTS_PER_IP = 10
+# ADMIN_LOGIN_IP_WINDOW_SECONDS = 60
+# ADMIN_LOGIN_MAX_ATTEMPTS_PER_USERNAME = 5
+# ADMIN_LOGIN_USERNAME_WINDOW_SECONDS = 900
+# ADMIN_LOGIN_MAX_ATTEMPTS_GLOBAL = 100
+# ADMIN_LOGIN_GLOBAL_WINDOW_SECONDS = 600
+
+# OTP PROVIDER & POLICY
+# OTP_PROVIDER = hybrid
 # FAZPASS_API_URL = https://api.fazpass.com
 # FAZPASS_API_PREFIX = /v1
 # FAZPASS_MERCHANT_KEY =
 # FAZPASS_GATEWAY_KEY =
 # FAZPASS_CALLBACK_SECRET =
 # FAZPASS_TIMEOUT_SECONDS = 15
+# FAZPASS_FALLBACK_ENABLED = true
 
-# OTP policy
-# OTP_PROVIDER = hybrid
+# BAILEYS WHATSAPP GATEWAY
+# BAILEYS_API_URL = http://127.0.0.1:3001
+# BAILEYS_API_KEY = your_baileys_api_key_here
+# BAILEYS_TIMEOUT_SECONDS = 5
+# BAILEYS_ACK_TIMEOUT_MS = 3000
+# BAILEYS_WAIT_FOR_ACK = true
+# APP_NAME = 'DPRD Sulawesi Tengah'
+# BAILEYS_OTP_TEMPLATE = ''
+
+# OTP RATE LIMITS & EXPIRATION
 # OTP_TTL_SECONDS = 300
 # OTP_CHALLENGE_TTL_SECONDS = 900
 # OTP_RESEND_COOLDOWN_SECONDS = 60
 # OTP_REQUEST_WINDOW_SECONDS = 3600
 # OTP_MAX_REQUESTS_PER_PHONE = 5
 # OTP_MAX_REQUESTS_PER_IP = 20
+# OTP_DAILY_WINDOW_SECONDS = 86400
+# OTP_MAX_REQUESTS_PER_ACCOUNT_PER_DAY = 10
+# OTP_GLOBAL_WINDOW_SECONDS = 3600
+# OTP_MAX_REQUESTS_GLOBAL = 100
+# OTP_MAX_REQUESTS_GLOBAL_PER_DAY = 300
 # OTP_MAX_VERIFICATION_ATTEMPTS = 5
 # OTP_CLEANUP_RETENTION_SECONDS = 86400
 
-# Hybrid OTP: Baileys gateway primer, Fazpass fallback
-# BAILEYS_API_URL = http://127.0.0.1:3001
-# BAILEYS_API_KEY = your_baileys_api_key_here
-# BAILEYS_TIMEOUT_SECONDS = 5
-# FAZPASS_FALLBACK_ENABLED = true
-
-#--------------------------------------------------------------------
 # GOOGLE GEMINI AI (Transkripsi & Risalah Rapat)
-#--------------------------------------------------------------------
 # GEMINI_API_KEY = your_google_ai_studio_api_key_here
-# GEMINI_MODEL_CHAIN = gemini-3.5-flash-lite,gemini-3.5-flash,gemini-3.1-flash,gemini-3.7-flash
+# GEMINI_MODEL_CHAIN = gemini-3.7-flash,gemini-3.5-flash
+# GEMINI_THINKING_LEVEL = LOW
 # CHUNK_DURATION_SECONDS = 1800
 # SAFETY_DELAY_MS = 8000
 # WORKER_POLL_INTERVAL_MS = 5000
 # MAX_RETRIES_PER_MODEL = 4
+# WORKER_DAEMON_MODE = 0
+# WORKER_STALE_THRESHOLD_MIN = 15
+
+# VAD TUNING (Deteksi Hening untuk Audio Chunking)
+# VAD_SILENCE_DB = -35
+# VAD_MIN_SILENCE_S = 2
+# VAD_TOLERANCE_S = 180
+# VAD_SKIP_SPEECH_RATIO = 0.05
+
+# VALIDASI TRANSKRIP
+# VALIDATION_MIN_WORDS_PER_MINUTE = 30
+# VALIDATION_ABRUPT_CUT_MIN_LENGTH = 500
