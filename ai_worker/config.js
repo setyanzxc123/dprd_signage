@@ -57,12 +57,9 @@ if (detectedSocket) {
 // Gemini API Key & Model Chain
 const geminiApiKey = getEnv('GEMINI_API_KEY', getEnv('GOOGLE_AI_API_KEY', getEnv('AI_GEMINI_KEY', '')));
 
-// Rantai model default sesuai contoh .env: primary hemat token -> fallback berurutan
 const DEFAULT_MODEL_CHAIN = [
-  'gemini-3.5-flash-lite',
-  'gemini-3.5-flash',
-  'gemini-3.1-flash',
   'gemini-3.7-flash',
+  'gemini-3.5-flash',
 ];
 
 const modelChainRaw = getEnv('GEMINI_MODEL_CHAIN', '');
@@ -70,11 +67,14 @@ const parsedModelChain = modelChainRaw
   ? modelChainRaw.split(',').map((m) => m.trim()).filter((m) => m.length > 0)
   : [];
 
+const geminiThinkingLevel = getEnv('GEMINI_THINKING_LEVEL', 'LOW').toUpperCase();
+
 export const config = {
   db: dbConfig,
   gemini: {
     apiKey: geminiApiKey,
     modelChain: parsedModelChain.length > 0 ? parsedModelChain : DEFAULT_MODEL_CHAIN,
+    thinkingLevel: geminiThinkingLevel,
   },
   audio: {
     chunkDurationSeconds: parseInt(getEnv('CHUNK_DURATION_SECONDS', '1800'), 10), // 30 menit

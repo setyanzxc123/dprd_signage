@@ -53,3 +53,20 @@ test('resetModelState menghapus sticky dan daftar mati', () => {
   resetModelState();
   assert.deepEqual(effectiveModelChain(CHAIN), CHAIN);
 });
+
+test('resolveThinkingLevel memetakan enum yang valid dan fallback ke LOW', async () => {
+  const { resolveThinkingLevel } = await import('../services/geminiService.js');
+  const { ThinkingLevel } = await import('@google/genai');
+
+  assert.equal(resolveThinkingLevel('LOW'), ThinkingLevel.LOW);
+  assert.equal(resolveThinkingLevel('MEDIUM'), ThinkingLevel.MEDIUM);
+  assert.equal(resolveThinkingLevel('HIGH'), ThinkingLevel.HIGH);
+  assert.equal(resolveThinkingLevel('UNKNOWN_VAL'), ThinkingLevel.LOW);
+  assert.equal(resolveThinkingLevel(null), ThinkingLevel.LOW);
+});
+
+test('config gemini menyediakan thinkingLevel default LOW', async () => {
+  const { config } = await import('../config.js');
+  assert.equal(typeof config.gemini.thinkingLevel, 'string');
+  assert.ok(['LOW', 'MEDIUM', 'HIGH'].includes(config.gemini.thinkingLevel));
+});

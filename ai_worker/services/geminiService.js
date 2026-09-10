@@ -1,11 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type, ThinkingLevel } from '@google/genai';
 import { config } from '../config.js';
 import { callWithRetry, JobCancelledError, isDailyQuotaExhausted, describeError, sleep } from './throttler.js';
 import { effectiveModelChain, setStickyModel, markDeadToday } from './modelChain.js';
 import { formatChunkIndex, probeDuration } from './audioSlicer.js';
 import { log as workerLog, warn as workerWarn } from './logger.js';
+
+export function resolveThinkingLevel(configuredLevel) {
+  const key = String(configuredLevel || 'LOW').toUpperCase();
+  return (ThinkingLevel && ThinkingLevel[key]) ? ThinkingLevel[key] : (ThinkingLevel?.LOW || 'LOW');
+}
 
 // Inisialisasi Google GenAI Client
 let aiClient = null;
@@ -339,7 +344,12 @@ Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup t
                     ],
                   },
                 ],
-                config: { abortSignal: watchdog.signal },
+                config: {
+                  thinkingConfig: {
+                    thinkingLevel: resolveThinkingLevel(config.gemini.thinkingLevel),
+                  },
+                  abortSignal: watchdog.signal,
+                },
               });
               watchdog.markConnected();
               onLog(`[Transcribe] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
@@ -611,6 +621,9 @@ Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
               config: {
                 responseMimeType: 'application/json',
                 responseSchema: MINUTES_RESPONSE_SCHEMA,
+                thinkingConfig: {
+                  thinkingLevel: resolveThinkingLevel(config.gemini.thinkingLevel),
+                },
                 abortSignal: watchdog.signal,
               },
             });
