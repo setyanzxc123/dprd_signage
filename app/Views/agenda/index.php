@@ -459,7 +459,6 @@ if ($isMember) {
                             :id="'agenda-card-' + item.key"
                             name="agenda-banmus-accordion"
                             class="group agenda-collapse mx-4 sm:mx-6 border-b border-slate-400 dark:border-slate-600 last:border-b-0"
-                            :open="expandedAgendaKey === item.key"
                             @toggle="handleAgendaToggle($event, item.key)"
                         >
                             <summary class="grid min-h-0 grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-3 overflow-hidden py-3.5 pr-8 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4 sm:pr-8 cursor-pointer select-none">
@@ -638,7 +637,6 @@ if ($isMember) {
                             :id="'agenda-card-' + item.key"
                             name="agenda-general-accordion"
                             class="group agenda-collapse mx-4 sm:mx-6 border-b border-slate-400 dark:border-slate-600 last:border-b-0"
-                            :open="expandedGeneralKey === item.key"
                             @toggle="handleGeneralToggle($event, item.key)"
                         >
                             <summary class="grid min-h-0 grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-3 overflow-hidden py-3.5 pr-8 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4 sm:pr-8 cursor-pointer select-none">
@@ -1126,6 +1124,7 @@ if ($isMember) {
                     if (!card) {
                         return;
                     }
+                    card.open = true;
                     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     card.classList.remove('agenda-flash');
                     void card.offsetWidth;
