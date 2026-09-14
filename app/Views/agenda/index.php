@@ -586,8 +586,6 @@ if ($isMember) {
                                 </div>
                             </div>
                         </details>
-                        </template>
-                    </template>
                     </div>
                 </div>
             </div>
