@@ -11,6 +11,7 @@ import {
   callWithRetry,
   interruptibleSleep,
   JobCancelledError,
+  StreamTimeoutError,
 } from '../services/throttler.js';
 
 // Fixture struktur nyata dari log job #11: SDK membungkus body API dalam JSON
@@ -246,7 +247,33 @@ test('isServerOverloaded mendeteksi 503 UNAVAILABLE dan overload', () => {
   assert.equal(isServerOverloaded(err429), false);
 });
 
-test('callWithRetry melempar segera pada 503 jika failoverOn503 aktif', async () => {
+test('StreamTimeoutError terdeteksi sebagai retryable', () => {
+  const timeoutErr = new StreamTimeoutError('STREAM_IDLE_TIMEOUT', { phase: 'ttft', idleDurationMs: 120000 });
+  assert.equal(isRetryableError(timeoutErr), true);
+  assert.equal(timeoutErr.phase, 'ttft');
+});
+
+test('callWithRetry melakukan retry saat terjadi StreamTimeoutError', async () => {
+  let attempts = 0;
+  const result = await callWithRetry(
+    async () => {
+      attempts++;
+      if (attempts === 1) {
+        throw new StreamTimeoutError('timeout');
+      }
+      return 'berhasil';
+    },
+    {
+      maxRetries: 3,
+      initialDelayMs: 10,
+      sleepFn: async () => {},
+    }
+  );
+  assert.equal(result, 'berhasil');
+  assert.equal(attempts, 2);
+});
+
+test('callWithRetry memberikan 1x retry sebelum failover pada 503 jika failoverOn503 aktif', async () => {
   let attempts = 0;
   await assert.rejects(
     callWithRetry(
@@ -258,6 +285,25 @@ test('callWithRetry melempar segera pada 503 jika failoverOn503 aktif', async ()
         maxRetries: 3,
         initialDelayMs: 10,
         failoverOn503: true,
+        sleepFn: async () => {},
+      }
+    )
+  );
+  assert.equal(attempts, 2);
+});
+
+test('callWithRetry melempar segera pada attempt 1 jika failoverOn503 bernilai 1', async () => {
+  let attempts = 0;
+  await assert.rejects(
+    callWithRetry(
+      async () => {
+        attempts++;
+        throw new Error('503 UNAVAILABLE');
+      },
+      {
+        maxRetries: 3,
+        initialDelayMs: 10,
+        failoverOn503: 1,
         sleepFn: async () => {},
       }
     )

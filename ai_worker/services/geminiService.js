@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { GoogleGenAI, Type, ThinkingLevel } from '@google/genai';
 import { config } from '../config.js';
-import { callWithRetry, JobCancelledError, isDailyQuotaExhausted, describeError, sleep } from './throttler.js';
+import { callWithRetry, JobCancelledError, StreamTimeoutError, isDailyQuotaExhausted, describeError, interruptibleSleep, sleep } from './throttler.js';
 import { effectiveModelChain, setStickyModel, markDeadToday } from './modelChain.js';
 import { formatChunkIndex, probeDuration } from './audioSlicer.js';
 import { log as workerLog, warn as workerWarn } from './logger.js';
@@ -25,24 +25,35 @@ export function getAiClient() {
   return aiClient;
 }
 
-const CANCEL_POLL_MS = 3000;
+export const DEFAULT_TTFT_TIMEOUT_MS = 120_000;
+export const DEFAULT_INTER_CHUNK_TIMEOUT_MS = 45_000;
 const STREAM_SILENCE_LOG_MS = 30_000;
+const CANCEL_POLL_MS = 2_000;
 
 /**
- * Watchdog untuk stream Gemini: mengecek cancelChecker berkala (termasuk
- * saat stream belum mengeluarkan teks apa pun) dan membatalkan request
- * via AbortSignal, plus callback heartbeat saat stream senyap. Fase senyap
- * dibedakan antara belum tersambung (server belum merespons) dan sudah
- * tersambung (model sedang prefill/thinking).
+ * Watchdog untuk stream Gemini dengan mekanisme dual-timeout (TTFT & Inter-Chunk)
+ * serta pemantauan cancel berkala.
  */
-function createStreamWatchdog({ cancelChecker, onSilence }) {
+export function createStreamWatchdog({
+  cancelChecker,
+  onSilence,
+  ttftTimeoutMs = DEFAULT_TTFT_TIMEOUT_MS,
+  interChunkTimeoutMs = DEFAULT_INTER_CHUNK_TIMEOUT_MS,
+  silenceLogMs = STREAM_SILENCE_LOG_MS,
+  pollIntervalMs = CANCEL_POLL_MS,
+}) {
   const controller = new AbortController();
   let cancelled = false;
   let connected = false;
-  let lastActivityAt = Date.now();
+  let hasReceivedFirstToken = false;
+  let timedOut = false;
+  let timeoutReason = null;
+  const startedAt = Date.now();
+  let lastActivityAt = startedAt;
+  let lastSilenceLogAt = startedAt;
 
   const timer = setInterval(() => {
-    if (cancelled) return;
+    if (cancelled || timedOut) return;
     (async () => {
       if (cancelChecker && typeof cancelChecker === 'function') {
         try {
@@ -52,22 +63,56 @@ function createStreamWatchdog({ cancelChecker, onSilence }) {
             return;
           }
         } catch {
-          // kegagalan cek cancel tidak boleh mematikan watchdog
+          // Kegagalan cek cancel tidak mematikan watchdog
         }
       }
-      const silentForMs = Date.now() - lastActivityAt;
-      if (onSilence && silentForMs >= STREAM_SILENCE_LOG_MS) {
-        lastActivityAt = Date.now();
+
+      const now = Date.now();
+
+      if (!hasReceivedFirstToken) {
+        const timeWaitingFirstToken = now - startedAt;
+        if (timeWaitingFirstToken >= ttftTimeoutMs) {
+          timedOut = true;
+          timeoutReason = {
+            phase: 'ttft',
+            idleDurationMs: timeWaitingFirstToken,
+            limitMs: ttftTimeoutMs,
+          };
+          controller.abort();
+          return;
+        }
+      } else {
+        const idleBetweenChunks = now - lastActivityAt;
+        if (idleBetweenChunks >= interChunkTimeoutMs) {
+          timedOut = true;
+          timeoutReason = {
+            phase: 'inter_chunk',
+            idleDurationMs: idleBetweenChunks,
+            limitMs: interChunkTimeoutMs,
+          };
+          controller.abort();
+          return;
+        }
+      }
+
+      const silentForMs = now - (hasReceivedFirstToken ? lastActivityAt : startedAt);
+      if (onSilence && now - lastSilenceLogAt >= silenceLogMs) {
+        lastSilenceLogAt = now;
         onSilence(Math.round(silentForMs / 1000), connected);
       }
     })();
-  }, CANCEL_POLL_MS);
+  }, pollIntervalMs);
 
   return {
     signal: controller.signal,
     isCancelled: () => cancelled,
+    isTimedOut: () => timedOut,
+    getTimeoutReason: () => timeoutReason,
     markConnected: () => { connected = true; },
-    touch: () => { lastActivityAt = Date.now(); },
+    touch: () => {
+      hasReceivedFirstToken = true;
+      lastActivityAt = Date.now();
+    },
     stop: () => clearInterval(timer),
   };
 }
@@ -295,130 +340,157 @@ export async function transcribeChunkWithFallback({
   let modelSuccess = false;
   let lastError = null;
 
-  const models = effectiveModelChain(config.gemini.modelChain);
-  if (models.length === 0) {
-    throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
-  }
+  const MAX_CHAIN_PASSES = 3;
+  const CHAIN_RETRY_DELAY_MS = 15_000;
   const ai = getAiClient();
 
   try {
-    // 3. Iterasi rantai model AI (Primary -> Fallback 1 -> Fallback 2 -> Fallback 3)
-    for (let mIdx = 0; mIdx < models.length; mIdx++) {
-      const modelName = models[mIdx];
-      onLog(`[Transcribe] Mencoba model: ${modelName} (Model ke-${mIdx + 1}/${models.length}) untuk chunk_${chunkNum}...`);
+    for (let pass = 1; pass <= MAX_CHAIN_PASSES; pass++) {
+      const models = effectiveModelChain(config.gemini.modelChain);
+      if (models.length === 0) {
+        throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+      }
 
-      try {
-        transcriptText = await callWithRetry(
-          async (attempt) => {
-            onLog(`[Transcribe] Memanggil model ${modelName} (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
+      // 3. Iterasi rantai model AI (Primary -> Fallback 1 -> Fallback 2 -> Fallback 3)
+      for (let mIdx = 0; mIdx < models.length; mIdx++) {
+        const modelName = models[mIdx];
+        const passSuffix = pass > 1 ? ` (Putaran ${pass}/${MAX_CHAIN_PASSES})` : '';
+        onLog(`[Transcribe] Mencoba model: ${modelName} (Model ke-${mIdx + 1}/${models.length}${passSuffix}) untuk chunk_${chunkNum}...`);
 
-            const startTime = Date.now();
-            let accumulated = '';
-            let wordCount = 0;
-            let lastLogTime = startTime;
-            const LOG_INTERVAL_MS = 10_000; // log progress tiap 10 detik
+        try {
+          transcriptText = await callWithRetry(
+            async (attempt) => {
+              onLog(`[Transcribe] Memanggil model ${modelName} (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
 
-            const watchdog = createStreamWatchdog({
-              cancelChecker,
-              onSilence: (sec, isConnected) => {
-                if (isConnected) {
-                  onLog(`[Transcribe] chunk_${chunkNum} tersambung ke ${modelName}, model sedang memproses audio... [${sec}s tanpa keluaran teks]`);
-                } else {
-                  onLog(`[Transcribe] chunk_${chunkNum} belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
-                }
-              },
-            });
+              const startTime = Date.now();
+              let accumulated = '';
+              let wordCount = 0;
+              let lastLogTime = startTime;
+              const LOG_INTERVAL_MS = 10_000; // log progress tiap 10 detik
 
-            try {
-              const stream = await ai.models.generateContentStream({
-                model: modelName,
-                contents: [
-                  {
-                    role: 'user',
-                    parts: [
-                      {
-                        fileData: {
-                          fileUri: uploadedFile.uri,
-                          mimeType: 'audio/mp3',
-                        },
-                      },
-                      { text: promptText },
-                    ],
-                  },
-                ],
-                config: {
-                  thinkingConfig: {
-                    thinkingLevel: resolveThinkingLevel(config.gemini.thinkingLevel),
-                  },
-                  abortSignal: watchdog.signal,
+              const watchdog = createStreamWatchdog({
+                cancelChecker,
+                onSilence: (sec, isConnected) => {
+                  if (isConnected) {
+                    onLog(`[Transcribe] chunk_${chunkNum} tersambung ke ${modelName}, model sedang memproses audio... [${sec}s tanpa keluaran teks]`);
+                  } else {
+                    onLog(`[Transcribe] chunk_${chunkNum} belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
+                  }
                 },
               });
-              watchdog.markConnected();
-              onLog(`[Transcribe] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
 
-              for await (const chunk of stream) {
-                watchdog.touch();
+              try {
+                const stream = await ai.models.generateContentStream({
+                  model: modelName,
+                  contents: [
+                    {
+                      role: 'user',
+                      parts: [
+                        {
+                          fileData: {
+                            fileUri: uploadedFile.uri,
+                            mimeType: 'audio/mp3',
+                          },
+                        },
+                        { text: promptText },
+                      ],
+                    },
+                  ],
+                  config: {
+                    thinkingConfig: {
+                      thinkingLevel: resolveThinkingLevel(config.gemini.thinkingLevel),
+                    },
+                    abortSignal: watchdog.signal,
+                  },
+                });
+                watchdog.markConnected();
+                onLog(`[Transcribe] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
 
-                accumulated += chunk.text ?? '';
-                wordCount = accumulated.split(/\s+/).filter(Boolean).length;
+                for await (const chunk of stream) {
+                  watchdog.touch();
 
-                // Log progress tiap LOG_INTERVAL_MS agar tidak spam
-                const now = Date.now();
-                if (now - lastLogTime >= LOG_INTERVAL_MS) {
-                  const elapsedSec = Math.round((now - startTime) / 1000);
-                  onLog(`[Transcribe] Menerima output chunk_${chunkNum}... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata]`);
-                  lastLogTime = now;
+                  accumulated += chunk.text ?? '';
+                  wordCount = accumulated.split(/\s+/).filter(Boolean).length;
+
+                  // Log progress tiap LOG_INTERVAL_MS agar tidak spam
+                  const now = Date.now();
+                  if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                    const elapsedSec = Math.round((now - startTime) / 1000);
+                    onLog(`[Transcribe] Menerima output chunk_${chunkNum}... [${elapsedSec}s | ~${wordCount.toLocaleString('id-ID')} kata]`);
+                    lastLogTime = now;
+                  }
                 }
+              } catch (err) {
+                if (watchdog.isCancelled() || err instanceof JobCancelledError) {
+                  throw new JobCancelledError();
+                }
+                if (watchdog.isTimedOut()) {
+                  const reason = watchdog.getTimeoutReason();
+                  const phaseLabel = reason?.phase === 'ttft'
+                    ? `Time-to-first-token timeout (${Math.round(reason.idleDurationMs / 1000)}s tanpa respons pertama)`
+                    : `Inter-chunk idle timeout (${Math.round(reason.idleDurationMs / 1000)}s jeda antar token)`;
+                  throw new StreamTimeoutError(`Stream ${modelName} terhenti: ${phaseLabel}`, reason);
+                }
+                throw err;
+              } finally {
+                watchdog.stop();
               }
-            } catch (err) {
-              if (watchdog.isCancelled() || err instanceof JobCancelledError) {
-                throw new JobCancelledError();
+
+              const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
+              if (!accumulated || accumulated.trim().length === 0) {
+                throw new Error(`Respons model ${modelName} kosong.`);
               }
-              throw err;
-            } finally {
-              watchdog.stop();
-            }
 
-            const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
-            if (!accumulated || accumulated.trim().length === 0) {
-              throw new Error(`Respons model ${modelName} kosong.`);
-            }
+              const trimmed = accumulated.trim();
 
-            const trimmed = accumulated.trim();
+              // Validasi kualitas transkrip
+              validateTranscriptQuality(trimmed, chunkNum, minExpectedWords, onLog);
 
-            // Validasi kualitas transkrip
-            validateTranscriptQuality(trimmed, chunkNum, minExpectedWords, onLog);
-
-            onLog(`[Transcribe] Stream selesai: chunk_${chunkNum} via ${modelName} [${elapsedTotal}s | ~${wordCount.toLocaleString('id-ID')} kata | ${trimmed.length.toLocaleString('id-ID')} karakter]`);
-            return trimmed;
-          },
-          {
-            maxRetries: config.worker.maxRetriesPerModel,
-            initialDelayMs: 10000,
-            backoffFactor: 2.5,
-            failoverOn503: true,
-            cancelChecker,
-            onRetry: ({ attempt, waitTimeMs, error, isTpm }) => {
-              const reason = isTpm ? 'Rate limit TPM' : describeError(error);
-              onLog(`[Throttler] ${reason} saat transkripsi chunk_${chunkNum}. Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+              onLog(`[Transcribe] Stream selesai: chunk_${chunkNum} via ${modelName} [${elapsedTotal}s | ~${wordCount.toLocaleString('id-ID')} kata | ${trimmed.length.toLocaleString('id-ID')} karakter]`);
+              return trimmed;
             },
-          }
-        );
+            {
+              maxRetries: config.worker.maxRetriesPerModel,
+              initialDelayMs: 10000,
+              backoffFactor: 2.5,
+              failoverOn503: true,
+              cancelChecker,
+              onRetry: ({ attempt, waitTimeMs, error, isTpm }) => {
+                const reason = isTpm ? 'Rate limit TPM' : describeError(error);
+                onLog(`[Throttler] ${reason} saat transkripsi chunk_${chunkNum}. Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+              },
+            }
+          );
 
-        setStickyModel(modelName);
-        modelSuccess = true;
+          setStickyModel(modelName);
+          modelSuccess = true;
+          break;
+        } catch (err) {
+          lastError = err;
+          if (err instanceof JobCancelledError) {
+            throw err;
+          }
+          if (isDailyQuotaExhausted(err)) {
+            markDeadToday(modelName);
+            onLog(`[Transcribe] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
+          } else {
+            onLog(`[Transcribe] Model ${modelName} dialihkan: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+          }
+        }
+      }
+
+      if (modelSuccess && transcriptText) {
         break;
-      } catch (err) {
-        lastError = err;
-        if (err instanceof JobCancelledError) {
-          throw err;
-        }
-        if (isDailyQuotaExhausted(err)) {
-          markDeadToday(modelName);
-          onLog(`[Transcribe] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
-        } else {
-          onLog(`[Transcribe] Model ${modelName} dialihkan: ${describeError(err)}. Mencoba model fallback berikutnya...`);
-        }
+      }
+
+      const remainingModels = effectiveModelChain(config.gemini.modelChain);
+      if (remainingModels.length === 0) {
+        throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+      }
+
+      if (pass < MAX_CHAIN_PASSES) {
+        onLog(`[Transcribe] Seluruh model mengalami gangguan sementara pada putaran ${pass}/${MAX_CHAIN_PASSES}. Menunggu ${CHAIN_RETRY_DELAY_MS / 1000}s sebelum mengulang rantai...`);
+        await interruptibleSleep(CHAIN_RETRY_DELAY_MS, cancelChecker);
       }
     }
 
@@ -581,126 +653,153 @@ misc(bukan termasuk field tapi tambahan aturan) : jangan sampai timestamp masuk 
 - poin_pembahasan: satu butir per pokok bahasan; sertakan waktu (bila ada), topik spesifik, nama pembicara/fraksi/jabatan resmi yang akurat, dan uraian substansi.
 - kesimpulan_akhir: seluruh butir kesepakatan, keputusan resmi, rekomendasi, dan tindak lanjut yang disepakati.`;
 
-  const models = effectiveModelChain(config.gemini.modelChain);
-  if (models.length === 0) {
-    throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
-  }
+  const MAX_CHAIN_PASSES = 3;
+  const CHAIN_RETRY_DELAY_MS = 15_000;
   const ai = getAiClient();
   let minutesJson = null;
   let usedModel = null;
   let lastError = null;
 
-  for (let mIdx = 0; mIdx < models.length; mIdx++) {
-    const modelName = models[mIdx];
-    onLog(`[Minutes] Mencoba model risalah: ${modelName} (Model ke-${mIdx + 1}/${models.length})...`);
+  for (let pass = 1; pass <= MAX_CHAIN_PASSES; pass++) {
+    const models = effectiveModelChain(config.gemini.modelChain);
+    if (models.length === 0) {
+      throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+    }
 
-    try {
-      const rawResponse = await callWithRetry(
-        async (attempt) => {
-          onLog(`[Minutes] Memanggil model ${modelName} untuk menyusun risalah (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
-
-          const startTime = Date.now();
-          let accumulated = '';
-          let lastLogTime = startTime;
-          const LOG_INTERVAL_MS = 10_000;
-
-          const watchdog = createStreamWatchdog({
-            cancelChecker,
-            onSilence: (sec, isConnected) => {
-              if (isConnected) {
-                onLog(`[Minutes] Tersambung ke ${modelName}, model sedang memproses transkrip (prefill/thinking)... [${sec}s tanpa keluaran teks]`);
-              } else {
-                onLog(`[Minutes] Belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
-              }
-            },
-          });
-
-          try {
-            const stream = await ai.models.generateContentStream({
-              model: modelName,
-              contents: promptText,
-              config: {
-                responseMimeType: 'application/json',
-                responseSchema: MINUTES_RESPONSE_SCHEMA,
-                thinkingConfig: {
-                  thinkingLevel: resolveThinkingLevel(config.gemini.thinkingLevel),
-                },
-                abortSignal: watchdog.signal,
-              },
-            });
-            watchdog.markConnected();
-            onLog(`[Minutes] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
-
-            for await (const chunk of stream) {
-              watchdog.touch();
-
-              accumulated += chunk.text ?? '';
-
-              const now = Date.now();
-              if (now - lastLogTime >= LOG_INTERVAL_MS) {
-                const elapsedSec = Math.round((now - startTime) / 1000);
-                onLog(`[Minutes] Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
-                lastLogTime = now;
-              }
-            }
-          } catch (err) {
-            if (watchdog.isCancelled() || err instanceof JobCancelledError) {
-              throw new JobCancelledError();
-            }
-            throw err;
-          } finally {
-            watchdog.stop();
-          }
-
-          const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
-          if (!accumulated || accumulated.trim().length === 0) {
-            throw new Error(`Respons risalah model ${modelName} kosong.`);
-          }
-
-          onLog(`[Minutes] Stream selesai: risalah via ${modelName} [${elapsedTotal}s | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
-          return accumulated.trim();
-        },
-        {
-          maxRetries: config.worker.maxRetriesPerModel,
-          initialDelayMs: 10000,
-          backoffFactor: 2.5,
-          failoverOn503: true,
-          cancelChecker,
-          onRetry: ({ attempt, waitTimeMs, error, isTpm }) => {
-            const reason = isTpm ? 'Rate limit TPM' : describeError(error);
-            onLog(`[Throttler] ${reason} saat generate risalah. Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
-          },
-        }
-      );
-
-      // Bersihkan kemungkinan markdown wrapping ```json ... ``` (antisipasi model noncompliant)
-      let cleanedJson = rawResponse.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+    for (let mIdx = 0; mIdx < models.length; mIdx++) {
+      const modelName = models[mIdx];
+      const passSuffix = pass > 1 ? ` (Putaran ${pass}/${MAX_CHAIN_PASSES})` : '';
+      onLog(`[Minutes] Mencoba model risalah: ${modelName} (Model ke-${mIdx + 1}/${models.length}${passSuffix})...`);
 
       try {
-        minutesJson = JSON.parse(cleanedJson);
-      } catch (parseErr) {
-        throw new Error(`Gagal mem-parse JSON hasil risalah dari model ${modelName}: ${parseErr.message}`);
-      }
+        const rawResponse = await callWithRetry(
+          async (attempt) => {
+            onLog(`[Minutes] Memanggil model ${modelName} untuk menyusun risalah (Percobaan ${attempt}/${config.worker.maxRetriesPerModel})...`);
 
-      if (!minutesJson || typeof minutesJson !== 'object' || !('ringkasan_utama' in minutesJson)) {
-        throw new Error(`Struktur risalah dari model ${modelName} tidak memenuhi skema (ringkasan_utama tidak ditemukan).`);
-      }
+            const startTime = Date.now();
+            let accumulated = '';
+            let lastLogTime = startTime;
+            const LOG_INTERVAL_MS = 10_000;
 
-      onLog(`[Minutes] Risalah rapat berhasil disusun via model ${modelName}!`);
-      setStickyModel(modelName);
-      usedModel = modelName;
+            const watchdog = createStreamWatchdog({
+              cancelChecker,
+              onSilence: (sec, isConnected) => {
+                if (isConnected) {
+                  onLog(`[Minutes] Tersambung ke ${modelName}, model sedang memproses transkrip (prefill/thinking)... [${sec}s tanpa keluaran teks]`);
+                } else {
+                  onLog(`[Minutes] Belum mendapat respons dari server ${modelName} (antrean/kapasitas)... [${sec}s]`);
+                }
+              },
+            });
+
+            try {
+              const stream = await ai.models.generateContentStream({
+                model: modelName,
+                contents: promptText,
+                config: {
+                  responseMimeType: 'application/json',
+                  responseSchema: MINUTES_RESPONSE_SCHEMA,
+                  thinkingConfig: {
+                    thinkingLevel: resolveThinkingLevel(config.gemini.thinkingLevel),
+                  },
+                  abortSignal: watchdog.signal,
+                },
+              });
+              watchdog.markConnected();
+              onLog(`[Minutes] Stream tersambung ke ${modelName}, menunggu keluaran pertama...`);
+
+              for await (const chunk of stream) {
+                watchdog.touch();
+
+                accumulated += chunk.text ?? '';
+
+                const now = Date.now();
+                if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                  const elapsedSec = Math.round((now - startTime) / 1000);
+                  onLog(`[Minutes] Menyusun risalah... [${elapsedSec}s | ${accumulated.length.toLocaleString('id-ID')} karakter terkumpul]`);
+                  lastLogTime = now;
+                }
+              }
+            } catch (err) {
+              if (watchdog.isCancelled() || err instanceof JobCancelledError) {
+                throw new JobCancelledError();
+              }
+              if (watchdog.isTimedOut()) {
+                const reason = watchdog.getTimeoutReason();
+                const phaseLabel = reason?.phase === 'ttft'
+                  ? `Time-to-first-token timeout (${Math.round(reason.idleDurationMs / 1000)}s tanpa respons pertama)`
+                  : `Inter-chunk idle timeout (${Math.round(reason.idleDurationMs / 1000)}s jeda antar token)`;
+                throw new StreamTimeoutError(`Stream ${modelName} terhenti: ${phaseLabel}`, reason);
+              }
+              throw err;
+            } finally {
+              watchdog.stop();
+            }
+
+            const elapsedTotal = ((Date.now() - startTime) / 1000).toFixed(1);
+            if (!accumulated || accumulated.trim().length === 0) {
+              throw new Error(`Respons risalah model ${modelName} kosong.`);
+            }
+
+            onLog(`[Minutes] Stream selesai: risalah via ${modelName} [${elapsedTotal}s | ${accumulated.trim().length.toLocaleString('id-ID')} karakter]`);
+            return accumulated.trim();
+          },
+          {
+            maxRetries: config.worker.maxRetriesPerModel,
+            initialDelayMs: 10000,
+            backoffFactor: 2.5,
+            failoverOn503: true,
+            cancelChecker,
+            onRetry: ({ attempt, waitTimeMs, error, isTpm }) => {
+              const reason = isTpm ? 'Rate limit TPM' : describeError(error);
+              onLog(`[Throttler] ${reason} saat generate risalah. Menunggu ${Math.round(waitTimeMs / 1000)}s sebelum retry ${attempt + 1}...`);
+            },
+          }
+        );
+
+        // Bersihkan kemungkinan markdown wrapping ```json ... ``` (antisipasi model noncompliant)
+        let cleanedJson = rawResponse.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+        try {
+          minutesJson = JSON.parse(cleanedJson);
+        } catch (parseErr) {
+          throw new Error(`Gagal mem-parse JSON hasil risalah dari model ${modelName}: ${parseErr.message}`);
+        }
+
+        if (!minutesJson || typeof minutesJson !== 'object' || !('ringkasan_utama' in minutesJson)) {
+          throw new Error(`Struktur risalah dari model ${modelName} tidak memenuhi skema (ringkasan_utama tidak ditemukan).`);
+        }
+
+        onLog(`[Minutes] Risalah rapat berhasil disusun via model ${modelName}!`);
+        setStickyModel(modelName);
+        usedModel = modelName;
+        break;
+      } catch (err) {
+        lastError = err;
+        if (err instanceof JobCancelledError) {
+          throw err;
+        }
+        if (isDailyQuotaExhausted(err)) {
+          markDeadToday(modelName);
+          onLog(`[Minutes] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
+        } else {
+          onLog(`[Minutes] Model ${modelName} dialihkan: ${describeError(err)}. Mencoba model fallback berikutnya...`);
+        }
+      }
+    }
+
+    if (minutesJson) {
       break;
-    } catch (err) {
-      lastError = err;
-      if (err instanceof JobCancelledError) {
-        throw err;
-      }
-      if (isDailyQuotaExhausted(err)) {
-        markDeadToday(modelName);
-        onLog(`[Minutes] Model ${modelName} dilewati untuk sisa hari ini: kuota harian habis (${describeError(err)}).`);
-      } else {
-        onLog(`[Minutes] Model ${modelName} dialihkan: ${describeError(err)}. Mencoba model fallback berikutnya...`);
-      }
+    }
+
+    const remainingModels = effectiveModelChain(config.gemini.modelChain);
+    if (remainingModels.length === 0) {
+      throw new Error('Kuota harian seluruh model chain habis. Coba lagi setelah kuota reset atau perbarui GEMINI_MODEL_CHAIN.');
+    }
+
+    if (pass < MAX_CHAIN_PASSES) {
+      onLog(`[Minutes] Seluruh model mengalami gangguan sementara pada putaran risalah ${pass}/${MAX_CHAIN_PASSES}. Menunggu ${CHAIN_RETRY_DELAY_MS / 1000}s sebelum mengulang rantai...`);
+      await interruptibleSleep(CHAIN_RETRY_DELAY_MS, cancelChecker);
     }
   }
 

@@ -20,6 +20,15 @@ export class JobCancelledError extends Error {
   }
 }
 
+export class StreamTimeoutError extends Error {
+  constructor(message = 'STREAM_IDLE_TIMEOUT', details = {}) {
+    super(message);
+    this.name = 'StreamTimeoutError';
+    this.phase = details.phase || 'unknown';
+    this.idleDurationMs = details.idleDurationMs || 0;
+  }
+}
+
 function tryParseJson(text) {
   if (typeof text !== 'string') return null;
   const trimmed = text.trim();
@@ -178,6 +187,8 @@ export function describeError(error) {
 export function isRetryableError(error) {
   if (!error) return false;
   if (isDailyQuotaExhausted(error)) return false;
+  if (error instanceof JobCancelledError) return false;
+  if (error instanceof StreamTimeoutError) return true;
 
   const message = String(error.message || error).toLowerCase();
   const status = error.status || error.code || error.statusCode;
@@ -194,6 +205,8 @@ export function isRetryableError(error) {
     message.includes('503') ||
     message.includes('service unavailable') ||
     message.includes('overloaded') ||
+    message.includes('stream_idle_timeout') ||
+    message.includes('stream timeout') ||
     message.includes('econnreset') ||
     message.includes('etimedout') ||
     message.includes('fetch failed')
@@ -231,8 +244,8 @@ export async function interruptibleSleep(ms, cancelChecker = null, checkInterval
  * @param {Function} fn Fungsi async yang dieksekusi: `async (attempt) => result`
  * @param {Object} options Opsi konfigurasi
  * @param {number} options.maxRetries Maksimal percobaan ulang per model (default: 4)
- * @param {number} options.initialDelayMs Jeda awal dalam ms (default: 10000 = 10s)
- * @param {number} options.backoffFactor Faktor pengali jeda (default: 2.5 -> 10s, 25s, 62.5s)
+ * @param {number} options.initialDelayMs Jeda awal dalam ms (default: 3000 = 3s)
+ * @param {number} options.backoffFactor Faktor pengali jeda (default: 2.0)
  * @param {Function} options.cancelChecker Fungsi pengecek apakah job dibatalkan
  * @param {Function} options.onRetry Callback log saat retry terjadi
  */
@@ -243,6 +256,9 @@ export async function callWithRetry(fn, options = {}) {
   const tpmResetWaitMs = options.tpmResetWaitMs !== undefined
     ? options.tpmResetWaitMs
     : (options.initialDelayMs !== undefined && options.initialDelayMs <= 100 ? options.initialDelayMs : 60000);
+  const overloadWaitMs = options.overloadWaitMs !== undefined
+    ? options.overloadWaitMs
+    : (options.initialDelayMs !== undefined && options.initialDelayMs <= 100 ? options.initialDelayMs : 5000);
   const failoverOn503 = options.failoverOn503 ?? false;
   const cancelChecker = options.cancelChecker ?? null;
   const onRetry = options.onRetry ?? null;
@@ -269,8 +285,12 @@ export async function callWithRetry(fn, options = {}) {
         throw err;
       }
 
-      if (failoverOn503 && isServerOverloaded(err)) {
-        throw err;
+      const isOverload = isServerOverloaded(err);
+      if (failoverOn503 && isOverload) {
+        const max503Attempts = typeof failoverOn503 === 'number' ? failoverOn503 : 2;
+        if (attempt >= max503Attempts) {
+          throw err;
+        }
       }
 
       const retryable = isRetryableError(err);
@@ -281,7 +301,7 @@ export async function callWithRetry(fn, options = {}) {
       }
 
       const isTpm = isTpmRateLimit(err);
-      const waitBase = isTpm ? tpmResetWaitMs : currentDelay;
+      const waitBase = isTpm ? tpmResetWaitMs : (isOverload ? overloadWaitMs : currentDelay);
       const jitter = Math.floor(Math.random() * 1000);
       const waitTime = Math.round(Math.max(waitBase, getRetryDelayMs(err)) + jitter);
 
@@ -292,6 +312,7 @@ export async function callWithRetry(fn, options = {}) {
           waitTimeMs: waitTime,
           error: err,
           isTpm,
+          isOverload,
         });
       }
 
