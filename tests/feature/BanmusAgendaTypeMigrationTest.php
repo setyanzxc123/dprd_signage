@@ -35,6 +35,7 @@ final class BanmusAgendaTypeMigrationTest extends CIUnitTestCase
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('jadwal_banmus');
+        $this->testDb->resetDataCache();
         $this->testDb->table('jadwal_banmus')->insertBatch([
             ['agenda' => 'Rapat Paripurna DPRD'],
             ['agenda' => 'Pelaksanaan Reses Anggota DPRD'],

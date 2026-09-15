@@ -364,7 +364,7 @@ $hasAudioFile = isset($hasAudioFile)
                 <div id="risalah_view_mode" class="space-y-6">
                     <div class="text-center border-b border-slate-200 dark:border-slate-800 pb-4 space-y-1">
                         <p class="text-xs font-semibold uppercase tracking-normal sm:tracking-widest text-slate-500 dark:text-slate-400">Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah</p>
-                        <h2 class="text-base sm:text-lg font-bold uppercase text-slate-900 dark:text-slate-100 tracking-wide">Naskah Risalah Resmi</h2>
+                        <h2 class="text-base sm:text-lg font-bold uppercase text-slate-900 dark:text-slate-100 tracking-wide">RISALAH RAPAT RESMI</h2>
                     </div>
 
                     <div id="risalah_preview_text" class="prose max-w-none text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap font-sans text-left">
@@ -589,7 +589,7 @@ $hasAudioFile = isset($hasAudioFile)
                     <div role="button" aria-disabled="true" class="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-slate-50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-600 cursor-not-allowed select-none" title="Transkrip dapat diunduh setelah proses AI selesai">
                         <i data-lucide="file-text" class="size-5"></i>
                         <span class="text-xs font-bold">Unduh Transkrip</span>
-                        <span class="text-[11px] font-medium">Belum Tersedia</span>
+                        <span class="text-[11px] font-medium">Belum Tersedia (Setelah proses selesai)</span>
                     </div>
                 <?php endif; ?>
 
@@ -605,7 +605,7 @@ $hasAudioFile = isset($hasAudioFile)
                     <div role="button" aria-disabled="true" class="border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-center bg-slate-50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-600 cursor-not-allowed select-none" title="Risalah dapat dicetak setelah proses AI selesai">
                         <i data-lucide="printer" class="size-5"></i>
                         <span class="text-xs font-bold">Cetak Risalah</span>
-                        <span class="text-[11px] font-medium">Belum Tersedia</span>
+                        <span class="text-[11px] font-medium">Belum Tersedia (Setelah proses selesai)</span>
                     </div>
                 <?php endif; ?>
 

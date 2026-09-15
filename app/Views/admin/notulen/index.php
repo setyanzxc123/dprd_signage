@@ -83,6 +83,8 @@
                                 <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                     <span><?= esc(date('d/m/Y', strtotime($tanggalRapat))) ?></span>
                                     <span>&bull;</span>
+                                    <span class="font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate max-w-[200px]" title="<?= esc($job['audio_filename']) ?>"><?= esc($job['audio_filename']) ?></span>
+                                    <span>&bull;</span>
                                     <?php if ($job['jadwal_type'] === 'banmus'): ?>
                                         <span class="font-semibold text-purple-600 dark:text-purple-400">Banmus</span>
                                     <?php else: ?>
