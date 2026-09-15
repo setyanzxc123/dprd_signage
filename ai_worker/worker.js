@@ -18,9 +18,9 @@ process.stderr?.on('error', (err) => {
 
 let dbPool = null;
 
-const LOCK_PATH = path.resolve(config.paths.logsDir, '..', 'worker.lock');
+export const LOCK_PATH = path.resolve(config.paths.logsDir, '..', 'worker.lock');
 
-function isPidAlive(pid) {
+export function isPidAlive(pid) {
   try {
     process.kill(pid, 0);
     return true;
@@ -33,7 +33,7 @@ function isPidAlive(pid) {
  * Kunci instance tunggal daemon: mencegah dua daemon berjalan bersamaan
  * (double-claim antrean). Lock basi (PID sudah mati) otomatis diambil alih.
  */
-function acquireDaemonLock() {
+export function acquireDaemonLock() {
   let existing = null;
   try {
     existing = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8'));
@@ -47,7 +47,7 @@ function acquireDaemonLock() {
   return { acquired: true, pid: process.pid };
 }
 
-function releaseDaemonLock() {
+export function releaseDaemonLock() {
   try {
     const existing = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8'));
     if (existing && existing.pid === process.pid) {
@@ -553,6 +553,12 @@ async function main() {
   // Mode 1: Single Job manual
   if (jobIdArg) {
     const targetJobId = parseInt(jobIdArg.split('=')[1], 10);
+    const lock = acquireDaemonLock();
+    if (!lock.acquired) {
+      log(`[Worker] Daemon sedang aktif (PID ${lock.pid}). Job #${targetJobId} sudah diantrekan dan akan diproses otomatis oleh daemon.`);
+      process.exit(0);
+    }
+
     const [rows] = await pool.query(
       `SELECT * FROM meeting_transcription_jobs WHERE id = ?`,
       [targetJobId]

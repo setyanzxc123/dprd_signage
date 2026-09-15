@@ -931,6 +931,17 @@ class NotulenService
         }
 
         try {
+            $lockFile = WRITEPATH . 'worker.lock';
+            if (is_file($lockFile)) {
+                $raw = @file_get_contents($lockFile);
+                $lockData = json_decode($raw ?: '', true);
+                if (is_array($lockData) && ! empty($lockData['pid'])) {
+                    if ($this->isProcessAlive((int) $lockData['pid'])) {
+                        return;
+                    }
+                }
+            }
+
             $workerScript = ROOTPATH . 'ai_worker' . DIRECTORY_SEPARATOR . 'worker.js';
             if (! file_exists($workerScript)) {
                 return;
@@ -944,8 +955,35 @@ class NotulenService
                 exec($command);
             }
         } catch (\Throwable) {
-            // Jangan gagalkan alur jika background trigger gagal dipanggil
+            // Abaikan kegagalan background trigger
         }
+    }
+
+    /**
+     * Cek apakah PID sistem operasi masih aktif.
+     */
+    private function isProcessAlive(int $pid): bool
+    {
+        if ($pid <= 0) {
+            return false;
+        }
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $output = [];
+            $ret = -1;
+            @exec('tasklist /nh /fi ' . escapeshellarg('PID eq ' . $pid), $output, $ret);
+            if ($ret === 0 && ! empty($output)) {
+                $line = trim($output[0] ?? '');
+                return $line !== '' && stripos($line, 'No tasks are running') === false && stripos($line, 'INFO:') === false;
+            }
+            return false;
+        }
+
+        if (function_exists('posix_kill')) {
+            return @posix_kill($pid, 0);
+        }
+
+        return file_exists('/proc/' . $pid);
     }
 
     /**
