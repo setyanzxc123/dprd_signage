@@ -145,3 +145,4 @@ writable/worker.lock
 
 # Session scratch artifacts
 temp/
+tmp/

@@ -8,9 +8,13 @@
     "watch:admin": "tailwindcss -i ./resources/css/admin.css -o ./public/assets/css/admin.css --watch",
     "build:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --minify",
     "build:signage-sw": "node scripts/build-signage-sw.mjs",
-    "watch:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --watch"
+    "watch:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --watch",
+    "lint:js": "eslint \"public/assets/js/**/*.js\" \"scripts/**/*.mjs\""
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
     "tailwindcss": "^4.3.1",
     "workbox-range-requests": "^7.4.1"
   },
