@@ -77,67 +77,100 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-            <!-- Background Task Monitor AI Dropdown -->
-            <div class="hs-dropdown relative inline-flex [--placement:bottom-right] [--strategy:fixed] sm:[--strategy:absolute]">
-                <button id="hs-dropdown-task-monitor" type="button" class="hs-dropdown-toggle relative inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" aria-haspopup="dialog" aria-expanded="false" aria-label="Antrean Proses AI" title="Antrean Proses AI">
-                    <i data-lucide="layers" class="size-4" id="task_monitor_icon"></i>
+            <!-- Unified Notification Hub Dropdown -->
+            <div class="hs-dropdown relative inline-flex [--placement:bottom-right] [--strategy:fixed] sm:[--strategy:absolute] [--auto-close:inside]">
+                <button id="hs-dropdown-notifications" type="button" class="hs-dropdown-toggle relative inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" aria-haspopup="dialog" aria-expanded="false" aria-label="Notifikasi Sistem" title="Notifikasi Sistem">
+                    <i data-lucide="bell" class="size-4" id="notification_hub_icon"></i>
                     <!-- Badge Counter / Indicator Dot -->
-                    <span id="task_monitor_badge" class="hidden absolute -top-1 -end-1 flex min-w-4 h-4 px-1 items-center justify-center rounded-full bg-rose-600 dark:bg-rose-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-pulse leading-none">
+                    <span id="notification_hub_badge" class="hidden absolute -top-1 -end-1 min-w-4 h-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-pulse leading-none">
                         0
                     </span>
                 </button>
 
                 <span id="csrf_global_token" class="hidden"><?= csrf_field() ?></span>
 
-                <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-md bg-white dark:bg-slate-900 shadow-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 z-50 mt-2 overflow-hidden" role="dialog" aria-label="Antrean Proses AI" aria-modal="false" aria-labelledby="hs-dropdown-task-monitor">
+                <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-md bg-white dark:bg-slate-900 shadow-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 z-50 mt-2 overflow-hidden" role="dialog" aria-label="Pusat Notifikasi & Aktivitas" aria-modal="false" aria-labelledby="hs-dropdown-notifications">
                     <!-- Header Dropdown -->
                     <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="activity" class="size-4 text-blue-600 dark:text-blue-400"></i>
-                            <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Antrean Proses AI</span>
+                            <i data-lucide="bell-ring" class="size-4 text-blue-600 dark:text-blue-400"></i>
+                            <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Pusat Notifikasi</span>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <span id="task_monitor_header_count" class="py-0.5 px-2 rounded-full text-[10px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                0 Aktif
+                            <span id="notification_hub_header_count" class="py-0.5 px-2 rounded-full text-[10px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                Semua Aman
                             </span>
-                            <button type="button" id="btn_task_monitor_refresh" class="size-7 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" title="Perbarui Status" aria-label="Perbarui status antrean">
+                            <button type="button" id="btn_notification_hub_refresh" class="size-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" title="Perbarui Notifikasi" aria-label="Perbarui notifikasi">
                                 <i data-lucide="rotate-cw" class="size-3.5"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Body List: Active Tasks & Recent History -->
-                    <div id="task_monitor_body" class="max-h-[65vh] sm:max-h-80 overflow-y-auto p-3 space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60">
-                        <!-- Active Tasks Section -->
-                        <div id="task_monitor_active_container" class="space-y-2 hidden">
-                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
-                                Sedang Berjalan
+                    <!-- Preline Tabs Nav -->
+                    <div class="px-3 pt-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+                        <nav class="flex gap-x-1 p-0.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl" aria-label="Tabs" role="tablist">
+                            <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-1.5 px-3 flex-1 inline-flex justify-center items-center gap-x-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition active cursor-pointer" id="notif-tab-alerts-btn" aria-selected="true" data-hs-tab="#notif-tab-alerts" aria-controls="notif-tab-alerts" role="tab">
+                                <span class="truncate">Peringatan</span>
+                                <span id="tab_alerts_count_pill" class="hidden py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-rose-500 text-white leading-none ring-1 ring-white/20">0</span>
+                            </button>
+                            <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-1.5 px-3 flex-1 inline-flex justify-center items-center gap-x-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition cursor-pointer" id="notif-tab-ai-btn" aria-selected="false" data-hs-tab="#notif-tab-ai" aria-controls="notif-tab-ai" role="tab">
+                                <span class="truncate">Antrean AI</span>
+                                <span id="tab_ai_count_pill" class="hidden py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-blue-600 text-white leading-none ring-1 ring-white/20">0</span>
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Content Panes -->
+                    <div class="min-h-[220px] max-h-[60vh] sm:max-h-80 overflow-y-auto p-3">
+                        <!-- Pane 1: Peringatan Sistem -->
+                        <div id="notif-tab-alerts" role="tabpanel" aria-labelledby="notif-tab-alerts-btn" class="space-y-2.5">
+                            <div id="notif_alerts_list" class="space-y-2"></div>
+                            <!-- Empty state for Alerts -->
+                            <div id="notif_alerts_empty" class="py-6 text-center text-slate-500 dark:text-slate-400 space-y-1.5">
+                                <div class="size-8 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                                    <i data-lucide="check-circle-2" class="size-4"></i>
+                                </div>
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Semua Sistem Normal</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Tidak ada kendala pada koneksi gateway atau layanan.</p>
                             </div>
-                            <div id="task_monitor_active_list" class="space-y-2"></div>
                         </div>
 
-                        <!-- Recent Finished Section -->
-                        <div id="task_monitor_recent_container" class="space-y-2 pt-2 hidden">
-                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
-                                Baru Selesai
+                        <!-- Pane 2: Antrean AI -->
+                        <div id="notif-tab-ai" class="hidden space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60" role="tabpanel" aria-labelledby="notif-tab-ai-btn">
+                            <!-- Active Tasks Section -->
+                            <div id="task_monitor_active_container" class="space-y-2 hidden">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                                    Sedang Berjalan
+                                </div>
+                                <div id="task_monitor_active_list" class="space-y-2"></div>
                             </div>
-                            <div id="task_monitor_recent_list" class="space-y-1.5"></div>
-                        </div>
 
-                        <!-- Empty State -->
-                        <div id="task_monitor_empty" class="py-6 text-center text-slate-500 dark:text-slate-400 space-y-1.5">
-                            <div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
-                                <i data-lucide="check-circle" class="size-4"></i>
+                            <!-- Recent Finished Section -->
+                            <div id="task_monitor_recent_container" class="space-y-2 pt-2 hidden">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                                    Baru Selesai
+                                </div>
+                                <div id="task_monitor_recent_list" class="space-y-1.5"></div>
                             </div>
-                            <p class="text-xs font-medium text-slate-700 dark:text-slate-300">Tidak ada proses AI yang berjalan</p>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Antrean pemrosesan notulensi sedang kosong.</p>
+
+                            <!-- Empty State AI -->
+                            <div id="task_monitor_empty" class="py-6 text-center text-slate-500 dark:text-slate-400 space-y-1.5">
+                                <div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+                                    <i data-lucide="layers" class="size-4"></i>
+                                </div>
+                                <p class="text-xs font-medium text-slate-700 dark:text-slate-300">Tidak ada proses AI yang berjalan</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Antrean pemrosesan notulensi sedang kosong.</p>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Footer Dropdown -->
-                    <div class="px-3 py-2.5 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 text-center">
-                        <a href="<?= base_url('admin/notulen') ?>" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden rounded-md px-2 py-1">
-                            <span>Buka Notulensi &amp; Risalah AI</span>
+                    <div class="px-3 py-2 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <a href="<?= base_url('admin/pengaturan') ?>" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition font-medium">
+                            Pengaturan
+                        </a>
+                        <a href="<?= base_url('admin/notulen') ?>" class="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition">
+                            <span>Buka Risalah AI</span>
                             <i data-lucide="chevron-right" class="size-3.5"></i>
                         </a>
                     </div>

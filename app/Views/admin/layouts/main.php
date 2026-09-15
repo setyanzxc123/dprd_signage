@@ -157,6 +157,8 @@ $flashError = session()->getFlashdata('error');
     </div>
     <?php endif; ?>
 
+    <?= $this->include('admin/layouts/_wa_pairing_modal') ?>
+
     <?= $this->renderSection('scripts') ?>
 
 </body>

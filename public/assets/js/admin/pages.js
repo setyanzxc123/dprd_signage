@@ -758,11 +758,19 @@
                 showError(errorMessage(error));
             }
         });
+    }
+
+    document.addEventListener('DOMContentLoaded', initSettingsPage);
+})();
+
+(() => {
+    function initWaManagement() {
+        const modalWaPairing = document.getElementById('modal_wa_pairing');
+        const waPrimaryStatus = document.getElementById('wa-primary-status');
+        if (!modalWaPairing && !waPrimaryStatus) return;
 
         const refreshWaBtn = document.getElementById('btn-refresh-wa-status');
         const refreshWaIcon = document.getElementById('icon-refresh-wa');
-        const waPrimaryStatus = document.getElementById('wa-primary-status');
-        const modalWaPairing = document.getElementById('modal_wa_pairing');
         const waQrLoading = document.getElementById('wa-qr-loading');
         const waQrImage = document.getElementById('wa-qr-image');
         const waQrError = document.getElementById('wa-qr-error');
@@ -850,6 +858,9 @@
                     if (isWaModalOpen()) closeWaPairingModal();
                     stopWaPolling();
                     renderConnectedStatus(gw);
+                    if (typeof window.refreshNotificationHub === 'function') {
+                        window.refreshNotificationHub();
+                    }
                     return;
                 }
 
@@ -883,6 +894,7 @@
                 }
             }
         };
+        window.loadWaQrCode = loadWaQrCode;
 
         const renderConnectedStatus = (gw) => {
             if (!waPrimaryStatus) return;
@@ -896,7 +908,7 @@
                     Nomor Pengirim: <strong>+${gw.phone || '-'}</strong>${nameStr}
                 </p>
                 <div class="flex flex-wrap gap-2 pt-2">
-                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition dark:border-rose-900/60 dark:text-rose-400 dark:hover:bg-rose-950/30 cursor-pointer" id="btn-wa-logout" data-hs-overlay="#modal_wa_logout">
                         <i data-lucide="log-out" class="size-4"></i>
                         <span>Putuskan Perangkat</span>
                     </button>
@@ -933,8 +945,8 @@
                 </p>
                 ${fallbackHtml}
                 <div class="pt-2">
-                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-xs transition" id="wa-qr-btn"
-                        data-hs-overlay="#modal_wa_pairing" onclick="window.switchWaTab('qr');">
+                    <button type="button" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-xs transition cursor-pointer" id="wa-qr-btn"
+                        data-hs-overlay="#modal_wa_pairing" onclick="window.switchWaTab('qr'); window.loadWaQrCode && window.loadWaQrCode();">
                         <i data-lucide="qr-code" class="size-4"></i>
                         <span>Tautkan Nomor WhatsApp</span>
                     </button>
@@ -947,7 +959,7 @@
 
         let isWaChecking = false;
         const checkWaStatus = async (updateQrIfModalOpen = false) => {
-            if (!waPrimaryStatus || isWaChecking) return;
+            if (isWaChecking) return;
             isWaChecking = true;
 
             try {
@@ -964,6 +976,9 @@
                     if (isWaModalOpen()) closeWaPairingModal();
                     stopWaPolling();
                     renderConnectedStatus(gw);
+                    if (typeof window.refreshNotificationHub === 'function') {
+                        window.refreshNotificationHub();
+                    }
                     return;
                 }
 
@@ -1007,6 +1022,9 @@
                         stopWaPolling();
                         renderDisconnectedStatus(gw.error || 'Nomor WhatsApp belum terhubung ke sistem.', canFallback);
                     }
+                    if (typeof window.refreshNotificationHub === 'function') {
+                        window.refreshNotificationHub();
+                    }
                 } catch (e) {
                     stopWaPolling();
                     renderDisconnectedStatus('Gagal terhubung ke layanan WhatsApp.');
@@ -1030,6 +1048,12 @@
         }
 
         if (modalWaPairing) {
+            modalWaPairing.addEventListener('open.hs.overlay', () => {
+                window.closeNotificationHub?.();
+                window.switchWaTab('qr');
+                loadWaQrCode();
+                startWaPolling(3000);
+            });
             modalWaPairing.addEventListener('close', () => {
                 stopWaPolling();
             });
@@ -1062,7 +1086,9 @@
                 if (boxPairResult) boxPairResult.hidden = true;
 
                 try {
-                    const csrfInput = form.querySelector('input[name="<?= csrf_token() ?>"]') || document.querySelector('input[name="csrf_test_name"]');
+                    const csrfInput = document.querySelector('#csrf_global_token input') ||
+                                      document.querySelector('input[name="csrf_token_name"]') ||
+                                      document.querySelector('input[name^="csrf_"]');
                     const csrfName = csrfInput ? csrfInput.name : 'csrf_test_name';
                     const csrfHash = csrfInput ? csrfInput.value : '';
 
@@ -1084,7 +1110,6 @@
                     if (textPairingCode) textPairingCode.textContent = data.pairing_code;
                     if (boxPairResult) boxPairResult.hidden = false;
 
-                    // Mulai polling cepat mendeteksi saat user menginput kode di WhatsApp HP
                     startWaPolling(2000);
                 } catch (err) {
                     if (boxPairError) {
@@ -1099,7 +1124,6 @@
             });
         }
 
-        // Tombol putuskan perangkat dirender ulang dinamis, gunakan delegasi pada kontainer status
         const modalWaLogout = document.getElementById('modal_wa_logout');
         const waLogoutError = document.getElementById('wa-logout-error');
 
@@ -1150,7 +1174,9 @@
                 if (waLogoutError) waLogoutError.hidden = true;
 
                 try {
-                    const csrfInput = form.querySelector('input[name="<?= csrf_token() ?>"]') || document.querySelector('input[name="csrf_test_name"]');
+                    const csrfInput = document.querySelector('#csrf_global_token input') ||
+                                      document.querySelector('input[name="csrf_token_name"]') ||
+                                      document.querySelector('input[name^="csrf_"]');
                     const csrfName = csrfInput ? csrfInput.name : 'csrf_test_name';
                     const csrfHash = csrfInput ? csrfInput.value : '';
 
@@ -1171,6 +1197,9 @@
                     closeWaLogoutModal();
                     stopWaPolling();
                     renderDisconnectedStatus(data.message || 'Sesi WhatsApp telah diputus. Lakukan pairing ulang untuk menghubungkan kembali.');
+                    if (typeof window.refreshNotificationHub === 'function') {
+                        window.refreshNotificationHub();
+                    }
                 } catch (err) {
                     if (waLogoutError) {
                         waLogoutError.textContent = err.message || 'Terjadi kesalahan sistem.';
@@ -1187,7 +1216,7 @@
         window.addEventListener('pagehide', stopWaPolling, { once: true });
     }
 
-    document.addEventListener('DOMContentLoaded', initSettingsPage);
+    document.addEventListener('DOMContentLoaded', initWaManagement);
 })();
 
 (function() {
@@ -3407,15 +3436,27 @@
     });
 })();
 
-// Global Background Task Monitor AI for Admin Topbar
+// Notification Center & Activity Monitor for Admin Topbar
 (() => {
-    const dropdownToggle = document.getElementById('hs-dropdown-task-monitor');
+    const dropdownToggle = document.getElementById('hs-dropdown-notifications') ||
+                           document.getElementById('hs-dropdown-task-monitor');
     if (!dropdownToggle) return;
 
-    const badgeEl = document.getElementById('task_monitor_badge');
-    const iconEl = document.getElementById('task_monitor_icon');
-    const headerCountEl = document.getElementById('task_monitor_header_count');
-    const refreshBtn = document.getElementById('btn_task_monitor_refresh');
+    const badgeEl = document.getElementById('notification_hub_badge') ||
+                    document.getElementById('task_monitor_badge');
+    const iconEl = document.getElementById('notification_hub_icon') ||
+                   document.getElementById('task_monitor_icon');
+    const headerCountEl = document.getElementById('notification_hub_header_count') ||
+                          document.getElementById('task_monitor_header_count');
+    const refreshBtn = document.getElementById('btn_notification_hub_refresh') ||
+                       document.getElementById('btn_task_monitor_refresh');
+
+    const tabAlertsPill = document.getElementById('tab_alerts_count_pill');
+    const tabAiPill = document.getElementById('tab_ai_count_pill');
+
+    const alertsListEl = document.getElementById('notif_alerts_list');
+    const alertsEmptyEl = document.getElementById('notif_alerts_empty');
+
     const activeContainer = document.getElementById('task_monitor_active_container');
     const activeListEl = document.getElementById('task_monitor_active_list');
     const recentContainer = document.getElementById('task_monitor_recent_container');
@@ -3453,39 +3494,34 @@
         return '';
     };
 
-    const getCsrfHeaders = () => {
-        const headers = {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        };
-        const csrfInput = document.querySelector('input[name="csrf_token_name"]') ||
-                          document.querySelector('meta[name="csrf-token"]') ||
-                          document.querySelector('input[name^="csrf_"]');
-        if (csrfInput) {
-            const tokenName = csrfInput.getAttribute('name') || 'X-CSRF-TOKEN';
-            const tokenValue = csrfInput.value || csrfInput.getAttribute('content');
-            if (tokenValue) {
-                headers[tokenName] = tokenValue;
-            }
-        }
-        return headers;
-    };
+    const renderNotifications = (data) => {
+        const summary = data.summary || {};
+        const alerts = data.alerts || [];
+        const aiTasks = data.ai_tasks || {};
+        const activeTasks = aiTasks.active || [];
+        const recentTasks = aiTasks.recent || [];
 
-    const renderTasks = (data) => {
-        const activeTasks = data.active || [];
-        const recentTasks = data.recent || [];
-        const activeCount = data.active_count || activeTasks.length;
-        const hasActive = activeCount > 0;
+        const activeCount = Number(summary.active_tasks_count ?? aiTasks.active_count ?? activeTasks.length) || 0;
+        const criticalCount = Number(summary.unread_critical_count ?? 0);
+        const warningCount = Number(summary.warning_count ?? 0);
+        const alertsCount = Number(summary.alerts_count ?? alerts.length) || 0;
+        const totalBadgeCount = Number(summary.badge_count ?? (activeCount + alertsCount)) || 0;
+        const badgeTone = summary.badge_tone || (criticalCount > 0 ? 'danger' : (warningCount > 0 ? 'warning' : (activeCount > 0 ? 'info' : 'none')));
 
-        // Skip redundant DOM rebuilds when task state has not changed
         const currentSignature = JSON.stringify({
+            criticalCount,
+            warningCount,
+            alertsCount,
             activeCount,
+            totalBadgeCount,
+            badgeTone,
+            alerts: alerts.map((a) => [a.id, a.category, a.severity, a.title, a.message]),
             active: activeTasks.map((t) => [t.id, t.status, t.progress_percent, t.current_step, t.cancel_requested]),
             recent: recentTasks.map((t) => [t.id, t.status])
         });
 
         if (currentSignature === lastRenderedSignature) {
-            const nextInterval = hasActive ? 4500 : 45000;
+            const nextInterval = activeCount > 0 ? 4500 : ((criticalCount > 0 || alertsCount > 0) ? 15000 : 45000);
             if (pollInterval !== nextInterval) {
                 pollInterval = nextInterval;
                 restartPolling();
@@ -3495,19 +3531,30 @@
         lastRenderedSignature = currentSignature;
 
         if (dropdownToggle) {
-            dropdownToggle.setAttribute('aria-label', hasActive
-                ? `Antrean Proses AI (${activeCount} proses aktif)`
-                : 'Antrean Proses AI');
-            dropdownToggle.setAttribute('title', hasActive
-                ? `Antrean Proses AI (${activeCount} proses aktif)`
-                : 'Antrean Proses AI');
+            let label = 'Pusat Notifikasi & Aktivitas';
+            if (criticalCount > 0) {
+                label += ` (${criticalCount} kritis)`;
+            } else if (alertsCount > 0) {
+                label += ` (${alertsCount} perhatian)`;
+            } else if (activeCount > 0) {
+                label += ` (${activeCount} proses AI aktif)`;
+            }
+            dropdownToggle.setAttribute('aria-label', label);
+            dropdownToggle.setAttribute('title', label);
         }
 
         if (badgeEl) {
-            if (hasActive) {
-                badgeEl.textContent = activeCount > 9 ? '9+' : String(activeCount);
+            if (totalBadgeCount > 0) {
+                badgeEl.textContent = totalBadgeCount > 9 ? '9+' : String(totalBadgeCount);
                 badgeEl.classList.remove('hidden');
                 badgeEl.classList.add('flex');
+                if (badgeTone === 'danger') {
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-pulse leading-none';
+                } else if (badgeTone === 'warning') {
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white shadow-xs motion-safe:animate-none leading-none';
+                } else {
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-none leading-none';
+                }
             } else {
                 badgeEl.classList.add('hidden');
                 badgeEl.classList.remove('flex');
@@ -3515,22 +3562,137 @@
         }
 
         if (iconEl) {
-            if (hasActive) {
+            iconEl.classList.remove('text-rose-600', 'dark:text-rose-400', 'text-amber-500', 'dark:text-amber-400', 'text-blue-600', 'dark:text-blue-400');
+            if (badgeTone === 'danger') {
+                iconEl.classList.add('text-rose-600', 'dark:text-rose-400');
+            } else if (badgeTone === 'warning') {
+                iconEl.classList.add('text-amber-500', 'dark:text-amber-400');
+            } else if (badgeTone === 'info') {
                 iconEl.classList.add('text-blue-600', 'dark:text-blue-400');
-            } else {
-                iconEl.classList.remove('text-blue-600', 'dark:text-blue-400');
             }
         }
 
         if (headerCountEl) {
-            headerCountEl.textContent = hasActive ? `${activeCount} Aktif` : '0 Aktif';
-            if (hasActive) {
+            if (criticalCount > 0) {
+                headerCountEl.textContent = `${criticalCount} Kritis`;
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300';
+            } else if (alertsCount > 0) {
+                headerCountEl.textContent = `${alertsCount} Perhatian`;
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300';
+            } else if (activeCount > 0) {
+                headerCountEl.textContent = `${activeCount} AI Aktif`;
                 headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300';
             } else {
+                headerCountEl.textContent = 'Semua Aman';
                 headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
             }
         }
 
+        if (tabAlertsPill) {
+            if (alertsCount > 0) {
+                tabAlertsPill.textContent = String(alertsCount);
+                tabAlertsPill.classList.remove('hidden');
+                if (criticalCount > 0) {
+                    tabAlertsPill.className = 'py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-rose-500 text-white leading-none ring-1 ring-white/20';
+                } else {
+                    tabAlertsPill.className = 'py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-amber-500 text-white leading-none ring-1 ring-white/20';
+                }
+            } else {
+                tabAlertsPill.classList.add('hidden');
+            }
+        }
+
+        if (tabAiPill) {
+            if (activeCount > 0) {
+                tabAiPill.textContent = String(activeCount);
+                tabAiPill.classList.remove('hidden');
+            } else {
+                tabAiPill.classList.add('hidden');
+            }
+        }
+
+        if (alertsListEl) {
+            if (alerts.length > 0) {
+                alertsListEl.innerHTML = alerts.map((alert) => {
+                    const isCritical = alert.severity === 'critical';
+                    const isInfo = alert.severity === 'info';
+
+                    let iconName = 'alert-triangle';
+                    if (alert.category === 'schedule_conflict') {
+                        iconName = 'calendar-x-2';
+                    } else if (alert.category === 'unassigned_room') {
+                        iconName = 'map-pin-off';
+                    } else if (alert.category === 'pending_minutes') {
+                        iconName = 'file-check';
+                    } else if (alert.category === 'signage_media') {
+                        iconName = 'video-off';
+                    } else if (alert.category === 'weather') {
+                        iconName = 'cloud-rain';
+                    } else if (isInfo) {
+                        iconName = 'info';
+                    }
+
+                    let cardBg = 'border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20';
+                    let titleColor = 'text-amber-800 dark:text-amber-300';
+                    let iconColor = 'text-amber-600 dark:text-amber-400';
+
+                    if (isCritical) {
+                        cardBg = 'border-rose-200 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/20';
+                        titleColor = 'text-rose-700 dark:text-rose-300';
+                        iconColor = 'text-rose-600 dark:text-rose-400';
+                    } else if (isInfo) {
+                        cardBg = 'border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/20';
+                        titleColor = 'text-blue-800 dark:text-blue-300';
+                        iconColor = 'text-blue-600 dark:text-blue-400';
+                    }
+
+                    let actionHtml = '';
+                    if (alert.action_type === 'modal' && alert.action_target) {
+                        actionHtml = `
+                            <button type="button" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-xs transition cursor-pointer" data-hs-overlay="${escapeHtml(alert.action_target)}" onclick="window.closeNotificationHub && window.closeNotificationHub(); window.switchWaTab && window.switchWaTab('qr'); window.loadWaQrCode && window.loadWaQrCode();">
+                                <i data-lucide="qr-code" class="size-3.5"></i>
+                                <span>${escapeHtml(alert.action_label || 'Tautkan')}</span>
+                            </button>
+                        `;
+                    } else if (alert.action_url) {
+                        const btnClass = isCritical
+                            ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                            : 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white';
+                        actionHtml = `
+                            <a href="${escapeHtml(alert.action_url)}" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg ${btnClass} font-semibold text-xs shadow-xs transition">
+                                <span>${escapeHtml(alert.action_label || 'Lihat')}</span>
+                                <i data-lucide="arrow-right" class="size-3"></i>
+                            </a>
+                        `;
+                    }
+
+                    return `
+                        <div class="p-3 rounded-xl border ${cardBg} space-y-2">
+                            <div class="flex items-start gap-2.5">
+                                <div class="p-1 rounded-lg bg-white/80 dark:bg-slate-900/80 shadow-xs shrink-0 mt-0.5">
+                                    <i data-lucide="${iconName}" class="size-4 ${iconColor}"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="text-xs font-bold ${titleColor} leading-tight">
+                                        ${escapeHtml(alert.title)}
+                                    </h4>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                        ${escapeHtml(alert.message)}
+                                    </p>
+                                </div>
+                            </div>
+                            ${actionHtml ? `<div class="flex justify-end pt-1">${actionHtml}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+                alertsEmptyEl?.classList.add('hidden');
+            } else {
+                alertsListEl.innerHTML = '';
+                alertsEmptyEl?.classList.remove('hidden');
+            }
+        }
+
+        const hasActive = activeCount > 0;
         if (hasActive && activeListEl && activeContainer) {
             activeContainer.classList.remove('hidden');
             emptyEl?.classList.add('hidden');
@@ -3628,14 +3790,14 @@
             window.lucide.createIcons();
         }
 
-        const nextInterval = hasActive ? 4500 : 45000;
+        const nextInterval = activeCount > 0 ? 4500 : (criticalCount > 0 ? 15000 : 45000);
         if (pollInterval !== nextInterval) {
             pollInterval = nextInterval;
             restartPolling();
         }
     };
 
-    const fetchTasks = async () => {
+    const fetchNotifications = async () => {
         if (isFetching || document.hidden) return;
         isFetching = true;
 
@@ -3646,7 +3808,7 @@
 
         try {
             const currentOrigin = window.location.origin;
-            const res = await fetch(`${currentOrigin}/admin/notulen/active-tasks`, {
+            const res = await fetch(`${currentOrigin}/admin/notifications/feed`, {
                 signal: abortController.signal,
                 headers: {
                     'Accept': 'application/json',
@@ -3657,7 +3819,7 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const json = await res.json();
             if (json && json.status === 'success' && json.data) {
-                renderTasks(json.data);
+                renderNotifications(json.data);
             }
         } catch (e) {
             if (e.name !== 'AbortError') {
@@ -3668,20 +3830,33 @@
         }
     };
 
+    window.refreshNotificationHub = () => {
+        lastRenderedSignature = null;
+        fetchNotifications();
+    };
+
+    window.closeNotificationHub = () => {
+        const toggle = document.getElementById('hs-dropdown-notifications') ||
+                       document.getElementById('hs-dropdown-task-monitor');
+        if (toggle && window.HSDropdown && typeof window.HSDropdown.close === 'function') {
+            window.HSDropdown.close(toggle);
+        }
+    };
+
     const restartPolling = () => {
         if (pollTimer) {
             clearInterval(pollTimer);
         }
-        pollTimer = setInterval(fetchTasks, pollInterval);
+        pollTimer = setInterval(fetchNotifications, pollInterval);
     };
 
-    // Close task monitor dropdown when confirmation modal is opened
     document.addEventListener('submit', (e) => {
         const form = e.target.closest('#task_monitor_active_list form[data-confirm-message]');
         if (!form) return;
-        const dropdownToggleEl = document.getElementById('hs-dropdown-task-monitor');
-        if (dropdownToggleEl && window.HSDropdown && typeof window.HSDropdown.close === 'function') {
-            window.HSDropdown.close(dropdownToggleEl);
+        const toggle = document.getElementById('hs-dropdown-notifications') ||
+                       document.getElementById('hs-dropdown-task-monitor');
+        if (toggle && window.HSDropdown && typeof window.HSDropdown.close === 'function') {
+            window.HSDropdown.close(toggle);
         }
     });
 
@@ -3689,7 +3864,7 @@
         refreshBtn.addEventListener('click', () => {
             refreshBtn.classList.add('motion-safe:animate-spin');
             lastRenderedSignature = null;
-            fetchTasks().finally(() => {
+            fetchNotifications().finally(() => {
                 setTimeout(() => refreshBtn.classList.remove('motion-safe:animate-spin'), 600);
             });
         });
@@ -3697,11 +3872,11 @@
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-            fetchTasks();
+            fetchNotifications();
         }
     });
 
-    fetchTasks();
+    fetchNotifications();
     restartPolling();
 
     window.addEventListener('pagehide', () => {

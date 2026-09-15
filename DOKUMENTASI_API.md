@@ -45,6 +45,7 @@ Authorization: Bearer <access_token>
 | `GET`  | `/admin/pengaturan/whatsapp/status` | Bearer Admin | Status koneksi WhatsApp Gateway Baileys & kesiapan fallback |
 | `POST` | `/admin/pengaturan/whatsapp/pair-code` | Bearer Admin | Minta kode pairing WhatsApp perangkat dinas |
 | `POST` | `/admin/pengaturan/whatsapp/logout` | Bearer Admin | Putus sesi WhatsApp perangkat dinas |
+| `GET`  | `/admin/notifications` | Bearer Admin | Feed notifikasi terpadu (peringatan sistem & antrean AI) |
 | `GET`  | `/api/signage/jadwal` | Publik | Data jadwal TV signage |
 | `GET`  | `/api/signage/cuaca` | Publik | Data cuaca BMKG |
 
@@ -696,7 +697,114 @@ Status Code:
 
 ---
 
-## 9. Format Error Response
+## 9. Pusat Notifikasi & Aktivitas Admin (`/admin/notifications`)
+
+Endpoint pada modul ini dirancang untuk monitoring terpusat pada mobile app admin dan web admin. Memerlukan token Bearer dengan hak akses `admin` atau `superadmin`.
+
+### `GET /admin/notifications`
+* **Deskripsi**: Mengambil data rekapitulasi notifikasi satu pintu, peringatan operasional real-time (koneksi WhatsApp Gateway, konflik ruangan rapat, agenda tanpa ruangan, risalah AI draf, integritas media signage, dan cuaca BMKG), serta progres antrean AI risalah/transkripsi.
+* **Hak Akses**: Bearer Admin (`admin` / `superadmin`).
+
+Response `200 OK`:
+```json
+{
+  "status": "success",
+  "data": {
+    "summary": {
+      "unread_critical_count": 1,
+      "warning_count": 2,
+      "alerts_count": 3,
+      "active_tasks_count": 1,
+      "badge_tone": "danger",
+      "badge_count": 4
+    },
+    "alerts": [
+      {
+        "id": "schedule-conflict-a1b2c3d4e5f6",
+        "category": "schedule_conflict",
+        "severity": "critical",
+        "title": "Konflik Ruangan Rapat",
+        "message": "Jadwal bentrok di Ruang Baruga pada 18/09/2026: Rapat Komisi I (09:00-11:00) dan Rapat Badan Anggaran (10:00-12:00).",
+        "action_label": "Buka Kalender",
+        "action_type": "url",
+        "action_target": null,
+        "action_url": "http://localhost:8081/admin/agenda-workspace/kalender?month=2026-09&lokasi=Ruang+Baruga",
+        "created_at": "2026-09-14T15:00:00+08:00"
+      },
+      {
+        "id": "unassigned-room-umum-45",
+        "category": "unassigned_room",
+        "severity": "warning",
+        "title": "Agenda Belum Menentukan Ruangan",
+        "message": "Agenda \"Rapat Kerja Komisi II\" (Hari Ini) belum ditentukan ruangan atau lokasinya.",
+        "action_label": "Tentukan Lokasi",
+        "action_type": "url",
+        "action_target": null,
+        "action_url": "http://localhost:8081/admin/jadwal-umum/45/edit",
+        "created_at": "2026-09-14T15:00:00+08:00"
+      },
+      {
+        "id": "pending-minutes-review",
+        "category": "pending_minutes",
+        "severity": "warning",
+        "title": "Risalah AI Menunggu Verifikasi",
+        "message": "Terdapat 2 risalah hasil transkripsi AI yang telah selesai dan siap diverifikasi operator.",
+        "action_label": "Tinjau Risalah",
+        "action_type": "url",
+        "action_target": null,
+        "action_url": "http://localhost:8081/admin/notulen",
+        "created_at": "2026-09-14T15:00:00+08:00"
+      }
+    ],
+    "ai_tasks": {
+      "active_count": 1,
+      "active": [
+        {
+          "id": 15,
+          "status": "transcribing",
+          "progress_percent": 60,
+          "current_step": "Transkripsi audio bagian 3 dari 5"
+        }
+      ],
+      "recent": [
+        {
+          "id": 12,
+          "status": "completed",
+          "status_label": "Selesai",
+          "judul": "Rapat Paripurna Masa Sidang I",
+          "tanggal": "14 Sep 2026",
+          "url": "http://localhost:8081/admin/notulen"
+        }
+      ]
+    }
+  }
+}
+```
+
+Bidang Data Ringkasan (`summary`):
+* `unread_critical_count`: Jumlah kendala sistem berkategori kritis (`critical`) seperti gateway terputus atau jadwal bentrok.
+* `warning_count`: Jumlah peringatan operasional (`warning`) seperti agenda tanpa ruangan atau risalah draf.
+* `alerts_count`: Total seluruh alert aktif.
+* `active_tasks_count`: Jumlah proses worker AI yang sedang aktif berjalan di latar belakang.
+* `badge_tone`: Warna status lencana notifikasi (`none` = sembunyi, `info` = biru/AI aktif, `warning` = amber/peringatan, `danger` = merah/kritis).
+* `badge_count`: Total akumulasi badge untuk ikon lonceng notifikasi di antarmuka.
+
+Kategori Notifikasi (`alerts[].category`):
+* `whatsapp`: Status konektivitas WhatsApp Gateway dinas (Baileys).
+* `schedule_conflict`: Deteksi bentrok jadwal ruangan rapat pada tanggal dan jam tumpang tindih.
+* `unassigned_room`: Agenda rapat aktif H-0 dan H-1 yang belum memiliki ruangan/lokasi definitif.
+* `pending_minutes`: Notulensi/risalah rapat hasil AI berstatus `draft` yang menunggu peninjauan operator.
+* `signage_media`: Validitas file media video/gambar signage dan teks berjalan (*running text*).
+* `weather`: Status sinkronisasi cuaca BMKG untuk display signage gedung.
+
+Status Code:
+* `200 OK`: Berhasil mengambil data feed notifikasi.
+* `401 Unauthorized`: Token Bearer tidak valid atau belum disertakan.
+* `403 Forbidden`: Token bukan milik akun dengan grup `admin` / `superadmin`.
+
+---
+
+## 10. Format Error Response
 
 Format respons saat terjadi kesalahan:
 ```json

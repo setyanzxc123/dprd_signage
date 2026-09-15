@@ -6,7 +6,7 @@ use App\Models\JadwalBanmusModel;
 use App\Models\JadwalUmumModel;
 use CodeIgniter\Database\BaseConnection;
 
-final class AgendaWorkspaceService
+class AgendaWorkspaceService
 {
     private const SOURCE_LABELS = [
         'banmus'       => 'Agenda Banmus',

@@ -132,6 +132,9 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('notulen/unfinalize/(:num)',          'Admin\NotulenController::unfinalizeMinutes/$1');
     $routes->get( 'notulen/export-pdf/(:num)',          'Admin\NotulenController::exportPdf/$1');
 
+    // Pusat Notifikasi Terpadu
+    $routes->get( 'notifications/feed',                 'Admin\NotificationController::feed');
+
     // Pengaturan Signage & Integrasi
     $routes->get( 'pengaturan',                    'Admin\SettingController::index');
     $routes->get( 'pengaturan/whatsapp/status',    'Admin\SettingController::whatsappStatus');
@@ -187,8 +190,9 @@ $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1', 'filter'
 
 // API v1 CRUD admin (bearer token + grup admin)
 $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'apiadmin']], static function ($routes) {
-    $routes->get('admin/agenda', 'AdminAgendaController::index');
-    $routes->get('admin/profil', 'AdminProfileController::index');
+    $routes->get('admin/agenda',        'AdminAgendaController::index');
+    $routes->get('admin/notifications', 'AdminNotificationController::index');
+    $routes->get('admin/profil',        'AdminProfileController::index');
     $routes->put('admin/profil', 'AdminProfileController::update');
     $routes->patch('admin/profil', 'AdminProfileController::update');
 
