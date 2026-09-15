@@ -175,30 +175,6 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertSame('RATE_LIMITED', $result->errorCode);
     }
 
-    public function testSendMessageSendsPayloadToGateway(): void
-    {
-        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
-            'status'  => 'success',
-            'message' => 'Pesan berhasil dikirim via WhatsApp.',
-            'data'    => [
-                'messageId'      => 'MSG-SEND-1',
-                'server_ack'     => true,
-                'ack_elapsed_ms' => 180,
-            ],
-        ], JSON_THROW_ON_ERROR)));
-        $provider = new BaileysProvider($transport, $this->config());
-
-        $result = $provider->sendMessage('628123456789', 'Pemberitahuan rapat.');
-
-        $this->assertTrue($result->success);
-        $this->assertSame('MSG-SEND-1', $result->messageId);
-        $this->assertTrue($result->serverAck);
-        $this->assertSame('http://127.0.0.1:3001/send-message', $transport->url);
-        $this->assertSame('628123456789', $transport->payload['to']);
-        $this->assertSame('Pemberitahuan rapat.', $transport->payload['message']);
-        $this->assertTrue($transport->payload['wait_for_ack']);
-    }
-
     public function testGetStatusReturnsConnectedDetailsWhenOnline(): void
     {
         $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
@@ -403,12 +379,6 @@ final class BaileysRecordingTransport implements HttpTransportInterface
 
     public function __construct(private readonly HttpResponse $response)
     {
-    }
-
-    public function post(string $url, array $headers, array $fields, int $timeoutSeconds): HttpResponse
-    {
-        $this->callCount++;
-        return $this->response;
     }
 
     public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse

@@ -549,9 +549,6 @@ final class HybridOtpServiceTest extends CIUnitTestCase
 final class HybridRecordingTransport implements HttpTransportInterface
 {
     public int $requestCount = 0;
-    public string $lastUrl = '';
-    /** @var array<string, string> */
-    public array $lastHeaders = [];
     /** @var array<string, mixed> */
     public array $lastPayload = [];
 
@@ -560,16 +557,9 @@ final class HybridRecordingTransport implements HttpTransportInterface
     {
     }
 
-    public function post(string $url, array $headers, array $fields, int $timeoutSeconds): HttpResponse
-    {
-        return new HttpResponse(405, null, 'not used');
-    }
-
     public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse
     {
         $this->requestCount++;
-        $this->lastUrl = $url;
-        $this->lastHeaders = $headers;
         $this->lastPayload = $payload;
 
         foreach ($this->responses as $path => $response) {
@@ -584,8 +574,6 @@ final class HybridRecordingTransport implements HttpTransportInterface
     public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
     {
         $this->requestCount++;
-        $this->lastUrl = $url;
-        $this->lastHeaders = $headers;
 
         foreach ($this->responses as $path => $response) {
             if (str_ends_with($url, $path)) {

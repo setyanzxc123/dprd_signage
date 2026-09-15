@@ -64,16 +64,18 @@ final class OtpStatus
             : in_array($to, self::TRANSITIONS[$from] ?? [], true);
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public static function sourcesFor(string $target): array
     {
-        if (! self::isKnown($target)) {
-            return [];
+        $sources = [];
+        foreach (self::TRANSITIONS as $from => $allowed) {
+            if ($from === $target || in_array($target, $allowed, true)) {
+                $sources[] = $from;
+            }
         }
 
-        return array_values(array_filter(
-            array_keys(self::TRANSITIONS),
-            static fn (string $source): bool => self::canTransition($source, $target),
-        ));
+        return $sources;
     }
 }

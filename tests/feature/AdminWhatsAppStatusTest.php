@@ -10,7 +10,6 @@ final class AdminWhatsAppStatusTest extends CIUnitTestCase
 {
     use FeatureTestTrait;
 
-    private BaseConnection $settingsDb;
     private Forge $forge;
 
     protected function setUp(): void
@@ -20,7 +19,6 @@ final class AdminWhatsAppStatusTest extends CIUnitTestCase
             $this->markTestSkipped('Ekstensi sqlite3 diperlukan.');
         }
 
-        $this->settingsDb = Database::connect('tests');
         $this->forge = Database::forge('tests');
         $this->forge->dropTable('settings', true);
         $this->forge->addField([

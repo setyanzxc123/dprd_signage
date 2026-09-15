@@ -18,7 +18,9 @@
                     clearInterval(checkInterval);
                     try {
                         window.lucide.createIcons({ root: target });
-                    } catch (_) {}
+                    } catch {
+                        /* ignore */
+                    }
                 } else if (retries >= 20) {
                     clearInterval(checkInterval);
                 }
@@ -27,12 +29,7 @@
     }
     window.renderAdminIcons = renderAdminIcons;
 
-    function isActivePath(current, link) {
-        return current === link || current.startsWith(link + '/');
-    }
-
     const ADMIN_THEME_STORAGE_KEY = 'dprd-admin-theme';
-    const ADMIN_SIDEBAR_STORAGE_KEY = 'dprd-sidebar-collapsed';
 
     function getCurrentTheme() {
         return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -273,7 +270,9 @@
                         if (window.HSAccordion && Array.isArray(window.$hsAccordionCollection) && typeof window.HSAccordion.show === 'function') {
                             window.HSAccordion.show(group);
                         }
-                    } catch (_) {}
+                    } catch {
+                        /* ignore */
+                    }
                 }
             } else {
                 link.removeAttribute('aria-current');
@@ -288,7 +287,7 @@
         if (!raw) return [];
         try {
             return JSON.parse(raw);
-        } catch (_) {
+        } catch {
             return [];
         }
     }
@@ -331,7 +330,7 @@
         if (!raw) return;
 
         var defs;
-        try { defs = JSON.parse(raw); } catch (_) { return; }
+        try { defs = JSON.parse(raw); } catch { return; }
         if (!Array.isArray(defs) || defs.length === 0) return;
 
         /* Cari wrapper DT dan tempatkan di baris toolbar (dt-layout-start) */
@@ -489,20 +488,6 @@
             } catch (error) {
                 console.error('Gagal menginisialisasi DataTables admin:', error);
                 renderAdminIcons(table);
-            }
-        });
-    }
-
-    function destroyAdminDataTables() {
-        if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.DataTable) return;
-
-        document.querySelectorAll('table[data-admin-datatable]').forEach(function (table) {
-            if (window.jQuery.fn.DataTable.isDataTable(table)) {
-                try {
-                    window.jQuery(table).DataTable().destroy(false);
-                } catch (e) {
-                    /* abaikan error saat destroy */
-                }
             }
         });
     }

@@ -10,14 +10,11 @@ class JadwalUmumModel extends Model
 
     public const TYPE_MEETING = 'rapat';
     public const TYPE_NON_MEETING = 'non_rapat';
-    public const AGENDA_TYPES = [self::TYPE_MEETING, self::TYPE_NON_MEETING];
 
     public const STATUS_MENUNGGU = 'menunggu';
     public const STATUS_PERSIAPAN = 'persiapan';
     public const STATUS_BERLANGSUNG = 'berlangsung';
     public const STATUS_SELESAI = 'selesai';
-    public const STATUS_DITUNDA = 'ditunda';
-    public const STATUS_DIBATALKAN = 'dibatalkan';
     public const STATUS_NON_RAPAT = 'non_rapat';
 
     public const SCHEDULED_STATUSES = ['menunggu', 'persiapan', 'berlangsung', 'selesai'];

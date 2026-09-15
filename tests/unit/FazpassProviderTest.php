@@ -74,11 +74,6 @@ final class FazpassRecordingTransport implements HttpTransportInterface
     {
     }
 
-    public function post(string $url, array $headers, array $fields, int $timeoutSeconds): HttpResponse
-    {
-        return $this->response;
-    }
-
     public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse
     {
         $this->url = $url;

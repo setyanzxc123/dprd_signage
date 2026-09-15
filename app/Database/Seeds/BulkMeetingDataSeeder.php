@@ -272,15 +272,6 @@ class BulkMeetingDataSeeder extends Seeder
         return $row;
     }
 
-    private function slug(string $value): string
-    {
-        $value = strtolower(trim($value));
-        $value = preg_replace('/[^a-z0-9]+/', '-', $value) ?? '';
-        $value = trim($value, '-');
-
-        return $value !== '' ? $value : 'agenda';
-    }
-
     private function insertOrUpdateSchedule(array $row): int
     {
         $existing = $this->db->table('jadwal_umum')

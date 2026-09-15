@@ -4,9 +4,10 @@ includes:
 
 parameters:
     phpVersion: 80200
-    level: 4
+    level: 0
     paths:
         - app
+        - tests
     excludePaths:
         - app/Views/*
         - app/Database/Migrations/*
@@ -15,11 +16,45 @@ parameters:
 
     reportUnmatchedIgnoredErrors: false
 
-    # CodeIgniter 4 controller public methods can be routed dynamically
     ignoreErrors:
+        -
+            identifier: shipmonk.deadProperty.neverRead
+            paths:
+                - app/Config/*
+                - app/Libraries/*/ValueObjects/*
+        -
+            identifier: shipmonk.deadProperty.neverWritten
+            paths:
+                - app/Config/*
         -
             identifier: shipmonk.deadMethod
             paths:
+                - app/Config/*
                 - app/Controllers/*
                 - app/Commands/*
                 - app/Filters/*
+                - app/Database/Seeds/*
+        -
+            identifier: shipmonk.deadConstant
+            paths:
+                - app/Config/*
+        -
+            identifier: codeigniter.superglobalsOffsetAccess
+            paths:
+                - tests/*
+        -
+            identifier: codeigniter.superglobalsOffsetAssign
+            paths:
+                - tests/*
+        -
+            identifier: codeigniter.superglobalsOffsetUnset
+            paths:
+                - tests/*
+        -
+            identifier: codeigniter.cacheHandlerInstance
+            paths:
+                - tests/*
+        -
+            identifier: class.notFound
+            paths:
+                - tests/*

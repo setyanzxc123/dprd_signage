@@ -414,42 +414,17 @@ final class ApiAdminWhatsAppTest extends CIUnitTestCase
 
 final class ApiAdminWhatsAppRecordingTransport implements HttpTransportInterface
 {
-    public string $url = '';
-    /** @var array<string, string> */
-    public array $headers = [];
-    /** @var array<string, mixed> */
-    public array $payload = [];
-    public int $timeoutSeconds = 0;
-    public int $callCount = 0;
-
     public function __construct(private readonly HttpResponse $response)
     {
     }
 
-    public function post(string $url, array $headers, array $fields, int $timeoutSeconds): HttpResponse
-    {
-        $this->callCount++;
-        return $this->response;
-    }
-
     public function postJson(string $url, array $headers, array $payload, int $timeoutSeconds): HttpResponse
     {
-        $this->callCount++;
-        $this->url = $url;
-        $this->headers = $headers;
-        $this->payload = $payload;
-        $this->timeoutSeconds = $timeoutSeconds;
-
         return $this->response;
     }
 
     public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
     {
-        $this->callCount++;
-        $this->url = $url;
-        $this->headers = $headers;
-        $this->timeoutSeconds = $timeoutSeconds;
-
         return $this->response;
     }
 }

@@ -241,7 +241,7 @@ class SettingController extends BaseController
 
     private function validateRequestSize(): ?string
     {
-        $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
+        $contentLength = (int) ($this->request->getServer('CONTENT_LENGTH') ?? 0);
         if ($contentLength <= 0) {
             return null;
         }

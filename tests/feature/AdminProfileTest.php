@@ -45,7 +45,7 @@ final class AdminProfileTest extends CIUnitTestCase
 
     protected function tearDown(): void
     {
-        if (isset($this->forge)) {
+        if (isset($this->profileForge)) {
             $this->profileForge->dropTable('auth_identities', true);
             $this->profileForge->dropTable('users', true);
         }

@@ -811,26 +811,6 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
         return $row;
     }
 
-    private function statusFor(string $date, string $start, string $end): string
-    {
-        $today = date('Y-m-d');
-        $now = date('H:i:s');
-
-        if ($date < $today || ($date === $today && $end <= $now)) {
-            return 'selesai';
-        }
-
-        if ($date === $today && $start <= $now && $end > $now) {
-            return 'berlangsung';
-        }
-
-        if ($date === $today && date('H:i:s', strtotime($start . ' -30 minutes')) <= $now && $start > $now) {
-            return 'persiapan';
-        }
-
-        return 'menunggu';
-    }
-
     private function putIfFieldExists(array &$row, string $table, string $field, mixed $value): void
     {
         if ($this->db->fieldExists($field, $table)) {
@@ -893,13 +873,5 @@ class BamusMasaPersidanganKetiga2026Seeder extends Seeder
         }
 
         $this->db->table($table)->insert($row);
-    }
-
-    private function allUnitNames(): array
-    {
-        return array_map(
-            static fn (array $row): string => $row['nama'],
-            $this->meetingUnits()
-        );
     }
 }

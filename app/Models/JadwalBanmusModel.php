@@ -195,12 +195,12 @@ class JadwalBanmusModel extends Model
             $normalized,
             $monthMatches,
         );
-        if (($monthMatches[1] ?? []) === []) {
+        if ($monthMatches[1] === []) {
             return $empty;
         }
 
         preg_match_all('/\b(20\d{2})\b/u', $normalized, $yearMatches);
-        $years = array_map('intval', $yearMatches[1] ?? []);
+        $years = array_map('intval', $yearMatches[1]);
         $firstMonthName = mb_strtolower((string) $monthMatches[1][0]);
         $lastMonthName = mb_strtolower((string) end($monthMatches[1]));
         $firstMonth = $monthNumbers[$firstMonthName];

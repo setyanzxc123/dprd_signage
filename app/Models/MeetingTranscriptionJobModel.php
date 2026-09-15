@@ -17,16 +17,6 @@ class MeetingTranscriptionJobModel extends Model
     public const TYPE_UMUM   = 'umum';
     public const TYPE_BANMUS = 'banmus';
 
-    public const VALID_STATUSES = [
-        self::STATUS_QUEUED,
-        self::STATUS_CHUNKING,
-        self::STATUS_TRANSCRIBING,
-        self::STATUS_SUMMARIZING,
-        self::STATUS_COMPLETED,
-        self::STATUS_FAILED,
-        self::STATUS_CANCELLED,
-    ];
-
     protected $table         = 'meeting_transcription_jobs';
     protected $primaryKey    = 'id';
     protected $returnType    = 'array';
@@ -48,17 +38,6 @@ class MeetingTranscriptionJobModel extends Model
         'ai_model',
         'created_by',
     ];
-
-    /**
-     * Cari job terbaru berdasarkan jadwal.
-     */
-    public function findLatestByJadwal(string $jadwalType, int $jadwalId): ?array
-    {
-        return $this->where('jadwal_type', $jadwalType)
-            ->where('jadwal_id', $jadwalId)
-            ->orderBy('id', 'DESC')
-            ->first();
-    }
 
     /**
      * Hitung ringkasan status job untuk dashboard monitoring.

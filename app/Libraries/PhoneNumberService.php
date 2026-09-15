@@ -13,9 +13,4 @@ final class PhoneNumberService
 
         return $phone;
     }
-
-    public static function isValidIndonesia(string $phone): bool
-    {
-        return preg_match('/^628\d{7,12}$/', $phone) === 1;
-    }
 }

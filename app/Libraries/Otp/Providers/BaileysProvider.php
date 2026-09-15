@@ -58,40 +58,6 @@ final class BaileysProvider
         return $this->parseSendResponse($response);
     }
 
-    public function sendMessage(
-        string $to,
-        string $message,
-        ?bool $waitForAck = null,
-        ?int $ackTimeoutMs = null,
-    ): BaileysSendResult {
-        if (! $this->isConfigured()) {
-            return new BaileysSendResult(
-                false,
-                error: 'Baileys gateway belum dikonfigurasi.',
-                errorCode: 'NOT_CONFIGURED',
-                statusCode: 0,
-            );
-        }
-
-        $body = [
-            'to'             => $to,
-            'message'        => $message,
-            'wait_for_ack'   => $waitForAck ?? $this->config->baileysWaitForAck,
-            'ack_timeout_ms' => $ackTimeoutMs ?? $this->config->baileysAckTimeoutMs,
-        ];
-
-        $timeoutSeconds = max(5, $this->config->baileysTimeoutSeconds);
-
-        $response = $this->transport->postJson(
-            $this->endpoint('/send-message'),
-            $this->headers(),
-            $body,
-            $timeoutSeconds,
-        );
-
-        return $this->parseSendResponse($response);
-    }
-
     private function parseSendResponse(\App\Libraries\WhatsApp\ValueObjects\HttpResponse $response): BaileysSendResult
     {
         $payload = $this->payload($response->body);

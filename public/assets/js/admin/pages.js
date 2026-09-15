@@ -10,7 +10,7 @@
         if (el) el.textContent = str;
     }
 
-    function initDashboardCalendar(signal) {
+    function initDashboardCalendar() {
         const dayButtons = Array.from(document.querySelectorAll('[data-dashboard-day]'));
         if (!dayButtons.length) return;
 
@@ -559,7 +559,7 @@
             if (onProgress) xhr.upload.addEventListener('progress', onProgress);
 
             xhr.addEventListener('load', () => {
-                let payload = null;
+                let payload;
                 try {
                     payload = JSON.parse(xhr.responseText);
                 } catch {
@@ -825,7 +825,7 @@
                 } else if (targetBtn) {
                     targetBtn.click();
                 }
-            } catch (_) {
+            } catch {
                 if (targetBtn) targetBtn.click();
             }
         };
@@ -885,7 +885,7 @@
                         waQrError.hidden = false;
                     }
                 }
-            } catch (e) {
+            } catch {
                 stopWaPolling();
                 waQrLoading.hidden = true;
                 if (waQrError) {
@@ -996,7 +996,7 @@
                     if (waQrLoading) waQrLoading.hidden = true;
                     if (waQrError) waQrError.hidden = true;
                 }
-            } catch (e) {
+            } catch {
                 stopWaPolling();
             } finally {
                 isWaChecking = false;
@@ -1025,7 +1025,7 @@
                     if (typeof window.refreshNotificationHub === 'function') {
                         window.refreshNotificationHub();
                     }
-                } catch (e) {
+                } catch {
                     stopWaPolling();
                     renderDisconnectedStatus('Gagal terhubung ke layanan WhatsApp.');
                 } finally {
@@ -2063,7 +2063,7 @@
                         const dt = new DataTransfer();
                         dt.items.add(files[0]);
                         fileInput.files = dt.files;
-                    } catch (err) { /* fallback skip */ }
+                    } catch { /* fallback skip */ }
                     fileInput.dispatchEvent(new Event('change'));
                 }
             });
@@ -2282,7 +2282,7 @@
                         subFilter.appendChild(opt);
                     });
                 }
-            } catch (e) {
+            } catch {
                 /* fallback empty */
             }
         }
@@ -2485,7 +2485,7 @@
             try {
                 generalOpts = JSON.parse(jadwalId.dataset.generalOptions || '[]');
                 banmusOpts = JSON.parse(jadwalId.dataset.banmusOptions || '[]');
-            } catch (e) {
+            } catch {
                 /* fallback empty */
             }
 
@@ -2858,7 +2858,7 @@
 
                 xhr.addEventListener('load', () => {
                     let payload = null;
-                    try { payload = JSON.parse(xhr.responseText); } catch (e) { /* noop */ }
+                    try { payload = JSON.parse(xhr.responseText); } catch { /* noop */ }
                     if (xhr.status >= 200 && xhr.status < 300 && payload && payload.status === 'success') {
                         resolve(payload);
                     } else {
