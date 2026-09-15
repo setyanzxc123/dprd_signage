@@ -289,10 +289,7 @@ export async function transcribeChunkWithFallback({
     throw new Error(`Gagal menyiapkan chunk_${chunkNum} di Files API: ${uploadErr.message}`);
   }
 
-  const promptText = `Transkripsikan seluruh isi percakapan rekaman audio rapat DPRD Provinsi Sulawesi Tengah ini dalam Bahasa Indonesia secara verbatim, rapi, dan terstruktur dengan timestamp.
-Gunakan label speaker diarization per pembicara (misalnya: [Pimpinan Sidang], [Anggota Fraksi/Komisi], [Narasumber], dll.), pisahkan setiap pergantian pembicara dengan baris baru, serta gunakan tanda baca yang tepat dan ejaan resmi istilah pemerintahan.
-Perhatikan dengan cermat perkenalan diri pembicara, penyebutan nama tokoh/pejabat, nama dinas/OPD, dan nama tempat/daerah di Sulawesi Tengah agar tertranskripsi secara jelas dan tepat.
-Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup tambahan.`;
+  const promptText = `Transkripsikan seluruh isi percakapan rekaman audio rapat DPRD Provinsi Sulawesi Tengah ini dalam Bahasa Indonesia secara verbatim, rapi, dan terstruktur dengan timestamp realtime.Perhatikan dengan cermat perkenalan diri pembicara, penyebutan nama tokoh/pejabat, nama dinas/OPD, dan nama tempat/daerah di Sulawesi Tengah agar tertranskripsi secara jelas dan tepat. Gunakan label speaker diarization per pembicara (misalnya: [Pimpinan Sidang], [Anggota Fraksi/Komisi], [Narasumber], dll.) dengan catatan jika ada bukti kuat seperti pengenalan diri, jika tidak ada jangan tambahkan, pisahkan setiap pergantian pembicara dengan baris baru, serta gunakan tanda baca yang tepat dan ejaan resmi istilah pemerintahan. Hanya kembalikan teks transkrip percakapan tanpa komentar pembuka atau penutup tambahan.`;
 
   let transcriptText = '';
   let modelSuccess = false;
@@ -542,7 +539,7 @@ export async function generateMeetingMinutesWithFallback({
   onLog(`[Minutes] Memulai penyusunan Risalah Rapat resmi dari transkrip (${fullTranscript.length} karakter)...`);
 
   const promptText = `Anda adalah Notulis Risalah Resmi untuk DPRD (Dewan Perwakilan Rakyat Daerah) Provinsi Sulawesi Tengah.
-Baca dan analisis transkrip rapat berikut, lalu susun DRAFT RISALAH RAPAT RESMI yang profesional dan sesuai standar tata naskah dinas legislatif daerah.
+  Baca dan analisis transkrip rapat berikut, lalu susun DRAFT RISALAH RAPAT RESMI yang profesional dan sesuai standar tata naskah dinas legislatif daerah.
 
 Informasi Konteks Rapat:
 - Judul Rapat: ${metadata.judul_rapat || 'Rapat DPRD Provinsi Sulawesi Tengah'}
@@ -558,7 +555,7 @@ Pedoman Identifikasi Pembicara & Verifikasi Entitas Sulawesi Tengah (SANGAT PENT
 1. Akurasi Pembicara Berdasarkan Perkenalan Diri:
    - Teliti setiap giliran pembicara berbicara. Peserta rapat sering kali telah memperkenalkan dirinya (menyebutkan nama lengkap, gelar, fraksi, komisi, jabatan pimpinan, atau instansi/dinas terkait).
    - Apabila pembicara sudah memperkenalkan diri, WAJIB cantumkan nama lengkap dan jabatan/instansinya secara tepat pada kolom "pembicara" di 'poin_pembahasan' dan sebutkan secara konsisten di 'ringkasan_utama'.
-   - Dilarang keras salah mengaitkan (misatribusi) pernyataan atau menukar nama antar pembicara.
+   - DILARANG KERAS salah mengaitkan (misatribusi) pernyataan atau menukar nama antar pembicara ATAU MENGARANG IDENTITAS PEMBICARA.
 
 2. Ruang Lingkup Wilayah & Kelembagaan (DPRD & Pemprov Sulawesi Tengah):
    - Seluruh pembahasan, tokoh, dan tempat berada dalam lingkup Provinsi Sulawesi Tengah.
@@ -572,6 +569,8 @@ Pedoman Identifikasi Pembicara & Verifikasi Entitas Sulawesi Tengah (SANGAT PENT
    - Pastikan ejaan yang tertulis di risalah merupakan nama resmi yang valid dan pasti, bukan hasil salah dengar audio.
 
 Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
+misc(bukan termasuk field tapi tambahan aturan) : jangan sampai timestamp masuk ke dalam hasil risalah.
+
 - ringkasan_utama:
   * WAJIB disusun dalam 3 sampai 4 paragraf naratif terpisah yang mengalir dan mudah dibaca.
   * Setiap pergantian paragraf WAJIB dipisahkan dengan DUA KALI BARIS BARU (\\n\\n). DILARANG KERAS menggabungkan seluruh ringkasan menjadi satu paragraf panjang tanpa jeda baris.
