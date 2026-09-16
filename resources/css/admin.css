@@ -5,6 +5,7 @@
 @source "../../app/Controllers/Admin/**/*.php";
 @source "../../app/Views/auth/**/*.php";
 @source "../../app/Views/member/**/*.php";
+@source "../../public/assets/js/admin/**/*.js";
 @source "../../node_modules/preline/dist/*.js";
 @custom-variant dark (&:where(.dark, .dark *));
 

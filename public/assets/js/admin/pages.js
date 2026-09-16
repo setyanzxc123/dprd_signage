@@ -3708,7 +3708,7 @@
                                 ${escapeHtml(task.judul)}
                             </a>
                             <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shrink-0">
-                                <span class="motion-safe:animate-spin inline-block size-2.5 border-2 border-current border-t-transparent rounded-full"></span>
+                                <span class="animate-spin inline-block size-2.5 border-2 border-current border-t-transparent rounded-full"></span>
                                 <span>${escapeHtml(task.status_label)}</span>
                             </span>
                         </div>
@@ -3862,10 +3862,10 @@
 
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
-            refreshBtn.classList.add('motion-safe:animate-spin');
+            refreshBtn.classList.add('animate-spin');
             lastRenderedSignature = null;
             fetchNotifications().finally(() => {
-                setTimeout(() => refreshBtn.classList.remove('motion-safe:animate-spin'), 600);
+                setTimeout(() => refreshBtn.classList.remove('animate-spin'), 600);
             });
         });
     }
