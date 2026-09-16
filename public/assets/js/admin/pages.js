@@ -3165,7 +3165,7 @@
             try {
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="loading loading-spinner loading-xs mr-1"></span> Menyimpan...';
+                    submitBtn.innerHTML = '<span class="animate-spin inline-block size-3.5 border-2 border-current border-t-transparent text-white rounded-full shrink-0 me-1.5" role="status" aria-label="loading"></span> Menyimpan...';
                 }
 
                 const formData = new FormData(form);
@@ -3549,11 +3549,11 @@
                 badgeEl.classList.remove('hidden');
                 badgeEl.classList.add('flex');
                 if (badgeTone === 'danger') {
-                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-pulse leading-none';
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs animate-pulse leading-none';
                 } else if (badgeTone === 'warning') {
-                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white shadow-xs motion-safe:animate-none leading-none';
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white shadow-xs leading-none';
                 } else {
-                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-none leading-none';
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs leading-none';
                 }
             } else {
                 badgeEl.classList.add('hidden');

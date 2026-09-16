@@ -220,7 +220,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                                 </div>
                             </div>
 
-                            <button type="submit" class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition dark:focus:ring-offset-slate-800 disabled:pointer-events-none disabled:opacity-60" data-login-button>
+                            <button type="submit" class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition dark:focus:ring-offset-slate-800 disabled:pointer-events-none disabled:opacity-60" data-login-button data-loading-label="Masuk...">
                                 <i data-lucide="shield-check" class="size-4 shrink-0"></i>
                                 <span>Masuk sebagai Admin</span>
                             </button>
@@ -340,7 +340,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
                     if (!button) return;
                     button.disabled = true;
                     const label = button.dataset.loadingLabel || 'Memverifikasi...';
-                    button.innerHTML = '<svg class="size-4 animate-spin motion-reduce:animate-none shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>' + label + '</span>';
+                    button.innerHTML = '<span class="animate-spin inline-block size-4 border-2 border-current border-t-transparent text-white rounded-full shrink-0" role="status" aria-label="loading"></span><span>' + label + '</span>';
                 });
             });
 

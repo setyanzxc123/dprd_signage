@@ -82,7 +82,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                 <button id="hs-dropdown-notifications" type="button" class="hs-dropdown-toggle relative inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" aria-haspopup="dialog" aria-expanded="false" aria-label="Notifikasi Sistem" title="Notifikasi Sistem">
                     <i data-lucide="bell" class="size-4" id="notification_hub_icon"></i>
                     <!-- Badge Counter / Indicator Dot -->
-                    <span id="notification_hub_badge" class="hidden absolute -top-1 -end-1 min-w-4 h-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs motion-safe:animate-pulse leading-none">
+                    <span id="notification_hub_badge" class="hidden absolute -top-1 -end-1 min-w-4 h-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs animate-pulse leading-none">
                         0
                     </span>
                 </button>
