@@ -531,7 +531,6 @@ export const MINUTES_RESPONSE_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          waktu: { type: Type.STRING, nullable: true, description: 'Cap waktu opsional dengan format [mm:ss] atau [hh:mm:ss].' },
           topik: { type: Type.STRING, description: 'Judul pokok bahasan.' },
           pembicara: {
             type: Type.STRING,
@@ -552,6 +551,11 @@ export const MINUTES_RESPONSE_SCHEMA = {
   required: ['ringkasan_utama', 'poin_pembahasan', 'kesimpulan_akhir'],
 };
 
+export function stripTimestamps(text) {
+  if (typeof text !== 'string') return '';
+  return text.replace(/\[\d{1,2}:\d{2}(?::\d{2})?\]\s*/g, '').trim();
+}
+
 /**
  * Menyusun naskah risalah 3 bagian (I/II/III) dari struktur pilar yang
  * dihasilkan model. Format harus tetap kompatibel dengan parser fallback
@@ -560,19 +564,19 @@ export const MINUTES_RESPONSE_SCHEMA = {
 export function composeMinutesText(pillars) {
   const points = Array.isArray(pillars.poin_pembahasan) ? pillars.poin_pembahasan : [];
   const conclusions = Array.isArray(pillars.kesimpulan_akhir) ? pillars.kesimpulan_akhir : [];
-  const rawSummary = String(pillars.ringkasan_utama || '').trim();
+  const rawSummary = stripTimestamps(String(pillars.ringkasan_utama || '')).trim();
   const cleanSummary = rawSummary.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
   const lines = ['I. RINGKASAN UTAMA', cleanSummary, '', 'II. POIN-POIN PEMBAHASAN'];
 
   points.forEach((point, i) => {
     const no = i + 1;
-    const waktu = point.waktu ? ` [${point.waktu}]` : '';
-    lines.push(`${no}.${waktu} Topik: ${String(point.topik || '').trim()}`);
+    const topik = stripTimestamps(String(point.topik || '')).trim();
+    lines.push(`${no}. Topik: ${topik}`);
     if (point.pembicara) {
-      lines.push(`   - Pembicara: ${String(point.pembicara).trim()}`);
+      lines.push(`   - Pembicara: ${stripTimestamps(String(point.pembicara)).trim()}`);
     }
-    lines.push(`   - Uraian: ${String(point.uraian || '').trim()}`);
-    point.full_text = `${no}.${waktu} Topik: ${String(point.topik || '').trim()}`;
+    lines.push(`   - Uraian: ${stripTimestamps(String(point.uraian || '')).trim()}`);
+    point.full_text = `${no}. Topik: ${topik}`;
   });
 
   if (points.length === 0) {
@@ -581,7 +585,7 @@ export function composeMinutesText(pillars) {
 
   lines.push('', 'III. KESIMPULAN & KEPUTUSAN AKHIR');
   conclusions.forEach((item, i) => {
-    lines.push(`${i + 1}. ${String(item).trim()}`);
+    lines.push(`${i + 1}. ${stripTimestamps(String(item)).trim()}`);
   });
   if (conclusions.length === 0) {
     lines.push('(Tidak ada kesimpulan yang terdeteksi.)');
@@ -641,16 +645,16 @@ Pedoman Identifikasi Pembicara & Verifikasi Entitas Sulawesi Tengah (SANGAT PENT
    - Pastikan ejaan yang tertulis di risalah merupakan nama resmi yang valid dan pasti, bukan hasil salah dengar audio.
 
 Aturan Pengisian Setiap Field (WAJIB DIIKUTI):
-misc(bukan termasuk field tapi tambahan aturan) : jangan sampai timestamp masuk ke dalam hasil risalah.
+- DILARANG mencantumkan cap waktu audio (seperti [00:15], [01:23:45], dll.) di seluruh bagian risalah. Risalah resmi merupakan dokumen naratif naskah dinas legislatif daerah.
 
 - ringkasan_utama:
   * WAJIB disusun dalam 3 sampai 4 paragraf naratif terpisah yang mengalir dan mudah dibaca.
-  * Setiap pergantian paragraf WAJIB dipisahkan dengan DUA KALI BARIS BARU (\\n\\n). DILARANG KERAS menggabungkan seluruh ringkasan menjadi satu paragraf panjang tanpa jeda baris.
-  * Paragraf 1 (Latar Belakang & Kuorum): Waktu, tanggal, pimpinan sidang, kuorum kehadiran anggota dewan, serta pembukaan agenda resmi.
+  * Setiap pergantian paragraf WAJIB dipisahkan dengan DUA KALI BARIS BARU (\n\n). DILARANG KERAS menggabungkan seluruh ringkasan menjadi satu paragraf panjang tanpa jeda baris.
+  * Paragraf 1 (Latar Belakang & Kuorum): Hari, tanggal, pimpinan sidang, kuorum kehadiran anggota dewan, serta pembukaan agenda resmi.
   * Paragraf 2 (Substansi Pokok Pembahasan): Materi pokok rapat, angka/indikator utama dokumen yang dibahas, atau pokok permasalahan substantif.
   * Paragraf 3 (Dinamika Fraksi & Tanggapan): Pokok-pokok pandangan umum, pertanyaan kritis, usulan prioritas dari fraksi/anggota dewan, serta tanggapan narasumber/eksekutif.
   * Paragraf 4 (Kesepakatan & Arah Sidang): Kesimpulan forum, keputusan persetujuan/kelanjutan agenda, dan mekanisme tindak lanjut.
-- poin_pembahasan: satu butir per pokok bahasan; sertakan waktu (bila ada), topik spesifik, nama pembicara/fraksi/jabatan resmi yang akurat, dan uraian substansi.
+- poin_pembahasan: satu butir per pokok bahasan; cantumkan topik spesifik, nama pembicara/fraksi/jabatan resmi yang akurat, dan uraian substansi pembahasan secara mendalam tanpa cap waktu.
 - kesimpulan_akhir: seluruh butir kesepakatan, keputusan resmi, rekomendasi, dan tindak lanjut yang disepakati.`;
 
   const MAX_CHAIN_PASSES = 3;
@@ -807,10 +811,18 @@ misc(bukan termasuk field tapi tambahan aturan) : jangan sampai timestamp masuk 
     throw new Error(`Seluruh rantai model AI gagal menyusun risalah rapat. Error terakhir: ${describeError(lastError)}`);
   }
 
+  const rawPoints = Array.isArray(minutesJson.poin_pembahasan) ? minutesJson.poin_pembahasan : [];
+  const cleanPoints = rawPoints.map((p) => ({
+    topik: stripTimestamps(p.topik || ''),
+    pembicara: p.pembicara ? stripTimestamps(p.pembicara) : null,
+    uraian: stripTimestamps(p.uraian || ''),
+  }));
+  const rawConclusions = Array.isArray(minutesJson.kesimpulan_akhir) ? minutesJson.kesimpulan_akhir : [];
+  const cleanConclusions = rawConclusions.map((c) => stripTimestamps(String(c)));
   const pillars = {
-    ringkasan_utama: String(minutesJson.ringkasan_utama || ''),
-    poin_pembahasan: Array.isArray(minutesJson.poin_pembahasan) ? minutesJson.poin_pembahasan : [],
-    kesimpulan_akhir: Array.isArray(minutesJson.kesimpulan_akhir) ? minutesJson.kesimpulan_akhir : [],
+    ringkasan_utama: stripTimestamps(String(minutesJson.ringkasan_utama || '')),
+    poin_pembahasan: cleanPoints,
+    kesimpulan_akhir: cleanConclusions,
   };
 
   return {
