@@ -19,6 +19,8 @@ final class NotificationServiceTest extends CIUnitTestCase
     {
         try {
             cache()->delete(BaileysProvider::OFFLINE_CACHE_KEY);
+            cache()->delete(NotificationService::ALERTS_CACHE_KEY);
+            cache()->delete(NotificationService::WA_STATUS_CACHE_KEY);
         } catch (\Throwable) {
         }
 
@@ -44,6 +46,54 @@ final class NotificationServiceTest extends CIUnitTestCase
         $this->assertArrayHasKey('badge_count', $summary);
 
         $this->assertContains($summary['badge_tone'], ['none', 'info', 'warning', 'danger']);
+    }
+
+    public function testFeedAlertsAreServedFromMicroCache(): void
+    {
+        cache()->save(NotificationService::ALERTS_CACHE_KEY, [
+            [
+                'id'       => 'cached-alert',
+                'category' => 'test',
+                'severity' => 'warning',
+                'title'    => 'Alert dari cache',
+                'message'  => 'Alert ini berasal dari cache mikro feed.',
+            ],
+        ], 10);
+
+        $feed = (new NotificationService())->getFeed();
+
+        $alertIds = array_column($feed['alerts'], 'id');
+        $this->assertContains('cached-alert', $alertIds);
+        $this->assertSame(0, $feed['summary']['unread_critical_count']);
+    }
+
+    public function testCachedWhatsAppStatusSkipsGatewayCheck(): void
+    {
+        cache()->save(NotificationService::WA_STATUS_CACHE_KEY, [
+            'configured' => true,
+            'connected'  => true,
+            'status'     => 'connected',
+            'phone'      => null,
+            'name'       => null,
+            'qr_url'     => null,
+            'error'      => null,
+        ], 30);
+
+        cache()->save(BaileysProvider::OFFLINE_CACHE_KEY, [
+            'configured' => true,
+            'connected'  => false,
+            'status'     => 'offline',
+            'phone'      => null,
+            'name'       => null,
+            'qr_url'     => null,
+            'error'      => 'Nomor terputus.',
+        ], 60);
+
+        $feed = (new NotificationService())->getFeed();
+
+        $alertCategories = array_column($feed['alerts'], 'category');
+        $this->assertNotContains('whatsapp', $alertCategories);
+        $this->assertSame(0, $feed['summary']['unread_critical_count']);
     }
 
     public function testWhatsAppDisconnectedProducesCriticalAlert(): void

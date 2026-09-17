@@ -1,5 +1,6 @@
 <?php
 
+use App\Libraries\Notification\NotificationService;
 use App\Libraries\Otp\Providers\BaileysProvider;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
@@ -17,6 +18,8 @@ final class AdminNotificationFeedTest extends CIUnitTestCase
     {
         try {
             cache()->delete(BaileysProvider::OFFLINE_CACHE_KEY);
+            cache()->delete(NotificationService::ALERTS_CACHE_KEY);
+            cache()->delete(NotificationService::WA_STATUS_CACHE_KEY);
         } catch (\Throwable) {
         }
 

@@ -994,75 +994,162 @@ class NotulenService
     public function resolveScheduleInfo(string $type, ?int $id): array
     {
         if ($id === null) {
-            return [
-                'judul'        => 'Rapat / Sidang DPRD',
-                'tanggal'      => date('Y-m-d'),
-                'waktu_mulai'  => '-',
-                'lokasi'       => '-',
-                'ruangan'      => 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah',
-                'unit'         => '-',
-                'unit_list'    => [],
-            ];
+            return $this->defaultScheduleInfo(null);
         }
 
+        $map = $this->buildScheduleInfoMap([['jadwal_type' => $type, 'jadwal_id' => $id]]);
+
+        return $map[$type . ':' . $id] ?? $this->defaultScheduleInfo($id);
+    }
+
+    /**
+     * Bangun peta metadata rapat untuk sekumpulan job dengan jumlah query tetap
+     * sehingga format massal tidak memicu query per job.
+     *
+     * @param list<array<string, mixed>> $jobs
+     * @return array<string, array{judul: string, tanggal: string, waktu_mulai: string, lokasi: string, ruangan: string, unit: string, unit_list: list<string>}>
+     */
+    private function buildScheduleInfoMap(array $jobs): array
+    {
+        $umumIds = [];
+        $banmusIds = [];
+
+        foreach ($jobs as $job) {
+            $id = (int) ($job['jadwal_id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            if (($job['jadwal_type'] ?? 'umum') === MeetingTranscriptionJobModel::TYPE_BANMUS) {
+                $banmusIds[$id] = true;
+            } elseif (($job['jadwal_type'] ?? 'umum') === MeetingTranscriptionJobModel::TYPE_UMUM) {
+                $umumIds[$id] = true;
+            }
+        }
+
+        $umumRows = [];
+        $banmusRows = [];
+        $unitLists = [];
+
         try {
-            if ($type === MeetingTranscriptionJobModel::TYPE_UMUM) {
-                $item = (new JadwalUmumModel($this->db))->find($id);
-                if ($item) {
-                    $ruanganName = null;
-                    if (! empty($item['ruangan_id'])) {
-                        $room = (new RuanganModel($this->db))->find((int) $item['ruangan_id']);
-                        $ruanganName = $room['nama'] ?? null;
-                    }
-                    $lokasi = (string) ($item['lokasi_lainnya'] ?? '');
-                    $unitList = [];
-                    if ($this->db->tableExists('jadwal_umum_unit_rapat') && $this->db->tableExists('unit_rapat')) {
-                        $unitRows = $this->db->table('jadwal_umum_unit_rapat jur')
-                            ->select('ur.nama')
-                            ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
-                            ->where('jur.jadwal_umum_id', $id)
-                            ->orderBy('ur.urutan', 'ASC')->orderBy('ur.nama', 'ASC')
-                            ->get()->getResultArray();
-                        $unitList = array_column($unitRows, 'nama');
-                    }
-                    return [
-                        'judul'        => (string) ($item['judul'] ?? 'Rapat Umum DPRD'),
-                        'tanggal'      => (string) ($item['tanggal'] ?? date('Y-m-d')),
-                        'waktu_mulai'  => (string) ($item['waktu_mulai'] ?? '-'),
-                        'lokasi'       => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
-                        'ruangan'      => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
-                        'unit'         => $unitList !== [] ? implode(', ', $unitList) : '-',
-                        'unit_list'    => $unitList,
-                    ];
+            if ($umumIds !== []) {
+                foreach ((new JadwalUmumModel($this->db))->whereIn('id', array_keys($umumIds))->findAll() as $row) {
+                    $umumRows[(int) $row['id']] = $row;
                 }
             }
 
-            if ($type === MeetingTranscriptionJobModel::TYPE_BANMUS) {
-                $item = (new JadwalBanmusModel($this->db))->find($id);
-                if ($item) {
-                    $ruanganName = null;
-                    if (! empty($item['ruangan_id'])) {
-                        $room = (new RuanganModel($this->db))->find((int) $item['ruangan_id']);
-                        $ruanganName = $room['nama'] ?? null;
+            if ($banmusIds !== []) {
+                foreach ((new JadwalBanmusModel($this->db))->whereIn('id', array_keys($banmusIds))->findAll() as $row) {
+                    $banmusRows[(int) $row['id']] = $row;
+                }
+            }
+
+            $roomIds = [];
+            foreach ([$umumRows, $banmusRows] as $rows) {
+                foreach ($rows as $row) {
+                    if (! empty($row['ruangan_id'])) {
+                        $roomIds[(int) $row['ruangan_id']] = true;
                     }
-                    $lokasi = (string) ($item['lokasi_lainnya'] ?? '');
-                    return [
-                        'judul'        => (string) ($item['agenda'] ?? 'Rapat Badan Musyawarah'),
-                        'tanggal'      => (string) ($item['tanggal'] ?? date('Y-m-d')),
-                        'waktu_mulai'  => (string) ($item['jam_mulai'] ?? '-'),
-                        'lokasi'       => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
-                        'ruangan'      => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
-                        'unit'         => 'Badan Musyawarah',
-                        'unit_list'    => ['Badan Musyawarah'],
-                    ];
+                }
+            }
+
+            $rooms = [];
+            if ($roomIds !== []) {
+                foreach ((new RuanganModel($this->db))->whereIn('id', array_keys($roomIds))->findAll() as $room) {
+                    $rooms[(int) $room['id']] = (string) ($room['nama'] ?? '');
+                }
+            }
+
+            if ($umumRows !== [] && $this->db->tableExists('jadwal_umum_unit_rapat') && $this->db->tableExists('unit_rapat')) {
+                foreach (
+                    $this->db->table('jadwal_umum_unit_rapat jur')
+                        ->select('jur.jadwal_umum_id, ur.nama')
+                        ->join('unit_rapat ur', 'ur.id = jur.unit_rapat_id')
+                        ->whereIn('jur.jadwal_umum_id', array_keys($umumRows))
+                        ->orderBy('ur.urutan', 'ASC')->orderBy('ur.nama', 'ASC')
+                        ->get()->getResultArray() as $unitRow
+                ) {
+                    $unitLists[(int) $unitRow['jadwal_umum_id']][] = (string) $unitRow['nama'];
                 }
             }
         } catch (\Throwable) {
-            // Fallback default
+            return [];
         }
 
+        $map = [];
+        foreach ($jobs as $job) {
+            $type = (string) ($job['jadwal_type'] ?? 'umum');
+            $id = (int) ($job['jadwal_id'] ?? 0);
+            $key = $type . ':' . $id;
+
+            if (isset($map[$key])) {
+                continue;
+            }
+
+            if ($id <= 0) {
+                $map[$key] = $this->defaultScheduleInfo(0);
+                continue;
+            }
+
+            if ($type === MeetingTranscriptionJobModel::TYPE_UMUM) {
+                $item = $umumRows[$id] ?? null;
+                if ($item === null) {
+                    $map[$key] = $this->defaultScheduleInfo($id);
+                    continue;
+                }
+
+                $ruanganName = ! empty($item['ruangan_id']) ? ($rooms[(int) $item['ruangan_id']] ?? null) : null;
+                $lokasi = (string) ($item['lokasi_lainnya'] ?? '');
+                $unitList = $unitLists[$id] ?? [];
+
+                $map[$key] = [
+                    'judul'       => (string) ($item['judul'] ?? 'Rapat Umum DPRD'),
+                    'tanggal'     => (string) ($item['tanggal'] ?? date('Y-m-d')),
+                    'waktu_mulai' => (string) ($item['waktu_mulai'] ?? '-'),
+                    'lokasi'      => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
+                    'ruangan'     => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
+                    'unit'        => $unitList !== [] ? implode(', ', $unitList) : '-',
+                    'unit_list'   => $unitList,
+                ];
+                continue;
+            }
+
+            if ($type === MeetingTranscriptionJobModel::TYPE_BANMUS) {
+                $item = $banmusRows[$id] ?? null;
+                if ($item === null) {
+                    $map[$key] = $this->defaultScheduleInfo($id);
+                    continue;
+                }
+
+                $ruanganName = ! empty($item['ruangan_id']) ? ($rooms[(int) $item['ruangan_id']] ?? null) : null;
+                $lokasi = (string) ($item['lokasi_lainnya'] ?? '');
+
+                $map[$key] = [
+                    'judul'       => (string) ($item['agenda'] ?? 'Rapat Badan Musyawarah'),
+                    'tanggal'     => (string) ($item['tanggal'] ?? date('Y-m-d')),
+                    'waktu_mulai' => (string) ($item['jam_mulai'] ?? '-'),
+                    'lokasi'      => $lokasi !== '' ? $lokasi : ($ruanganName ?? '-'),
+                    'ruangan'     => $ruanganName ?? ($lokasi !== '' ? $lokasi : 'Ruang Rapat Paripurna DPRD Provinsi Sulawesi Tengah'),
+                    'unit'        => 'Badan Musyawarah',
+                    'unit_list'   => ['Badan Musyawarah'],
+                ];
+                continue;
+            }
+
+            $map[$key] = $this->defaultScheduleInfo($id);
+        }
+
+        return $map;
+    }
+
+    /**
+     * Metadata rapat bawaan saat jadwal tidak dapat diselesaikan.
+     *
+     * @return array{judul: string, tanggal: string, waktu_mulai: string, lokasi: string, ruangan: string, unit: string, unit_list: list<string>}
+     */
+    private function defaultScheduleInfo(?int $id): array
+    {
         return [
-            'judul'        => 'Rapat DPRD',
+            'judul'        => $id === null ? 'Rapat / Sidang DPRD' : 'Rapat DPRD',
             'tanggal'      => date('Y-m-d'),
             'waktu_mulai'  => '-',
             'lokasi'       => '-',
@@ -1299,8 +1386,11 @@ class NotulenService
             ->orderBy('updated_at', 'DESC')
             ->findAll(3);
 
-        $formatJob = function (array $job): array {
-            $schedule = $this->resolveScheduleInfo((string) ($job['jadwal_type'] ?? 'umum'), (int) ($job['jadwal_id'] ?? 0));
+        $scheduleMap = $this->buildScheduleInfoMap(array_merge($activeJobs, $recentJobs));
+
+        $formatJob = function (array $job) use ($scheduleMap): array {
+            $key = (string) ($job['jadwal_type'] ?? 'umum') . ':' . (int) ($job['jadwal_id'] ?? 0);
+            $schedule = $scheduleMap[$key] ?? $this->defaultScheduleInfo(0);
             $status   = (string) ($job['status'] ?? 'queued');
 
             $statusLabel = match ($status) {

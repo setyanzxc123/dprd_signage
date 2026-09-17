@@ -9,6 +9,11 @@ use Config\Otp;
 
 final class NotificationService
 {
+    public const ALERTS_CACHE_KEY = 'notification_feed_alerts';
+    public const ALERTS_CACHE_TTL = 10;
+    public const WA_STATUS_CACHE_KEY = 'notification_feed_wa_status';
+    public const WA_STATUS_CACHE_TTL = 30;
+
     private BaileysProvider $baileysProvider;
     private NotulenService $notulenService;
     private Otp $otpConfig;
@@ -30,13 +35,7 @@ final class NotificationService
      */
     public function getFeed(): array
     {
-        $alerts = array_merge(
-            $this->collectWhatsAppAlerts(),
-            $this->collectUnassignedRoomAlerts(),
-            $this->collectPendingMinutesAlerts(),
-            $this->collectSignageIntegrityAlerts(),
-            $this->collectWeatherAlerts()
-        );
+        $alerts = $this->getCachedAlerts();
 
         $criticalCount = 0;
         $warningCount  = 0;
@@ -55,7 +54,8 @@ final class NotificationService
 
         try {
             $aiSummary = $this->notulenService->getActiveTasksSummary();
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal mengambil ringkasan antrean AI. {message}', ['message' => $e->getMessage()]);
             $aiSummary = [
                 'active_count' => 0,
                 'active'       => [],
@@ -90,6 +90,68 @@ final class NotificationService
     }
 
     /**
+     * Mengambil alert feed dari cache mikro agar polling antar tab admin
+     * tidak mengeksekusi seluruh kolektor pada setiap permintaan.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function getCachedAlerts(): array
+    {
+        try {
+            $cached = cache(self::ALERTS_CACHE_KEY);
+            if (is_array($cached)) {
+                return $cached;
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal membaca cache feed alert. {message}', ['message' => $e->getMessage()]);
+        }
+
+        $alerts = array_merge(
+            $this->collectWhatsAppAlerts(),
+            $this->collectUnassignedRoomAlerts(),
+            $this->collectPendingMinutesAlerts(),
+            $this->collectSignageIntegrityAlerts(),
+            $this->collectWeatherAlerts()
+        );
+
+        try {
+            cache()->save(self::ALERTS_CACHE_KEY, $alerts, self::ALERTS_CACHE_TTL);
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal menyimpan cache feed alert. {message}', ['message' => $e->getMessage()]);
+        }
+
+        return $alerts;
+    }
+
+    /**
+     * Mengambil status WhatsApp gateway dengan cache pendek supaya feed
+     * tidak melakukan panggilan HTTP keluar pada setiap polling.
+     *
+     * @return array<string, mixed>
+     */
+    private function getCachedWaStatus(): array
+    {
+        try {
+            $cached = cache(self::WA_STATUS_CACHE_KEY);
+            if (is_array($cached)) {
+                return $cached;
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal membaca cache status WhatsApp. {message}', ['message' => $e->getMessage()]);
+        }
+
+        $status = $this->baileysProvider->getStatus();
+
+        try {
+            cache()->save(self::WA_STATUS_CACHE_KEY, $status, self::WA_STATUS_CACHE_TTL);
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal menyimpan cache status WhatsApp. {message}', ['message' => $e->getMessage()]);
+        }
+
+        return $status;
+    }
+
+    /**
      * Mengumpulkan notifikasi status koneksi WhatsApp Gateway dinas.
      *
      * @return list<array<string, mixed>>
@@ -97,7 +159,7 @@ final class NotificationService
     private function collectWhatsAppAlerts(): array
     {
         $alerts = [];
-        $waStatus = $this->baileysProvider->getStatus();
+        $waStatus = $this->getCachedWaStatus();
         $isConfigured = (bool) ($waStatus['configured'] ?? false);
         $isConnected = (bool) ($waStatus['connected'] ?? false);
 
@@ -187,8 +249,8 @@ final class NotificationService
                     }
                 }
             }
-        } catch (\Throwable) {
-            // Defensif jika tabel belum siap
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal memeriksa agenda tanpa ruangan. {message}', ['message' => $e->getMessage()]);
         }
 
         if (empty($unassigned)) {
@@ -266,10 +328,11 @@ final class NotificationService
                 'action_label'  => 'Tinjau Risalah',
                 'action_type'   => 'url',
                 'action_target' => null,
-                'action_url'    => base_url('admin/notulen'),
-                'created_at'    => date('c'),
-            ]];
-        } catch (\Throwable) {
+                    'action_url'    => base_url('admin/notulen'),
+                    'created_at'    => date('c'),
+                ]];
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal menghitung risalah AI menunggu verifikasi. {message}', ['message' => $e->getMessage()]);
             return [];
         }
     }
@@ -327,8 +390,8 @@ final class NotificationService
                     'created_at'    => date('c'),
                 ];
             }
-        } catch (\Throwable) {
-            // Abaikan kesalahan pembacaan setting
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal memeriksa integritas media signage. {message}', ['message' => $e->getMessage()]);
         }
 
         return $alerts;
@@ -381,8 +444,8 @@ final class NotificationService
                     'created_at'    => date('c'),
                 ]];
             }
-        } catch (\Throwable) {
-            // Abaikan kegagalan pemeriksaan cuaca
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal memeriksa sinkronisasi cuaca BMKG. {message}', ['message' => $e->getMessage()]);
         }
 
         return [];
