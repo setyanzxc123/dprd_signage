@@ -109,9 +109,6 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     $routes->post('jadwal-umum/(:num)/update',        'Admin\GeneralScheduleController::update/$1');
     $routes->post('jadwal-umum/(:num)/delete',        'Admin\GeneralScheduleController::delete/$1');
 
-    // Workspace Seluruh Agenda (Fase 5)
-    $routes->get('kalender', 'Admin\AgendaWorkspaceController::kalender');
-
     // Modul Notulensi & Risalah AI
     $routes->get( 'notulen',                            'Admin\NotulenController::index');
     $routes->get( 'notulen/active-tasks',               'Admin\NotulenController::activeTasks');
@@ -190,7 +187,6 @@ $routes->group('api/v1/auth', ['namespace' => 'App\Controllers\Api\V1', 'filter'
 
 // API v1 CRUD admin (bearer token + grup admin)
 $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => ['cors', 'apiadmin']], static function ($routes) {
-    $routes->get('admin/agenda',        'AdminAgendaController::index');
     $routes->get('admin/notifications', 'AdminNotificationController::index');
     $routes->get('admin/profil',        'AdminProfileController::index');
     $routes->put('admin/profil', 'AdminProfileController::update');

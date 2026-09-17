@@ -1547,48 +1547,6 @@
         font-size: 0.68rem;
         line-height: 1.2;
     }
-    .agenda-workspace-calendar {
-        padding: 24px;
-    }
-    .agenda-workspace-calendar .dashboard-weekday-grid,
-    .agenda-workspace-calendar .dashboard-calendar-grid {
-        gap: 10px;
-    }
-    .agenda-workspace-calendar .dashboard-weekday-grid {
-        margin-bottom: 10px;
-    }
-    .agenda-workspace-calendar .dashboard-weekday-grid span {
-        padding-inline: 10px;
-        font-size: 0.78rem;
-    }
-    .agenda-workspace-calendar .dashboard-calendar-day {
-        min-height: 148px;
-        gap: 10px;
-        padding: 12px;
-    }
-    .agenda-workspace-calendar .calendar-day-num {
-        width: 32px;
-        height: 32px;
-        font-size: 0.86rem;
-    }
-    .agenda-workspace-calendar .calendar-day-count {
-        min-width: 24px;
-        height: 24px;
-        font-size: 0.72rem;
-    }
-    .agenda-workspace-calendar .calendar-day-events {
-        gap: 6px;
-    }
-    .agenda-workspace-calendar .calendar-event-dot {
-        grid-template-columns: 8px minmax(0, 1fr);
-        gap: 8px;
-        font-size: 0.75rem;
-        line-height: 1.35;
-    }
-    .agenda-workspace-calendar .calendar-event-dot::before {
-        width: 8px;
-        height: 8px;
-    }
 
     table.dataTable.admin-data-table > tbody > tr > th,
     table.dataTable.admin-data-table > tbody > tr > td {
@@ -1649,7 +1607,6 @@
     }
     .dashboard-calendar-day { min-height: 98px; }
     .dashboard-home-calendar .dashboard-calendar-day { min-height: 94px; }
-    .agenda-workspace-calendar .dashboard-calendar-day { min-height: 136px; }
 }
 
 @media (max-width: 820px) {
@@ -1669,22 +1626,6 @@
     }
     .dashboard-home-calendar .calendar-event-dot {
         font-size: 0.68rem;
-    }
-    .agenda-workspace-calendar {
-        padding: 18px;
-    }
-    .agenda-workspace-calendar .dashboard-weekday-grid,
-    .agenda-workspace-calendar .dashboard-calendar-grid {
-        gap: 7px;
-    }
-    .agenda-workspace-calendar .dashboard-calendar-day {
-        min-height: 118px;
-        gap: 8px;
-        padding: 9px;
-    }
-    .agenda-workspace-calendar .calendar-event-dot {
-        gap: 6px;
-        font-size: 0.7rem;
     }
     .dashboard-agenda-item {
         display: block;
@@ -2103,50 +2044,6 @@
         width: 7px;
         height: 7px;
     }
-    .agenda-workspace-calendar {
-        padding: 10px;
-    }
-    .agenda-workspace-calendar .dashboard-weekday-grid,
-    .agenda-workspace-calendar .dashboard-calendar-grid {
-        min-width: 0;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 4px;
-    }
-    .agenda-workspace-calendar .dashboard-calendar-day {
-        position: relative;
-        min-width: 0;
-        min-height: 78px;
-        padding: 6px 3px;
-        gap: 4px;
-    }
-    .agenda-workspace-calendar .calendar-day-num {
-        width: 22px;
-        height: 22px;
-        font-size: 0.68rem;
-    }
-    .agenda-workspace-calendar .calendar-day-count {
-        position: absolute;
-        top: 4px;
-        right: 3px;
-        min-width: 16px;
-        height: 16px;
-        font-size: 0.56rem;
-    }
-    .agenda-workspace-calendar .calendar-day-events {
-        min-height: 7px;
-        gap: 3px;
-    }
-    .agenda-workspace-calendar .calendar-event-dot {
-        width: 7px;
-        height: 7px;
-        grid-template-columns: 1fr;
-        gap: 0;
-        font-size: 0;
-    }
-    .agenda-workspace-calendar .calendar-event-dot::before {
-        width: 7px;
-        height: 7px;
-    }
     .calendar-day-num { width: 24px; height: 24px; font-size: 0.72rem; }
     .calendar-day-events {
         min-height: 7px;
@@ -2264,9 +2161,6 @@
     }
     .dashboard-home-calendar .dashboard-calendar-day {
         min-height: 70px;
-    }
-    .agenda-workspace-calendar .dashboard-calendar-day {
-        min-height: 72px;
     }
     .calendar-day-count {
         min-width: 18px;

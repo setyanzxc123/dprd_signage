@@ -702,7 +702,7 @@ Status Code:
 Endpoint pada modul ini dirancang untuk monitoring terpusat pada mobile app admin dan web admin. Memerlukan token Bearer dengan hak akses `admin` atau `superadmin`.
 
 ### `GET /admin/notifications`
-* **Deskripsi**: Mengambil data rekapitulasi notifikasi satu pintu, peringatan operasional real-time (koneksi WhatsApp Gateway, konflik ruangan rapat, agenda tanpa ruangan, risalah AI draf, integritas media signage, dan cuaca BMKG), serta progres antrean AI risalah/transkripsi.
+* **Deskripsi**: Mengambil data rekapitulasi notifikasi satu pintu, peringatan operasional real-time (koneksi WhatsApp Gateway, agenda tanpa ruangan, risalah AI draf, integritas media signage, dan cuaca BMKG), serta progres antrean AI risalah/transkripsi.
 * **Hak Akses**: Bearer Admin (`admin` / `superadmin`).
 
 Response `200 OK`:
@@ -711,26 +711,14 @@ Response `200 OK`:
   "status": "success",
   "data": {
     "summary": {
-      "unread_critical_count": 1,
+      "unread_critical_count": 0,
       "warning_count": 2,
-      "alerts_count": 3,
+      "alerts_count": 2,
       "active_tasks_count": 1,
-      "badge_tone": "danger",
-      "badge_count": 4
+      "badge_tone": "warning",
+      "badge_count": 3
     },
     "alerts": [
-      {
-        "id": "schedule-conflict-a1b2c3d4e5f6",
-        "category": "schedule_conflict",
-        "severity": "critical",
-        "title": "Konflik Ruangan Rapat",
-        "message": "Jadwal bentrok di Ruang Baruga pada 18/09/2026: Rapat Komisi I (09:00-11:00) dan Rapat Badan Anggaran (10:00-12:00).",
-        "action_label": "Buka Kalender",
-        "action_type": "url",
-        "action_target": null,
-        "action_url": "http://localhost:8081/admin/agenda-workspace/kalender?month=2026-09&lokasi=Ruang+Baruga",
-        "created_at": "2026-09-14T15:00:00+08:00"
-      },
       {
         "id": "unassigned-room-umum-45",
         "category": "unassigned_room",
@@ -782,7 +770,7 @@ Response `200 OK`:
 ```
 
 Bidang Data Ringkasan (`summary`):
-* `unread_critical_count`: Jumlah kendala sistem berkategori kritis (`critical`) seperti gateway terputus atau jadwal bentrok.
+* `unread_critical_count`: Jumlah kendala sistem berkategori kritis (`critical`) seperti gateway terputus.
 * `warning_count`: Jumlah peringatan operasional (`warning`) seperti agenda tanpa ruangan atau risalah draf.
 * `alerts_count`: Total seluruh alert aktif.
 * `active_tasks_count`: Jumlah proses worker AI yang sedang aktif berjalan di latar belakang.
@@ -791,7 +779,6 @@ Bidang Data Ringkasan (`summary`):
 
 Kategori Notifikasi (`alerts[].category`):
 * `whatsapp`: Status konektivitas WhatsApp Gateway dinas (Baileys).
-* `schedule_conflict`: Deteksi bentrok jadwal ruangan rapat pada tanggal dan jam tumpang tindih.
 * `unassigned_room`: Agenda rapat aktif H-0 dan H-1 yang belum memiliki ruangan/lokasi definitif.
 * `pending_minutes`: Notulensi/risalah rapat hasil AI berstatus `draft` yang menunggu peninjauan operator.
 * `signage_media`: Validitas file media video/gambar signage dan teks berjalan (*running text*).

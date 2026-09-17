@@ -3618,9 +3618,7 @@
                     const isInfo = alert.severity === 'info';
 
                     let iconName = 'alert-triangle';
-                    if (alert.category === 'schedule_conflict') {
-                        iconName = 'calendar-x-2';
-                    } else if (alert.category === 'unassigned_room') {
+                    if (alert.category === 'unassigned_room') {
                         iconName = 'map-pin-off';
                     } else if (alert.category === 'pending_minutes') {
                         iconName = 'file-check';

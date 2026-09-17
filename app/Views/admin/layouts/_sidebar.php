@@ -10,7 +10,7 @@ $isActivePath = static function (string $path) use ($currentPath): bool {
     return $path !== '' && $path !== '/' && ($currentPath === $path || str_starts_with($currentPath, $path . '/'));
 };
 $masterActive = $isActivePath('/admin/anggota') || $isActivePath('/admin/unit-rapat') || $isActivePath('/admin/ruangan');
-$agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/jadwal-umum') || $isActivePath('/admin/kalender') || $isActivePath('/admin/notulen');
+$agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/jadwal-umum') || $isActivePath('/admin/notulen');
 ?>
 <aside id="application-sidebar" class="hs-overlay [--auto-close:lg] hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform hidden fixed top-0 start-0 bottom-0 z-[60] w-64 bg-white border-e border-slate-200 overflow-y-auto lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 dark:bg-slate-900 dark:border-slate-800" tabindex="-1" aria-label="Navigasi Utama">
     <div class="relative flex flex-col h-full max-h-full">
@@ -66,7 +66,6 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
                     <div class="mt-1 ps-7 pe-1 space-y-1 border-s border-slate-100 dark:border-slate-800 ms-5">
                         <a href="<?= base_url('admin/jadwal-banmus') ?>" data-path="/admin/jadwal-banmus" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Agenda Banmus</a>
                         <a href="<?= base_url('admin/jadwal-umum') ?>" data-path="/admin/jadwal-umum" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Jadwal Umum</a>
-                        <a href="<?= base_url('admin/kalender') ?>" data-path="/admin/kalender" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Kalender Agenda</a>
                         <a href="<?= base_url('admin/notulen') ?>" data-path="/admin/notulen" data-admin-nav class="block py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Notulensi &amp; Risalah AI</a>
                     </div>
                 </div>

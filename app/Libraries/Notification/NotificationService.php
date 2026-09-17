@@ -4,7 +4,6 @@ namespace App\Libraries\Notification;
 
 use App\Libraries\Notulen\NotulenService;
 use App\Libraries\Otp\Providers\BaileysProvider;
-use App\Libraries\Schedule\AgendaWorkspaceService;
 use App\Models\SettingModel;
 use Config\Otp;
 
@@ -13,18 +12,15 @@ final class NotificationService
     private BaileysProvider $baileysProvider;
     private NotulenService $notulenService;
     private Otp $otpConfig;
-    private ?AgendaWorkspaceService $agendaWorkspaceService;
 
     public function __construct(
         ?BaileysProvider $baileysProvider = null,
         ?NotulenService $notulenService = null,
-        ?Otp $otpConfig = null,
-        ?AgendaWorkspaceService $agendaWorkspaceService = null
+        ?Otp $otpConfig = null
     ) {
         $this->otpConfig = $otpConfig ?? config('Otp');
         $this->baileysProvider = $baileysProvider ?? new BaileysProvider(config: $this->otpConfig);
         $this->notulenService = $notulenService ?? new NotulenService();
-        $this->agendaWorkspaceService = $agendaWorkspaceService;
     }
 
     /**
@@ -36,7 +32,6 @@ final class NotificationService
     {
         $alerts = array_merge(
             $this->collectWhatsAppAlerts(),
-            $this->collectScheduleConflictAlerts(),
             $this->collectUnassignedRoomAlerts(),
             $this->collectPendingMinutesAlerts(),
             $this->collectSignageIntegrityAlerts(),
@@ -134,67 +129,6 @@ final class NotificationService
     }
 
     /**
-     * Mengumpulkan notifikasi bentrok/konflik penggunaan ruangan rapat.
-     *
-     * @return list<array<string, mixed>>
-     */
-    private function collectScheduleConflictAlerts(): array
-    {
-        $alerts = [];
-
-        try {
-            $workspaceService = $this->agendaWorkspaceService ?? new AgendaWorkspaceService();
-            $month = date('Y-m');
-            $workspace = $workspaceService->loadMonth($month);
-            $agendas = $workspace['agendas'] ?? [];
-            $today = date('Y-m-d');
-
-            $conflictGroups = [];
-            foreach ($agendas as $agenda) {
-                if (!empty($agenda['has_conflict']) && ($agenda['tanggal'] ?? '') >= $today) {
-                    $locKey = $agenda['location_key'] ?: 'lokasi';
-                    $groupKey = $agenda['tanggal'] . '_' . $locKey;
-                    if (!isset($conflictGroups[$groupKey])) {
-                        $conflictGroups[$groupKey] = [
-                            'tanggal' => $agenda['tanggal'],
-                            'lokasi'  => $agenda['lokasi'] ?? 'Ruang Rapat',
-                            'agendas' => [],
-                        ];
-                    }
-                    $startStr = !empty($agenda['waktu_mulai']) ? $agenda['waktu_mulai'] : '';
-                    $endStr = !empty($agenda['waktu_selesai']) ? $agenda['waktu_selesai'] : '';
-                    $timeStr = ($startStr && $endStr) ? " ({$startStr}-{$endStr})" : '';
-                    $conflictGroups[$groupKey]['agendas'][] = $agenda['judul'] . $timeStr;
-                }
-            }
-
-            foreach ($conflictGroups as $key => $group) {
-                $conflictCount = count($group['agendas']);
-                $conflictSample = implode(' dan ', array_slice($group['agendas'], 0, 2));
-                $moreText = $conflictCount > 2 ? ' (+ ' . ($conflictCount - 2) . ' agenda lain)' : '';
-                $tglFormatted = date('d/m/Y', strtotime($group['tanggal']));
-
-                $alerts[] = [
-                    'id'            => 'schedule-conflict-' . substr(md5($key), 0, 12),
-                    'category'      => 'schedule_conflict',
-                    'severity'      => 'critical',
-                    'title'         => 'Konflik Ruangan Rapat',
-                    'message'       => "Jadwal bentrok di {$group['lokasi']} pada {$tglFormatted}: {$conflictSample}{$moreText}.",
-                    'action_label'  => 'Buka Kalender',
-                    'action_type'   => 'url',
-                    'action_target' => null,
-                    'action_url'    => base_url('admin/agenda-workspace/kalender?month=' . date('Y-m', strtotime($group['tanggal'])) . '&lokasi=' . urlencode((string) $group['lokasi'])),
-                    'created_at'    => date('c'),
-                ];
-            }
-        } catch (\Throwable) {
-            // Defensif jika tabel jadwal belum siap
-        }
-
-        return $alerts;
-    }
-
-    /**
      * Mengumpulkan notifikasi agenda H-0 dan H-1 yang belum memiliki ruangan.
      *
      * @return list<array<string, mixed>>
@@ -204,50 +138,57 @@ final class NotificationService
         $alerts = [];
         $today = date('Y-m-d');
         $tomorrow = date('Y-m-d', strtotime('+1 day'));
-        $db = db_connect();
 
         $unassigned = [];
 
         try {
-            if ($db->tableExists('jadwal_umum')) {
-                $rows = $db->table('jadwal_umum')
-                    ->select('id, judul, tanggal, "umum" as source, NULL as dokumen_banmus_id')
-                    ->where('tanggal >=', $today)
-                    ->where('tanggal <=', $tomorrow)
-                    ->whereIn('status', ['menunggu', 'persiapan'])
-                    ->groupStart()
-                        ->where('ruangan_id IS NULL', null, false)
-                        ->orWhere('ruangan_id', 0)
-                    ->groupEnd()
-                    ->groupStart()
-                        ->where('lokasi_lainnya IS NULL', null, false)
-                        ->orWhere('TRIM(lokasi_lainnya)', '')
-                    ->groupEnd()
-                    ->get()
-                    ->getResultArray();
-                $unassigned = array_merge($unassigned, $rows);
-            }
+            $db = db_connect();
 
             if ($db->tableExists('jadwal_banmus')) {
-                $rows = $db->table('jadwal_banmus')
-                    ->select('id, judul, tanggal, "banmus" as source, dokumen_banmus_id')
-                    ->where('tanggal >=', $today)
-                    ->where('tanggal <=', $tomorrow)
-                    ->whereIn('status', ['menunggu', 'persiapan'])
-                    ->groupStart()
-                        ->where('ruangan_id IS NULL', null, false)
-                        ->orWhere('ruangan_id', 0)
-                    ->groupEnd()
-                    ->groupStart()
-                        ->where('lokasi_lainnya IS NULL', null, false)
-                        ->orWhere('TRIM(lokasi_lainnya)', '')
-                    ->groupEnd()
+                $banmusRows = $db->table('jadwal_banmus')
+                    ->select('id, judul, tanggal, waktu_mulai, waktu_selesai, ruangan_id, lokasi_lainnya, dokumen_banmus_id')
+                    ->whereIn('tanggal', [$today, $tomorrow])
+                    ->whereIn('status', ['menunggu', 'persiapan', 'berlangsung'])
                     ->get()
                     ->getResultArray();
-                $unassigned = array_merge($unassigned, $rows);
+
+                foreach ($banmusRows as $row) {
+                    if (empty($row['ruangan_id']) && empty(trim((string) ($row['lokasi_lainnya'] ?? '')))) {
+                        $unassigned[] = [
+                            'source'      => 'banmus',
+                            'id'          => $row['id'],
+                            'dokumen_id'  => $row['dokumen_banmus_id'],
+                            'judul'       => $row['judul'],
+                            'tanggal'     => $row['tanggal'],
+                            'waktu_mulai' => $row['waktu_mulai'],
+                        ];
+                    }
+                }
+            }
+
+            if ($db->tableExists('jadwal_umum')) {
+                $umumRows = $db->table('jadwal_umum')
+                    ->select('id, judul, tanggal, waktu_mulai, waktu_selesai, ruangan_id, lokasi_lainnya')
+                    ->whereIn('tanggal', [$today, $tomorrow])
+                    ->whereNotIn('status', ['ditunda', 'dibatalkan', 'selesai'])
+                    ->get()
+                    ->getResultArray();
+
+                foreach ($umumRows as $row) {
+                    if (empty($row['ruangan_id']) && empty(trim((string) ($row['lokasi_lainnya'] ?? '')))) {
+                        $unassigned[] = [
+                            'source'      => 'umum',
+                            'id'          => $row['id'],
+                            'dokumen_id'  => null,
+                            'judul'       => $row['judul'],
+                            'tanggal'     => $row['tanggal'],
+                            'waktu_mulai' => $row['waktu_mulai'],
+                        ];
+                    }
+                }
             }
         } catch (\Throwable) {
-            return [];
+            // Defensif jika tabel belum siap
         }
 
         if (empty($unassigned)) {
@@ -258,9 +199,9 @@ final class NotificationService
             foreach ($unassigned as $item) {
                 $isToday = $item['tanggal'] === $today;
                 $tglLabel = $isToday ? 'Hari Ini' : 'Besok';
-                $editUrl = $item['source'] === 'banmus'
-                    ? base_url('admin/jadwal-banmus/' . (int) $item['dokumen_banmus_id'])
-                    : base_url("admin/jadwal-umum/{$item['id']}/edit");
+                $actionUrl = $item['source'] === 'banmus'
+                    ? base_url('admin/jadwal-banmus/' . $item['dokumen_id'])
+                    : base_url('admin/jadwal-umum/' . $item['id'] . '/edit');
 
                 $alerts[] = [
                     'id'            => 'unassigned-room-' . $item['source'] . '-' . $item['id'],
@@ -271,7 +212,7 @@ final class NotificationService
                     'action_label'  => 'Tentukan Lokasi',
                     'action_type'   => 'url',
                     'action_target' => null,
-                    'action_url'    => $editUrl,
+                    'action_url'    => $actionUrl,
                     'created_at'    => date('c'),
                 ];
             }
@@ -286,7 +227,7 @@ final class NotificationService
                 'action_label'  => 'Lihat Agenda',
                 'action_type'   => 'url',
                 'action_target' => null,
-                'action_url'    => base_url('admin/agenda-workspace/kalender?month=' . date('Y-m')),
+                'action_url'    => base_url('admin/jadwal-umum'),
                 'created_at'    => date('c'),
             ];
         }

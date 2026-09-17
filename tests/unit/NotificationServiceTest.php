@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use App\Libraries\Notification\NotificationService;
 use App\Libraries\Notulen\NotulenService;
 use App\Libraries\Otp\Providers\BaileysProvider;
-use App\Libraries\Schedule\AgendaWorkspaceService;
 use CodeIgniter\Test\CIUnitTestCase;
 use Config\Otp;
 
@@ -73,49 +72,6 @@ final class NotificationServiceTest extends CIUnitTestCase
         $this->assertContains('whatsapp', $alertCategories);
     }
 
-    public function testScheduleConflictProducesCriticalAlert(): void
-    {
-        $workspaceMock = $this->createMock(AgendaWorkspaceService::class);
-        $workspaceMock->method('loadMonth')->willReturn([
-            'agendas' => [
-                [
-                    'key'          => 'umum:1',
-                    'judul'        => 'Rapat Komisi I',
-                    'tanggal'      => date('Y-m-d'),
-                    'waktu_mulai'  => '09:00',
-                    'waktu_selesai'=> '11:00',
-                    'lokasi'       => 'Ruang Baruga',
-                    'location_key' => 'ruang baruga',
-                    'has_conflict' => true,
-                    'conflicts'    => [['key' => 'banmus:2', 'label' => 'Rapat Badan Anggaran']],
-                ],
-                [
-                    'key'          => 'banmus:2',
-                    'judul'        => 'Rapat Badan Anggaran',
-                    'tanggal'      => date('Y-m-d'),
-                    'waktu_mulai'  => '10:00',
-                    'waktu_selesai'=> '12:00',
-                    'lokasi'       => 'Ruang Baruga',
-                    'location_key' => 'ruang baruga',
-                    'has_conflict' => true,
-                    'conflicts'    => [['key' => 'umum:1', 'label' => 'Rapat Komisi I']],
-                ],
-            ],
-            'counts'  => ['total' => 2, 'conflicts' => 2],
-            'options' => [],
-        ]);
-
-        $service = new NotificationService(agendaWorkspaceService: $workspaceMock);
-        $feed = $service->getFeed();
-
-        $categories = array_column($feed['alerts'], 'category');
-        $this->assertContains('schedule_conflict', $categories);
-
-        $severities = array_column($feed['alerts'], 'severity');
-        $this->assertContains('critical', $severities);
-        $this->assertSame('danger', $feed['summary']['badge_tone']);
-    }
-
     public function testActiveAiTasksProduceInfoBadgeToneWhenNoAlerts(): void
     {
         $notulenMock = $this->createMock(NotulenService::class);
@@ -127,12 +83,8 @@ final class NotificationServiceTest extends CIUnitTestCase
             'recent'       => [],
         ]);
 
-        $workspaceMock = $this->createMock(AgendaWorkspaceService::class);
-        $workspaceMock->method('loadMonth')->willReturn(['agendas' => [], 'counts' => ['conflicts' => 0]]);
-
         $service = new NotificationService(
-            notulenService: $notulenMock,
-            agendaWorkspaceService: $workspaceMock
+            notulenService: $notulenMock
         );
         $feed = $service->getFeed();
 
