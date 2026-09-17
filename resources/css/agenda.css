@@ -42,6 +42,44 @@
   }
 }
 
+html[data-app-loading] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #f1f5f9;
+}
+
+html.dark[data-app-loading] body::after {
+  background: #020617;
+}
+
+html[data-app-loading] body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: -1.25rem 0 0 -1.25rem;
+  border: 3px solid #cbd5e1;
+  border-top-color: #2563eb;
+  border-radius: 9999px;
+  z-index: 61;
+  animation: agenda-boot-spin 0.7s linear infinite;
+}
+
+html.dark[data-app-loading] body::before {
+  border-color: #334155;
+  border-top-color: #3b82f6;
+}
+
+@keyframes agenda-boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @layer components {
   .agenda-unit-scroll {
     scrollbar-width: none;
@@ -193,6 +231,10 @@
   .animate-ping,
   .animate-pulse,
   .animate-spin {
+    animation: none;
+  }
+
+  html[data-app-loading] body::before {
     animation: none;
   }
 

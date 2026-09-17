@@ -28,10 +28,10 @@ if (! empty($documents)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Proyeksi Banmus - DPRD Provinsi Sulawesi Tengah</title>
     <meta name="description" content="Proyeksi kegiatan dan SK Badan Musyawarah DPRD Provinsi Sulawesi Tengah." />
-    <link rel="icon" type="image/png" href="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" />
-    <link rel="preload" as="image" href="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/favicon-32x32.png?v=' . $logoVersion) ?>" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-600-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-900-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -39,6 +39,7 @@ if (! empty($documents)) {
             const theme = stored === 'dark' || stored === 'light' ? stored : 'light';
             document.documentElement.classList.toggle('dark', theme === 'dark');
             document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-app-loading', '');
         })();
     </script>
     <link href="<?= base_url('assets/css/agenda.css?v=' . $cssVersion) ?>" rel="stylesheet" />
@@ -55,7 +56,7 @@ if (! empty($documents)) {
                         <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                             AGENDA DPRD
                         </span>
-                        <span class="block truncate text-[10px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
+                        <span class="block truncate text-[11px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
                             Provinsi Sulawesi Tengah
                         </span>
                     </span>
@@ -74,17 +75,17 @@ if (! empty($documents)) {
 
                         <div class="hidden 2xl:block px-3 py-1 text-left">
                             <span class="block max-w-48 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{{ weatherLocation }}</span>
-                            <span class="block text-[10px] text-slate-500 dark:text-slate-400">Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}</span>
+                            <span class="block text-[11px] text-slate-500 dark:text-slate-400">Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}</span>
                         </div>
 
                         <div class="px-3.5 py-1 text-center">
-                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
+                            <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
                             <span class="block text-xs font-semibold text-slate-800 dark:text-slate-200">{{ headerDate }}</span>
                         </div>
 
                         <div class="px-3.5 py-1 text-center">
                             <span class="block font-mono text-2xl font-black tabular-nums leading-none text-slate-900 dark:text-white">{{ headerTime }}</span>
-                            <span class="block text-[9px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
+                            <span class="block text-[11px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
                         </div>
                     </div>
 
@@ -107,13 +108,13 @@ if (! empty($documents)) {
                                     <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-snug"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></p>
                                     <div class="mt-1.5 flex flex-wrap gap-1">
                                         <?php if (! empty($member['komisi'])): ?>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"><?= esc((string) $member['komisi']) ?></span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"><?= esc((string) $member['komisi']) ?></span>
                                         <?php endif; ?>
                                         <?php if (! empty($member['fraksi'])): ?>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
                                         <?php endif; ?>
                                         <?php if (empty($member['fraksi']) && empty($member['komisi'])): ?>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) ($member['jabatan'] ?? 'Dewan')) ?></span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) ($member['jabatan'] ?? 'Dewan')) ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -271,7 +272,7 @@ if (! empty($documents)) {
                                         Periode belum ditentukan
                                     </span>
 
-                                    <span v-if="item.jenis_agenda === 'rapat'" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-none bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                                    <span v-if="item.jenis_agenda === 'rapat'" class="inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-none bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/30">
                                         Rapat
                                     </span>
                                 </div>
@@ -335,7 +336,7 @@ if (! empty($documents)) {
                         </div>
 
                         <div class="p-1.5 sm:p-3">
-                            <div class="grid grid-cols-7 gap-0.5 sm:gap-1 text-center font-bold text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 py-1.5 sm:py-2 border-b border-slate-200 dark:border-slate-800">
+                            <div class="grid grid-cols-7 gap-0.5 sm:gap-1 text-center font-bold text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 py-1.5 sm:py-2 border-b border-slate-200 dark:border-slate-800">
                                 <span>Sen</span>
                                 <span>Sel</span>
                                 <span>Rab</span>
@@ -365,7 +366,7 @@ if (! empty($documents)) {
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between border-t border-slate-300 dark:border-slate-700 px-3 py-2 sm:px-4 sm:py-3 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30">
+                        <div class="flex items-center justify-between border-t border-slate-300 dark:border-slate-700 px-3 py-2 sm:px-4 sm:py-3 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30">
                             <div class="flex items-center gap-1.5">
                                 <span class="size-2 rounded-none bg-amber-500"></span>
                                 <span class="font-medium">Ada Agenda</span>
@@ -497,6 +498,7 @@ if (! empty($documents)) {
             let weatherInterval = null;
 
             onMounted(() => {
+                document.documentElement.removeAttribute('data-app-loading');
                 updateClock();
                 loadWeather();
                 clockInterval = setInterval(updateClock, 1000);

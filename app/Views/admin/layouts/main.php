@@ -28,7 +28,7 @@ $flashError = session()->getFlashdata('error');
         content="Panel manajemen sistem informasi jadwal rapat dan digital signage DPRD Provinsi Sulawesi Tengah." />
     <meta name="robots" content="noindex, nofollow" />
 
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/favicon-32x32.png?v=' . $logoVersion) ?>" />
     <link rel="preload" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" as="image" type="image/png" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font"
         type="font/woff2" crossorigin />

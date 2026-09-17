@@ -35,10 +35,10 @@ if ($isMember) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= esc($pageTitle) ?> - DPRD Provinsi Sulawesi Tengah</title>
     <meta name="description" content="Agenda dan jadwal rapat DPRD Provinsi Sulawesi Tengah." />
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
-    <link rel="preload" as="image" href="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/favicon-32x32.png?v=' . $logoVersion) ?>" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-600-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-900-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -48,6 +48,7 @@ if ($isMember) {
                 : 'light';
             document.documentElement.classList.toggle('dark', theme === 'dark');
             document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-app-loading', '');
         })();
     </script>
     <link href="<?= base_url('assets/css/agenda.css?v=' . $cssVersion) ?>" rel="stylesheet" />
@@ -64,7 +65,7 @@ if ($isMember) {
                     <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                         AGENDA DPRD
                     </span>
-                    <span class="block truncate text-[10px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
+                    <span class="block truncate text-[11px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
                         Provinsi Sulawesi Tengah
                     </span>
                 </span>
@@ -83,17 +84,17 @@ if ($isMember) {
 
                     <div class="hidden 2xl:block px-3 py-1 text-left">
                         <span class="block max-w-48 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{{ weatherLocation }}</span>
-                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}</span>
+                        <span class="block text-[11px] text-slate-500 dark:text-slate-400">Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}</span>
                     </div>
 
                     <div class="px-3.5 py-1 text-center">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
                         <span class="block text-xs font-semibold text-slate-800 dark:text-slate-200">{{ headerDate }}</span>
                     </div>
 
                     <div class="px-3.5 py-1 text-center">
                         <span class="block font-mono text-2xl font-black tabular-nums leading-none text-slate-900 dark:text-white">{{ headerTime }}</span>
-                        <span class="block text-[9px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
+                        <span class="block text-[11px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
                     </div>
                 </div>
 
@@ -116,13 +117,13 @@ if ($isMember) {
                                 <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-snug"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></p>
                                 <div class="mt-1.5 flex flex-wrap gap-1">
                                     <?php if (! empty($member['komisi'])): ?>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"><?= esc((string) $member['komisi']) ?></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"><?= esc((string) $member['komisi']) ?></span>
                                     <?php endif; ?>
                                     <?php if (! empty($member['fraksi'])): ?>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
                                     <?php endif; ?>
                                     <?php if (empty($member['fraksi']) && empty($member['komisi'])): ?>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) ($member['jabatan'] ?? 'Dewan')) ?></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) ($member['jabatan'] ?? 'Dewan')) ?></span>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -472,13 +473,13 @@ if ($isMember) {
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
                                         <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
-                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                                             Live
                                         </span>
@@ -650,13 +651,13 @@ if ($isMember) {
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
                                         <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
-                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                                             Live
                                         </span>
@@ -793,7 +794,7 @@ if ($isMember) {
                         <div v-else-if="risalahData" class="space-y-6">
                             <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/40 dark:bg-slate-900/60 p-5 sm:p-8 md:p-10 shadow-xs">
                                 <div class="text-center border-b-2 border-slate-900 dark:border-slate-200 pb-5 mb-6 space-y-1.5">
-                                    <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
+                                    <p class="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
                                         Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah
                                     </p>
                                     <h2 class="text-base sm:text-lg lg:text-xl font-black uppercase text-slate-900 dark:text-white tracking-wide">
@@ -1198,20 +1199,33 @@ if ($isMember) {
                 return url;
             }
 
-            async function fetchMonth(month) {
-                const response = await fetch(requestUrl(month), { credentials: 'same-origin' });
-                if (response.status === 401 && IS_MEMBER) {
-                    window.location.assign(LOGIN_URL);
-                    throw new Error('Sesi anggota berakhir.');
+            const inflightMonthFetches = new Map();
+
+            function fetchMonth(month) {
+                if (inflightMonthFetches.has(month)) {
+                    return inflightMonthFetches.get(month);
                 }
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                const payload = await response.json();
-                if (payload.status !== 'success') {
-                    throw new Error(payload.message || 'Respons agenda tidak valid.');
-                }
-                return payload;
+                const request = (async () => {
+                    const response = await fetch(requestUrl(month), { credentials: 'same-origin' });
+                    if (response.status === 401 && IS_MEMBER) {
+                        window.location.assign(LOGIN_URL);
+                        throw new Error('Sesi anggota berakhir.');
+                    }
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const payload = await response.json();
+                    if (payload.status !== 'success') {
+                        throw new Error(payload.message || 'Respons agenda tidak valid.');
+                    }
+                    return payload;
+                })();
+                inflightMonthFetches.set(month, request);
+                request.then(
+                    () => inflightMonthFetches.delete(month),
+                    () => inflightMonthFetches.delete(month),
+                );
+                return request;
             }
 
             async function loadAgenda() {
@@ -1879,6 +1893,7 @@ if ($isMember) {
             }
 
             onMounted(() => {
+                document.documentElement.removeAttribute('data-app-loading');
                 const params = new URLSearchParams(window.location.search);
                 const requestedMenu = params.get('menu');
                 if (requestedMenu === 'saya' || requestedMenu === 'all' || requestedMenu === 'komisi' || /^unit:\d+$/.test(requestedMenu || '')) {

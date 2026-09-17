@@ -15,7 +15,7 @@ $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPAT
     <meta property="og:description" content="Pantau jadwal rapat DPRD Provinsi Sulawesi Tengah secara langsung." />
     <meta property="og:type" content="website" />
 
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/favicon-32x32.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {

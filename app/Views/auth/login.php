@@ -15,7 +15,7 @@ $activeAccess = ($access ?? 'anggota') === 'admin' ? 'admin' : 'anggota';
     <script src="<?= base_url('assets/js/admin/theme-init.js?v=' . $adminThemeJsVersion) ?>"></script>
     <title><?= esc($pageTitle ?? 'Sistem Informasi Agenda dan Jadwal Rapat DPRD') ?></title>
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/favicon-32x32.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
 </head>

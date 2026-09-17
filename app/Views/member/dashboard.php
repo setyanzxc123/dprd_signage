@@ -12,7 +12,7 @@ $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPAT
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= esc($pageTitle ?? 'Portal Anggota DPRD') ?></title>
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/favicon-32x32.png?v=' . $logoVersion) ?>" />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/admin.css?v=' . $adminCssVersion) ?>" rel="stylesheet" />
 </head>
