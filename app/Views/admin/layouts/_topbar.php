@@ -81,7 +81,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                 <button id="hs-dropdown-notifications" type="button" class="hs-dropdown-toggle relative inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" aria-haspopup="dialog" aria-expanded="false" aria-label="Notifikasi Sistem" title="Notifikasi Sistem">
                     <i data-lucide="bell" class="size-4" id="notification_hub_icon"></i>
                     <!-- Badge Counter / Indicator Dot -->
-                    <span id="notification_hub_badge" class="hidden absolute -top-1 -end-1 min-w-4 h-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs animate-pulse leading-none">
+                    <span id="notification_hub_badge" class="hidden absolute -top-1 -end-1 min-w-4.5 h-4.5 px-1 items-center justify-center rounded-full bg-rose-600 text-[11px] font-bold text-white shadow-xs animate-pulse leading-none">
                         0
                     </span>
                 </button>
@@ -96,7 +96,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                             <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Pusat Notifikasi</span>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <span id="notification_hub_header_count" class="py-0.5 px-2 rounded-full text-[10px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            <span id="notification_hub_header_count" role="status" aria-live="polite" class="py-0.5 px-2 rounded-full text-[11px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                                 Semua Aman
                             </span>
                             <button type="button" id="btn_notification_hub_refresh" class="size-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" title="Perbarui Notifikasi" aria-label="Perbarui notifikasi">
@@ -108,13 +108,13 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                     <!-- Preline Tabs Nav -->
                     <div class="px-3 pt-2 pb-1 border-b border-slate-100 dark:border-slate-800">
                         <nav class="flex gap-x-1 p-0.5 bg-slate-100 dark:bg-slate-800/60 rounded-xl" aria-label="Tabs" role="tablist">
-                            <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-1.5 px-3 flex-1 inline-flex justify-center items-center gap-x-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition active cursor-pointer" id="notif-tab-alerts-btn" aria-selected="true" data-hs-tab="#notif-tab-alerts" aria-controls="notif-tab-alerts" role="tab">
+                            <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-2 px-3 flex-1 inline-flex justify-center items-center gap-x-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden cursor-pointer active" id="notif-tab-alerts-btn" aria-selected="true" data-hs-tab="#notif-tab-alerts" aria-controls="notif-tab-alerts" role="tab">
                                 <span class="truncate">Peringatan</span>
-                                <span id="tab_alerts_count_pill" class="hidden py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-rose-500 text-white leading-none ring-1 ring-white/20">0</span>
+                                <span id="tab_alerts_count_pill" class="hidden py-0.5 px-1.5 text-[11px] font-bold rounded-full bg-rose-600 text-white leading-none ring-1 ring-white/20">0</span>
                             </button>
-                            <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-1.5 px-3 flex-1 inline-flex justify-center items-center gap-x-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition cursor-pointer" id="notif-tab-ai-btn" aria-selected="false" data-hs-tab="#notif-tab-ai" aria-controls="notif-tab-ai" role="tab">
+                            <button type="button" class="hs-tab-active:bg-white hs-tab-active:text-slate-800 hs-tab-active:shadow-xs dark:hs-tab-active:bg-slate-900 dark:hs-tab-active:text-slate-200 py-2 px-3 flex-1 inline-flex justify-center items-center gap-x-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden cursor-pointer" id="notif-tab-ai-btn" aria-selected="false" data-hs-tab="#notif-tab-ai" aria-controls="notif-tab-ai" role="tab">
                                 <span class="truncate">Antrean AI</span>
-                                <span id="tab_ai_count_pill" class="hidden py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-blue-600 text-white leading-none ring-1 ring-white/20">0</span>
+                                <span id="tab_ai_count_pill" class="hidden py-0.5 px-1.5 text-[11px] font-bold rounded-full bg-blue-600 text-white leading-none ring-1 ring-white/20">0</span>
                             </button>
                         </nav>
                     </div>
@@ -144,7 +144,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                         <div id="notif-tab-ai" class="hidden space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60" role="tabpanel" aria-labelledby="notif-tab-ai-btn">
                             <!-- Active Tasks Section -->
                             <div id="task_monitor_active_container" class="space-y-2 hidden">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
                                     Sedang Berjalan
                                 </div>
                                 <div id="task_monitor_active_list" class="space-y-2"></div>
@@ -152,7 +152,7 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
 
                             <!-- Recent Finished Section -->
                             <div id="task_monitor_recent_container" class="space-y-2 pt-2 hidden">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
                                     Baru Selesai
                                 </div>
                                 <div id="task_monitor_recent_list" class="space-y-1.5"></div>

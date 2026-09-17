@@ -3438,18 +3438,13 @@
 
 // Notification Center & Activity Monitor for Admin Topbar
 (() => {
-    const dropdownToggle = document.getElementById('hs-dropdown-notifications') ||
-                           document.getElementById('hs-dropdown-task-monitor');
+    const dropdownToggle = document.getElementById('hs-dropdown-notifications');
     if (!dropdownToggle) return;
 
-    const badgeEl = document.getElementById('notification_hub_badge') ||
-                    document.getElementById('task_monitor_badge');
-    const iconEl = document.getElementById('notification_hub_icon') ||
-                   document.getElementById('task_monitor_icon');
-    const headerCountEl = document.getElementById('notification_hub_header_count') ||
-                          document.getElementById('task_monitor_header_count');
-    const refreshBtn = document.getElementById('btn_notification_hub_refresh') ||
-                       document.getElementById('btn_task_monitor_refresh');
+    const badgeEl = document.getElementById('notification_hub_badge');
+    const iconEl = document.getElementById('notification_hub_icon');
+    const headerCountEl = document.getElementById('notification_hub_header_count');
+    const refreshBtn = document.getElementById('btn_notification_hub_refresh');
 
     const tabAlertsPill = document.getElementById('tab_alerts_count_pill');
     const tabAiPill = document.getElementById('tab_ai_count_pill');
@@ -3626,11 +3621,11 @@
                 badgeEl.classList.remove('hidden');
                 badgeEl.classList.add('flex');
                 if (badgeTone === 'danger') {
-                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-xs animate-pulse leading-none';
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4.5 h-4.5 px-1 flex items-center justify-center rounded-full bg-rose-600 text-[11px] font-bold text-white shadow-xs animate-pulse leading-none';
                 } else if (badgeTone === 'warning') {
-                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white shadow-xs leading-none';
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4.5 h-4.5 px-1 flex items-center justify-center rounded-full bg-amber-700 text-[11px] font-bold text-white shadow-xs leading-none';
                 } else {
-                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-xs leading-none';
+                    badgeEl.className = 'absolute -top-1 -end-1 min-w-4.5 h-4.5 px-1 flex items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white shadow-xs leading-none';
                 }
             } else {
                 badgeEl.classList.add('hidden');
@@ -3652,16 +3647,16 @@
         if (headerCountEl) {
             if (criticalCount > 0) {
                 headerCountEl.textContent = `${criticalCount} Kritis`;
-                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300';
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300';
             } else if (alertsCount > 0) {
                 headerCountEl.textContent = `${alertsCount} Perhatian`;
-                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300';
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300';
             } else if (activeCount > 0) {
                 headerCountEl.textContent = `${activeCount} AI Aktif`;
-                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300';
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300';
             } else {
                 headerCountEl.textContent = 'Semua Aman';
-                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[10px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+                headerCountEl.className = 'py-0.5 px-2 rounded-full text-[11px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
             }
         }
 
@@ -3670,9 +3665,9 @@
                 tabAlertsPill.textContent = String(alertsCount);
                 tabAlertsPill.classList.remove('hidden');
                 if (criticalCount > 0) {
-                    tabAlertsPill.className = 'py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-rose-500 text-white leading-none ring-1 ring-white/20';
+                    tabAlertsPill.className = 'py-0.5 px-1.5 text-[11px] font-bold rounded-full bg-rose-600 text-white leading-none ring-1 ring-white/20';
                 } else {
-                    tabAlertsPill.className = 'py-0.2 px-1.5 text-[9px] font-bold rounded-full bg-amber-500 text-white leading-none ring-1 ring-white/20';
+                    tabAlertsPill.className = 'py-0.5 px-1.5 text-[11px] font-bold rounded-full bg-amber-700 text-white leading-none ring-1 ring-white/20';
                 }
             } else {
                 tabAlertsPill.classList.add('hidden');
@@ -3732,7 +3727,7 @@
                     let actionHtml = '';
                     if (alert.action_type === 'modal' && alert.action_target) {
                         actionHtml = `
-                            <button type="button" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-xs transition cursor-pointer" data-hs-overlay="${escapeHtml(alert.action_target)}" onclick="window.closeNotificationHub && window.closeNotificationHub(); window.switchWaTab && window.switchWaTab('qr'); window.loadWaQrCode && window.loadWaQrCode();">
+                            <button type="button" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-xs transition cursor-pointer" data-hub-wa-action data-hs-overlay="${escapeHtml(alert.action_target)}">
                                 <i data-lucide="qr-code" class="size-3.5"></i>
                                 <span>${escapeHtml(alert.action_label || 'Tautkan')}</span>
                             </button>
@@ -3750,7 +3745,7 @@
                     }
 
                     const markReadButton = `
-                        <button type="button" data-mark-read="${escapeHtml(alert.id)}" title="Tandai dibaca" aria-label="Tandai ${escapeHtml(alert.title)} sebagai dibaca" class="shrink-0 size-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800/70 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden">
+                        <button type="button" data-mark-read="${escapeHtml(alert.id)}" title="Tandai dibaca" aria-label="Tandai ${escapeHtml(alert.title)} sebagai dibaca" class="shrink-0 size-7 inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/70 dark:hover:bg-slate-800/70 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden">
                             <i data-lucide="check" class="size-3.5"></i>
                         </button>
                     `;
@@ -3768,7 +3763,7 @@
                                     <p class="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
                                         ${escapeHtml(alert.message)}
                                     </p>
-                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 font-medium flex items-center gap-1">
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium flex items-center gap-1">
                                         <i data-lucide="clock" class="size-3"></i>
                                         <span>Aktif sejak ${sinceLabelFor(alert)}</span>
                                     </p>
@@ -3781,10 +3776,10 @@
                 }).join('');
 
                 const readHtml = readAlerts.map((alert) => `
-                    <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500" title="${escapeHtml(alert.message)}">
+                    <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400" title="${escapeHtml(alert.message)}">
                         <i data-lucide="check-circle-2" class="size-3.5 shrink-0"></i>
                         <span class="text-[11px] font-medium truncate flex-1">${escapeHtml(alert.title)}</span>
-                        <span class="text-[10px] font-semibold shrink-0">dibaca</span>
+                        <span class="text-[11px] font-semibold shrink-0">dibaca</span>
                     </div>
                 `).join('');
 
@@ -3811,7 +3806,7 @@
                             <a href="${escapeHtml(task.url)}" class="font-bold text-xs text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-1 flex-1 leading-snug focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden rounded">
                                 ${escapeHtml(task.judul)}
                             </a>
-                            <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shrink-0">
+                            <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shrink-0">
                                 <span class="animate-spin inline-block size-2.5 border-2 border-current border-t-transparent rounded-full"></span>
                                 <span>${escapeHtml(task.status_label)}</span>
                             </span>
@@ -3829,7 +3824,7 @@
                             <span class="text-slate-500 dark:text-slate-400 truncate">${escapeHtml(task.tanggal)}</span>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 ${isCancelling ? `
-                                    <span class="inline-flex items-center min-h-[28px] px-2 text-[10px] text-amber-600 dark:text-amber-400 font-medium">Menghentikan...</span>
+                                    <span class="inline-flex items-center min-h-[28px] px-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium">Menghentikan...</span>
                                 ` : `
                                     <form method="post" action="${baseUrl}/admin/notulen/cancel/${task.id}"
                                           data-confirm-title="Hentikan Proses AI"
@@ -3873,7 +3868,7 @@
                             <span class="font-medium text-xs text-slate-800 dark:text-slate-200 truncate flex-1">
                                 ${escapeHtml(task.judul)}
                             </span>
-                            <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[10px] font-semibold border ${badgeClass} shrink-0">
+                            <span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[11px] font-semibold border ${badgeClass} shrink-0">
                                 <i data-lucide="${iconName}" class="size-2.5"></i>
                                 <span>${escapeHtml(task.status_label)}</span>
                             </span>
@@ -3891,7 +3886,8 @@
         }
 
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
-            window.lucide.createIcons();
+            const hubRoot = dropdownToggle.closest('.hs-dropdown');
+            window.lucide.createIcons(hubRoot ? { root: hubRoot } : undefined);
         }
 
         const nextInterval = activeCount > 0 ? 4500 : ((criticalCount > 0 || alertsCount > 0) ? 15000 : 45000);
@@ -3946,8 +3942,7 @@
     };
 
     window.closeNotificationHub = () => {
-        const toggle = document.getElementById('hs-dropdown-notifications') ||
-                       document.getElementById('hs-dropdown-task-monitor');
+        const toggle = document.getElementById('hs-dropdown-notifications');
         if (toggle && window.HSDropdown && typeof window.HSDropdown.close === 'function') {
             window.HSDropdown.close(toggle);
         }
@@ -3963,8 +3958,7 @@
     document.addEventListener('submit', (e) => {
         const form = e.target.closest('#task_monitor_active_list form[data-confirm-message]');
         if (!form) return;
-        const toggle = document.getElementById('hs-dropdown-notifications') ||
-                       document.getElementById('hs-dropdown-task-monitor');
+        const toggle = document.getElementById('hs-dropdown-notifications');
         if (toggle && window.HSDropdown && typeof window.HSDropdown.close === 'function') {
             window.HSDropdown.close(toggle);
         }
@@ -3990,6 +3984,14 @@
         if (lastFeedData) {
             renderNotifications(lastFeedData);
         }
+    });
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-hub-wa-action]');
+        if (!btn) return;
+        if (window.closeNotificationHub) window.closeNotificationHub();
+        if (window.switchWaTab) window.switchWaTab('qr');
+        if (window.loadWaQrCode) window.loadWaQrCode();
     });
 
     document.addEventListener('visibilitychange', () => {

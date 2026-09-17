@@ -2514,7 +2514,8 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
         scroll-behavior: auto !important;
     }
 
-    .animate-ping {
+    .animate-ping,
+    .animate-pulse {
         animation: none !important;
     }
 }
