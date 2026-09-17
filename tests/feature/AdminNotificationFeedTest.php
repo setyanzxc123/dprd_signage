@@ -99,6 +99,7 @@ final class AdminNotificationFeedTest extends CIUnitTestCase
         $response->assertSee('notification_hub_badge');
         $response->assertSee('notif-tab-alerts');
         $response->assertSee('notif-tab-ai');
+        $response->assertSee('notif_hub_error');
         $response->assertSee('modal_wa_pairing');
     }
 

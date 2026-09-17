@@ -119,6 +119,12 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
                         </nav>
                     </div>
 
+                    <!-- Feed Error Banner -->
+                    <div id="notif_hub_error" class="hidden mx-3 mt-2 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-[11px] font-semibold flex items-center gap-2" role="alert">
+                        <i data-lucide="cloud-off" class="size-3.5 shrink-0"></i>
+                        <span class="min-w-0">Gagal memuat notifikasi dari server. Periksa koneksi atau muat ulang halaman.</span>
+                    </div>
+
                     <!-- Tab Content Panes -->
                     <div class="min-h-[220px] max-h-[60vh] sm:max-h-80 overflow-y-auto p-3">
                         <!-- Pane 1: Peringatan Sistem -->

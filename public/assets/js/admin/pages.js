@@ -3456,6 +3456,15 @@
 
     const alertsListEl = document.getElementById('notif_alerts_list');
     const alertsEmptyEl = document.getElementById('notif_alerts_empty');
+    const feedErrorEl = document.getElementById('notif_hub_error');
+
+    let consecutiveFeedFailures = 0;
+
+    const setFeedErrorVisible = (visible) => {
+        if (feedErrorEl) {
+            feedErrorEl.classList.toggle('hidden', !visible);
+        }
+    };
 
     const activeContainer = document.getElementById('task_monitor_active_container');
     const activeListEl = document.getElementById('task_monitor_active_list');
@@ -3468,8 +3477,38 @@
     let isFetching = false;
     let abortController = null;
     let lastRenderedSignature = null;
+    let lastFeedData = null;
 
     const baseUrl = window.location.origin;
+
+    const HUB_STATE_KEY = 'notif_hub_state_v1';
+
+    const loadHubState = () => {
+        const fallback = { firstSeen: {}, read: {} };
+        try {
+            const raw = localStorage.getItem(HUB_STATE_KEY);
+            if (!raw) return fallback;
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object'
+                && parsed.firstSeen && typeof parsed.firstSeen === 'object'
+                && parsed.read && typeof parsed.read === 'object') {
+                return parsed;
+            }
+        } catch (e) {
+            // State korup atau penyimpanan tidak tersedia, pakai state kosong.
+        }
+        return fallback;
+    };
+
+    let hubState = loadHubState();
+
+    const saveHubState = () => {
+        try {
+            localStorage.setItem(HUB_STATE_KEY, JSON.stringify(hubState));
+        } catch (e) {
+            // Penyimpanan tidak tersedia (mis. mode privat), abaikan.
+        }
+    };
 
     const escapeHtml = (str) => {
         if (!str) return '';
@@ -3495,18 +3534,54 @@
     };
 
     const renderNotifications = (data) => {
+        lastFeedData = data;
+
         const summary = data.summary || {};
         const alerts = data.alerts || [];
         const aiTasks = data.ai_tasks || {};
         const activeTasks = aiTasks.active || [];
         const recentTasks = aiTasks.recent || [];
 
+        const now = Date.now();
+        const alertIds = new Set(alerts.map((a) => String(a.id)));
+        let hubStateChanged = false;
+        alerts.forEach((alert) => {
+            const id = String(alert.id);
+            if (!hubState.firstSeen[id]) {
+                hubState.firstSeen[id] = now;
+                hubStateChanged = true;
+            }
+        });
+        Object.keys(hubState.firstSeen).forEach((id) => {
+            if (!alertIds.has(id)) {
+                delete hubState.firstSeen[id];
+                hubStateChanged = true;
+            }
+        });
+        Object.keys(hubState.read).forEach((id) => {
+            if (!alertIds.has(id)) {
+                delete hubState.read[id];
+                hubStateChanged = true;
+            }
+        });
+        if (hubStateChanged) {
+            saveHubState();
+        }
+
+        const unreadAlerts = alerts.filter((a) => !hubState.read[String(a.id)]);
+        const readAlerts = alerts.filter((a) => hubState.read[String(a.id)]);
+        const firstSeenBuckets = {};
+        alerts.forEach((a) => {
+            const seenAt = hubState.firstSeen[String(a.id)] || now;
+            firstSeenBuckets[a.id] = Math.floor((now - seenAt) / 60000);
+        });
+
         const activeCount = Number(summary.active_tasks_count ?? aiTasks.active_count ?? activeTasks.length) || 0;
-        const criticalCount = Number(summary.unread_critical_count ?? 0);
-        const warningCount = Number(summary.warning_count ?? 0);
-        const alertsCount = Number(summary.alerts_count ?? alerts.length) || 0;
-        const totalBadgeCount = Number(summary.badge_count ?? (activeCount + alertsCount)) || 0;
-        const badgeTone = summary.badge_tone || (criticalCount > 0 ? 'danger' : (warningCount > 0 ? 'warning' : (activeCount > 0 ? 'info' : 'none')));
+        const criticalCount = unreadAlerts.filter((a) => a.severity === 'critical').length;
+        const warningCount = unreadAlerts.filter((a) => a.severity === 'warning').length;
+        const alertsCount = unreadAlerts.length;
+        const totalBadgeCount = criticalCount + warningCount + activeCount;
+        const badgeTone = criticalCount > 0 ? 'danger' : (warningCount > 0 ? 'warning' : (activeCount > 0 ? 'info' : 'none'));
 
         const currentSignature = JSON.stringify({
             criticalCount,
@@ -3517,7 +3592,9 @@
             badgeTone,
             alerts: alerts.map((a) => [a.id, a.category, a.severity, a.title, a.message]),
             active: activeTasks.map((t) => [t.id, t.status, t.progress_percent, t.current_step, t.cancel_requested]),
-            recent: recentTasks.map((t) => [t.id, t.status])
+            recent: recentTasks.map((t) => [t.id, t.status]),
+            readAlertIds: Object.keys(hubState.read).sort(),
+            firstSeenBuckets
         });
 
         if (currentSignature === lastRenderedSignature) {
@@ -3613,7 +3690,15 @@
 
         if (alertsListEl) {
             if (alerts.length > 0) {
-                alertsListEl.innerHTML = alerts.map((alert) => {
+                const sinceLabelFor = (alert) => {
+                    const seenAt = hubState.firstSeen[String(alert.id)] || now;
+                    const minutes = Math.floor((now - seenAt) / 60000);
+                    if (minutes < 1) return 'baru saja';
+                    if (minutes < 60) return `${minutes} menit lalu`;
+                    return `${Math.floor(minutes / 60)} jam lalu`;
+                };
+
+                const unreadHtml = unreadAlerts.map((alert) => {
                     const isCritical = alert.severity === 'critical';
                     const isInfo = alert.severity === 'info';
 
@@ -3664,6 +3749,12 @@
                         `;
                     }
 
+                    const markReadButton = `
+                        <button type="button" data-mark-read="${escapeHtml(alert.id)}" title="Tandai dibaca" aria-label="Tandai ${escapeHtml(alert.title)} sebagai dibaca" class="shrink-0 size-6 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800/70 transition cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden">
+                            <i data-lucide="check" class="size-3.5"></i>
+                        </button>
+                    `;
+
                     return `
                         <div class="p-3 rounded-xl border ${cardBg} space-y-2">
                             <div class="flex items-start gap-2.5">
@@ -3677,12 +3768,27 @@
                                     <p class="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
                                         ${escapeHtml(alert.message)}
                                     </p>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 font-medium flex items-center gap-1">
+                                        <i data-lucide="clock" class="size-3"></i>
+                                        <span>Aktif sejak ${sinceLabelFor(alert)}</span>
+                                    </p>
                                 </div>
+                                ${markReadButton}
                             </div>
                             ${actionHtml ? `<div class="flex justify-end pt-1">${actionHtml}</div>` : ''}
                         </div>
                     `;
                 }).join('');
+
+                const readHtml = readAlerts.map((alert) => `
+                    <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500" title="${escapeHtml(alert.message)}">
+                        <i data-lucide="check-circle-2" class="size-3.5 shrink-0"></i>
+                        <span class="text-[11px] font-medium truncate flex-1">${escapeHtml(alert.title)}</span>
+                        <span class="text-[10px] font-semibold shrink-0">dibaca</span>
+                    </div>
+                `).join('');
+
+                alertsListEl.innerHTML = unreadHtml + readHtml;
                 alertsEmptyEl?.classList.add('hidden');
             } else {
                 alertsListEl.innerHTML = '';
@@ -3788,7 +3894,7 @@
             window.lucide.createIcons();
         }
 
-        const nextInterval = activeCount > 0 ? 4500 : (criticalCount > 0 ? 15000 : 45000);
+        const nextInterval = activeCount > 0 ? 4500 : ((criticalCount > 0 || alertsCount > 0) ? 15000 : 45000);
         if (pollInterval !== nextInterval) {
             pollInterval = nextInterval;
             restartPolling();
@@ -3817,11 +3923,17 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const json = await res.json();
             if (json && json.status === 'success' && json.data) {
+                consecutiveFeedFailures = 0;
+                setFeedErrorVisible(false);
                 renderNotifications(json.data);
             }
         } catch (e) {
             if (e.name !== 'AbortError') {
-                // Silently handle polling failure
+                consecutiveFeedFailures++;
+                console.warn('Notification hub fetch failed:', e);
+                if (consecutiveFeedFailures >= 2) {
+                    setFeedErrorVisible(true);
+                }
             }
         } finally {
             isFetching = false;
@@ -3867,6 +3979,18 @@
             });
         });
     }
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-mark-read]');
+        if (!btn) return;
+        const alertId = btn.getAttribute('data-mark-read');
+        if (!alertId || hubState.read[alertId]) return;
+        hubState.read[alertId] = Date.now();
+        saveHubState();
+        if (lastFeedData) {
+            renderNotifications(lastFeedData);
+        }
+    });
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
