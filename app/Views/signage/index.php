@@ -45,7 +45,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
-                    <div class="inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/90 px-[0.8vw] py-[0.45vh] shadow-xs">
+                    <div class="inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-800/90 backdrop-blur-sm backdrop-saturate-200 ring-1 ring-inset ring-white/60 dark:ring-white/10 px-[0.8vw] py-[0.45vh] shadow-xs">
                         <div class="flex items-center gap-[0.6vw] px-[1vw] py-[0.35vh]">
                             <img v-if="cuaca.icon_url" :src="cuaca.icon_url"
                                 class="h-[clamp(28px,2vw,40px)] w-[clamp(28px,2vw,40px)] object-contain"
