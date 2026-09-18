@@ -72,7 +72,7 @@ if ($isMember) {
             </a>
 
             <div class="flex items-center gap-2 shrink-0">
-                <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-3.5 py-1.5 shadow-xs">
+                <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-800/50 backdrop-blur-sm backdrop-saturate-200 ring-1 ring-inset ring-white/60 dark:ring-white/10 px-3.5 py-1.5 shadow-xs">
                     <div class="flex items-center gap-2.5 px-3 py-1">
                         <img v-if="weather.icon_url" :src="weather.icon_url" class="h-7 w-7 object-contain" alt="Ikon cuaca" />
                         <span v-else class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>
