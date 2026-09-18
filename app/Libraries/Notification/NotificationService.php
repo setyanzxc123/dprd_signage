@@ -33,9 +33,9 @@ final class NotificationService
      *
      * @return array<string, mixed>
      */
-    public function getFeed(): array
+    public function getFeed(bool $fresh = false): array
     {
-        $alerts = $this->getCachedAlerts();
+        $alerts = $this->getCachedAlerts($fresh);
 
         $criticalCount = 0;
         $warningCount  = 0;
@@ -92,22 +92,22 @@ final class NotificationService
     /**
      * Mengambil alert feed dari cache mikro agar polling antar tab admin
      * tidak mengeksekusi seluruh kolektor pada setiap permintaan.
-     *
-     * @return list<array<string, mixed>>
      */
-    private function getCachedAlerts(): array
+    private function getCachedAlerts(bool $fresh = false): array
     {
-        try {
-            $cached = cache(self::ALERTS_CACHE_KEY);
-            if (is_array($cached)) {
-                return $cached;
+        if (!$fresh) {
+            try {
+                $cached = cache(self::ALERTS_CACHE_KEY);
+                if (is_array($cached)) {
+                    return $cached;
+                }
+            } catch (\Throwable $e) {
+                log_message('error', 'Notifikasi: gagal membaca cache feed alert. {message}', ['message' => $e->getMessage()]);
             }
-        } catch (\Throwable $e) {
-            log_message('error', 'Notifikasi: gagal membaca cache feed alert. {message}', ['message' => $e->getMessage()]);
         }
 
         $alerts = array_merge(
-            $this->collectWhatsAppAlerts(),
+            $this->collectWhatsAppAlerts($fresh),
             $this->collectUnassignedRoomAlerts(),
             $this->collectPendingMinutesAlerts(),
             $this->collectSignageIntegrityAlerts(),
@@ -129,26 +129,42 @@ final class NotificationService
      *
      * @return array<string, mixed>
      */
-    private function getCachedWaStatus(): array
+    private function getCachedWaStatus(bool $fresh = false): array
     {
-        try {
-            $cached = cache(self::WA_STATUS_CACHE_KEY);
-            if (is_array($cached)) {
-                return $cached;
+        if (!$fresh) {
+            try {
+                $cached = cache(self::WA_STATUS_CACHE_KEY);
+                if (is_array($cached)) {
+                    return $cached;
+                }
+            } catch (\Throwable $e) {
+                log_message('error', 'Notifikasi: gagal membaca cache status WhatsApp. {message}', ['message' => $e->getMessage()]);
             }
-        } catch (\Throwable $e) {
-            log_message('error', 'Notifikasi: gagal membaca cache status WhatsApp. {message}', ['message' => $e->getMessage()]);
         }
 
-        $status = $this->baileysProvider->getStatus();
+        $freshWaStatus = $this->baileysProvider->getStatus();
 
         try {
-            cache()->save(self::WA_STATUS_CACHE_KEY, $status, self::WA_STATUS_CACHE_TTL);
+            cache()->save(self::WA_STATUS_CACHE_KEY, $freshWaStatus, self::WA_STATUS_CACHE_TTL);
         } catch (\Throwable $e) {
             log_message('error', 'Notifikasi: gagal menyimpan cache status WhatsApp. {message}', ['message' => $e->getMessage()]);
         }
 
-        return $status;
+        return $freshWaStatus;
+    }
+
+    /**
+     * Menghapus cache feed alert dan status WhatsApp sehingga polling
+     * berikutnya menghitung ulang kondisi terbaru.
+     */
+    public static function flushFeedCache(): void
+    {
+        try {
+            cache()->delete(self::ALERTS_CACHE_KEY);
+            cache()->delete(self::WA_STATUS_CACHE_KEY);
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal menghapus cache feed. {message}', ['message' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -156,10 +172,10 @@ final class NotificationService
      *
      * @return list<array<string, mixed>>
      */
-    private function collectWhatsAppAlerts(): array
+    private function collectWhatsAppAlerts(bool $fresh = false): array
     {
         $alerts = [];
-        $waStatus = $this->getCachedWaStatus();
+        $waStatus = $this->getCachedWaStatus($fresh);
         $isConfigured = (bool) ($waStatus['configured'] ?? false);
         $isConnected = (bool) ($waStatus['connected'] ?? false);
 

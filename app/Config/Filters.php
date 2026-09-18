@@ -37,6 +37,8 @@ class Filters extends BaseFilters
         'memberauth'    => \App\Filters\MemberAuthFilter::class,
         'memberapi'     => \App\Filters\MemberApiAuthFilter::class,
         'appsecurity'   => \App\Filters\SecurityHeadersFilter::class,
+        // Invalidasi mikro-cache feed notifikasi pada request mutasi.
+        'notifyflush'   => \App\Filters\NotificationCacheFlushFilter::class,
         // Filter bawaan CodeIgniter Shield.
         'session'       => \CodeIgniter\Shield\Filters\SessionAuth::class,
         'chain'         => \CodeIgniter\Shield\Filters\ChainAuth::class,
@@ -119,7 +121,14 @@ class Filters extends BaseFilters
      *
      * @var array<string, list<string>>
      */
-    public array $methods = [];
+    public array $methods = [
+        // Request mutasi mengubah sumber alert (jadwal, notulen, WA, media),
+        // sehingga cache feed notifikasi harus dihitung ulang setelahnya.
+        'post'       => ['notifyflush'],
+        'put'        => ['notifyflush'],
+        'patch'      => ['notifyflush'],
+        'delete'     => ['notifyflush'],
+    ];
 
     /**
      * List of filter aliases that should run on any

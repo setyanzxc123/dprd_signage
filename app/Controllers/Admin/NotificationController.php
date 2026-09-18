@@ -17,10 +17,13 @@ class NotificationController extends BaseController
 
     /**
      * Endpoint polling feed notifikasi dan aktivitas sistem untuk Web Admin Topbar.
+     * Parameter fresh=1 melewati cache mikro untuk refresh manual.
      */
     public function feed(): ResponseInterface
     {
-        $data = $this->service->getFeed();
+        $fresh = strtolower((string) $this->request->getGet('fresh')) === '1';
+
+        $data = $this->service->getFeed($fresh);
 
         return $this->response->setJSON([
             'status' => 'success',

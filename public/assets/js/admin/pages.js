@@ -3897,7 +3897,7 @@
         }
     };
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (fresh = false) => {
         if (isFetching || document.hidden) return;
         isFetching = true;
 
@@ -3908,7 +3908,10 @@
 
         try {
             const currentOrigin = window.location.origin;
-            const res = await fetch(`${currentOrigin}/admin/notifications/feed`, {
+            const feedUrl = fresh
+                ? `${currentOrigin}/admin/notifications/feed?fresh=1`
+                : `${currentOrigin}/admin/notifications/feed`;
+            const res = await fetch(feedUrl, {
                 signal: abortController.signal,
                 headers: {
                     'Accept': 'application/json',
@@ -3938,7 +3941,7 @@
 
     window.refreshNotificationHub = () => {
         lastRenderedSignature = null;
-        fetchNotifications();
+        fetchNotifications(true);
     };
 
     window.closeNotificationHub = () => {
@@ -3968,7 +3971,7 @@
         refreshBtn.addEventListener('click', () => {
             refreshBtn.classList.add('animate-spin');
             lastRenderedSignature = null;
-            fetchNotifications().finally(() => {
+            fetchNotifications(true).finally(() => {
                 setTimeout(() => refreshBtn.classList.remove('animate-spin'), 600);
             });
         });
