@@ -4,7 +4,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import { config } from '../config.js';
-import { probeDuration } from './audioSlicer.js';
+import { probeDuration, MAX_CHUNK_SECONDS } from './audioSlicer.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -132,7 +132,7 @@ export async function detectSilences(inputPath, totalDuration, { onLog = () => {
       onLog(`[VAD] ffmpeg keluar dengan kode ${err.code}, ${silences.length} rentang hening tetap terbaca.`);
       return silences;
     }
-    throw new Error(`Gagal menjalankan silencedetect: ${err.message}`);
+    throw new Error(`Gagal menjalankan silencedetect: ${err.message}`, { cause: err });
   }
 }
 
@@ -144,9 +144,6 @@ export async function detectSilences(inputPath, totalDuration, { onLog = () => {
  * Rencana disimpan ke vad.json sehingga resume mereproduksi batas yang sama.
  */
 export function planChunks(duration, silences, chunkDurationSeconds, toleranceSeconds) {
-  // Pengaman TPM: satu request maksimal ~110 menit audio (~211K token, di bawah TPM 250K),
-  // sekalipun pembulatan menghasilkan chunk tunggal 1.5x durasi target.
-  const MAX_CHUNK_SECONDS = 6600;
   const count = Math.max(
     Math.round(duration / chunkDurationSeconds),
     Math.ceil(duration / MAX_CHUNK_SECONDS),

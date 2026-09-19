@@ -5,7 +5,8 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import { config } from '../config.js';
-import { getDbPool, processJob } from '../worker.js';
+import { getDbPool } from '../services/db.js';
+import { processJob } from '../services/pipeline.js';
 
 if (ffmpegInstaller && ffmpegInstaller.path) {
   ffmpeg.setFfmpegPath(ffmpegInstaller.path);
@@ -45,7 +46,7 @@ async function runSmokeTest() {
 
   // 1. Uji Koneksi Database
   try {
-    const [dbTest] = await pool.query('SELECT 1 as connected');
+    await pool.query('SELECT 1 as connected');
     const target = config.db.socketPath ? `socket: ${config.db.socketPath}` : `${config.db.host}:${config.db.port}`;
     console.log(`[DB] Koneksi MySQL berhasil (${target})`);
   } catch (err) {
@@ -110,7 +111,9 @@ async function runSmokeTest() {
       if (fs.existsSync(jobDir)) {
         fs.rmSync(jobDir, { recursive: true, force: true });
       }
-    } catch {}
+      } catch {
+        // Pembersihan file sementara diabaikan jika gagal
+      }
 
     console.log('[CLEANUP] Pembersihan selesai.');
     await pool.end();

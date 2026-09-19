@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeMinutesText, MINUTES_RESPONSE_SCHEMA, stripTimestamps } from '../services/geminiService.js';
+import { composeMinutesText, MINUTES_RESPONSE_SCHEMA, stripTimestamps } from '../services/gemini/minutes.js';
 
 test('schema risalah memuat tiga pilar dengan tipe yang benar', () => {
   assert.equal(MINUTES_RESPONSE_SCHEMA.type, 'OBJECT');

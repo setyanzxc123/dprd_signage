@@ -799,7 +799,7 @@ class NotulenService
     /**
      * Fallback parser 3 Pilar untuk teks risalah hasil editan notulis.
      * Struktur risalah dari worker kini dijamin responseSchema (lihat
-     * ai_worker/services/geminiService.js); parser ini hanya dipakai bila
+     * ai_worker/services/gemini/minutes.js); parser ini hanya dipakai bila
      * struktur_json tidak tersedia atau setelah naskah disunting.
      *
      * @return array{ringkasan_utama: string, poin_pembahasan: list<array{waktu: ?string, topik: string, pembicara?: ?string, uraian?: string, full_text?: string}>, kesimpulan_akhir: list<string>}

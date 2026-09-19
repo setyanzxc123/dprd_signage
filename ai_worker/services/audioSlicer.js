@@ -126,7 +126,9 @@ export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = nul
     if (typeof onProgress === 'function') {
       try {
         await onProgress(entry.index, chunkPlan.length, chunkFileName, durationMin);
-      } catch {}
+      } catch {
+        // Laporan progres slicing bersifat best effort
+      }
     }
 
     if (fs.existsSync(partFilePath)) {
@@ -147,11 +149,13 @@ export async function sliceAudio(inputPath, outputDir, plan, cancelChecker = nul
   };
 }
 
+// Pengaman TPM: chunk tunggal maksimal ~110 menit audio meski pembagian
+// merata menghasilkan lebih sedikit chunk.
+export const MAX_CHUNK_SECONDS = 6600;
+
 function fixedPlan(totalDuration, chunkDurationSeconds) {
   // Pembagian merata (pembulatan terdekat) agar tidak ada chunk ekor kecil
-  // yang tetap membayar satu request penuh. Pengaman TPM: chunk tunggal
-  // maksimal ~110 menit audio meski pembulatan menghasilkan lebih sedikit.
-  const MAX_CHUNK_SECONDS = 6600;
+  // yang tetap membayar satu request penuh.
   const count = Math.max(
     Math.round(totalDuration / chunkDurationSeconds),
     Math.ceil(totalDuration / MAX_CHUNK_SECONDS),

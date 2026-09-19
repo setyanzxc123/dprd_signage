@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { waitForFileActive } from '../services/geminiService.js';
+import { waitForFileActive } from '../services/gemini/filesApi.js';
 
 test('file sudah ACTIVE langsung lolos tanpa poll tambahan', async () => {
   let calls = 0;

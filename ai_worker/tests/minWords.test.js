@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { minExpectedWordsFor } from '../services/geminiService.js';
+import { minExpectedWordsFor } from '../services/gemini/transcriber.js';
 
 test('minimum kata non-final proporsional durasi bicara', () => {
   // 30 menit bicara penuh, 30 kata/menit -> 900 kata

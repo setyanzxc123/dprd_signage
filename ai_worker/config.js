@@ -16,6 +16,16 @@ function getEnv(key, defaultValue = '') {
     : defaultValue;
 }
 
+function toInt(raw, fallback) {
+  const parsed = parseInt(String(raw), 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function toFloat(raw, fallback) {
+  const parsed = parseFloat(String(raw));
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
 const rawHost = getEnv('database.default.hostname', getEnv('DB_HOST', '127.0.0.1'));
 const configuredSocket = getEnv('database.default.socket', getEnv('DB_SOCKET', ''));
 
@@ -51,7 +61,7 @@ if (detectedSocket) {
   dbConfig.socketPath = detectedSocket;
 } else {
   dbConfig.host = rawHost;
-  dbConfig.port = parseInt(getEnv('database.default.port', getEnv('DB_PORT', '3306')), 10);
+  dbConfig.port = toInt(getEnv('database.default.port', getEnv('DB_PORT', '3306')), 3306);
 }
 
 // Gemini API Key & Model Chain
@@ -77,34 +87,34 @@ export const config = {
     thinkingLevel: geminiThinkingLevel,
   },
   audio: {
-    chunkDurationSeconds: parseInt(getEnv('CHUNK_DURATION_SECONDS', '1800'), 10),
-    safetyDelayMs: parseInt(getEnv('SAFETY_DELAY_MS', '0'), 10),
+    chunkDurationSeconds: toInt(getEnv('CHUNK_DURATION_SECONDS', '1800'), 1800),
+    safetyDelayMs: toInt(getEnv('SAFETY_DELAY_MS', '0'), 0),
   },
   vad: {
     // Ambang kebisingan (dB) dan durasi minimum hening (detik) untuk silencedetect
-    silenceDb: parseInt(getEnv('VAD_SILENCE_DB', '-35'), 10),
-    minSilenceSeconds: parseInt(getEnv('VAD_MIN_SILENCE_S', '2'), 10),
+    silenceDb: toInt(getEnv('VAD_SILENCE_DB', '-35'), -35),
+    minSilenceSeconds: toInt(getEnv('VAD_MIN_SILENCE_S', '2'), 2),
     // Batas pergeseran titik potong chunk mencari titik hening (detik)
-    toleranceSeconds: parseInt(getEnv('VAD_TOLERANCE_S', '180'), 10),
+    toleranceSeconds: toInt(getEnv('VAD_TOLERANCE_S', '180'), 180),
     // Pengabaian chunk hening
     skipSilentChunks: ['true', '1', 'yes'].includes(String(getEnv('VAD_SKIP_SILENT_CHUNKS', 'false')).toLowerCase().trim()),
     // Chunk dengan rasio bicara di bawah nilai ini dilewati jika skipSilentChunks aktif
-    skipSpeechRatio: parseFloat(getEnv('VAD_SKIP_SPEECH_RATIO', '0.05')),
+    skipSpeechRatio: toFloat(getEnv('VAD_SKIP_SPEECH_RATIO', '0.05'), 0.05),
   },
   worker: {
-    pollIntervalMs: parseInt(getEnv('WORKER_POLL_INTERVAL_MS', '5000'), 10), // 5 detik
-    maxRetriesPerModel: parseInt(getEnv('MAX_RETRIES_PER_MODEL', '4'), 10),
+    pollIntervalMs: toInt(getEnv('WORKER_POLL_INTERVAL_MS', '5000'), 5000), // 5 detik
+    maxRetriesPerModel: toInt(getEnv('MAX_RETRIES_PER_MODEL', '4'), 4),
     // Job in-progress lebih tua dari nilai ini dianggap basi saat startup reset
-    staleThresholdMinutes: parseInt(getEnv('WORKER_STALE_THRESHOLD_MIN', '15'), 10),
+    staleThresholdMinutes: toInt(getEnv('WORKER_STALE_THRESHOLD_MIN', '15'), 15),
   },
   validation: {
     // Minimum kata per menit audio — threshold konservatif untuk percakapan rapat
     // Rata-rata manusia berbicara 120-150 kata/menit; 30 kata/menit adalah batas bawah
     // yang mencakup kondisi audio buruk, banyak jeda, atau rapat formal lambat
-    minWordsPerMinute: parseInt(getEnv('VALIDATION_MIN_WORDS_PER_MINUTE', '30'), 10),
+    minWordsPerMinute: toInt(getEnv('VALIDATION_MIN_WORDS_PER_MINUTE', '30'), 30),
     // Jumlah karakter minimum agar cek abrupt-cut dijalankan
     // (transkrip sangat pendek tidak perlu dicek ending-nya)
-    abruptCutMinLength: parseInt(getEnv('VALIDATION_ABRUPT_CUT_MIN_LENGTH', '500'), 10),
+    abruptCutMinLength: toInt(getEnv('VALIDATION_ABRUPT_CUT_MIN_LENGTH', '500'), 500),
   },
   paths: {
     root: path.resolve(__dirname, '..'),

@@ -1,12 +1,15 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import mysql from 'mysql2/promise';
 import { config } from './config.js';
-import { sliceAudio, probeDuration, formatChunkIndex } from './services/audioSlicer.js';
-import { transcribeChunkWithFallback, generateMeetingMinutesWithFallback } from './services/geminiService.js';
+import { getDbPool, closeDbPool } from './services/db.js';
+import { acquireDaemonLock, releaseDaemonLock } from './services/daemonLock.js';
 import { interruptibleSleep, JobCancelledError } from './services/throttler.js';
-import { runVadAnalysis, loadOrAnalyze, isChunkSilent } from './services/vad.js';
 import { log, warn, error } from './services/logger.js';
+import {
+  getJobById,
+  markJobFailure,
+  nextQueuedJobCandidate,
+  performStartupReset,
+} from './services/jobRepository.js';
+import { processJob } from './services/pipeline.js';
 
 // Abaikan error EPIPE jika worker dijalankan asinkron tanpa pipe terminal aktif (popen PHP)
 process.stdout?.on('error', (err) => {
@@ -15,508 +18,6 @@ process.stdout?.on('error', (err) => {
 process.stderr?.on('error', (err) => {
   if (err.code === 'EPIPE') return;
 });
-
-let dbPool = null;
-
-export const LOCK_PATH = path.resolve(config.paths.logsDir, '..', 'worker.lock');
-
-export function isPidAlive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    return err.code === 'EPERM';
-  }
-}
-
-/**
- * Kunci instance tunggal daemon: mencegah dua daemon berjalan bersamaan
- * (double-claim antrean). Lock basi (PID sudah mati) otomatis diambil alih.
- */
-export function acquireDaemonLock() {
-  let existing = null;
-  try {
-    existing = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8'));
-  } catch {
-    // lock tidak ada / rusak: aman untuk diambil
-  }
-  if (existing && existing.pid !== process.pid && isPidAlive(existing.pid)) {
-    return { acquired: false, pid: existing.pid };
-  }
-  fs.writeFileSync(LOCK_PATH, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }));
-  return { acquired: true, pid: process.pid };
-}
-
-export function releaseDaemonLock() {
-  try {
-    const existing = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8'));
-    if (existing && existing.pid === process.pid) {
-      fs.unlinkSync(LOCK_PATH);
-    }
-  } catch {
-    // lock sudah tidak ada: tidak ada yang perlu dibersihkan
-  }
-}
-
-export async function getDbPool() {
-  if (!dbPool) {
-    dbPool = mysql.createPool(config.db);
-  }
-  return dbPool;
-}
-
-/**
- * Pemulihan job in-progress yang menggantung (worker mati/crash saat
- * memproses) ke status 'queued'. Dijalankan saat startup dan secara berkala
- * oleh daemon. Job yang sedang diproses worker ini dikecualikan agar tidak
- * di-reset di tengah proses yang masih berjalan.
- *
- * Saat kunci instance tunggal menjamin tidak ada worker lain
- * (ignoreStaleness = true), semua job in-progress dipulihkan tanpa
- * menunggu ambang kebasian - resume langsung setelah restart.
- */
-export async function performStartupReset(pool, excludeJobId = null, ignoreStaleness = false) {
-  const params = [];
-  let sql =
-    `UPDATE meeting_transcription_jobs
-     SET status = 'queued', cancel_requested = 0, current_step = 'Menunggu antrean (dipulihkan dari kondisi macet)'
-     WHERE status IN ('chunking', 'transcribing', 'summarizing')`;
-  if (!ignoreStaleness) {
-    sql += ' AND updated_at < ?';
-    params.push(new Date(Date.now() - config.worker.staleThresholdMinutes * 60 * 1000));
-  }
-  if (excludeJobId) {
-    sql += ' AND id <> ?';
-    params.push(excludeJobId);
-  }
-  const [result] = await pool.execute(sql, params);
-
-  if (result.affectedRows > 0) {
-    log(`[Worker] Pemulihan job basi: ${result.affectedRows} job in-progress di-reset ke 'queued'.`);
-  }
-}
-
-/**
- * Penanda job gagal dari handler error worker. Dijaga agar tidak menurunkan
- * status 'completed'/'cancelled' yang mungkin sudah ditulis worker lain.
- */
-export async function markJobFailure(pool, jobId, err) {
-  const message = String(err.message || err);
-  const isCancelled = err instanceof JobCancelledError;
-  const [result] = await pool.execute(
-    `UPDATE meeting_transcription_jobs
-     SET status = ?, cancel_requested = 0, error_message = ?, current_step = ?, updated_at = NOW()
-     WHERE id = ? AND status NOT IN ('completed', 'cancelled')`,
-    [
-      isCancelled ? 'cancelled' : 'failed',
-      isCancelled ? null : message,
-      isCancelled ? 'Proses dihentikan oleh admin' : ('Gagal: ' + message.slice(0, 150)),
-      jobId
-    ]
-  );
-  return result.affectedRows;
-}
-
-/**
- * Mencari 1 kandidat job dari antrean (FIFO). Klaim atomik dilakukan
- * di dalam processJob agar mode single-job dan daemon memakai jalur yang sama.
- */
-export async function nextQueuedJobCandidate(pool) {
-  const [rows] = await pool.query(
-    `SELECT * FROM meeting_transcription_jobs
-     WHERE status = 'queued' AND cancel_requested = 0
-     ORDER BY id ASC
-     LIMIT 1`
-  );
-
-  return rows[0] || null;
-}
-
-/**
- * Membaca metadata konteks rapat dari database (judul rapat & tanggal).
- */
-async function fetchMeetingContext(pool, job) {
-  let judulRapat = job.audio_filename || `Rapat ID #${job.id}`;
-  let tanggalRapat = new Date().toISOString().slice(0, 10);
-
-  try {
-    if (job.jadwal_type === 'umum' && job.jadwal_id) {
-      const [rows] = await pool.query(
-        `SELECT judul, tanggal FROM jadwal_umum WHERE id = ?`,
-        [job.jadwal_id]
-      );
-      if (rows && rows.length > 0) {
-        judulRapat = rows[0].judul;
-        tanggalRapat = rows[0].tanggal instanceof Date
-          ? rows[0].tanggal.toISOString().slice(0, 10)
-          : String(rows[0].tanggal);
-      }
-    } else if (job.jadwal_type === 'banmus' && job.jadwal_id) {
-      const [rows] = await pool.query(
-        `SELECT agenda, tanggal FROM jadwal_banmus WHERE id = ?`,
-        [job.jadwal_id]
-      );
-      if (rows && rows.length > 0) {
-        judulRapat = rows[0].agenda;
-        tanggalRapat = rows[0].tanggal instanceof Date
-          ? rows[0].tanggal.toISOString().slice(0, 10)
-          : String(rows[0].tanggal);
-      }
-    }
-  } catch (err) {
-    warn(`[Worker] Peringatan membaca konteks jadwal #${job.jadwal_id}:`, err.message);
-  }
-
-  return { judulRapat, tanggalRapat };
-}
-
-/**
- * Membuat cancel-checker yang mengecek kolom cancel_requested secara langsung di DB.
- */
-function createCancelChecker(pool, jobId) {
-  let lastCheckTime = 0;
-  let cachedValue = false;
-  return async () => {
-    const now = Date.now();
-    if (now - lastCheckTime < 500) {
-      return cachedValue;
-    }
-    lastCheckTime = now;
-    try {
-      const [rows] = await pool.query(
-        `SELECT cancel_requested FROM meeting_transcription_jobs WHERE id = ?`,
-        [jobId]
-      );
-      cachedValue = Boolean(rows?.[0]?.cancel_requested);
-      return cachedValue;
-    } catch {
-      return cachedValue;
-    }
-  };
-}
-
-/**
- * Pembersihan file potongan audio lokal setelah job completed (Retensi Disk).
- */
-function cleanLocalAudioChunks(audioDir) {
-  try {
-    if (!fs.existsSync(audioDir)) return;
-    const files = fs.readdirSync(audioDir);
-    for (const file of files) {
-      if (file.startsWith('chunk_') && file.endsWith('.mp3')) {
-        fs.unlinkSync(path.join(audioDir, file));
-      }
-    }
-    log(`[Worker] Retensi Disk: File potongan chunk audio lokal di ${audioDir} berhasil dibersihkan.`);
-  } catch (err) {
-    warn(`[Worker] Peringatan saat membersihkan chunk lokal:`, err.message);
-  }
-}
-
-/**
- * Eksekutor pemrosesan satu job rapat.
- */
-export async function processJob(pool, job) {
-  const jobId = job.id;
-  const isCancelled = createCancelChecker(pool, jobId);
-
-  // Klaim atomik: hanya worker yang berhasil mengubah status dari 'queued'
-  // yang boleh memproses job ini.
-  const [claimResult] = await pool.execute(
-    `UPDATE meeting_transcription_jobs
-     SET status = 'chunking', current_step = 'Menginisialisasi pemrosesan audio...', updated_at = NOW()
-     WHERE id = ? AND status = 'queued'`,
-    [jobId]
-  );
-
-  if (claimResult.affectedRows === 0) {
-    log(`[Worker] Job #${jobId} dilewati: tidak berstatus 'queued' (sedang dipegang worker lain atau sudah selesai).`);
-    return;
-  }
-
-  try {
-    log(`\n========================================================`);
-    log(`[Worker] Memulai Pemrosesan Job ID #${jobId} (${job.audio_filename})`);
-    log(`========================================================`);
-
-    const jobDir = path.join(config.paths.recordingsBaseDir, `job_${jobId}`);
-    const audioDir = path.join(jobDir, 'audio');
-    const transcriptsDir = path.join(jobDir, 'transcripts');
-
-    // Pastikan struktur folder tersedia
-    fs.mkdirSync(audioDir, { recursive: true });
-    fs.mkdirSync(transcriptsDir, { recursive: true });
-
-    // Tentukan path file input rekaman
-    let inputAudioPath = job.audio_path || '';
-    if (!path.isAbsolute(inputAudioPath)) {
-      const writableUploadsPath = path.resolve(config.paths.root, 'writable/uploads', inputAudioPath);
-      const directRootPath = path.resolve(config.paths.root, inputAudioPath);
-      if (fs.existsSync(writableUploadsPath)) {
-        inputAudioPath = writableUploadsPath;
-      } else if (fs.existsSync(directRootPath)) {
-        inputAudioPath = directRootPath;
-      } else {
-        inputAudioPath = writableUploadsPath;
-      }
-    }
-
-    if (!fs.existsSync(inputAudioPath)) {
-      // Coba fallback ke lokasi standard audio/original.mp3
-      const standardPath = path.join(audioDir, 'original.mp3');
-      if (fs.existsSync(standardPath)) {
-        inputAudioPath = standardPath;
-      } else {
-        throw new Error(`Berkas rekaman audio tidak ditemukan di path: ${inputAudioPath}`);
-      }
-    }
-
-    // Periksa apakah ada permintaan pembatalan awal
-    if (await isCancelled()) {
-      await pool.execute(
-        `UPDATE meeting_transcription_jobs SET status = 'cancelled', cancel_requested = 0, error_message = NULL, current_step = 'Dibatalkan oleh admin', updated_at = NOW() WHERE id = ?`,
-        [jobId]
-      );
-      log(`[Worker] Job #${jobId} dibatalkan oleh admin sebelum pemrosesan dimulai.`);
-      return;
-    }
-
-    // 1. Tahap Probe Durasi & Analisis VAD & Chunking Audio
-    log(`[Worker] Mengukur durasi audio via ffprobe...`);
-    const totalDuration = await probeDuration(inputAudioPath);
-
-    // Pass VAD: rencana chunk sadar-hening dipersistenkan sebelum slicing
-    // agar resume mereproduksi batas yang sama persis.
-    let vad = null;
-    try {
-      vad = await loadOrAnalyze(inputAudioPath, jobDir, { onLog: (msg) => log(`[Job #${jobId}] ${msg}`) });
-    } catch (vadErr) {
-      warn(`[Worker] VAD dilewati untuk Job #${jobId}, memakai potongan seragam: ${vadErr.message}`);
-    }
-    const plan = vad && Array.isArray(vad.plan) && vad.plan.length > 0
-      ? vad.plan
-      : null;
-    const totalChunks = plan ? plan.length : Math.max(1, Math.ceil(totalDuration / config.audio.chunkDurationSeconds));
-
-    await pool.execute(
-      `UPDATE meeting_transcription_jobs
-       SET audio_duration = ?, total_chunks = ?, current_step = 'Memotong rekaman menjadi ${totalChunks} segmen...', updated_at = NOW()
-       WHERE id = ?`,
-      [totalDuration, totalChunks, jobId]
-    );
-
-    log(`[Worker] Durasi total: ${totalDuration}s (${Math.round(totalDuration / 60)} menit), Total chunk: ${totalChunks}`);
-
-    const sliceResult = await sliceAudio(
-      inputAudioPath,
-      audioDir,
-      plan || config.audio.chunkDurationSeconds,
-      isCancelled,
-      (msg) => log(`[Job #${jobId}] ${msg}`),
-      async (current, total, filename, durationMin) => {
-        try {
-          await pool.execute(
-            `UPDATE meeting_transcription_jobs
-             SET current_step = 'Memotong segmen ${current} dari ${total} (~${durationMin} menit)...', updated_at = NOW()
-             WHERE id = ?`,
-            [jobId]
-          );
-        } catch {}
-      }
-    );
-
-    // 2. Tahap Transkripsi Sekuensial per Chunk
-    await pool.execute(
-      `UPDATE meeting_transcription_jobs
-       SET status = 'transcribing', current_step = 'Memulai transkripsi audio per bagian...', updated_at = NOW()
-       WHERE id = ?`,
-      [jobId]
-    );
-
-    const chunkFiles = sliceResult.chunkFiles;
-    const planStats = plan && Array.isArray(plan) ? plan : [];
-    const statsFor = (index) => planStats.find((entry) => entry.index === index) || null;
-
-    for (let i = 0; i < chunkFiles.length; i++) {
-      const chunk = chunkFiles[i];
-      const stats = statsFor(chunk.index);
-
-      // Cek pembatalan sebelum setiap chunk
-      if (await isCancelled()) {
-        await pool.execute(
-          `UPDATE meeting_transcription_jobs SET status = 'cancelled', cancel_requested = 0, error_message = NULL, current_step = 'Dibatalkan saat transkripsi berlangsung', updated_at = NOW() WHERE id = ?`,
-          [jobId]
-        );
-        log(`[Worker] Job #${jobId} dibatalkan kooperatif pada chunk ke-${chunk.index}.`);
-        return;
-      }
-
-      // Chunk hening dilewati hanya bila VAD_SKIP_SILENT_CHUNKS diaktifkan
-      if (config.vad.skipSilentChunks && stats && isChunkSilent(stats, config.vad.skipSpeechRatio)) {
-        log(`[Job #${jobId}] [VAD] Bagian ${chunk.index} hening (${(stats.ratio * 100).toFixed(1)}% bicara), dilewati atas konfigurasi VAD_SKIP_SILENT_CHUNKS.`);
-        const progressSkipped = Math.round((chunk.index / totalChunks) * 75);
-        await pool.execute(
-          `UPDATE meeting_transcription_jobs
-           SET completed_chunks = ?, progress_percent = ?, current_step = 'Bagian ${chunk.index} dari ${totalChunks} hening, dilewati.', updated_at = NOW()
-           WHERE id = ?`,
-          [chunk.index, progressSkipped, jobId]
-        );
-        continue;
-      }
-
-      const chunkProgressBase = Math.round(((chunk.index - 1) / totalChunks) * 75);
-      await pool.execute(
-        `UPDATE meeting_transcription_jobs
-         SET current_step = 'Mentranskripsikan bagian ${chunk.index} dari ${totalChunks}...', progress_percent = ?, updated_at = NOW()
-         WHERE id = ?`,
-        [chunkProgressBase, jobId]
-      );
-
-      // Jalankan transkripsi chunk (dengan Files API, model fallback, dan penulisan atomik .part -> .txt)
-      await transcribeChunkWithFallback({
-        chunkPath: chunk.path,
-        chunkIndex: chunk.index,
-        totalChunks,
-        durationSeconds: chunk.durationSeconds,
-        speechSeconds: stats ? stats.speech_seconds : null,
-        isLastChunk: (chunk.index === totalChunks),
-        transcriptsDir,
-        cancelChecker: isCancelled,
-        onLog: (msg) => log(`[Job #${jobId}] ${msg}`),
-      });
-
-      const chunkProgressDone = Math.round((chunk.index / totalChunks) * 75);
-      await pool.execute(
-        `UPDATE meeting_transcription_jobs
-         SET completed_chunks = ?, progress_percent = ?, current_step = 'Bagian ${chunk.index} dari ${totalChunks} selesai.', updated_at = NOW()
-         WHERE id = ?`,
-        [chunk.index, chunkProgressDone, jobId]
-      );
-
-      // Jeda keamanan antar chunk jika diaktifkan dan bukan chunk terakhir
-      if (config.audio.safetyDelayMs > 0 && i < chunkFiles.length - 1) {
-        log(`[Job #${jobId}] Jeda keamanan ${config.audio.safetyDelayMs / 1000}s sebelum memproses chunk berikutnya...`);
-        await interruptibleSleep(config.audio.safetyDelayMs, isCancelled);
-      }
-    }
-
-    // 3. Tahap Penggabungan Transkrip & Penyusunan Risalah Rapat
-    if (await isCancelled()) {
-      await pool.execute(
-        `UPDATE meeting_transcription_jobs SET status = 'cancelled', cancel_requested = 0, error_message = NULL, current_step = 'Dibatalkan sebelum penyusunan risalah', updated_at = NOW() WHERE id = ?`,
-        [jobId]
-      );
-      return;
-    }
-
-    if (config.audio.safetyDelayMs > 0 && chunkFiles.length > 0) {
-      log(`[Job #${jobId}] Jeda keamanan ${config.audio.safetyDelayMs / 1000}s sebelum menyusun risalah...`);
-      await interruptibleSleep(config.audio.safetyDelayMs, isCancelled);
-    }
-
-    await pool.execute(
-      `UPDATE meeting_transcription_jobs
-       SET status = 'summarizing', progress_percent = 80, current_step = 'Membaca transkrip lengkap dan menyusun Risalah Rapat resmi via AI...', updated_at = NOW()
-       WHERE id = ?`,
-      [jobId]
-    );
-
-    // Baca seluruh file chunk_NNN.txt secara terurut alfabetis/numerik
-    const transcriptFiles = fs.readdirSync(transcriptsDir)
-      .filter((f) => f.startsWith('chunk_') && f.endsWith('.txt') && !f.endsWith('.part'))
-      .sort();
-
-    let fullTranscriptParts = [];
-    for (const tFile of transcriptFiles) {
-      const content = fs.readFileSync(path.join(transcriptsDir, tFile), 'utf-8').trim();
-      if (content.length > 0) {
-        fullTranscriptParts.push(`=== ${tFile.replace('.txt', '').toUpperCase()} ===\n${content}`);
-      }
-    }
-
-    const fullTranscript = fullTranscriptParts.join('\n\n');
-    if (fullTranscript.length === 0) {
-      throw new Error('Seluruh berkas transkrip kosong atau tidak ditemukan.');
-    }
-
-    // Ambil metadata rapat (judul & tanggal)
-    const meetingContext = await fetchMeetingContext(pool, job);
-
-    // Generate draft Risalah Rapat via Gemini
-    const minutesResult = await generateMeetingMinutesWithFallback({
-      fullTranscript,
-      metadata: {
-        judul_rapat: meetingContext.judulRapat,
-        tanggal_rapat: meetingContext.tanggalRapat,
-        jadwal_type: job.jadwal_type,
-      },
-      cancelChecker: isCancelled,
-      onLog: (msg) => log(`[Job #${jobId}] ${msg}`),
-    });
-
-    // 4. Simpan Hasil Risalah ke Database MySQL (meeting_minutes)
-    const relativeTranscriptsDir = `recordings/job_${jobId}/transcripts`;
-
-    // Cek apakah row minutes sudah ada sebelumnya untuk job ini
-    const [existingMinutes] = await pool.query(
-      `SELECT id FROM meeting_minutes WHERE job_id = ?`,
-      [jobId]
-    );
-
-    // Struktur 3 pilar dijamin responseSchema dari model, bukan hasil parsing regex
-    const strukturJsonStr = JSON.stringify(minutesResult.pillars);
-
-    if (existingMinutes && existingMinutes.length > 0) {
-      await pool.execute(
-        `UPDATE meeting_minutes
-         SET transcripts_dir = ?, ringkasan_eksekutif = ?, struktur_json = ?, updated_at = NOW()
-         WHERE id = ?`,
-        [
-          relativeTranscriptsDir,
-          minutesResult.ringkasan_eksekutif,
-          strukturJsonStr,
-          existingMinutes[0].id,
-        ]
-      );
-    } else {
-      await pool.execute(
-        `INSERT INTO meeting_minutes
-         (job_id, transcripts_dir, ringkasan_eksekutif, struktur_json, status_verifikasi, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 'draft', NOW(), NOW())`,
-        [
-          jobId,
-          relativeTranscriptsDir,
-          minutesResult.ringkasan_eksekutif,
-          strukturJsonStr,
-        ]
-      );
-    }
-
-    // 5. Tandai Job Completed & Bersihkan Chunk Audio Lokal
-    await pool.execute(
-      `UPDATE meeting_transcription_jobs
-       SET status = 'completed', progress_percent = 100, current_step = 'Selesai: Transkrip dan draft risalah siap ditinjau.', ai_model = ?, error_message = NULL, updated_at = NOW()
-       WHERE id = ? AND status NOT IN ('cancelled')`,
-      [minutesResult.usedModel || null, jobId]
-    );
-
-    cleanLocalAudioChunks(audioDir);
-
-    log(`\n[Worker] SUKSES: Job #${jobId} (${meetingContext.judulRapat}) telah selesai 100%!\n`);
-  } catch (err) {
-    if (err instanceof JobCancelledError || (await isCancelled())) {
-      log(`[Worker] Job #${jobId} berhasil dihentikan atas permintaan admin.`);
-      await pool.execute(
-        `UPDATE meeting_transcription_jobs
-         SET status = 'cancelled', cancel_requested = 0, error_message = NULL, current_step = 'Proses dihentikan oleh admin (dapat dilanjutkan kembali)', updated_at = NOW()
-         WHERE id = ?`,
-        [jobId]
-      );
-      return;
-    }
-    throw err;
-  }
-}
 
 /**
  * Runner Utama Worker
@@ -534,14 +35,19 @@ async function main() {
 
   const pool = await getDbPool();
 
+  let sweepTimer = null;
+
   // Registrasi handler sinyal penghentian proses (Ctrl+C / Kill)
   const handleExitSignal = async (signal) => {
     log(`\n[Worker] Menerima sinyal ${signal} (Ctrl+C). Menghentikan worker segera...`);
     releaseDaemonLock();
-    if (pool) {
-      try {
-        await pool.end();
-      } catch {}
+    if (sweepTimer) {
+      clearInterval(sweepTimer);
+    }
+    try {
+      await closeDbPool();
+    } catch {
+      // Koneksi bisa saja sudah tertutup saat shutdown
     }
     process.exit(0);
   };
@@ -559,16 +65,13 @@ async function main() {
       process.exit(0);
     }
 
-    const [rows] = await pool.query(
-      `SELECT * FROM meeting_transcription_jobs WHERE id = ?`,
-      [targetJobId]
-    );
-    if (!rows || rows.length === 0) {
+    const job = await getJobById(pool, targetJobId);
+    if (!job) {
       error(`[Worker] Job ID #${targetJobId} tidak ditemukan di database.`);
       process.exit(1);
     }
     try {
-      await processJob(pool, rows[0]);
+      await processJob(pool, job);
       process.exit(0);
     } catch (err) {
       error(`[Worker] Job #${targetJobId} selesai dengan error:`, err);
@@ -594,7 +97,7 @@ async function main() {
   // Sweep berkala: pulihkan job macet (mis. worker mati saat memproses lalu
   // restart terjadi < threshold kemudian) tanpa menunggu restart berikutnya.
   const STALE_SWEEP_INTERVAL_MS = 60_000;
-  const sweepTimer = setInterval(() => {
+  sweepTimer = setInterval(() => {
     performStartupReset(pool, activeJobId).catch((err) => {
       warn('[Worker] Sweep job basi gagal:', err.message);
     });
@@ -626,9 +129,7 @@ async function main() {
     }
   }
 
-  if (dbPool) {
-    await dbPool.end();
-  }
+  await closeDbPool();
   log('[Worker] Worker telah berhenti.');
 }
 

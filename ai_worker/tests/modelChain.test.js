@@ -55,7 +55,7 @@ test('resetModelState menghapus sticky dan daftar mati', () => {
 });
 
 test('resolveThinkingLevel memetakan enum yang valid dan fallback ke LOW', async () => {
-  const { resolveThinkingLevel } = await import('../services/geminiService.js');
+  const { resolveThinkingLevel } = await import('../services/gemini/client.js');
   const { ThinkingLevel } = await import('@google/genai');
 
   assert.equal(resolveThinkingLevel('LOW'), ThinkingLevel.LOW);

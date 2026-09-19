@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createStreamWatchdog } from '../services/geminiService.js';
+import { createStreamWatchdog } from '../services/gemini/streamWatchdog.js';
 import { sleep } from '../services/throttler.js';
 
 test('watchdog membatalkan stream jika TTFT melebihi batas waktu', async () => {
