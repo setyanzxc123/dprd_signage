@@ -9,7 +9,8 @@
     "build:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --minify",
     "build:signage-sw": "node scripts/build-signage-sw.mjs",
     "watch:signage": "tailwindcss -i ./resources/css/signage.css -o ./public/assets/css/signage.css --watch",
-    "lint:js": "eslint \"public/assets/js/**/*.js\" \"scripts/**/*.mjs\""
+    "lint:js": "eslint \"public/assets/js/**/*.js\" \"scripts/**/*.mjs\"",
+    "lint:worker": "eslint \"ai_worker/**/*.js\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

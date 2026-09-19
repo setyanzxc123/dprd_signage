@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node worker.js --daemon",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "test": "node --test \"tests/*.test.js\""
   },
   "keywords": [
     "gemini",

@@ -35,11 +35,33 @@ export default [
     }
   },
   {
+    files: ["ai_worker/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      "no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          args: "after-used",
+          ignoreRestSiblings: true,
+          varsIgnorePattern: "^_"
+        }
+      ],
+      "no-unreachable": "error",
+      "no-undef": "error"
+    }
+  },
+  {
     ignores: [
       "**/node_modules/**",
       "**/vendor/**",
-      "writable/**",
-      "ai_worker/**"
+      "writable/**"
     ]
   }
 ];
