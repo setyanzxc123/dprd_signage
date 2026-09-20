@@ -262,6 +262,17 @@ class JadwalUmumService
             return 'Jadwal Umum gagal disimpan. Silakan coba kembali.';
         }
 
+        if (isset($input['unit_ids'])) {
+            $this->kirimNotifPWA(
+                $payload['judul'],
+                $payload['tanggal_mulai'],
+                $payload['ruangan_id'] ?? null,
+                $payload['lokasi_lainnya'] ?? null,
+                $input['unit_ids'],
+                'Baru'
+            );
+        }
+
         return (int) $id;
     }
 
@@ -295,6 +306,17 @@ class JadwalUmumService
 
         if (($existing['undangan_file'] ?? null) !== ($payload['undangan_file'] ?? $existing['undangan_file'] ?? null)) {
             (new ScheduleInvitationStorage())->delete($existing['undangan_file'] ?? null);
+        }
+
+        if (isset($input['unit_ids'])) {
+            $this->kirimNotifPWA(
+                $payload['judul'] ?? $existing['judul'],
+                $payload['tanggal_mulai'] ?? $existing['tanggal_mulai'],
+                $payload['ruangan_id'] ?? $existing['ruangan_id'] ?? null,
+                $payload['lokasi_lainnya'] ?? $existing['lokasi_lainnya'] ?? null,
+                $input['unit_ids'],
+                'Diubah'
+            );
         }
 
         return null;
@@ -547,5 +569,73 @@ class JadwalUmumService
         }
 
         return ['url' => $url];
+    }
+
+    private function kirimNotifPWA($judul, $tanggal, $ruanganId, $lokasiLainnya, $unitIds, $jenisAksi = 'Baru')
+    {
+        if (empty($unitIds)) {
+            return;
+        }
+
+        try {
+            $users = $this->db->table('anggota_unit_rapat aur')
+                ->select('a.user_id')
+                ->join('anggota a', 'a.id = aur.anggota_id')
+                ->whereIn('aur.unit_rapat_id', $unitIds)
+                ->where('a.user_id IS NOT NULL')
+                ->get()->getResultArray();
+
+            $userIds = array_values(array_unique(array_column($users, 'user_id')));
+            if (empty($userIds)) {
+                return;
+            }
+
+            $subscriptions = $this->db->table('push_subscriptions')
+                ->whereIn('user_id', $userIds)
+                ->get()->getResultArray();
+
+            if (empty($subscriptions)) {
+                return;
+            }
+
+            $namaRuangan = 'Lokasi Lainnya';
+            if (!empty($ruanganId)) {
+                $ruangan = $this->db->table('ruangan')->select('name')->where('id', $ruanganId)->get()->getRow();
+                if ($ruangan) {
+                    $namaRuangan = $ruangan->name;
+                }
+            } elseif (!empty($lokasiLainnya)) {
+                $namaRuangan = $lokasiLainnya;
+            }
+
+            $webPush = new \Minishlink\WebPush\WebPush([
+                'VAPID' => [
+                    'subject'    => env('VAPID_SUBJECT'),
+                    'publicKey'  => env('VAPID_PUBLIC_KEY'),
+                    'privateKey' => env('VAPID_PRIVATE_KEY'),
+                ],
+            ]);
+
+            $pesan = json_encode([
+                'title'   => 'Pemberitahuan Jadwal ' . ($jenisAksi === 'Baru' ? 'Baru' : 'Perubahan'),
+                'message' => "Agenda: {$judul}\nWaktu: {$tanggal}\nTempat: {$namaRuangan}\nSilakan cek detailnya di aplikasi.",
+                'url'     => '/agenda',
+            ]);
+
+            foreach ($subscriptions as $sub) {
+                $subscription = \Minishlink\WebPush\Subscription::create([
+                    'endpoint' => $sub['endpoint'],
+                    'keys'     => [
+                        'p256dh' => $sub['p256dh'],
+                        'auth'   => $sub['auth'],
+                    ],
+                ]);
+                $webPush->sendOneNotification($subscription, $pesan);
+            }
+
+            $webPush->flush();
+        } catch (\Throwable $th) {
+            log_message('error', "Gagal kirim notif PWA ({$jenisAksi}): " . $th->getMessage());
+        }
     }
 }

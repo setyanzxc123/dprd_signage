@@ -44,6 +44,6 @@ class ScheduleResourceController extends BaseController
             return $this->apiError('Resource tidak tersedia atau tidak dapat Anda akses.', 403);
         }
 
-        return $this->apiSuccess(['url' => $url]);
+       return redirect()->to($url);
     }
 }

@@ -71,19 +71,12 @@ final class ApiScheduleResourceTest extends CIUnitTestCase
         $materi = $this
             ->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
             ->get("/api/v1/jadwal/jadwal-umum/{$id}/materi");
-        $materi->assertOK();
-        $body = json_decode((string) $materi->response()->getBody(), true);
-        $this->assertSame('success', $body['status']);
-        $this->assertSame('https://example.com/materi-umum.pdf', $body['url']);
+        $materi->assertRedirectTo('https://example.com/materi-umum.pdf');
 
         $stream = $this
             ->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
             ->get("/api/v1/jadwal/jadwal-umum/{$id}/stream");
-        $stream->assertOK();
-        $this->assertSame(
-            'https://example.com/live-umum',
-            json_decode((string) $stream->response()->getBody(), true)['url'],
-        );
+        $stream->assertRedirectTo('https://example.com/live-umum');
     }
 
     public function testResolvesResourceWithShortAlias(): void
@@ -101,9 +94,7 @@ final class ApiScheduleResourceTest extends CIUnitTestCase
         $materi = $this
             ->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
             ->get("/api/v1/jadwal/umum/{$id}/materi");
-        $materi->assertOK();
-        $body = json_decode((string) $materi->response()->getBody(), true);
-        $this->assertSame('https://example.com/materi-alias.pdf', $body['url']);
+        $materi->assertRedirectTo('https://example.com/materi-alias.pdf');
     }
 
     public function testAdminCanAccessResourceWithoutMemberAccount(): void
@@ -121,9 +112,7 @@ final class ApiScheduleResourceTest extends CIUnitTestCase
         $materi = $this
             ->withHeaders(['Authorization' => 'Bearer ' . self::ADMIN_TOKEN])
             ->get("/api/v1/jadwal/umum/{$id}/materi");
-        $materi->assertOK();
-        $body = json_decode((string) $materi->response()->getBody(), true);
-        $this->assertSame('https://example.com/materi-admin.pdf', $body['url']);
+        $materi->assertRedirectTo('https://example.com/materi-admin.pdf');
     }
 
     public function testParticipantResourceFollowsUnitRelation(): void
@@ -160,11 +149,7 @@ final class ApiScheduleResourceTest extends CIUnitTestCase
         $allowed = $this
             ->withHeaders(['Authorization' => 'Bearer ' . self::MEMBER_TOKEN])
             ->get("/api/v1/jadwal/banmus/{$scheduleId}/materi");
-        $allowed->assertOK();
-        $this->assertSame(
-            'https://example.com/bahan-rapat.pdf',
-            json_decode((string) $allowed->response()->getBody(), true)['url'],
-        );
+        $allowed->assertRedirectTo('https://example.com/bahan-rapat.pdf');
     }
 
     public function testUnknownSourceAndMissingResourceAreRejected(): void

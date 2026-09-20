@@ -43,7 +43,10 @@ $routes->post('admin/logout', 'Admin\AuthController::logout');
 // Auth anggota DPRD (terpisah dari panel admin)
 $routes->get( 'anggota/login',  'Member\AuthController::loginPage');
 $routes->post('anggota/logout', 'Member\AuthController::logout');
-
+// Push notification PWA
+$routes->post('member/simpan-notif-hp', '\App\Controllers\NotifController::simpanIdHp');
+$routes->post('member/test-notif', '\App\Controllers\NotifController::testNotif');
+$routes->post('admin/test-kirim-notif', '\App\Controllers\NotifController::testKirimKeUser');
 // Portal anggota DPRD
 $routes->group('anggota', ['filter' => 'memberauth'], function ($routes) {
     $routes->get('', 'Member\PortalController::index');

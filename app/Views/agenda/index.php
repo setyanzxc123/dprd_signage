@@ -35,10 +35,11 @@ if ($isMember) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= esc($pageTitle) ?> - DPRD Provinsi Sulawesi Tengah</title>
     <meta name="description" content="Agenda dan jadwal rapat DPRD Provinsi Sulawesi Tengah." />
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/favicon-32x32.png?v=' . $logoVersion) ?>" />
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preload" as="image" href="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" />
     <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-700-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-900-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="<?= base_url('assets/vendor/fonts/files/inter-latin-600-normal.woff2') ?>" as="font" type="font/woff2" crossorigin />
     <link href="<?= base_url('assets/vendor/fonts/fonts.css?v=' . $fontVersion) ?>" rel="stylesheet" />
     <script {csp-script-nonce}>
         (() => {
@@ -48,7 +49,6 @@ if ($isMember) {
                 : 'light';
             document.documentElement.classList.toggle('dark', theme === 'dark');
             document.documentElement.setAttribute('data-theme', theme);
-            document.documentElement.setAttribute('data-app-loading', '');
         })();
     </script>
     <link href="<?= base_url('assets/css/agenda.css?v=' . $cssVersion) ?>" rel="stylesheet" />
@@ -65,14 +65,14 @@ if ($isMember) {
                     <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                         AGENDA DPRD
                     </span>
-                    <span class="block truncate text-[11px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
+                    <span class="block truncate text-[10px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
                         Provinsi Sulawesi Tengah
                     </span>
                 </span>
             </a>
 
             <div class="flex items-center gap-2 shrink-0">
-                <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-800/50 backdrop-blur-sm backdrop-saturate-200 ring-1 ring-inset ring-white/60 dark:ring-white/10 px-3.5 py-1.5 shadow-xs">
+                <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-3.5 py-1.5 shadow-xs">
                     <div class="flex items-center gap-2.5 px-3 py-1">
                         <img v-if="weather.icon_url" :src="weather.icon_url" class="h-7 w-7 object-contain" alt="Ikon cuaca" />
                         <span v-else class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>
@@ -84,19 +84,26 @@ if ($isMember) {
 
                     <div class="hidden 2xl:block px-3 py-1 text-left">
                         <span class="block max-w-48 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{{ weatherLocation }}</span>
-                        <span class="block text-[11px] text-slate-500 dark:text-slate-400">Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}</span>
+                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}</span>
                     </div>
 
                     <div class="px-3.5 py-1 text-center">
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
                         <span class="block text-xs font-semibold text-slate-800 dark:text-slate-200">{{ headerDate }}</span>
                     </div>
 
                     <div class="px-3.5 py-1 text-center">
                         <span class="block font-mono text-2xl font-black tabular-nums leading-none text-slate-900 dark:text-white">{{ headerTime }}</span>
-                        <span class="block text-[11px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
+                        <span class="block text-[9px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
                     </div>
                 </div>
+                <button id="btn-aktifkan-notif" class="inline-flex items-center gap-x-2 py-2 px-3.5 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold shadow-xs transition cursor-pointer" type="button">
+                    🔔 Aktifkan Notifikasi
+                </button>
+                <button id="btn-install-pwa" class="hidden inline-flex items-center gap-x-2 py-2 px-3.5 rounded-xl border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 text-xs font-semibold shadow-xs transition cursor-pointer" type="button" aria-label="Install Aplikasi">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span class="hidden sm:inline">Install App</span>
+                </button>
 
                 <button class="inline-flex justify-center items-center size-10 sm:size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700/80 transition" type="button" @click="toggleTheme" :aria-label="isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap'">
                     <svg v-if="!isDark" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a7 7 0 1 0 11.5 11.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -117,13 +124,13 @@ if ($isMember) {
                                 <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-snug"><?= esc((string) ($member['name'] ?? 'Anggota DPRD')) ?></p>
                                 <div class="mt-1.5 flex flex-wrap gap-1">
                                     <?php if (! empty($member['komisi'])): ?>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"><?= esc((string) $member['komisi']) ?></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"><?= esc((string) $member['komisi']) ?></span>
                                     <?php endif; ?>
                                     <?php if (! empty($member['fraksi'])): ?>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) $member['fraksi']) ?></span>
                                     <?php endif; ?>
                                     <?php if (empty($member['fraksi']) && empty($member['komisi'])): ?>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) ($member['jabatan'] ?? 'Dewan')) ?></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200"><?= esc((string) ($member['jabatan'] ?? 'Dewan')) ?></span>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -473,13 +480,13 @@ if ($isMember) {
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
                                         <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
-                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                                             Live
                                         </span>
@@ -651,13 +658,13 @@ if ($isMember) {
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
                                         <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
-                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                                             Live
                                         </span>
@@ -794,7 +801,7 @@ if ($isMember) {
                         <div v-else-if="risalahData" class="space-y-6">
                             <div class="border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/40 dark:bg-slate-900/60 p-5 sm:p-8 md:p-10 shadow-xs">
                                 <div class="text-center border-b-2 border-slate-900 dark:border-slate-200 pb-5 mb-6 space-y-1.5">
-                                    <p class="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
+                                    <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
                                         Dewan Perwakilan Rakyat Daerah Provinsi Sulawesi Tengah
                                     </p>
                                     <h2 class="text-base sm:text-lg lg:text-xl font-black uppercase text-slate-900 dark:text-white tracking-wide">
@@ -1199,33 +1206,20 @@ if ($isMember) {
                 return url;
             }
 
-            const inflightMonthFetches = new Map();
-
-            function fetchMonth(month) {
-                if (inflightMonthFetches.has(month)) {
-                    return inflightMonthFetches.get(month);
+            async function fetchMonth(month) {
+                const response = await fetch(requestUrl(month), { credentials: 'same-origin' });
+                if (response.status === 401 && IS_MEMBER) {
+                    window.location.assign(LOGIN_URL);
+                    throw new Error('Sesi anggota berakhir.');
                 }
-                const request = (async () => {
-                    const response = await fetch(requestUrl(month), { credentials: 'same-origin' });
-                    if (response.status === 401 && IS_MEMBER) {
-                        window.location.assign(LOGIN_URL);
-                        throw new Error('Sesi anggota berakhir.');
-                    }
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    const payload = await response.json();
-                    if (payload.status !== 'success') {
-                        throw new Error(payload.message || 'Respons agenda tidak valid.');
-                    }
-                    return payload;
-                })();
-                inflightMonthFetches.set(month, request);
-                request.then(
-                    () => inflightMonthFetches.delete(month),
-                    () => inflightMonthFetches.delete(month),
-                );
-                return request;
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const payload = await response.json();
+                if (payload.status !== 'success') {
+                    throw new Error(payload.message || 'Respons agenda tidak valid.');
+                }
+                return payload;
             }
 
             async function loadAgenda() {
@@ -1893,7 +1887,6 @@ if ($isMember) {
             }
 
             onMounted(() => {
-                document.documentElement.removeAttribute('data-app-loading');
                 const params = new URLSearchParams(window.location.search);
                 const requestedMenu = params.get('menu');
                 if (requestedMenu === 'saya' || requestedMenu === 'all' || requestedMenu === 'komisi' || /^unit:\d+$/.test(requestedMenu || '')) {
@@ -2066,6 +2059,90 @@ if ($isMember) {
             };
         },
     }).mount('#agenda-app');
+</script>
+<script {csp-script-nonce}>
+    const csrfHeader = '<?= csrf_header() ?>';
+    const csrfToken  = '<?= csrf_hash() ?>';
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/app-sw.js').then(async (registration) => {
+            const btnAktifkanNotif = document.getElementById('btn-aktifkan-notif');
+
+            if (btnAktifkanNotif) {
+                // Sembunyikan tombol jika notifikasi sudah aktif di perangkat ini.
+                const existingSubscription = await registration.pushManager.getSubscription();
+                if (Notification.permission === 'granted' && existingSubscription) {
+                    btnAktifkanNotif.style.display = 'none';
+                }
+
+                btnAktifkanNotif.addEventListener('click', async () => {
+                    btnAktifkanNotif.innerHTML = 'Memproses...';
+
+                    try {
+                        const permission = await Notification.requestPermission();
+                        if (permission !== 'granted') {
+                            alert('Izin notifikasi ditolak.');
+                            btnAktifkanNotif.innerHTML = '🔔 Aktifkan Notifikasi';
+                            return;
+                        }
+
+                        let subscription = await existingSubscription;
+                        if (!subscription) {
+                            subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: '<?= env("VAPID_PUBLIC_KEY") ?>'
+                            });
+                        }
+
+                        const response = await fetch('/member/simpan-notif-hp', {
+                            method: 'POST',
+                            body: JSON.stringify(subscription),
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                [csrfHeader]: csrfToken
+                            },
+                            credentials: 'same-origin'
+                        });
+
+                        if (response.ok) {
+                            alert('SUKSES: Perangkat Anda kini siap menerima notifikasi jadwal!');
+                            btnAktifkanNotif.style.display = 'none';
+                        } else {
+                            alert('GAGAL: Pastikan Anda sudah Login sebagai anggota.');
+                            btnAktifkanNotif.innerHTML = '🔔 Aktifkan Notifikasi';
+                        }
+
+                    } catch (error) {
+                        console.error('Push Error:', error);
+                        alert('Terjadi kesalahan jaringan atau VAPID Key tidak valid.');
+                        btnAktifkanNotif.innerHTML = '🔔 Aktifkan Notifikasi';
+                    }
+                });
+            }
+        }).catch(err => console.log('SW Error:', err));
+    }
+
+    // Tombol install PWA.
+    let penangkapInstall = null;
+    const btnInstallPwa = document.getElementById('btn-install-pwa');
+
+    if (btnInstallPwa) {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            penangkapInstall = e;
+        });
+
+        btnInstallPwa.addEventListener('click', async () => {
+            if (penangkapInstall !== null) {
+                penangkapInstall.prompt();
+                const { outcome } = await penangkapInstall.userChoice;
+                penangkapInstall = null;
+            } else {
+                alert('Untuk menginstall aplikasi ini:\n\n📱 Di Android (Chrome):\nKlik ikon titik tiga di pojok kanan atas browser, lalu pilih "Tambahkan ke Layar Utama" atau "Install Aplikasi".\n\n🍏 Di iPhone (Safari):\nTekan tombol Bagikan (Share) di bawah layar, lalu pilih "Add to Home Screen".');
+            }
+        });
+    }
 </script>
 </body>
 </html>

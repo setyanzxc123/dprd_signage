@@ -13,7 +13,9 @@
         "php": "^8.2",
         "codeigniter4/framework": "^4.7.4",
         "codeigniter4/shield": "^1.4",
-        "dompdf/dompdf": "^3.1"
+        "dompdf/dompdf": "^3.1",
+        "guzzlehttp/guzzle": "^8.2",
+        "minishlink/web-push": "^11.0"
     },
     "require-dev": {
         "codeigniter/phpstan-codeigniter": "^2.1",
@@ -40,7 +42,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "scripts": {
         "test": "phpunit --no-coverage",
