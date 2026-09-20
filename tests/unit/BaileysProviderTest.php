@@ -22,10 +22,48 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertTrue($result->success);
         $this->assertSame('BAE5-MSG-1', $result->messageId);
         $this->assertNull($result->error);
-        $this->assertSame('http://127.0.0.1:3001/send-otp', $transport->url);
+        $this->assertSame('http://127.0.0.1:3001/send-message', $transport->url);
         $this->assertSame('baileys-key', $transport->headers['x-api-key']);
         $this->assertSame('628123456789', $transport->payload['phone']);
-        $this->assertSame('748192', $transport->payload['otp']);
+        $this->assertArrayNotHasKey('otp', $transport->payload);
+        $this->assertStringContainsString('748192', (string) $transport->payload['message']);
+        $this->assertStringContainsString('DPRD Sulawesi Tengah', (string) $transport->payload['message']);
+    }
+
+    public function testUsesConfiguredTemplateWhenProvided(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status' => 'success',
+            'message' => 'Pesan terkirim.',
+            'data' => ['messageId' => 'BAE5-TPL-1'],
+        ], JSON_THROW_ON_ERROR)));
+        $config = $this->config();
+        $config->baileysOtpTemplate = 'OTP {{app_name}}: {{otp}} ({{expiry_minutes}} menit)';
+        $provider = new BaileysProvider($transport, $config);
+
+        $result = $provider->sendOtp('628123456789', '748192');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('OTP DPRD Sulawesi Tengah: 748192 (5 menit)', $transport->payload['message']);
+    }
+
+    public function testSendsIdempotencyKeyHeaderOnlyWhenProvided(): void
+    {
+        $transport = new BaileysRecordingTransport(new HttpResponse(200, json_encode([
+            'status' => 'success',
+            'message' => 'Pesan terkirim.',
+            'data' => ['messageId' => 'BAE5-IDM-1'],
+        ], JSON_THROW_ON_ERROR)));
+        $provider = new BaileysProvider($transport, $this->config());
+
+        $result = $provider->sendOtp('628123456789', '748192', 'otp-123');
+
+        $this->assertTrue($result->success);
+        $this->assertSame('otp-123', $transport->headers['Idempotency-Key']);
+
+        $provider->sendOtp('628123456789', '748192');
+
+        $this->assertArrayNotHasKey('Idempotency-Key', $transport->headers);
     }
 
     public function testRejectsInvalidApiKeyAsFailure(): void
@@ -107,7 +145,7 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertSame(200, $result->statusCode);
         $this->assertTrue($transport->payload['wait_for_ack']);
         $this->assertSame(3000, $transport->payload['ack_timeout_ms']);
-        $this->assertSame('DPRD Sulawesi Tengah', $transport->payload['app_name']);
+        $this->assertStringContainsString('DPRD Sulawesi Tengah', (string) $transport->payload['message']);
     }
 
     public function testHandles502ServerRejected(): void

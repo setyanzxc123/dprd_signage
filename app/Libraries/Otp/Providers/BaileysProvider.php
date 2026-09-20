@@ -23,7 +23,14 @@ final class BaileysProvider
         return $this->config->baileysApiKey !== '' && $this->config->baileysApiUrl !== '';
     }
 
-    public function sendOtp(string $phone, string $code): BaileysSendResult
+    private const OTP_MESSAGE_TEMPLATES = [
+        "*KODE VERIFIKASI LOGIN*\n\nKode OTP Anda untuk portal *{{app_name}}* adalah:\n\n*{{otp}}*\n\n_Kode ini berlaku selama {{expiry_minutes}} menit. Jangan berikan kode ini kepada siapapun termasuk petugas._",
+        "*VERIFIKASI AKUN*\n\nGunakan kode berikut untuk masuk ke *{{app_name}}*:\n\n*{{otp}}*\n\n_Masa berlaku kode {{expiry_minutes}} menit. Rahasiakan kode ini dari siapapun._",
+        "*KODE OTP {{app_name}}*\n\n*{{otp}}*\n\nMasukkan kode di atas pada halaman login. Kode kedaluwarsa dalam {{expiry_minutes}} menit.\n\n_Jangan bagikan kode ini kepada siapapun._",
+        "*KONFIRMASI LOGIN*\n\nPermintaan login ke *{{app_name}}* terdeteksi. Kode verifikasi Anda:\n\n*{{otp}}*\n\n_Berlaku {{expiry_minutes}} menit. Abaikan pesan ini jika Anda tidak merasa melakukan login._",
+    ];
+
+    public function sendOtp(string $phone, string $code, ?string $idempotencyKey = null): BaileysSendResult
     {
         if (! $this->isConfigured()) {
             return new BaileysSendResult(
@@ -36,26 +43,38 @@ final class BaileysProvider
 
         $body = [
             'phone'          => $phone,
-            'otp'            => $code,
-            'app_name'       => $this->config->appName,
+            'message'        => $this->buildOtpMessage($code),
             'wait_for_ack'   => $this->config->baileysWaitForAck,
             'ack_timeout_ms' => $this->config->baileysAckTimeoutMs,
         ];
 
-        if ($this->config->baileysOtpTemplate !== null) {
-            $body['template'] = $this->config->baileysOtpTemplate;
-        }
-
         $timeoutSeconds = max(5, $this->config->baileysTimeoutSeconds);
 
         $response = $this->transport->postJson(
-            $this->endpoint('/send-otp'),
-            $this->headers(),
+            $this->endpoint('/send-message'),
+            $this->headers($idempotencyKey),
             $body,
             $timeoutSeconds,
         );
 
         return $this->parseSendResponse($response);
+    }
+
+    private function buildOtpMessage(string $code): string
+    {
+        $template = $this->config->baileysOtpTemplate ?? $this->pickOtpTemplate();
+        $expiryMinutes = (string) max(1, (int) floor($this->config->ttlSeconds / 60));
+
+        return strtr($template, [
+            '{{otp}}'            => $code,
+            '{{app_name}}'       => $this->config->appName,
+            '{{expiry_minutes}}' => $expiryMinutes,
+        ]);
+    }
+
+    private function pickOtpTemplate(): string
+    {
+        return self::OTP_MESSAGE_TEMPLATES[random_int(0, count(self::OTP_MESSAGE_TEMPLATES) - 1)];
     }
 
     private function parseSendResponse(\App\Libraries\WhatsApp\ValueObjects\HttpResponse $response): BaileysSendResult
@@ -352,12 +371,18 @@ final class BaileysProvider
     }
 
     /** @return array<string, string> */
-    private function headers(): array
+    private function headers(?string $idempotencyKey = null): array
     {
-        return [
+        $headers = [
             'x-api-key' => $this->config->baileysApiKey,
             'Accept'    => 'application/json',
         ];
+
+        if ($idempotencyKey !== null && $this->config->baileysIdempotencyEnabled) {
+            $headers['Idempotency-Key'] = $idempotencyKey;
+        }
+
+        return $headers;
     }
 
     /** @return array<string, mixed>|null */

@@ -244,7 +244,7 @@ final class OtpService
         }
 
         try {
-            $baileysResult = $this->baileysProvider->sendOtp($phone, $code);
+            $baileysResult = $this->baileysProvider->sendOtp($phone, $code, 'otp-' . $otpId);
         } catch (\Throwable $e) {
             $baileysResult = new \App\Libraries\Otp\ValueObjects\BaileysSendResult(
                 false,

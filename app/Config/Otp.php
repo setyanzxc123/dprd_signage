@@ -19,6 +19,7 @@ class Otp extends BaseConfig
     public int $baileysTimeoutSeconds = 5;
     public int $baileysAckTimeoutMs = 3000;
     public bool $baileysWaitForAck = true;
+    public bool $baileysIdempotencyEnabled = true;
     public string $appName = 'DPRD Sulawesi Tengah';
     public ?string $baileysOtpTemplate = null;
     public int $length = 6;
@@ -53,6 +54,7 @@ class Otp extends BaseConfig
         $this->baileysTimeoutSeconds = max(5, $this->envInt('BAILEYS_TIMEOUT_SECONDS', $this->baileysTimeoutSeconds));
         $this->baileysAckTimeoutMs = max(1000, $this->envInt('BAILEYS_ACK_TIMEOUT_MS', $this->baileysAckTimeoutMs));
         $this->baileysWaitForAck = $this->envBool('BAILEYS_WAIT_FOR_ACK', $this->baileysWaitForAck);
+        $this->baileysIdempotencyEnabled = $this->envBool('BAILEYS_IDEMPOTENCY_ENABLED', $this->baileysIdempotencyEnabled);
         $this->appName = trim((string) env('APP_NAME', $this->appName));
         $envTemplate = trim((string) env('BAILEYS_OTP_TEMPLATE', ''));
         $this->baileysOtpTemplate = $envTemplate !== '' ? $envTemplate : null;

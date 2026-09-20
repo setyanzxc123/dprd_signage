@@ -24,7 +24,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(200, json_encode([
+            '/send-message' => new HttpResponse(200, json_encode([
                 'status'  => 'success',
                 'message' => 'OTP terkirim',
                 'data'    => ['messageId' => 'BAE5-MSG-001', 'phone' => '628123456789'],
@@ -54,7 +54,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(200, json_encode([
+            '/send-message' => new HttpResponse(200, json_encode([
                 'status'  => 'success',
                 'message' => 'OTP terkirim',
                 'data'    => ['messageId' => 'BAE5-MSG-002'],
@@ -64,7 +64,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
 
         $service->request(7, '628123456789');
-        $sentCode = (string) $baileysTransport->lastPayload['otp'];
+        $sentCode = self::extractOtpCode((string) $baileysTransport->lastPayload['message']);
         $this->assertSame(6, strlen($sentCode));
 
         $verifyResult = $service->verify(7, $sentCode);
@@ -80,7 +80,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(503, json_encode([
+            '/send-message' => new HttpResponse(503, json_encode([
                 'status'  => 'error',
                 'code'    => 'WA_GATEWAY_OFFLINE',
                 'message' => 'WhatsApp Gateway offline.',
@@ -112,7 +112,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(503, '{"status":"error","message":"Gateway offline"}'),
+            '/send-message' => new HttpResponse(503, '{"status":"error","message":"Gateway offline"}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport([
             '/otp/request' => new HttpResponse(200, json_encode([
@@ -137,7 +137,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
+            '/send-message' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport([
             '/otp/request' => new HttpResponse(400, '{"status":false,"message":"Fazpass saldo habis"}'),
@@ -160,7 +160,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $config->fazpassFallbackEnabled = false;
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
+            '/send-message' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport, $config);
@@ -181,7 +181,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $config->fazpassGatewayKey = '';
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
+            '/send-message' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport, $config);
@@ -198,7 +198,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(502, json_encode([
+            '/send-message' => new HttpResponse(502, json_encode([
                 'status'  => 'error',
                 'code'    => 'WA_SERVER_REJECTED',
                 'message' => 'Server WhatsApp menolak pengiriman pesan.',
@@ -225,7 +225,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(504, json_encode([
+            '/send-message' => new HttpResponse(504, json_encode([
                 'status'  => 'error',
                 'code'    => 'WA_SERVER_ACK_TIMEOUT',
                 'message' => 'Batas waktu Server ACK terlampaui.',
@@ -251,7 +251,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(422, json_encode([
+            '/send-message' => new HttpResponse(422, json_encode([
                 'status'  => 'error',
                 'code'    => 'WA_NUMBER_NOT_REGISTERED',
                 'message' => 'Nomor tujuan tidak terdaftar di WhatsApp.',
@@ -277,7 +277,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(429, json_encode([
+            '/send-message' => new HttpResponse(429, json_encode([
                 'status'  => 'error',
                 'code'    => 'RATE_LIMITED',
                 'message' => 'Jeda cooldown gateway aktif.',
@@ -303,7 +303,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(0, null, 'Operation timed out after 5000 milliseconds'),
+            '/send-message' => new HttpResponse(0, null, 'Operation timed out after 5000 milliseconds'),
         ]);
         $fazpassTransport = new HybridRecordingTransport([
             '/otp/request' => new HttpResponse(200, json_encode([
@@ -327,7 +327,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $config->provider = 'baileys';
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
+            '/send-message' => new HttpResponse(503, '{"status":"error","message":"Baileys offline"}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport, $config);
@@ -382,7 +382,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M1"}}'),
+            '/send-message' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M1"}}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
@@ -404,7 +404,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $config->maxRequestsPerAccountPerDay = 2;
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
+            '/send-message' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport, $config);
@@ -426,7 +426,7 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $config->maxRequestsGlobal = 2;
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
+            '/send-message' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport, $config);
@@ -445,13 +445,13 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $config->maxVerificationAttempts = 2;
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
+            '/send-message' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport, $config);
 
         $service->request(7, '628123456789');
-        $code = (string) $baileysTransport->lastPayload['otp'];
+        $code = self::extractOtpCode((string) $baileysTransport->lastPayload['message']);
         $wrongCode = $code === '000000' ? '000001' : '000000';
 
         $first = $service->verify(7, $wrongCode);
@@ -470,13 +470,13 @@ final class HybridOtpServiceTest extends CIUnitTestCase
     {
         $repository = new HybridOtpMemoryRepository();
         $baileysTransport = new HybridRecordingTransport([
-            '/send-otp' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
+            '/send-message' => new HttpResponse(200, '{"status":"success","data":{"messageId":"M"}}'),
         ]);
         $fazpassTransport = new HybridRecordingTransport();
         $service = $this->createService($repository, $baileysTransport, $fazpassTransport);
 
         $service->request(7, '628123456789');
-        $code = (string) $baileysTransport->lastPayload['otp'];
+        $code = self::extractOtpCode((string) $baileysTransport->lastPayload['message']);
 
         $this->now += 301;
         $verify = $service->verify(7, $code);
@@ -504,6 +504,15 @@ final class HybridOtpServiceTest extends CIUnitTestCase
         $this->assertSame(0, $fazpassTransport->requestCount);
         $this->assertSame(42, $repository->otps[1]['created_by_admin_id']);
         $this->assertSame('emergency', $repository->otps[1]['provider']);
+    }
+
+    private static function extractOtpCode(string $message): string
+    {
+        if (preg_match('/\*(\d{6})\*/', $message, $matches) === 1) {
+            return $matches[1];
+        }
+
+        self::fail('Pesan OTP tidak memuat kode 6 digit.');
     }
 
     private function createService(
