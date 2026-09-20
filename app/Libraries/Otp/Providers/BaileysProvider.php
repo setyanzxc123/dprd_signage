@@ -64,12 +64,25 @@ final class BaileysProvider
     {
         $template = $this->config->baileysOtpTemplate ?? $this->pickOtpTemplate();
         $expiryMinutes = (string) max(1, (int) floor($this->config->ttlSeconds / 60));
-
-        return strtr($template, [
+        $message = strtr($template, [
             '{{otp}}'            => $code,
             '{{app_name}}'       => $this->config->appName,
             '{{expiry_minutes}}' => $expiryMinutes,
         ]);
+
+        return $message . "\n\nRef: #" . $this->generateRefId();
+    }
+
+    private function generateRefId(): string
+    {
+        $alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $ref = '';
+
+        for ($i = 0; $i < 5; $i++) {
+            $ref .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        return $ref;
     }
 
     private function pickOtpTemplate(): string

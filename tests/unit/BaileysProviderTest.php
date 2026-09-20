@@ -28,6 +28,7 @@ final class BaileysProviderTest extends CIUnitTestCase
         $this->assertArrayNotHasKey('otp', $transport->payload);
         $this->assertStringContainsString('748192', (string) $transport->payload['message']);
         $this->assertStringContainsString('DPRD Sulawesi Tengah', (string) $transport->payload['message']);
+        $this->assertMatchesRegularExpression('/\nRef: #[2-9A-HJ-NP-Z]{5}$/', (string) $transport->payload['message']);
     }
 
     public function testUsesConfiguredTemplateWhenProvided(): void
@@ -44,7 +45,8 @@ final class BaileysProviderTest extends CIUnitTestCase
         $result = $provider->sendOtp('628123456789', '748192');
 
         $this->assertTrue($result->success);
-        $this->assertSame('OTP DPRD Sulawesi Tengah: 748192 (5 menit)', $transport->payload['message']);
+        $this->assertStringStartsWith('OTP DPRD Sulawesi Tengah: 748192 (5 menit)', (string) $transport->payload['message']);
+        $this->assertMatchesRegularExpression('/\nRef: #[2-9A-HJ-NP-Z]{5}$/', (string) $transport->payload['message']);
     }
 
     public function testSendsIdempotencyKeyHeaderOnlyWhenProvided(): void
