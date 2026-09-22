@@ -58,20 +58,20 @@ if ($isMember) {
     <header class="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
         <div class="relative overflow-hidden">
             <div class="agenda-header-motif" aria-hidden="true"></div>
-            <div class="relative z-10 mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
-            <a class="flex items-center gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
-                <img class="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" width="64" height="64" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+            <div class="relative z-10 mx-auto flex min-h-16 w-full flex-wrap items-center justify-between gap-3 px-3 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
+                <a class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Halaman agenda DPRD">
+                <img class="h-16 w-16 shrink-0 object-contain" width="64" height="64" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                 <span class="min-w-0 leading-tight">
-                    <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
+                    <span class="block min-w-0 truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                         AGENDA DPRD
                     </span>
-                    <span class="block truncate text-[10px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
+                    <span class="block min-w-0 truncate text-[10px] uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.06em]">
                         Provinsi Sulawesi Tengah
                     </span>
                 </span>
             </a>
 
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="ml-auto flex items-center gap-2 shrink-0">
                 <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-3.5 py-1.5 shadow-xs">
                     <div class="flex items-center gap-2.5 px-3 py-1">
                         <img v-if="weather.icon_url" :src="weather.icon_url" class="h-7 w-7 object-contain" alt="Ikon cuaca" />
@@ -97,12 +97,13 @@ if ($isMember) {
                         <span class="block text-[9px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
                     </div>
                 </div>
-                <button id="btn-aktifkan-notif" class="inline-flex items-center gap-x-2 py-2 px-3.5 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold shadow-xs transition cursor-pointer" type="button">
-                    🔔 Aktifkan Notifikasi
+                <button class="js-aktifkan-notif max-md:hidden inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold shadow-xs transition cursor-pointer" type="button" aria-label="Aktifkan notifikasi">
+                    <span aria-hidden="true">🔔</span>
+                    <span>Aktifkan Notifikasi</span>
                 </button>
-                <button id="btn-install-pwa" class="hidden inline-flex items-center gap-x-2 py-2 px-3.5 rounded-xl border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 text-xs font-semibold shadow-xs transition cursor-pointer" type="button" aria-label="Install Aplikasi">
+                <button class="js-install-pwa max-md:hidden inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 text-xs font-semibold shadow-xs transition cursor-pointer" type="button" aria-label="Install Aplikasi">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    <span class="hidden sm:inline">Install App</span>
+                    <span>Install App</span>
                 </button>
 
                 <button class="inline-flex justify-center items-center size-10 sm:size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700/80 transition" type="button" @click="toggleTheme" :aria-label="isDark ? 'Gunakan tema terang' : 'Gunakan tema gelap'">
@@ -149,17 +150,31 @@ if ($isMember) {
                         </div>
                     </div>
                 <?php elseif ($isAdmin): ?>
-                    <a class="inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition" href="<?= base_url('admin/dashboard') ?>">
+                    <a class="inline-flex items-center gap-x-2 min-h-10 sm:min-h-9 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition" href="<?= base_url('admin/dashboard') ?>">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                         <span class="hidden sm:inline">Panel Admin</span>
                     </a>
                 <?php else: ?>
-                    <a class="inline-flex items-center gap-x-2 py-2 px-3.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-xs font-semibold shadow-xs transition" href="<?= base_url('login?akses=anggota') ?>">
+                    <a class="inline-flex items-center gap-x-2 min-h-10 sm:min-h-9 py-2 px-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-xs font-semibold shadow-xs transition" href="<?= base_url('login?akses=anggota') ?>">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4m-4-4 5-5-5-5m5 5H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         <span class="hidden sm:inline">Masuk Anggota</span>
                     </a>
                 <?php endif; ?>
             </div>
+        </div>
+
+<div id="cta-banner" class="relative z-10 md:hidden flex items-center gap-2 border-t border-slate-200/80 dark:border-slate-800/80 bg-blue-50/90 dark:bg-blue-950/40 px-3 py-2">
+            <button class="js-aktifkan-notif flex min-w-0 items-center gap-x-2.5 rounded-xl bg-blue-600 py-2.5 px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition cursor-pointer" type="button">
+                <span aria-hidden="true">🔔</span>
+                <span class="truncate">Aktifkan Notifikasi</span>
+            </button>
+            <button class="js-install-pwa inline-flex shrink-0 items-center gap-x-2 rounded-xl border border-blue-200 bg-white py-2.5 px-3 text-xs font-semibold text-blue-700 shadow-xs transition hover:bg-blue-100 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800 cursor-pointer" type="button" aria-label="Install aplikasi">
+                <svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Install</span>
+            </button>
+            <button class="js-tutup-cta ml-auto inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer" type="button" aria-label="Tutup saran notifikasi dan install">
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
         </div>
 
         <div class="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 xl:hidden px-3 py-1.5 text-center">
@@ -1884,6 +1899,7 @@ if ($isMember) {
                 document.documentElement.classList.toggle('dark', isDark.value);
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('dprd-admin-theme', theme);
+                window.liquidGlass?.markChanged?.();
             }
 
             onMounted(() => {
@@ -2066,23 +2082,24 @@ if ($isMember) {
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/app-sw.js').then(async (registration) => {
-            const btnAktifkanNotif = document.getElementById('btn-aktifkan-notif');
+            const notifButtons = [...document.querySelectorAll('.js-aktifkan-notif')];
 
-            if (btnAktifkanNotif) {
+            if (notifButtons.length) {
                 // Sembunyikan tombol jika notifikasi sudah aktif di perangkat ini.
                 const existingSubscription = await registration.pushManager.getSubscription();
                 if (Notification.permission === 'granted' && existingSubscription) {
-                    btnAktifkanNotif.style.display = 'none';
+                    notifButtons.forEach((btn) => { btn.style.display = 'none'; });
                 }
 
-                btnAktifkanNotif.addEventListener('click', async () => {
-                    btnAktifkanNotif.innerHTML = 'Memproses...';
+                notifButtons.forEach((btn) => btn.addEventListener('click', async () => {
+                    const tampilanAwal = btn.innerHTML;
+                    btn.innerHTML = 'Memproses...';
 
                     try {
                         const permission = await Notification.requestPermission();
                         if (permission !== 'granted') {
                             alert('Izin notifikasi ditolak.');
-                            btnAktifkanNotif.innerHTML = '🔔 Aktifkan Notifikasi';
+                            btn.innerHTML = tampilanAwal;
                             return;
                         }
 
@@ -2107,33 +2124,45 @@ if ($isMember) {
 
                         if (response.ok) {
                             alert('SUKSES: Perangkat Anda kini siap menerima notifikasi jadwal!');
-                            btnAktifkanNotif.style.display = 'none';
+                            notifButtons.forEach((b) => { b.style.display = 'none'; });
                         } else {
                             alert('GAGAL: Pastikan Anda sudah Login sebagai anggota.');
-                            btnAktifkanNotif.innerHTML = '🔔 Aktifkan Notifikasi';
+                            btn.innerHTML = tampilanAwal;
                         }
 
                     } catch (error) {
                         console.error('Push Error:', error);
                         alert('Terjadi kesalahan jaringan atau VAPID Key tidak valid.');
-                        btnAktifkanNotif.innerHTML = '🔔 Aktifkan Notifikasi';
+                        btn.innerHTML = tampilanAwal;
                     }
-                });
+                }));
             }
         }).catch(err => console.log('SW Error:', err));
     }
 
+    const ctaBanner = document.getElementById('cta-banner');
+    if (ctaBanner) {
+        const tutupCta = ctaBanner.querySelector('.js-tutup-cta');
+        if (sessionStorage.getItem('agendaCtaDitutup') === '1') {
+            ctaBanner.classList.add('hidden');
+        }
+        tutupCta?.addEventListener('click', () => {
+            sessionStorage.setItem('agendaCtaDitutup', '1');
+            ctaBanner.classList.add('hidden');
+        });
+    }
+
     // Tombol install PWA.
     let penangkapInstall = null;
-    const btnInstallPwa = document.getElementById('btn-install-pwa');
+    const installButtons = [...document.querySelectorAll('.js-install-pwa')];
 
-    if (btnInstallPwa) {
+    if (installButtons.length) {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             penangkapInstall = e;
         });
 
-        btnInstallPwa.addEventListener('click', async () => {
+        installButtons.forEach((btn) => btn.addEventListener('click', async () => {
             if (penangkapInstall !== null) {
                 penangkapInstall.prompt();
                 const { outcome } = await penangkapInstall.userChoice;
@@ -2141,7 +2170,7 @@ if ($isMember) {
             } else {
                 alert('Untuk menginstall aplikasi ini:\n\n📱 Di Android (Chrome):\nKlik ikon titik tiga di pojok kanan atas browser, lalu pilih "Tambahkan ke Layar Utama" atau "Install Aplikasi".\n\n🍏 Di iPhone (Safari):\nTekan tombol Bagikan (Share) di bawah layar, lalu pilih "Add to Home Screen".');
             }
-        });
+        }));
     }
 </script>
 </body>

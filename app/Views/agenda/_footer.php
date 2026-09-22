@@ -9,7 +9,7 @@ $footerIsMember = ! empty($isMember);
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-10">
             <div class="space-y-3 lg:col-span-7 lg:ps-6">
                 <div class="flex items-center gap-3">
-                    <img class="h-11 w-11 shrink-0 object-contain sm:h-12 sm:w-12" width="48" height="48" loading="lazy" decoding="async" src="<?= esc($footerLogoUrl) ?><?= str_contains($footerLogoUrl, '?') ? '&' : '?' ?>v=<?= $footerLogoVer ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+                    <img class="h-12 w-12 shrink-0 object-contain" width="48" height="48" loading="lazy" decoding="async" src="<?= esc($footerLogoUrl) ?><?= str_contains($footerLogoUrl, '?') ? '&' : '?' ?>v=<?= $footerLogoVer ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                     <div class="min-w-0">
                         <span class="block text-sm font-extrabold uppercase tracking-wider text-white sm:text-base">
                             Dewan Perwakilan Rakyat Daerah

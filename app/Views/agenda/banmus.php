@@ -49,20 +49,20 @@ if (! empty($documents)) {
     <header class="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
         <div class="relative overflow-hidden">
             <div class="agenda-header-motif" aria-hidden="true"></div>
-            <div class="relative z-10 mx-auto flex min-h-16 w-full items-center justify-between gap-3 px-3.5 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
-                <a class="flex items-center gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Kembali ke agenda DPRD">
-                    <img class="h-12 w-12 shrink-0 object-contain sm:h-16 sm:w-16" width="64" height="64" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
+            <div class="relative z-10 mx-auto flex min-h-16 w-full flex-wrap items-center justify-between gap-3 px-3 py-2.5 sm:min-h-20 sm:px-6 xl:px-8">
+                <a class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1" href="<?= esc($portalUrl) ?>" aria-label="Kembali ke agenda DPRD">
+                    <img class="h-16 w-16 shrink-0 object-contain" width="64" height="64" src="<?= esc($logoUrl) ?><?= str_contains($logoUrl, '?') ? '&' : '?' ?>v=<?= $logoVersion ?>" alt="Logo DPRD Provinsi Sulawesi Tengah" />
                     <span class="min-w-0 leading-tight">
-                        <span class="block truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
+                        <span class="block min-w-0 truncate text-sm font-black uppercase tracking-[0.06em] text-slate-900 dark:text-white sm:text-[clamp(17px,1.08vw,22px)] sm:tracking-[0.08em]">
                             AGENDA DPRD
                         </span>
-                        <span class="block truncate text-[11px] uppercase tracking-[0.06em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.08em]">
+                        <span class="block min-w-0 truncate text-[11px] uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400 sm:text-[clamp(12px,0.82vw,16px)] sm:tracking-[0.06em]">
                             Provinsi Sulawesi Tengah
                         </span>
                     </span>
                 </a>
 
-                <div class="flex items-center gap-2 shrink-0">
+                <div class="ml-auto flex items-center gap-2 shrink-0">
                     <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-3.5 py-1.5 shadow-xs">
                         <div class="flex items-center gap-2.5 px-3 py-1">
                             <img v-if="weather.icon_url" :src="weather.icon_url" class="h-7 w-7 object-contain" alt="Ikon cuaca" />
