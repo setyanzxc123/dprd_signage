@@ -21,7 +21,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
     <script src="<?= base_url('assets/vendor/qrcodejs/qrcode.min.js?v=' . $qrcodeVersion) ?>"></script>
 </head>
 
-<body class="bg-base-200 text-base-content">
+<body class="bg-base-200 text-base-content antialiased">
 
     <div id="app" v-cloak>
 
@@ -33,7 +33,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 <div class="flex items-center gap-[1vw] min-w-0 flex-1">
                     <img src="<?= base_url('assets/images/logo_dprd.png?v=' . $logoVersion) ?>"
                         alt="Logo DPRD Provinsi Sulawesi Tengah"
-                        class="h-[clamp(56px,7.2vh,84px)] w-[clamp(56px,7.2vh,84px)] shrink-0 object-contain" />
+                        class="h-[clamp(56px,7.6vh,84px)] w-[clamp(56px,7.6vh,84px)] shrink-0 object-contain" />
                     <span class="min-w-0 leading-tight">
                         <span class="block truncate text-[clamp(17px,1.2vw,24px)] font-black uppercase tracking-[0.08em] text-slate-900 dark:text-white">
                             DPRD Provinsi

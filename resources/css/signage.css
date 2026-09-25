@@ -56,7 +56,7 @@ body {
     overflow: hidden;
     cursor: none;
     user-select: none;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: var(--color-base-content);
     background-color: var(--color-base-200);
 }
