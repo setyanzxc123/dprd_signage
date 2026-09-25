@@ -1,5 +1,6 @@
 @import "tailwindcss" source(none);
 @import "../../node_modules/preline/variants.css";
+@import "./components/liquid-glass.css";
 @source "../../app/Views/agenda/**/*.php";
 @source "../../app/Views/agenda/*.php";
 @source "../../node_modules/preline/dist/*.js";

@@ -72,33 +72,35 @@ if ($isMember) {
             </a>
 
             <div class="ml-auto flex items-center gap-2 shrink-0">
-                <div class="hidden xl:inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-800/50 backdrop-blur-sm px-3.5 py-1.5 shadow-xs">
-                    <div class="flex items-center gap-2.5 px-3 py-1">
-                        <img v-if="weather.icon_url" :src="weather.icon_url" class="h-7 w-7 object-contain" alt="Ikon cuaca" />
-                        <span v-else class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>
-                        <div class="text-left">
-                            <span class="block text-sm font-bold text-slate-900 dark:text-white leading-tight">{{ weather.suhu }}</span>
-                            <span class="block max-w-28 truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ weather.kondisi }}</span>
+                <div class="hidden xl:inline-flex liquid-glass">
+                    <div id="agenda-weather-card" class="inline-flex items-center gap-3.5 text-slate-900 dark:text-white px-4 py-2.5 transition-colors duration-300">
+                        <div class="flex items-center gap-2">
+                            <div class="size-8 rounded-full bg-slate-900/5 dark:bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 border border-slate-900/10 dark:border-white/25 shadow-inner">
+                                <img v-if="weather.icon_url" :src="weather.icon_url" class="size-5 object-contain filter drop-shadow-xs" alt="Ikon cuaca" />
+                                <span v-else class="size-2 rounded-full bg-amber-500"></span>
+                            </div>
+                            <div class="text-left leading-tight">
+                                <span class="block text-sm font-black text-slate-900 dark:text-white leading-tight">{{ weather.suhu }}</span>
+                                <span class="block max-w-24 truncate text-[10px] font-semibold text-slate-600 dark:text-white/80">{{ weather.kondisi }}</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="hidden 2xl:block px-3 py-1 text-left">
-                        <span class="block max-w-48 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{{ weatherLocation }}</span>
-                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Kelembapan {{ weather.kelembapan }} · Angin {{ weather.kec_angin }}</span>
-                    </div>
+                        <div class="h-5 w-px bg-slate-900/15 dark:bg-white/20"></div>
 
-                    <div class="px-3.5 py-1 text-center">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ headerDay }}</span>
-                        <span class="block text-xs font-semibold text-slate-800 dark:text-slate-200">{{ headerDate }}</span>
-                    </div>
+                        <div class="text-left leading-tight">
+                            <span class="block max-w-52 truncate text-sm font-bold text-slate-900 dark:text-white">{{ headerDay }}, {{ headerDate }}</span>
+                        </div>
 
-                    <div class="px-3.5 py-1 text-center">
-                        <span class="block font-mono text-2xl font-black tabular-nums leading-none text-slate-900 dark:text-white">{{ headerTime }}</span>
-                        <span class="block text-[9px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 mt-0.5">WITA</span>
+                        <div class="h-5 w-px bg-slate-900/15 dark:bg-white/20"></div>
+
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-mono text-xl font-black tabular-nums tracking-tight text-slate-950 dark:text-white leading-none">{{ headerTime }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-slate-900/10 text-slate-800 dark:bg-white/20 dark:text-white uppercase backdrop-blur-xs">WITA</span>
+                        </div>
                     </div>
                 </div>
                 <button class="js-aktifkan-notif max-md:hidden inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold shadow-xs transition cursor-pointer" type="button" aria-label="Aktifkan notifikasi">
-                    <span aria-hidden="true">🔔</span>
+                    <svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                     <span>Aktifkan Notifikasi</span>
                 </button>
                 <button class="js-install-pwa max-md:hidden inline-flex items-center gap-x-2 py-2 px-3 rounded-xl border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 text-xs font-semibold shadow-xs transition cursor-pointer" type="button" aria-label="Install Aplikasi">
@@ -165,7 +167,7 @@ if ($isMember) {
 
 <div id="cta-banner" class="relative z-10 md:hidden flex items-center gap-2 border-t border-slate-200/80 dark:border-slate-800/80 bg-blue-50/90 dark:bg-blue-950/40 px-3 py-2">
             <button class="js-aktifkan-notif flex min-w-0 items-center gap-x-2.5 rounded-xl bg-blue-600 py-2.5 px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition cursor-pointer" type="button">
-                <span aria-hidden="true">🔔</span>
+                <svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                 <span class="truncate">Aktifkan Notifikasi</span>
             </button>
             <button class="js-install-pwa inline-flex shrink-0 items-center gap-x-2 rounded-xl border border-blue-200 bg-white py-2.5 px-3 text-xs font-semibold text-blue-700 shadow-xs transition hover:bg-blue-100 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800 cursor-pointer" type="button" aria-label="Install aplikasi">
@@ -495,14 +497,14 @@ if ($isMember) {
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
                                         <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
-                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
-                                            <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                            <span class="size-2 rounded-full bg-rose-500 animate-pulse"></span>
                                             Live
                                         </span>
                                     </div>
@@ -673,14 +675,14 @@ if ($isMember) {
                                 <div class="min-w-0">
                                     <div class="flex items-start gap-2">
                                         <span class="min-w-0 flex-1 line-clamp-2 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors sm:text-base [text-wrap:pretty]">{{ cleanJudul(item.judul) }}</span>
-                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                        <span v-if="item.status === 'dibatalkan'" class="shrink-0 mt-0.5 inline-flex items-center px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                                             Dibatalkan
                                         </span>
-                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        <span v-else-if="item.status === 'ditunda'" class="shrink-0 mt-0.5 inline-flex items-center px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                                             Ditunda
                                         </span>
-                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
-                                            <span class="size-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                        <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                            <span class="size-2 rounded-full bg-rose-500 animate-pulse"></span>
                                             Live
                                         </span>
                                     </div>
@@ -882,7 +884,7 @@ if ($isMember) {
 <script {csp-script-nonce}>
     const { createApp, ref, computed, nextTick, onMounted, onUnmounted, watch } = Vue;
 
-    createApp({
+    const app = createApp({
         setup() {
             const API_URL = <?= json_encode($apiUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
             const WEATHER_URL = <?= json_encode(base_url('api/signage/cuaca'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
@@ -1022,11 +1024,6 @@ if ($isMember) {
                 const temperature = weather.value.suhu || '';
                 const condition = weather.value.kondisi || 'Tidak tersedia';
                 return temperature ? `${temperature} · ${condition}` : condition;
-            });
-            const weatherLocation = computed(() => {
-                const location = [weather.value.desa, weather.value.kecamatan]
-                    .filter((value) => value && value !== '-');
-                return location.length ? location.join(', ') : 'Sulawesi Tengah';
             });
             const scheduledAgendas = computed(() => {
                 const selectedMonths = new Set(periodMonths());
@@ -1899,7 +1896,6 @@ if ($isMember) {
                 document.documentElement.classList.toggle('dark', isDark.value);
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('dprd-admin-theme', theme);
-                window.liquidGlass?.markChanged?.();
             }
 
             onMounted(() => {
@@ -2004,7 +2000,6 @@ if ($isMember) {
                 canScrollUnitsRight,
                 weather,
                 weatherLabel,
-                weatherLocation,
                 headerDay,
                 headerDate,
                 headerShortDate,
@@ -2074,7 +2069,9 @@ if ($isMember) {
                 toggleTheme,
             };
         },
-    }).mount('#agenda-app');
+    });
+
+    app.mount('#agenda-app');
 </script>
 <script {csp-script-nonce}>
     const csrfHeader = '<?= csrf_header() ?>';
@@ -2168,7 +2165,7 @@ if ($isMember) {
                 const { outcome } = await penangkapInstall.userChoice;
                 penangkapInstall = null;
             } else {
-                alert('Untuk menginstall aplikasi ini:\n\n📱 Di Android (Chrome):\nKlik ikon titik tiga di pojok kanan atas browser, lalu pilih "Tambahkan ke Layar Utama" atau "Install Aplikasi".\n\n🍏 Di iPhone (Safari):\nTekan tombol Bagikan (Share) di bawah layar, lalu pilih "Add to Home Screen".');
+                alert('Untuk menginstall aplikasi ini:\n\nDi Android (Chrome):\nKlik ikon titik tiga di pojok kanan atas browser, lalu pilih "Tambahkan ke Layar Utama" atau "Install Aplikasi".\n\nDi iPhone (Safari):\nTekan tombol Bagikan (Share) di bawah layar, lalu pilih "Add to Home Screen".');
             }
         }));
     }
