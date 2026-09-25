@@ -45,7 +45,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
-                    <div class="inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-800/90 backdrop-blur-sm backdrop-saturate-200 ring-1 ring-inset ring-white/60 dark:ring-white/10 px-[0.8vw] py-[0.45vh] shadow-xs">
+                    <div class="liquid-glass inline-flex items-center divide-x divide-slate-200 dark:divide-slate-800 rounded-2xl px-[0.8vw] py-[0.45vh]">
                         <div class="flex items-center gap-[0.6vw] px-[1vw] py-[0.35vh]">
                             <img v-if="cuaca.icon_url" :src="cuaca.icon_url"
                                 class="h-[clamp(28px,2vw,40px)] w-[clamp(28px,2vw,40px)] object-contain"
@@ -70,7 +70,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         </div>
 
                         <div class="flex flex-col items-center justify-center px-[1.1vw] py-[0.35vh] text-center">
-                            <span class="block text-[clamp(11px,0.72vw,15px)] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                            <span class="block text-[clamp(13px,0.85vw,18px)] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                                 {{ dateDay }}
                             </span>
                             <span class="block text-[clamp(13.5px,0.95vw,19px)] font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
