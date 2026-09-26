@@ -590,14 +590,6 @@ class JadwalUmumService
                 return;
             }
 
-            $subscriptions = $this->db->table('push_subscriptions')
-                ->whereIn('user_id', $userIds)
-                ->get()->getResultArray();
-
-            if (empty($subscriptions)) {
-                return;
-            }
-
             $namaRuangan = 'Lokasi Lainnya';
             if (!empty($ruanganId)) {
                 $ruangan = $this->db->table('ruangan')->select('name')->where('id', $ruanganId)->get()->getRow();
@@ -608,32 +600,12 @@ class JadwalUmumService
                 $namaRuangan = $lokasiLainnya;
             }
 
-            $webPush = new \Minishlink\WebPush\WebPush([
-                'VAPID' => [
-                    'subject'    => env('VAPID_SUBJECT'),
-                    'publicKey'  => env('VAPID_PUBLIC_KEY'),
-                    'privateKey' => env('VAPID_PRIVATE_KEY'),
-                ],
-            ]);
-
-            $pesan = json_encode([
-                'title'   => 'Pemberitahuan Jadwal ' . ($jenisAksi === 'Baru' ? 'Baru' : 'Perubahan'),
-                'message' => "Agenda: {$judul}\nWaktu: {$tanggal}\nTempat: {$namaRuangan}\nSilakan cek detailnya di aplikasi.",
-                'url'     => '/agenda',
-            ]);
-
-            foreach ($subscriptions as $sub) {
-                $subscription = \Minishlink\WebPush\Subscription::create([
-                    'endpoint' => $sub['endpoint'],
-                    'keys'     => [
-                        'p256dh' => $sub['p256dh'],
-                        'auth'   => $sub['auth'],
-                    ],
-                ]);
-                $webPush->sendOneNotification($subscription, $pesan);
-            }
-
-            $webPush->flush();
+            (new \App\Libraries\Notification\PushNotifier())->sendToUserIds(
+                $userIds,
+                'Pemberitahuan Jadwal ' . ($jenisAksi === 'Baru' ? 'Baru' : 'Perubahan'),
+                "Agenda: {$judul}\nWaktu: {$tanggal}\nTempat: {$namaRuangan}\nSilakan cek detailnya di aplikasi.",
+                '/agenda',
+            );
         } catch (\Throwable $th) {
             log_message('error', "Gagal kirim notif PWA ({$jenisAksi}): " . $th->getMessage());
         }

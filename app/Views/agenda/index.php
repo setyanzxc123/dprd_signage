@@ -2120,8 +2120,8 @@ if ($isMember) {
                         });
 
                         if (response.ok) {
-                            alert('SUKSES: Perangkat Anda kini siap menerima notifikasi jadwal!');
                             notifButtons.forEach((b) => { b.style.display = 'none'; });
+                            alert('SUKSES: Perangkat Anda kini siap menerima notifikasi jadwal!');
                         } else {
                             alert('GAGAL: Pastikan Anda sudah Login sebagai anggota.');
                             btn.innerHTML = tampilanAwal;

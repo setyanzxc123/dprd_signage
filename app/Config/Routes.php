@@ -134,6 +134,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
 
     // Pusat Notifikasi Terpadu
     $routes->get( 'notifications/feed',                 'Admin\NotificationController::feed');
+    $routes->post('notifications/aktifkan-push',        'Admin\NotificationController::aktifkanPush');
 
     // Pengaturan Signage & Integrasi
     $routes->get( 'pengaturan',                    'Admin\SettingController::index');

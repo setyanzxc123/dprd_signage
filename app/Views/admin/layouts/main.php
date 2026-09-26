@@ -47,6 +47,16 @@ $flashError = session()->getFlashdata('error');
     <script src="<?= base_url('assets/vendor/datatables/dataTables.min.js?v=' . $dataTablesJsVersion) ?>" defer></script>
     <script src="<?= base_url('assets/js/admin/main.js?v=' . $adminJsVersion) ?>" defer></script>
     <script src="<?= base_url('assets/js/admin/pages.js?v=' . $adminPagesJsVersion) ?>" defer></script>
+    <?php $adminPushJsVersion = is_file(FCPATH . 'assets/js/admin/push.js') ? filemtime(FCPATH . 'assets/js/admin/push.js') : time(); ?>
+    <script>
+        window.AdminPushConfig = {
+            publicKey: '<?= env('VAPID_PUBLIC_KEY') ?>',
+            csrfHeader: '<?= csrf_header() ?>',
+            csrfToken: '<?= csrf_hash() ?>',
+            subscribeUrl: '<?= base_url('admin/notifications/aktifkan-push') ?>'
+        };
+    </script>
+    <script src="<?= base_url('assets/js/admin/push.js?v=' . $adminPushJsVersion) ?>" defer></script>
     <?= $this->renderSection('styles') ?>
 </head>
 

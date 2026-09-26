@@ -76,6 +76,15 @@ if (empty($breadcrumbs) && $pageTitle !== 'Dashboard') {
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
+            <!-- Aktivasi Push Notification Browser -->
+            <button id="btn_aktifkan_push" type="button"
+                    class="max-md:hidden inline-flex items-center gap-x-2 h-9 px-3 rounded-xl border border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 text-xs font-semibold shadow-xs transition cursor-pointer"
+                    title="Terima notifikasi OS saat panel tidak terbuka"
+                    aria-label="Aktifkan notifikasi browser">
+                <i data-lucide="bell-ring" class="size-4"></i>
+                <span class="hidden lg:inline">Aktifkan Notifikasi</span>
+            </button>
+
             <!-- Unified Notification Hub Dropdown -->
             <div class="hs-dropdown relative inline-flex [--placement:bottom-right] [--strategy:fixed] sm:[--strategy:absolute] [--auto-close:inside]">
                 <button id="hs-dropdown-notifications" type="button" class="hs-dropdown-toggle relative inline-flex justify-center items-center size-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden" aria-haspopup="dialog" aria-expanded="false" aria-label="Notifikasi Sistem" title="Notifikasi Sistem">

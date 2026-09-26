@@ -13,6 +13,7 @@ final class NotificationService
     public const ALERTS_CACHE_TTL = 10;
     public const WA_STATUS_CACHE_KEY = 'notification_feed_wa_status';
     public const WA_STATUS_CACHE_TTL = 30;
+    private const PUSH_STATE_KEY = 'notification_push_last_ids';
 
     private BaileysProvider $baileysProvider;
     private NotulenService $notulenService;
@@ -36,6 +37,8 @@ final class NotificationService
     public function getFeed(bool $fresh = false): array
     {
         $alerts = $this->getCachedAlerts($fresh);
+
+        $this->pushNewAlerts($alerts);
 
         $criticalCount = 0;
         $warningCount  = 0;
@@ -121,6 +124,67 @@ final class NotificationService
         }
 
         return $alerts;
+    }
+
+    /**
+     * Mengirim push browser ke admin yang berlangganan untuk setiap alert
+     * critical/warning yang belum ada pada feed sebelumnya. State dipersist
+     * di tabel settings agar alert tidak dikirim ulang di setiap polling;
+     * eksekusi pertama hanya membentuk baseline tanpa mengirim.
+     */
+    private function pushNewAlerts(array $alerts): void
+    {
+        try {
+            $pushable = [];
+            foreach ($alerts as $alert) {
+                $severity = $alert['severity'] ?? 'info';
+                if (in_array($severity, ['critical', 'warning'], true) && !empty($alert['id'])) {
+                    $pushable[(string) $alert['id']] = $alert;
+                }
+            }
+            ksort($pushable);
+
+            $settings     = new SettingModel();
+            $previousRaw  = $settings->getValue(self::PUSH_STATE_KEY);
+            $previousIds  = [];
+            $hasBaseline  = false;
+
+            if (is_string($previousRaw) && $previousRaw !== '') {
+                $decoded = json_decode($previousRaw, true);
+                if (is_array($decoded)) {
+                    $previousIds = array_flip($decoded);
+                    $hasBaseline = true;
+                }
+            }
+
+            $settings->upsert(self::PUSH_STATE_KEY, json_encode(array_keys($pushable)));
+
+            if (!$hasBaseline) {
+                return;
+            }
+
+            $newIds = array_values(array_filter(array_keys($pushable), static fn (string $id): bool => !isset($previousIds[$id])));
+            if ($newIds === []) {
+                return;
+            }
+
+            $adminIds = (new PushNotifier())->adminSubscriberIds();
+            if ($adminIds === []) {
+                return;
+            }
+
+            foreach ($newIds as $alertId) {
+                $alert = $pushable[$alertId];
+                (new PushNotifier())->sendToUserIds(
+                    $adminIds,
+                    (string) ($alert['title'] ?? 'Notifikasi Admin'),
+                    (string) ($alert['message'] ?? ''),
+                    (string) ($alert['action_url'] ?? '/admin'),
+                );
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Notifikasi: gagal memproses push alert admin. {message}', ['message' => $e->getMessage()]);
+        }
     }
 
     /**
