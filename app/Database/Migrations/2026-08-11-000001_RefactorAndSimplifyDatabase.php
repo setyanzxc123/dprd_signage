@@ -48,7 +48,7 @@ class RefactorAndSimplifyDatabase extends Migration
             'attempts'                => ['type' => 'SMALLINT', 'default' => 0],
             'expires_at'              => ['type' => 'DATETIME'],
             'used_at'                 => ['type' => 'DATETIME', 'null' => true],
-            'created_by_admin_id'     => ['type' => 'INT', 'null' => true],
+            'created_by_admin_id'     => ['type' => 'INT', 'unsigned' => true, 'null' => true],
             'created_at'              => ['type' => 'DATETIME'],
             'updated_at'              => ['type' => 'DATETIME'],
         ]);

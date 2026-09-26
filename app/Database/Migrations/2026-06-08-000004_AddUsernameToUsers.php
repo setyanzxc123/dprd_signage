@@ -19,45 +19,57 @@ class AddUsernameToUsers extends Migration
             ]);
         }
 
-        $users = $this->db->table('users')
-            ->select('id, email, username')
-            ->get()
-            ->getResultArray();
+        // Tabel users hasil Shield tidak memiliki kolom email
+        // (identitas email disimpan di auth_identities), sehingga
+        // backfill username hanya berlaku pada tabel users warisan.
+        $hasEmail = $this->db->fieldExists('email', 'users');
 
-        foreach ($users as $user) {
-            if (! empty($user['username'])) {
-                continue;
+        if ($hasEmail) {
+            $users = $this->db->table('users')
+                ->select('id, email, username')
+                ->get()
+                ->getResultArray();
+
+            foreach ($users as $user) {
+                if (! empty($user['username'])) {
+                    continue;
+                }
+
+                $base = $this->makeUsername($user);
+                $username = $base;
+                $suffix = 2;
+
+                while ($this->usernameExists($username, (int) $user['id'])) {
+                    $username = $base . $suffix;
+                    $suffix++;
+                }
+
+                $this->db->table('users')
+                    ->where('id', $user['id'])
+                    ->update(['username' => $username]);
             }
-
-            $base = $this->makeUsername($user);
-            $username = $base;
-            $suffix = 2;
-
-            while ($this->usernameExists($username, (int) $user['id'])) {
-                $username = $base . $suffix;
-                $suffix++;
-            }
-
-            $this->db->table('users')
-                ->where('id', $user['id'])
-                ->update(['username' => $username]);
         }
 
-        $this->forge->modifyColumn('users', [
+        $columns = [
             'username' => [
                 'name'       => 'username',
                 'type'       => 'VARCHAR',
                 'constraint' => 50,
                 'null'       => false,
             ],
-            'email' => [
+        ];
+
+        if ($hasEmail) {
+            $columns['email'] = [
                 'name'       => 'email',
                 'type'       => 'VARCHAR',
                 'constraint' => 100,
                 'null'       => true,
                 'default'    => null,
-            ],
-        ]);
+            ];
+        }
+
+        $this->forge->modifyColumn('users', $columns);
 
         if (! $this->hasUsernameUniqueIndex()) {
             $this->forge->addUniqueKey('username', 'users_username_unique');
