@@ -4,6 +4,7 @@ namespace App\Database\Seeds;
 
 use App\Models\JadwalUmumModel;
 use CodeIgniter\Database\Seeder;
+use DateTimeImmutable;
 use RuntimeException;
 use Throwable;
 
@@ -15,12 +16,10 @@ use Throwable;
  * setiap item memiliki status terjadwal, bukan proyeksi. Teks tanggal asli
  * dari lampiran tetap disimpan pada kolom teks_tanggal_asli. Berkas PDF SK
  * sengaja dibiarkan kosong untuk diunggah manual.
- *
- * Anggota dan kelompok peserta mengikuti pola CurrentSystemDataSeeder.
  */
-class BanmusSemester2026Seeder extends Seeder
+class Banmus2026Seeder extends Seeder
 {
-    private const SEED_MARKER = '[BanmusSemester2026Seeder]';
+    private const SEED_MARKER = '[Banmus2026Seeder]';
     private const DUMMY_PREFIX = '(Dummy) ';
     private const SAMPLE_MEMBER_PHONE = '85156049890';
     private const SK_ONE_NUMBER = '160/1/2026';
@@ -39,6 +38,7 @@ class BanmusSemester2026Seeder extends Seeder
             $this->seedMembers();
             $this->cleanLegacyDummyData();
             $this->seedBanmusDocuments();
+            $this->seedDynamicTestDocument();
             $this->seedGeneralSchedules();
 
             if ($this->db->transStatus() === false) {
@@ -295,6 +295,7 @@ class BanmusSemester2026Seeder extends Seeder
 
         $markers = [
             self::SEED_MARKER,
+            '[BanmusSemester2026Seeder]',
             '[CurrentSystemDataSeeder]',
             'Data contoh Jadwal Umum dari BamusMasaPersidanganKetiga2026Seeder',
             'Data contoh rapat dekat waktu sekarang dari BamusMasaPersidanganKetiga2026Seeder',
@@ -575,6 +576,163 @@ class BanmusSemester2026Seeder extends Seeder
             $this->item('Agustus-September 2026', 'Rapat Paripurna Pembahasan/Penetapan RAPBD Perubahan Tahun Anggaran 2026: Penyampaian Ranperda Perubahan APBD oleh Kepala Daerah kepada DPRD dan Persetujuan Bersama DPRD dan Kepala Daerah', 'rapat', '2026-09-03', null, '09:00:00', '11:00:00', 'Ruang Rapat Paripurna', ['Seluruh Anggota', 'Badan Anggaran'], 5),
             $this->item('Senin, 21 September 2026', 'Rapat Badan Musyawarah dengan Acara Pembahasan/Penetapan Jadwal Kegiatan Masa Persidangan Ke-I Tahun Ketiga DPRD Provinsi Sulawesi Tengah', 'rapat', '2026-09-21', null, '09:00:00', '11:00:00', 'Ruang Badan Musyawarah', ['Badan Musyawarah'], 5),
             $this->item('Selasa, 22 September 2026', 'Rapat Paripurna dengan Acara Penutupan Masa Persidangan Ke-III Tahun Kedua, sekaligus Pembukaan Masa Persidangan Ke-I Tahun Ketiga Periode Tahun 2024-2029', 'rapat', '2026-09-22', null, '09:00:00', '11:00:00', 'Ruang Rapat Paripurna', ['Seluruh Anggota'], 5),
+        ];
+    }
+
+    /**
+     * SK dummy berisi rapat mingguan pada pekan-pekan yang belum memiliki rapat
+     * banmus, ditambah jadwal uji dinamis yang mengikuti tanggal seeder
+     * dijalankan. Dokumen dibuat ulang setiap eksekusi sehingga jadwal uji
+     * selalu relevan dengan waktu berjalan.
+     */
+    private function seedDynamicTestDocument(): void
+    {
+        $now = new DateTimeImmutable('now');
+
+        $this->upsertBanmusDocument([
+            'judul' => self::DUMMY_PREFIX . 'SK Jadwal Rapat Mingguan dan Uji Agenda Berlangsung',
+            'nomor_sk' => 'DUMMY/UJI-AGENDA/2026',
+            'tanggal_sk' => $now->format('Y-m-d'),
+            'tahun' => 2026,
+            'semester' => (int) $now->format('n') <= 6 ? 1 : 2,
+            'masa_persidangan' => self::DUMMY_PREFIX . 'Masa Uji Agenda Mingguan',
+            'periode_mulai' => '2026-01-01',
+            'periode_selesai' => '2026-12-31',
+            'status' => 'disahkan',
+            'is_publik' => 1,
+            'dokumen_file' => null,
+            'dokumen_nama_asli' => null,
+            'dokumen_url' => null,
+            'catatan' => self::SEED_MARKER . ' SK dummy untuk rapat mingguan dan jadwal uji dinamis; tanggal uji mengikuti waktu seeder dijalankan.',
+        ], array_merge(
+            $this->weeklyMeetingItems(),
+            $this->dynamicTodayItems($now),
+        ));
+    }
+
+    /**
+     * Satu rapat dummy untuk setiap pekan 2026 yang belum memiliki rapat
+     * pada item SK semester 1 dan 2. Tanggal dipilih di hari kerja
+     * Selasa-Jumat yang masih kosong.
+     */
+    private function weeklyMeetingItems(): array
+    {
+        $occupiedDates = [];
+        foreach (array_merge($this->semesterOneItems(), $this->semesterTwoItems()) as $item) {
+            $occupiedDates[$item['tanggal']] = true;
+        }
+
+        $unitRooms = [
+            'Komisi I' => 'Ruang Komisi I',
+            'Komisi II' => 'Ruang Komisi II',
+            'Komisi III' => 'Ruang Komisi III',
+            'Komisi IV' => 'Ruang Komisi IV',
+            'Badan Anggaran' => 'Ruang Badan Anggaran',
+            'Badan Musyawarah' => 'Ruang Badan Musyawarah',
+            'Bapemperda' => 'Ruang Bapemperda',
+            'Gabungan Komisi' => 'Ruang Rapat Utama',
+            'Pansus Ranperda Pajak Daerah' => 'Ruang Pansus',
+            'Pansus Tata Tertib DPRD' => 'Ruang Pansus',
+            'Tim Pembahas RAPBD' => 'Ruang Badan Anggaran',
+            'Tim Kunjungan Kerja' => 'Ruang Rapat Utama',
+        ];
+        $units = array_keys($unitRooms);
+        $titles = [
+            'Rapat Kerja %s Pembahasan Program Kerja',
+            'Rapat Koordinasi %s',
+            'Rapat Evaluasi %s',
+            'Rapat Pembahasan Agenda %s',
+        ];
+        $slots = [
+            ['09:00:00', '11:00:00'],
+            ['10:00:00', '12:00:00'],
+            ['13:30:00', '15:30:00'],
+        ];
+
+        $items = [];
+        $rotation = 0;
+        for ($monday = new DateTimeImmutable('2026-01-05'); $monday->format('Y-m-d') <= '2026-12-28'; $monday = $monday->modify('+7 days')) {
+            $chosen = null;
+            foreach (['tuesday', 'wednesday', 'thursday', 'friday'] as $dayName) {
+                $candidate = $monday->modify($dayName);
+                if ($candidate->format('Y') !== '2026' || isset($occupiedDates[$candidate->format('Y-m-d')])) {
+                    continue;
+                }
+                $chosen = $candidate;
+                break;
+            }
+
+            if ($chosen === null) {
+                continue;
+            }
+
+            $unit = $units[$rotation % count($units)];
+            [$jamMulai, $jamSelesai] = $slots[intdiv($rotation, count($units)) % count($slots)];
+
+            $items[] = $this->item(
+                'Dummy mingguan 2026',
+                sprintf($titles[$rotation % count($titles)], $unit),
+                'rapat',
+                $chosen->format('Y-m-d'),
+                null,
+                $jamMulai,
+                $jamSelesai,
+                $unitRooms[$unit],
+                [$unit],
+                1,
+            );
+            $rotation++;
+        }
+
+        return $items;
+    }
+
+    /**
+     * Jadwal uji di sekitar waktu seeder dijalankan: satu rapat kemarin
+     * (selesai), satu rapat yang sedang berlangsung, dan satu rapat
+     * mendatang hari ini.
+     */
+    private function dynamicTodayItems(DateTimeImmutable $now): array
+    {
+        $label = 'Dinamis mengikuti waktu seeder dijalankan';
+
+        return [
+            $this->item(
+                $label,
+                self::DUMMY_PREFIX . 'Rapat Komisi I Tindak Lanjut Agenda',
+                'rapat',
+                $now->modify('-1 day')->format('Y-m-d'),
+                null,
+                '09:00:00',
+                '10:30:00',
+                'Ruang Komisi I',
+                ['Komisi I'],
+                1,
+            ),
+            $this->item(
+                $label,
+                self::DUMMY_PREFIX . 'Rapat Badan Musyawarah Evaluasi Agenda Saat Ini',
+                'rapat',
+                $now->format('Y-m-d'),
+                null,
+                $now->modify('-15 minutes')->format('H:i:s'),
+                $now->modify('+45 minutes')->format('H:i:s'),
+                'Ruang Badan Musyawarah',
+                ['Badan Musyawarah'],
+                1,
+            ),
+            $this->item(
+                $label,
+                self::DUMMY_PREFIX . 'Rapat Paripurna Persiapan Agenda Terdekat',
+                'rapat',
+                $now->format('Y-m-d'),
+                null,
+                $now->modify('+2 hours')->format('H:i:s'),
+                $now->modify('+3 hours')->format('H:i:s'),
+                'Ruang Rapat Paripurna',
+                ['Seluruh Anggota'],
+                1,
+            ),
         ];
     }
 
