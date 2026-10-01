@@ -1064,7 +1064,7 @@ if ($isMember) {
                     .sort((a, b) => (a.waktu_mulai || '').localeCompare(b.waktu_mulai || ''));
                 const others = rows.filter((item) => item.status !== 'berlangsung')
                     .sort((a, b) => {
-                        const dateCmp = (b.tanggal || '').localeCompare(a.tanggal || '');
+                        const dateCmp = (a.tanggal || '').localeCompare(b.tanggal || '');
                         if (dateCmp !== 0) {
                             return dateCmp;
                         }
@@ -1078,7 +1078,7 @@ if ($isMember) {
                     .sort((a, b) => (a.waktu_mulai || '').localeCompare(b.waktu_mulai || ''));
                 const others = rows.filter((item) => item.status !== 'berlangsung')
                     .sort((a, b) => {
-                        const dateCmp = (b.tanggal || '').localeCompare(a.tanggal || '');
+                        const dateCmp = (a.tanggal || '').localeCompare(b.tanggal || '');
                         if (dateCmp !== 0) {
                             return dateCmp;
                         }
