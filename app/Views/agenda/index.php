@@ -209,6 +209,7 @@ if ($isMember) {
                             <button :class="navButtonClass('saya')" :aria-pressed="activeNavigation === 'saya'" type="button" @click="setNavigation('saya')">Jadwal Saya</button>
                         <?php endif; ?>
                         <button :class="navButtonClass('all')" :aria-pressed="activeNavigation === 'all'" type="button" @click="setNavigation('all')">Semua</button>
+                        <!--
                         <button
                             v-if="komisiUnits.length > 0"
                             ref="komisiButtonRef"
@@ -224,6 +225,7 @@ if ($isMember) {
                                 <path d="m6 9 6 6 6-6"/>
                             </svg>
                         </button>
+                        -->
                         <button v-for="unit in nonKomisiUnits" :key="unit.id" :class="navButtonClass('unit:' + unit.id)" :aria-pressed="activeNavigation === 'unit:' + unit.id" :title="unit.nama" type="button" @click="setNavigation('unit:' + unit.id)">{{ compactUnitName(unit.nama) }}</button>
                     </div>
 
@@ -932,8 +934,25 @@ if ($isMember) {
             const komisiUnitIds = computed(() =>
                 komisiUnits.value.map((u) => Number(u.id))
             );
+            /*
             const nonKomisiUnits = computed(() =>
                 units.value.filter((u) => !/^komisi\s+(i{1,3}|iv|[1-4])$/i.test(u.nama))
+            );
+            */
+            const clientTestAllowedUnits = ['badan anggaran', 'banggar', 'badan musyawarah', 'banmus', 'bapemperda', 'badan kehormatan', 'kehormatan'];
+            const nonKomisiUnits = computed(() =>
+                units.value
+                    .filter((u) => {
+                        const name = (u.nama || '').trim().toLowerCase();
+                        return clientTestAllowedUnits.some((target) => name.includes(target) || target.includes(name));
+                    })
+                    .sort((a, b) => {
+                        const aName = (a.nama || '').trim().toLowerCase();
+                        const bName = (b.nama || '').trim().toLowerCase();
+                        const aIdx = clientTestAllowedUnits.findIndex((t) => aName.includes(t) || t.includes(aName));
+                        const bIdx = clientTestAllowedUnits.findIndex((t) => bName.includes(t) || t.includes(bName));
+                        return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+                    })
             );
 
             const isKomisiActive = computed(() => {
