@@ -445,7 +445,7 @@ if ($isMember) {
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <a class="inline-flex items-center gap-1 py-1 px-2.5 sm:px-3 rounded-md text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 border border-blue-500/30 hover:border-blue-500/50 bg-blue-50/60 dark:bg-blue-950/30 transition shadow-2xs" href="<?= base_url('agenda/jadwal-banmus') ?>" title="Lihat Proyeksi &amp; SK" aria-label="Lihat Proyeksi &amp; SK">
-                            <span>Proyeksi Banmus</span>
+                            <span>Jadwal Banmus</span>
                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                         </a>
                     </div>
