@@ -380,7 +380,10 @@ if ($isMember) {
                                             Ditunda
                                         </span>
                                         <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
-                                            <span class="size-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                            <span class="relative flex size-2 items-center justify-center shrink-0">
+                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                                                <span class="relative inline-flex size-1.5 rounded-full bg-rose-500"></span>
+                                            </span>
                                             Live
                                         </span>
                                     </div>
@@ -558,7 +561,10 @@ if ($isMember) {
                                             Ditunda
                                         </span>
                                         <span v-else-if="item.status === 'berlangsung'" class="shrink-0 mt-0.5 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
-                                            <span class="size-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                            <span class="relative flex size-2 items-center justify-center shrink-0">
+                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                                                <span class="relative inline-flex size-1.5 rounded-full bg-rose-500"></span>
+                                            </span>
                                             Live
                                         </span>
                                     </div>

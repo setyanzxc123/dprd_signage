@@ -229,16 +229,6 @@ html.dark[data-app-loading] body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-ping,
-  .animate-pulse,
-  .animate-spin {
-    animation: none;
-  }
-
-  html[data-app-loading] body::before {
-    animation: none;
-  }
-
   details.agenda-collapse::details-content {
     transition: none;
   }
