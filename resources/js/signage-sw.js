@@ -14,6 +14,7 @@ const MEDIA_PROTOCOL_VERSION = 2;
 const workerVersion = new URL(self.location.href).searchParams.get('v') || '1';
 const CACHE_NAME = `${CACHE_PREFIX}${workerVersion.replace(/[^a-zA-Z0-9._-]/g, '')}`;
 const APP_SHELL = [
+    '/tv',
     '/signage',
     '/assets/css/signage.css',
     '/assets/vendor/vue/vue.global.prod.js',
@@ -68,12 +69,12 @@ async function networkFirstSignage(request) {
         const response = await fetchWithTimeout(request, 8000);
         if (response.ok) {
             const url = new URL(request.url);
-            const cacheKey = url.searchParams.has('tema') ? request : '/signage';
+            const cacheKey = url.searchParams.has('tema') ? request : (url.pathname === '/signage' ? '/signage' : '/tv');
             await cache.put(cacheKey, response.clone());
         }
         return response;
     } catch (error) {
-        const cached = await cache.match(request) || await cache.match('/signage');
+        const cached = await cache.match(request) || await cache.match('/tv') || await cache.match('/signage');
         if (cached) return cached;
 
         return new Response('Signage belum pernah dibuka saat online.', {
@@ -499,7 +500,7 @@ self.addEventListener('fetch', event => {
     }
     if (url.origin !== self.location.origin) return;
 
-    if (request.mode === 'navigate' && url.pathname === '/signage') {
+    if (request.mode === 'navigate' && (url.pathname === '/tv' || url.pathname === '/signage')) {
         event.respondWith(networkFirstSignage(request));
         return;
     }

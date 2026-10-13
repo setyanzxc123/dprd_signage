@@ -14,8 +14,9 @@ $routes->get('agenda', 'AgendaController::index');
 $routes->get('agenda/jadwal-banmus', 'AgendaController::banmus');
 $routes->get('agenda/jadwal-banmus/(:num)/dokumen', 'AgendaController::banmusDocument/$1');
 
-// Layar TV Signage
-$routes->get('signage', 'SignageController::index');
+// Layar TV
+$routes->get('tv',      'TvController::index');
+$routes->get('signage', 'TvController::redirectSignage');
 
 // Portal Publik — akses via QR Code / direct link
 $routes->get('jadwal', 'AgendaController::legacy');

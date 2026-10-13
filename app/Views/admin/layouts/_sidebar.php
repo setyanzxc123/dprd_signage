@@ -89,7 +89,7 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
                 </button>
                 <div id="hs-accordion-public-collapse" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300 hidden" role="region" aria-labelledby="hs-accordion-public">
                     <div class="mt-1 ps-7 pe-1 space-y-1 border-s border-slate-100 dark:border-slate-800 ms-5">
-                        <a href="<?= base_url('signage') ?>" target="_blank" rel="noopener" class="flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <a href="<?= base_url('tv') ?>" target="_blank" rel="noopener" class="flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             <span>Layar TV</span>
                             <i data-lucide="external-link" class="size-3.5 text-slate-400"></i>
                         </a>

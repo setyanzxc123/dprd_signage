@@ -1751,7 +1751,7 @@ $logoVersion       = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime
                         const existingRegs = await navigator.serviceWorker.getRegistrations();
                         for (const reg of existingRegs) {
                             const regPath = new URL(reg.scope).pathname.replace(/\/+$/, '');
-                            if (regPath === '' || regPath === '/' || !regPath.endsWith('signage')) {
+                            if (regPath === '' || regPath === '/' || (!regPath.endsWith('signage') && !regPath.endsWith('tv'))) {
                                 await reg.unregister();
                             }
                         }

@@ -62,6 +62,26 @@ final class AdminSidebarRenderTest extends CIUnitTestCase
         $this->assertStringNotContainsString('group open', $response->response()->getBody());
     }
 
+    public function testSidebarRendersTvLinkInPublicSection(): void
+    {
+        $response = $this
+            ->withSession([
+                'auth_user' => [
+                    'id'       => 1,
+                    'name'     => 'Admin Pengujian',
+                    'username' => 'admin-test',
+                    'role'     => 'superadmin',
+                ],
+            ])
+            ->get('/admin/profile');
+
+        $response->assertOK();
+        $body = $response->response()->getBody();
+
+        $this->assertStringContainsString('href="' . base_url('tv') . '"', $body);
+        $this->assertStringNotContainsString('href="' . base_url('signage') . '"', $body);
+    }
+
     private function createShieldUserTables(): void
     {
         $this->sidebarForge->addField([

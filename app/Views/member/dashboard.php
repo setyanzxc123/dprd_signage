@@ -54,7 +54,7 @@ $logoVersion = is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPAT
                         </p>
                     </div>
 
-                    <a href="<?= base_url('signage') ?>" class="btn btn-primary">
+                    <a href="<?= base_url('tv') ?>" class="btn btn-primary">
                         <i data-lucide="calendar-days" class="h-4 w-4"></i>
                         Lihat Jadwal
                     </a>

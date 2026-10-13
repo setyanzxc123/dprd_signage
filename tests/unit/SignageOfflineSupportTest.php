@@ -41,6 +41,7 @@ final class SignageOfflineSupportTest extends CIUnitTestCase
         $source = file_get_contents(ROOTPATH . 'resources/js/signage-sw.js');
 
         $this->assertIsString($source);
+        $this->assertStringContainsString("'/tv'", $source);
         $this->assertStringContainsString("'/signage'", $source);
         $this->assertStringContainsString("'/assets/css/signage.css'", $source);
         $this->assertStringContainsString("'/assets/vendor/vue/vue.global.prod.js'", $source);
