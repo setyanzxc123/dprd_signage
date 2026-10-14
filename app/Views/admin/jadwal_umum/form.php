@@ -291,19 +291,13 @@ $targetUnitIds = array_map('intval', $schedule['target_unit_ids'] ?? []);
                 </div>
 
                 <div>
-                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5" for="is_publik">
                         Akses Publikasi
-                    </span>
-                    <label class="flex cursor-pointer items-center gap-3 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/30 min-h-[42px]"
-                        for="is_publik">
-                        <input class="size-4 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700" id="is_publik" name="is_publik" type="checkbox"
-                            value="1" <?= (int) ($schedule['is_publik'] ?? 0) === 1 ? 'checked' : '' ?> />
-                        <span class="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200" id="publik-label">
-                            <?= (int) ($schedule['is_publik'] ?? 0) === 1
-                                ? 'Tampilkan kepada publik'
-                                : 'Internal DPRD saja' ?>
-                        </span>
                     </label>
+                    <select class="py-2.5 px-3.5 pe-9 block w-full border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200" id="is_publik" name="is_publik">
+                        <option value="0" <?= (int) ($schedule['is_publik'] ?? 0) === 0 ? 'selected' : '' ?>>Internal DPRD Saja</option>
+                        <option value="1" <?= (int) ($schedule['is_publik'] ?? 0) === 1 ? 'selected' : '' ?>>Publik</option>
+                    </select>
                 </div>
             </div>
         </div>

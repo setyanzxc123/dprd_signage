@@ -185,7 +185,7 @@ class JadwalUmumService
                 'ruangan_id'      => $location['ruangan_id'],
                 'lokasi_lainnya'  => $location['lokasi_lainnya'],
                 'pihak_eksternal' => $pihakEksternal !== '' ? $pihakEksternal : null,
-                'is_publik'       => ($input['is_publik'] ?? null) === '1' ? 1 : 0,
+                'is_publik'       => in_array((string) ($input['is_publik'] ?? '0'), ['1', 'publik', 'true'], true) ? 1 : 0,
                 'keterangan'      => $keterangan !== '' ? $keterangan : null,
                 'materi_url'      => $materialUrl['url'],
                 'materi_akses'    => ScheduleResourceAccess::normalize($input['materi_akses'] ?? null, ScheduleResourceAccess::PARTICIPANT),

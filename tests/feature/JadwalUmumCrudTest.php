@@ -55,6 +55,8 @@ final class JadwalUmumCrudTest extends CIUnitTestCase
         $this->assertStringContainsString('name="target_unit_rapat[]"', $body);
         $this->assertStringContainsString('data-require-targets="false"', $body);
         $this->assertStringContainsString('name="is_publik"', $body);
+        $this->assertStringContainsString('Internal DPRD Saja', $body);
+        $this->assertStringContainsString('Publik', $body);
         $this->assertStringNotContainsString('name="lingkup"', $body);
         $this->assertStringNotContainsString('name="kategori"', $body);
         $this->assertDoesNotMatchRegularExpression('/<input[^>]*id="is_publik"[^>]*checked/s', $body);

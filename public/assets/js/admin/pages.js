@@ -140,15 +140,6 @@
         const form = document.querySelector('.schedule-form');
         if (!form) return;
         const requiresTargets = form.dataset.requireTargets !== 'false';
-        const toggle = document.getElementById('is_publik');
-        const label = document.getElementById('publik-label');
-        if (toggle && label) {
-            toggle.addEventListener('change', function() {
-                label.textContent = this.checked
-                    ? 'Tampilkan kepada publik'
-                    : 'Internal DPRD saja';
-            });
-        }
 
         const agendaTypeRadios = Array.from(document.querySelectorAll('input[name="jenis_agenda"]'));
         const rapatTanggalContainer = document.getElementById('rapat-tanggal-container');
