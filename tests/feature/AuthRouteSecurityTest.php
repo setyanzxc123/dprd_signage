@@ -121,7 +121,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
 
         $response->assertOK();
         $this->assertStringContainsString(base_url('agenda/jadwal-banmus'), $body);
-        $this->assertStringContainsString('Proyeksi Banmus', $body);
+        $this->assertStringContainsString('Jadwal Banmus', $body);
         $this->assertStringContainsString('Agenda Rapat', $body);
         $this->assertStringContainsString('Jadwal Umum', $body);
         $this->assertStringContainsString("item.source === 'jadwal_umum'", $body);
