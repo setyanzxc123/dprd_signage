@@ -47,7 +47,7 @@ if (! empty($documents)) {
 <body class="min-h-screen overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased">
 <div id="banmus-app" v-cloak>
     <header class="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xs">
-        <?= $this->include('agenda/_header') ?>
+        <?= $this->include('agenda/_header', ['isMember' => $isMember, 'member' => $member, 'isAdmin' => $isAdmin]) ?>
     </header>
 
     <main class="mx-auto w-full max-w-7xl px-3 py-5 sm:px-6 sm:py-8">

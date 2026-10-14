@@ -35,6 +35,7 @@ class AgendaController extends BaseController
             'portalUrl'    => base_url('agenda'),
             'apiUrl'       => base_url($isMember ? 'api/v1/anggota/jadwal' : 'api/v1/publik/jadwal'),
             'member'       => $member,
+            'isMember'     => $isMember,
             'isAdmin'      => $isAdmin,
             'banmusProjections' => $banmusProjections,
         ]));
@@ -68,6 +69,7 @@ class AgendaController extends BaseController
             'logoUrl'           => base_url('assets/images/logo_dprd.png'),
             'portalUrl'         => base_url('agenda'),
             'member'            => $member,
+            'isMember'          => $includeInternal,
             'isAdmin'           => $isAdmin,
             'documents'         => $model?->findForPortal($includeInternal, $selectedYear, $selectedSemester) ?? [],
             'availableYears'    => $availableYears,
