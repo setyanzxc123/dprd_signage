@@ -659,6 +659,7 @@ if ($isMember) {
     </main>
 
     <?= $this->include('agenda/_footer') ?>
+    <?= $this->include('agenda/_confirm_modal') ?>
 
     <?php if ($isMember): ?>
         <div id="hs-risalah-modal" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="hs-risalah-modal-label">

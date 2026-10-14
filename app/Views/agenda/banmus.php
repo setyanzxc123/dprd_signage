@@ -326,6 +326,7 @@ if (! empty($documents)) {
     </main>
 
     <?= $this->include('agenda/_footer') ?>
+    <?= $this->include('agenda/_confirm_modal') ?>
 </div>
 
 <script src="<?= base_url('assets/vendor/preline/preline.js?v=' . $prelineVersion) ?>" defer></script>
