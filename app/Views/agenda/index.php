@@ -59,8 +59,8 @@ if ($isMember) {
         <?= $this->include('agenda/_header') ?>
 
         <nav class="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md" aria-label="Navigasi agenda">
-            <div class="mx-auto flex w-full flex-col gap-2 px-3 py-2 sm:w-[min(1480px,calc(100%-32px))] sm:flex-row sm:items-center sm:justify-between sm:px-0">
-                <div class="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+            <div class="mx-auto flex w-full flex-col gap-2 px-3 py-2 sm:w-[min(1480px,calc(100%-32px))] sm:flex-row sm:items-center sm:justify-center sm:px-0">
+                <div class="flex min-w-0 flex-1 items-center justify-center gap-1.5 sm:gap-2">
                     <button
                         :class="{ 'invisible pointer-events-none': !canScrollUnitsLeft }"
                         class="inline-flex size-7 sm:size-8 shrink-0 items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition cursor-pointer"
@@ -78,7 +78,7 @@ if ($isMember) {
                     <div
                         ref="unitScroller"
                         :class="unitScrollMaskClass"
-                        class="agenda-unit-scroll flex w-full min-w-0 items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-2 sm:px-4 no-scrollbar"
+                        class="agenda-unit-scroll flex w-full min-w-0 items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-2 sm:px-4 no-scrollbar"
                         @scroll.passive="updateUnitScrollState">
                         <?php if ($isMember): ?>
                             <button :class="navButtonClass('saya')" :aria-pressed="activeNavigation === 'saya'" type="button" @click="setNavigation('saya')">Jadwal Saya</button>
