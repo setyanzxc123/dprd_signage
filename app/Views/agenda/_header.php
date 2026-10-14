@@ -90,15 +90,53 @@ $headerIsAdmin = ! $headerIsMember && ! empty($isAdmin);
                         </div>
 
                         <div class="pt-1.5">
-                            <form action="<?= base_url('anggota/logout') ?>" method="post">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="flex w-full items-center gap-x-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer">
-                                    <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/>
-                                    </svg>
-                                    <span>Keluar</span>
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-x-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                data-hs-overlay="#modal-member-logout"
+                                aria-haspopup="dialog"
+                                aria-expanded="false"
+                                aria-controls="modal-member-logout">
+                                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/>
+                                </svg>
+                                <span>Keluar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="modal-member-logout" class="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none" role="dialog" tabindex="-1" aria-labelledby="modal-member-logout-label">
+                    <div class="hs-overlay-open:mt-7 hs-overlay-open:opacity-100 hs-overlay-open:duration-300 mt-0 opacity-0 ease-out transition-all sm:max-w-md sm:w-full m-3 sm:mx-auto min-h-[calc(100%-3.5rem)] flex items-center">
+                        <div class="w-full flex flex-col bg-white border border-slate-200 shadow-xl rounded-2xl pointer-events-auto dark:bg-slate-900 dark:border-slate-800">
+                            <div class="p-5 sm:p-6">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+                                        <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/>
+                                        </svg>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <h3 id="modal-member-logout-label" class="text-base font-bold text-slate-900 dark:text-white">
+                                            Konfirmasi Keluar
+                                        </h3>
+                                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                            Apakah Anda yakin ingin keluar dari sesi akun Anggota DPRD? Anda perlu masuk kembali untuk mengakses agenda internal dan jadwal rapat.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex justify-end items-center gap-x-2">
+                                    <button type="button" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs transition cursor-pointer" data-hs-overlay="#modal-member-logout">
+                                        Batal
+                                    </button>
+                                    <form action="<?= base_url('anggota/logout') ?>" method="post" class="inline">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="py-2 px-3.5 inline-flex items-center gap-x-2 text-xs font-semibold rounded-xl border border-transparent bg-rose-600 text-white hover:bg-rose-700 focus:outline-hidden focus:bg-rose-700 shadow-xs transition cursor-pointer">
+                                            Ya, Keluar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
