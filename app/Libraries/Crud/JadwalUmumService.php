@@ -604,7 +604,7 @@ class JadwalUmumService
                 $userIds,
                 'Pemberitahuan Jadwal ' . ($jenisAksi === 'Baru' ? 'Baru' : 'Perubahan'),
                 "Agenda: {$judul}\nWaktu: {$tanggal}\nTempat: {$namaRuangan}\nSilakan cek detailnya di aplikasi.",
-                '/agenda',
+                '/',
             );
         } catch (\Throwable $th) {
             log_message('error', "Gagal kirim notif PWA ({$jenisAksi}): " . $th->getMessage());

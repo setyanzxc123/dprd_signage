@@ -2,7 +2,7 @@
 $headerLogoUrl = $logoUrl ?? base_url('assets/images/logo_dprd.png');
 $headerLogoVer = $logoVersion
     ?? (is_file(FCPATH . 'assets/images/logo_dprd.png') ? filemtime(FCPATH . 'assets/images/logo_dprd.png') : time());
-$headerPortalUrl = $portalUrl ?? base_url('agenda');
+$headerPortalUrl = $portalUrl ?? base_url('/');
 $headerMember = $member ?? null;
 $headerIsMember = ! empty($isMember) || is_array($headerMember);
 $headerIsAdmin = ! $headerIsMember && ! empty($isAdmin);

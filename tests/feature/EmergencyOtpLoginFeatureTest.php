@@ -91,7 +91,7 @@ final class EmergencyOtpLoginFeatureTest extends CIUnitTestCase
         ]);
 
         $verified->assertStatus(303);
-        $verified->assertRedirectTo(base_url('agenda'));
+        $verified->assertRedirectTo(base_url('/'));
 
         $updatedOtp = $this->otpDb->table('member_otps')->where('id', $otp['id'])->get()->getRowArray();
         $member = $this->otpDb->table('anggota')->where('id', $this->anggotaId)->get()->getRowArray();

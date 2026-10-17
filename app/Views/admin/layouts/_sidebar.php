@@ -93,7 +93,7 @@ $agendaActive = $isActivePath('/admin/jadwal-banmus') || $isActivePath('/admin/j
                             <span>Layar TV</span>
                             <i data-lucide="external-link" class="size-3.5 text-slate-400"></i>
                         </a>
-                        <a href="<?= base_url('agenda') ?>" target="_blank" rel="noopener" class="flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <a href="<?= base_url('/') ?>" target="_blank" rel="noopener" class="flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             <span>Jadwal Publik</span>
                             <i data-lucide="external-link" class="size-3.5 text-slate-400"></i>
                         </a>

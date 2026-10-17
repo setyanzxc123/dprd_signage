@@ -8,6 +8,6 @@ class PortalController extends BaseController
 {
     public function index()
     {
-        return redirect()->to(base_url('agenda'), 302);
+        return redirect()->to(base_url('/'), 302);
     }
 }

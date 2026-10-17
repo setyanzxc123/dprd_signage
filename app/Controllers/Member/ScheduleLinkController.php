@@ -60,7 +60,7 @@ class ScheduleLinkController extends BaseController
         );
 
         return $url === null
-            ? redirect()->to(base_url('agenda'), 303)
+            ? redirect()->to(base_url('/'), 303)
             : redirect()->to($url);
     }
 }

@@ -19,7 +19,7 @@ self.addEventListener('push', (event) => {
         body: payload.message || '',
         icon: '/assets/images/logo_dprd.png',
         badge: '/assets/images/logo_dprd.png',
-        data: { url: payload.url || '/agenda' },
+        data: { url: payload.url || '/' },
     };
 
     event.waitUntil(self.registration.showNotification(payload.title || 'Agenda DPRD', options));
@@ -28,7 +28,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
-    const target = new URL(event.notification.data?.url || '/agenda', self.location.origin).href;
+    const target = new URL(event.notification.data?.url || '/', self.location.origin).href;
 
     event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
         for (const client of clientList) {

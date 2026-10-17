@@ -93,12 +93,20 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
         ]);
     }
 
-    public function testRootRedirectsToAgendaInsteadOfTvSignage(): void
+    public function testRootRendersAgendaDirectly(): void
     {
         $response = $this->get('/');
 
-        $response->assertStatus(302);
-        $response->assertRedirectTo(base_url('agenda'));
+        $response->assertOK();
+        $this->assertStringContainsString('Provinsi Sulawesi Tengah', $response->response()->getBody());
+    }
+
+    public function testLegacyAgendaRouteRedirectsToRoot(): void
+    {
+        $response = $this->get('/agenda');
+
+        $response->assertStatus(301);
+        $response->assertRedirectTo(base_url('/'));
     }
 
     public function testBanmusProjectionPageIsSeparateFromAgendaFilters(): void
@@ -116,7 +124,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
 
     public function testAgendaShellLinksToBanmusProjectionOutsideItsFilterLogic(): void
     {
-        $response = $this->get('/agenda');
+        $response = $this->get('/');
         $body = $response->response()->getBody();
 
         $response->assertOK();
@@ -157,7 +165,7 @@ final class AuthRouteSecurityTest extends CIUnitTestCase
             ],
         ];
 
-        foreach (['/agenda', '/agenda/jadwal-banmus'] as $path) {
+        foreach (['/', '/agenda/jadwal-banmus'] as $path) {
             $response = $this->withSession($session)->get($path);
 
             $response->assertOK();

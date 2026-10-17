@@ -2,7 +2,7 @@
     "name": "Agenda DPRD Provinsi Sulawesi Tengah",
     "short_name": "Agenda DPRD",
     "description": "Agenda dan jadwal rapat DPRD Provinsi Sulawesi Tengah.",
-    "start_url": "/agenda",
+    "start_url": "/",
     "scope": "/",
     "display": "standalone",
     "background_color": "#f8fafc",

@@ -252,7 +252,7 @@ final class JadwalBanmusCrudTest extends CIUnitTestCase
         $this->get("/agenda/jadwal-banmus/{$this->documentId}/dokumen")
             ->assertRedirectTo('https://example.com/sk-banmus.pdf');
 
-        $agendaResponse = $this->get('/agenda');
+        $agendaResponse = $this->get('/');
         $agendaResponse->assertOK();
         $agendaBody = $agendaResponse->response()->getBody();
         $this->assertStringContainsString('banmus_projection', $agendaBody);

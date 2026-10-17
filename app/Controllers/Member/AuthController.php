@@ -19,7 +19,7 @@ class AuthController extends BaseController
     public function loginPage()
     {
         if (session()->has('member_auth')) {
-            return redirect()->to(base_url('agenda'));
+            return redirect()->to(base_url('/'));
         }
 
         return redirect()->to(base_url('login?akses=anggota'));
@@ -123,7 +123,7 @@ class AuthController extends BaseController
         ]);
         (new AnggotaModel())->update($anggotaId, ['last_login_at' => date('Y-m-d H:i:s')]);
 
-        return redirect()->to(base_url('agenda'), 303);
+        return redirect()->to(base_url('/'), 303);
     }
 
     public function resendOtp()
@@ -265,7 +265,7 @@ class AuthController extends BaseController
         }
 
         if (session()->has('member_auth')) {
-            return redirect()->to(base_url('agenda'), 303);
+            return redirect()->to(base_url('/'), 303);
         }
 
         return null;

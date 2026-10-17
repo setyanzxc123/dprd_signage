@@ -7,10 +7,10 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // Home
-$routes->get('/', 'AgendaController::root');
+$routes->get('/', 'AgendaController::index');
+$routes->get('agenda', 'AgendaController::root');
 
 // Agenda web responsif untuk publik dan anggota
-$routes->get('agenda', 'AgendaController::index');
 $routes->get('agenda/jadwal-banmus', 'AgendaController::banmus');
 $routes->get('agenda/jadwal-banmus/(:num)/dokumen', 'AgendaController::banmusDocument/$1');
 

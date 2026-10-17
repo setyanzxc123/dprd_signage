@@ -56,7 +56,7 @@ class NotifController extends BaseController
                 [$userId],
                 'Notifikasi Uji Coba',
                 'Perangkat ini sudah terhubung. Notifikasi jadwal rapat akan dikirim ke sini.',
-                '/agenda'
+                '/'
             );
         } catch (\Throwable $th) {
             log_message('error', 'Gagal kirim notif uji PWA: ' . $th->getMessage());
@@ -87,7 +87,7 @@ class NotifController extends BaseController
                 [$userId],
                 'Notifikasi Uji Coba',
                 'Ini adalah notifikasi uji coba dari panel admin.',
-                '/agenda'
+                '/'
             );
         } catch (\Throwable $th) {
             log_message('error', 'Gagal kirim notif uji admin: ' . $th->getMessage());

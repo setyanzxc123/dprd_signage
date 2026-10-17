@@ -14,7 +14,10 @@ class AgendaController extends BaseController
 {
     public function root()
     {
-        return redirect()->to(base_url('agenda'), 302);
+        $queryString = $this->request->getUri()->getQuery();
+        $target = base_url($queryString !== '' ? '?' . $queryString : '');
+
+        return redirect()->to($target, 301);
     }
 
     public function index()
@@ -32,7 +35,7 @@ class AgendaController extends BaseController
         return $this->privateResponse()->setBody(view('agenda/index', [
             'namaInstansi' => 'DPRD Provinsi Sulawesi Tengah',
             'logoUrl'      => base_url('assets/images/logo_dprd.png'),
-            'portalUrl'    => base_url('agenda'),
+            'portalUrl'    => base_url('/'),
             'apiUrl'       => base_url($isMember ? 'api/v1/anggota/jadwal' : 'api/v1/publik/jadwal'),
             'member'       => $member,
             'isMember'     => $isMember,
@@ -67,7 +70,7 @@ class AgendaController extends BaseController
         return $this->privateResponse()->setBody(view('agenda/banmus', [
             'namaInstansi'      => 'DPRD Provinsi Sulawesi Tengah',
             'logoUrl'           => base_url('assets/images/logo_dprd.png'),
-            'portalUrl'         => base_url('agenda'),
+            'portalUrl'         => base_url('/'),
             'member'            => $member,
             'isMember'          => $includeInternal,
             'isAdmin'           => $isAdmin,
@@ -117,7 +120,7 @@ class AgendaController extends BaseController
 
     public function legacy()
     {
-        return redirect()->to(base_url('agenda'), 302);
+        return redirect()->to(base_url('/'), 302);
     }
 
     private function privateResponse(): ResponseInterface
